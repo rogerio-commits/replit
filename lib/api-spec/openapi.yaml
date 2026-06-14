@@ -43,7 +43,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [planning, active, on_hold, completed]
+            enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
         - name: priority
           in: query
           schema:
@@ -399,7 +399,7 @@ components:
           type: ["string", "null"]
         status:
           type: string
-          enum: [planning, active, on_hold, completed]
+          enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
         priority:
           type: string
           enum: [low, medium, high]
@@ -421,7 +421,7 @@ components:
           type: string
         status:
           type: string
-          enum: [planning, active, on_hold, completed]
+          enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
         priority:
           type: string
           enum: [low, medium, high]
@@ -440,7 +440,7 @@ components:
           type: string
         status:
           type: string
-          enum: [planning, active, on_hold, completed]
+          enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
         priority:
           type: string
           enum: [low, medium, high]
@@ -604,11 +604,12 @@ components:
         projectsByStatus:
           type: object
           properties:
-            planning: { type: integer }
-            active: { type: integer }
-            on_hold: { type: integer }
-            completed: { type: integer }
-          required: [planning, active, on_hold, completed]
+            a_iniciar: { type: integer }
+            em_projeto: { type: integer }
+            em_producao: { type: integer }
+            aguardando_instalacao: { type: integer }
+            em_instalacao: { type: integer }
+          required: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
         tasksByStatus:
           type: object
           properties:

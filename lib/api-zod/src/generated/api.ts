@@ -21,7 +21,7 @@ export const HealthCheckResponse = zod.object({
  * @summary List all projects
  */
 export const ListProjectsQueryParams = zod.object({
-  "status": zod.enum(['planning', 'active', 'on_hold', 'completed']).optional(),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_producao', 'aguardando_instalacao', 'em_instalacao']).optional(),
   "priority": zod.enum(['low', 'medium', 'high']).optional()
 })
 
@@ -29,7 +29,7 @@ export const ListProjectsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string().nullish(),
-  "status": zod.enum(['planning', 'active', 'on_hold', 'completed']),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
@@ -47,7 +47,7 @@ export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
 export const CreateProjectBody = zod.object({
   "name": zod.string().min(1),
   "description": zod.string().optional(),
-  "status": zod.enum(['planning', 'active', 'on_hold', 'completed']),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().optional(),
   "endDate": zod.string().optional()
@@ -65,7 +65,7 @@ export const GetProjectResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string().nullish(),
-  "status": zod.enum(['planning', 'active', 'on_hold', 'completed']),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
@@ -86,7 +86,7 @@ export const UpdateProjectParams = zod.object({
 export const UpdateProjectBody = zod.object({
   "name": zod.string().min(1).optional(),
   "description": zod.string().optional(),
-  "status": zod.enum(['planning', 'active', 'on_hold', 'completed']).optional(),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_producao', 'aguardando_instalacao', 'em_instalacao']).optional(),
   "priority": zod.enum(['low', 'medium', 'high']).optional(),
   "startDate": zod.string().optional(),
   "endDate": zod.string().optional()
@@ -96,7 +96,7 @@ export const UpdateProjectResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "description": zod.string().nullish(),
-  "status": zod.enum(['planning', 'active', 'on_hold', 'completed']),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
@@ -327,10 +327,11 @@ export const GetDashboardSummaryResponse = zod.object({
   "overdueTasks": zod.number(),
   "totalMembers": zod.number(),
   "projectsByStatus": zod.object({
-  "planning": zod.number(),
-  "active": zod.number(),
-  "on_hold": zod.number(),
-  "completed": zod.number()
+  "a_iniciar": zod.number(),
+  "em_projeto": zod.number(),
+  "em_producao": zod.number(),
+  "aguardando_instalacao": zod.number(),
+  "em_instalacao": zod.number()
 }),
   "tasksByStatus": zod.object({
   "todo": zod.number(),

@@ -7,8 +7,9 @@
  */
 
 export type DashboardSummaryProjectsByStatus = {
-  planning: number;
-  active: number;
-  on_hold: number;
-  completed: number;
+  a_iniciar: number;
+  em_projeto: number;
+  em_producao: number;
+  aguardando_instalacao: number;
+  em_instalacao: number;
 };

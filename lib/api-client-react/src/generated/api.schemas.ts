@@ -13,10 +13,11 @@ export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
 
 
 export const ProjectStatus = {
-  planning: 'planning',
-  active: 'active',
-  on_hold: 'on_hold',
-  completed: 'completed',
+  a_iniciar: 'a_iniciar',
+  em_projeto: 'em_projeto',
+  em_producao: 'em_producao',
+  aguardando_instalacao: 'aguardando_instalacao',
+  em_instalacao: 'em_instalacao',
 } as const;
 
 export type ProjectPriority = typeof ProjectPriority[keyof typeof ProjectPriority];
@@ -46,10 +47,11 @@ export type ProjectInputStatus = typeof ProjectInputStatus[keyof typeof ProjectI
 
 
 export const ProjectInputStatus = {
-  planning: 'planning',
-  active: 'active',
-  on_hold: 'on_hold',
-  completed: 'completed',
+  a_iniciar: 'a_iniciar',
+  em_projeto: 'em_projeto',
+  em_producao: 'em_producao',
+  aguardando_instalacao: 'aguardando_instalacao',
+  em_instalacao: 'em_instalacao',
 } as const;
 
 export type ProjectInputPriority = typeof ProjectInputPriority[keyof typeof ProjectInputPriority];
@@ -75,10 +77,11 @@ export type ProjectUpdateStatus = typeof ProjectUpdateStatus[keyof typeof Projec
 
 
 export const ProjectUpdateStatus = {
-  planning: 'planning',
-  active: 'active',
-  on_hold: 'on_hold',
-  completed: 'completed',
+  a_iniciar: 'a_iniciar',
+  em_projeto: 'em_projeto',
+  em_producao: 'em_producao',
+  aguardando_instalacao: 'aguardando_instalacao',
+  em_instalacao: 'em_instalacao',
 } as const;
 
 export type ProjectUpdatePriority = typeof ProjectUpdatePriority[keyof typeof ProjectUpdatePriority];
@@ -234,10 +237,11 @@ export interface MemberUpdate {
 }
 
 export type DashboardSummaryProjectsByStatus = {
-  planning: number;
-  active: number;
-  on_hold: number;
-  completed: number;
+  a_iniciar: number;
+  em_projeto: number;
+  em_producao: number;
+  aguardando_instalacao: number;
+  em_instalacao: number;
 };
 
 export type DashboardSummaryTasksByStatus = {
@@ -294,10 +298,11 @@ export type ListProjectsStatus = typeof ListProjectsStatus[keyof typeof ListProj
 
 
 export const ListProjectsStatus = {
-  planning: 'planning',
-  active: 'active',
-  on_hold: 'on_hold',
-  completed: 'completed',
+  a_iniciar: 'a_iniciar',
+  em_projeto: 'em_projeto',
+  em_producao: 'em_producao',
+  aguardando_instalacao: 'aguardando_instalacao',
+  em_instalacao: 'em_instalacao',
 } as const;
 
 export type ListProjectsPriority = typeof ListProjectsPriority[keyof typeof ListProjectsPriority];

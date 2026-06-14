@@ -15,17 +15,18 @@ router.get("/dashboard/summary", async (_req, res) => {
 
   return res.json({
     totalProjects: projects.length,
-    activeProjects: projects.filter((p) => p.status === "active").length,
-    completedProjects: projects.filter((p) => p.status === "completed").length,
+    activeProjects: projects.filter((p) => ["em_projeto", "em_producao", "aguardando_instalacao", "em_instalacao"].includes(p.status)).length,
+    completedProjects: projects.filter((p) => p.status === "em_instalacao").length,
     totalTasks: tasks.length,
     doneTasks: tasks.filter((t) => t.status === "done").length,
     overdueTasks,
     totalMembers: members.length,
     projectsByStatus: {
-      planning: projects.filter((p) => p.status === "planning").length,
-      active: projects.filter((p) => p.status === "active").length,
-      on_hold: projects.filter((p) => p.status === "on_hold").length,
-      completed: projects.filter((p) => p.status === "completed").length,
+      a_iniciar: projects.filter((p) => p.status === "a_iniciar").length,
+      em_projeto: projects.filter((p) => p.status === "em_projeto").length,
+      em_producao: projects.filter((p) => p.status === "em_producao").length,
+      aguardando_instalacao: projects.filter((p) => p.status === "aguardando_instalacao").length,
+      em_instalacao: projects.filter((p) => p.status === "em_instalacao").length,
     },
     tasksByStatus: {
       todo: tasks.filter((t) => t.status === "todo").length,

@@ -22,7 +22,7 @@ import {
   getListTasksQueryKey,
   getListProjectsQueryKey,
 } from "@workspace/api-client-react";
-import type { ListTasksResponseItem, ListProjectsResponseItem } from "@workspace/api-client-react";
+import type { ListTasksQueryResult, ListProjectsQueryResult } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,10 +45,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type KanbanView = "tasks" | "projects";
 type TaskStatus = "todo" | "in_progress" | "review" | "done";
-type ProjectStatus = "planning" | "active" | "on_hold" | "completed";
+type ProjectStatus = "a_iniciar" | "em_projeto" | "em_producao" | "aguardando_instalacao" | "em_instalacao";
 
-type TaskItem = ListTasksResponseItem;
-type ProjectItem = ListProjectsResponseItem;
+type TaskItem = ListTasksQueryResult[number];
+type ProjectItem = ListProjectsQueryResult[number];
 
 const TASK_COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }[] = [
   { id: "todo",        label: "A Fazer",      color: "text-slate-600",  bg: "bg-slate-100 dark:bg-slate-800/60" },
@@ -58,10 +58,11 @@ const TASK_COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }
 ];
 
 const PROJECT_COLUMNS: { id: ProjectStatus; label: string; color: string; bg: string }[] = [
-  { id: "planning",   label: "Planejamento",  color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-900/20" },
-  { id: "active",     label: "Ativo",         color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-900/20" },
-  { id: "on_hold",    label: "Em Espera",     color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-900/20" },
-  { id: "completed",  label: "Concluído",     color: "text-green-600",  bg: "bg-green-50 dark:bg-green-900/20" },
+  { id: "a_iniciar",            label: "A Iniciar",             color: "text-slate-600",   bg: "bg-slate-100 dark:bg-slate-800/60" },
+  { id: "em_projeto",           label: "Em Projeto",            color: "text-violet-600",  bg: "bg-violet-50 dark:bg-violet-900/20" },
+  { id: "em_producao",          label: "Em Produção",           color: "text-blue-600",    bg: "bg-blue-50 dark:bg-blue-900/20" },
+  { id: "aguardando_instalacao",label: "Aguardando Instalação", color: "text-amber-600",   bg: "bg-amber-50 dark:bg-amber-900/20" },
+  { id: "em_instalacao",        label: "Em Instalação",         color: "text-green-600",   bg: "bg-green-50 dark:bg-green-900/20" },
 ];
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -72,7 +73,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 const PRIORITY_LABELS: Record<string, string> = { high: "Alta", medium: "Média", low: "Baixa" };
 
 function isOverdue(dueDate: string | null | undefined, status: string) {
-  if (!dueDate || status === "done" || status === "completed") return false;
+  if (!dueDate || status === "done" || status === "em_instalacao") return false;
   return new Date(dueDate) < new Date();
 }
 
@@ -507,7 +508,7 @@ function ProjectsBoard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
-  const [dialog, setDialog] = useState<{ open: boolean; status: ProjectStatus }>({ open: false, status: "planning" });
+  const [dialog, setDialog] = useState<{ open: boolean; status: ProjectStatus }>({ open: false, status: "a_iniciar" });
 
   const { data: projects, isLoading } = useListProjects();
   const updateProject = useUpdateProject();
@@ -515,7 +516,7 @@ function ProjectsBoard() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
   const projectsByColumn = useMemo(() => {
-    const map: Record<ProjectStatus, ProjectItem[]> = { planning: [], active: [], on_hold: [], completed: [] };
+    const map: Record<ProjectStatus, ProjectItem[]> = { a_iniciar: [], em_projeto: [], em_producao: [], aguardando_instalacao: [], em_instalacao: [] };
     projects?.forEach((p) => { if (map[p.status as ProjectStatus]) map[p.status as ProjectStatus].push(p); });
     return map;
   }, [projects]);
@@ -551,7 +552,7 @@ function ProjectsBoard() {
   return (
     <>
       <div className="flex items-center gap-3 shrink-0">
-        <Button onClick={() => setDialog({ open: true, status: "planning" })} data-testid="button-new-project">
+        <Button onClick={() => setDialog({ open: true, status: "a_iniciar" })} data-testid="button-new-project">
           <Plus className="h-4 w-4 mr-2" />Novo Projeto
         </Button>
       </div>

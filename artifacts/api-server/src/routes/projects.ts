@@ -54,7 +54,7 @@ router.post("/projects", async (req, res) => {
     .values({
       name: body.data.name,
       description: body.data.description ?? null,
-      status: (body.data.status as "planning" | "active" | "on_hold" | "completed") ?? "planning",
+      status: (body.data.status as "a_iniciar" | "em_projeto" | "em_producao" | "aguardando_instalacao" | "em_instalacao") ?? "a_iniciar",
       priority: (body.data.priority as "low" | "medium" | "high") ?? "medium",
       startDate: body.data.startDate ?? null,
       endDate: body.data.endDate ?? null,

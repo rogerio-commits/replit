@@ -53,7 +53,7 @@ import { useToast } from "@/hooks/use-toast";
 const projectSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  status: z.enum(["planning", "active", "on_hold", "completed"]),
+  status: z.enum(["a_iniciar", "em_projeto", "em_producao", "aguardando_instalacao", "em_instalacao"]),
   priority: z.enum(["low", "medium", "high"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -70,12 +70,21 @@ const taskSchema = z.object({
 type ProjectFormValues = z.infer<typeof projectSchema>;
 type TaskFormValues = z.infer<typeof taskSchema>;
 
+const STATUS_LABELS: Record<string, string> = {
+  a_iniciar: "A Iniciar",
+  em_projeto: "Em Projeto",
+  em_producao: "Em Produção",
+  aguardando_instalacao: "Aguardando Instalação",
+  em_instalacao: "Em Instalação",
+};
+
 function getStatusColor(status: string) {
   switch (status) {
-    case "active": return "bg-blue-500/10 text-blue-600 border-blue-200";
-    case "planning": return "bg-slate-500/10 text-slate-600 border-slate-200";
-    case "completed": return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
-    case "on_hold": return "bg-amber-500/10 text-amber-600 border-amber-200";
+    case "a_iniciar": return "bg-slate-500/10 text-slate-600 border-slate-200";
+    case "em_projeto": return "bg-violet-500/10 text-violet-600 border-violet-200";
+    case "em_producao": return "bg-blue-500/10 text-blue-600 border-blue-200";
+    case "aguardando_instalacao": return "bg-amber-500/10 text-amber-600 border-amber-200";
+    case "em_instalacao": return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
     default: return "bg-slate-500/10 text-slate-600 border-slate-200";
   }
 }
@@ -130,7 +139,7 @@ export default function ProjectDetail() {
     values: project ? {
       name: project.name,
       description: project.description || "",
-      status: project.status,
+      status: project.status as "a_iniciar" | "em_projeto" | "em_producao" | "aguardando_instalacao" | "em_instalacao",
       priority: project.priority,
       startDate: project.startDate ? project.startDate.split('T')[0] : "",
       endDate: project.endDate ? project.endDate.split('T')[0] : "",
@@ -226,7 +235,7 @@ export default function ProjectDetail() {
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h1>
               <Badge variant="outline" className={getStatusColor(project.status)}>
-                {project.status.replace("_", " ").toUpperCase()}
+                {STATUS_LABELS[project.status] ?? project.status}
               </Badge>
             </div>
             <p className="text-muted-foreground mt-2 max-w-3xl">{project.description || "No description provided."}</p>
@@ -286,10 +295,11 @@ export default function ProjectDetail() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="planning">Planning</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="on_hold">On Hold</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="a_iniciar">A Iniciar</SelectItem>
+                                <SelectItem value="em_projeto">Em Projeto</SelectItem>
+                                <SelectItem value="em_producao">Em Produção</SelectItem>
+                                <SelectItem value="aguardando_instalacao">Aguardando Instalação</SelectItem>
+                                <SelectItem value="em_instalacao">Em Instalação</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
