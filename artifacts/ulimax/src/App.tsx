@@ -10,6 +10,7 @@ import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
 import Tasks from "@/pages/tasks";
 import Members from "@/pages/members";
+import Kanban from "@/pages/kanban";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ function Router() {
         <Route path="/projects" component={Projects} />
         <Route path="/projects/:id" component={ProjectDetail} />
         <Route path="/tasks" component={Tasks} />
+        <Route path="/kanban" component={Kanban} />
         <Route path="/members" component={Members} />
         <Route component={NotFound} />
       </Switch>

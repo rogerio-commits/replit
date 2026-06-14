@@ -6,7 +6,8 @@ import {
   CheckSquare, 
   Users, 
   Settings,
-  HardHat
+  HardHat,
+  Columns3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -22,6 +23,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/projects", label: "Projects", icon: Briefcase },
     { href: "/tasks", label: "Tasks", icon: CheckSquare },
+    { href: "/kanban", label: "Kanban", icon: Columns3 },
     { href: "/members", label: "Team", icon: Users },
   ];
 
