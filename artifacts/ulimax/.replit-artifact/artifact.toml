@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Ulimax — Sistema de Projetos"
+version = "1.0.0"
+id = "artifacts/ulimax"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22537
+
+[services.development]
+run = "pnpm --filter @workspace/ulimax run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ulimax", "run", "build" ]
+publicDir = "artifacts/ulimax/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22537"
+BASE_PATH = "/"

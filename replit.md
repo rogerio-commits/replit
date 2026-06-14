@@ -1,10 +1,11 @@
-# [Project name]
+# Ulimax — Sistema de Controle de Projetos
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Sistema de gestão e controle de projetos para a Ulimax, com projetos, tarefas, membros de equipe e dashboard de acompanhamento.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
+- `pnpm --filter @workspace/ulimax run dev` — run the frontend (port 22537)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -14,6 +15,7 @@ _Replace the heading above with the project's name, and this line with one sente
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite + Tailwind CSS + shadcn/ui + Wouter
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
@@ -22,15 +24,24 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — OpenAPI source of truth
+- `lib/db/src/schema/` — Drizzle schema (projects.ts, tasks.ts, members.ts)
+- `artifacts/api-server/src/routes/` — Express route handlers
+- `artifacts/ulimax/src/pages/` — React pages (dashboard, projects, tasks, members)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Contract-first OpenAPI: spec gates codegen, which gates frontend
+- Activity feed uses composite key `${type}-${id}` to avoid React duplicate key warnings when tasks and projects share IDs
+- Dashboard summary computed server-side from live DB queries
+- Recent activity merges tasks + projects sorted by createdAt
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Dashboard** — métricas resumidas (projetos, tarefas, vencidas, equipe), atividade recente, breakdown por status
+- **Projetos** — CRUD completo com filtros por status e prioridade, detalhe com estatísticas e tarefas do projeto
+- **Tarefas** — lista global com filtros por projeto, status, prioridade e responsável
+- **Equipe** — gestão de membros com nome, cargo e e-mail
 
 ## User preferences
 
@@ -38,7 +49,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- After OpenAPI changes, always run codegen before touching routes or frontend
+- Enums in Drizzle require explicit type casting when inserting
 
 ## Pointers
 

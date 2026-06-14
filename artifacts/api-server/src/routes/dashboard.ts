@@ -1,0 +1,87 @@
+import { Router } from "express";
+import { db, projectsTable, tasksTable, membersTable } from "@workspace/db";
+
+const router = Router();
+
+router.get("/dashboard/summary", async (_req, res) => {
+  const projects = await db.select().from(projectsTable);
+  const tasks = await db.select().from(tasksTable);
+  const members = await db.select().from(membersTable);
+
+  const now = new Date();
+  const overdueTasks = tasks.filter(
+    (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
+  ).length;
+
+  return res.json({
+    totalProjects: projects.length,
+    activeProjects: projects.filter((p) => p.status === "active").length,
+    completedProjects: projects.filter((p) => p.status === "completed").length,
+    totalTasks: tasks.length,
+    doneTasks: tasks.filter((t) => t.status === "done").length,
+    overdueTasks,
+    totalMembers: members.length,
+    projectsByStatus: {
+      planning: projects.filter((p) => p.status === "planning").length,
+      active: projects.filter((p) => p.status === "active").length,
+      on_hold: projects.filter((p) => p.status === "on_hold").length,
+      completed: projects.filter((p) => p.status === "completed").length,
+    },
+    tasksByStatus: {
+      todo: tasks.filter((t) => t.status === "todo").length,
+      in_progress: tasks.filter((t) => t.status === "in_progress").length,
+      review: tasks.filter((t) => t.status === "review").length,
+      done: tasks.filter((t) => t.status === "done").length,
+    },
+    tasksByPriority: {
+      low: tasks.filter((t) => t.priority === "low").length,
+      medium: tasks.filter((t) => t.priority === "medium").length,
+      high: tasks.filter((t) => t.priority === "high").length,
+    },
+  });
+});
+
+router.get("/dashboard/recent-activity", async (_req, res) => {
+  const { eq } = await import("drizzle-orm");
+
+  const recentTasks = await db
+    .select({
+      task: tasksTable,
+      projectName: projectsTable.name,
+    })
+    .from(tasksTable)
+    .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+    .orderBy(tasksTable.createdAt)
+    .limit(5);
+
+  const recentProjects = await db
+    .select()
+    .from(projectsTable)
+    .orderBy(projectsTable.createdAt)
+    .limit(5);
+
+  const activity = [
+    ...recentTasks.map((r) => ({
+      id: r.task.id,
+      type: "task" as const,
+      title: r.task.title,
+      status: r.task.status,
+      priority: r.task.priority,
+      projectName: r.projectName ?? null,
+      createdAt: r.task.createdAt.toISOString(),
+    })),
+    ...recentProjects.map((p) => ({
+      id: p.id,
+      type: "project" as const,
+      title: p.name,
+      status: p.status,
+      priority: p.priority,
+      projectName: null,
+      createdAt: p.createdAt.toISOString(),
+    })),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+
+  return res.json(activity);
+});
+
+export default router;
