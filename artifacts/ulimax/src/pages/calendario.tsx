@@ -226,8 +226,19 @@ function EventDialog({
             )} />
             <FormField control={form.control} name="teamDescription" render={({ field }) => (
               <FormItem>
-                <FormLabel>Equipe</FormLabel>
-                <FormControl><Input placeholder="Ex: Equipe A — João, Maria" {...field} /></FormControl>
+                <FormLabel className="flex items-center gap-2">
+                  Equipe
+                  {editing && (
+                    <span className="text-[11px] font-normal text-muted-foreground">(fixo na linha)</span>
+                  )}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Ex: Equipe A — João, Maria"
+                    disabled={!!editing}
+                    {...field}
+                  />
+                </FormControl>
               </FormItem>
             )} />
             <div className="grid grid-cols-2 gap-3">
