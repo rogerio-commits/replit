@@ -841,7 +841,7 @@ function BoardSkeleton() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Kanban() {
-  const [view, setView] = useState<KanbanView>("tasks");
+  const [view, setView] = useState<KanbanView>("projects");
 
   return (
     <div className="flex flex-col gap-5 h-full">
@@ -855,16 +855,6 @@ export default function Kanban() {
         {/* View toggle */}
         <div className="flex items-center bg-muted rounded-lg p-1 shrink-0" data-testid="kanban-view-toggle">
           <button
-            onClick={() => setView("tasks")}
-            data-testid="toggle-tasks"
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-              view === "tasks" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <CheckSquare className="h-4 w-4" />Tarefas
-          </button>
-          <button
             onClick={() => setView("projects")}
             data-testid="toggle-projects"
             className={cn(
@@ -873,6 +863,16 @@ export default function Kanban() {
             )}
           >
             <Briefcase className="h-4 w-4" />Projetos
+          </button>
+          <button
+            onClick={() => setView("tasks")}
+            data-testid="toggle-tasks"
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+              view === "tasks" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <CheckSquare className="h-4 w-4" />Tarefas
           </button>
         </div>
       </div>
