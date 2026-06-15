@@ -1,12 +1,12 @@
 import { pgTable, text, serial, timestamp, pgEnum } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["gestor", "colaborador"]);
+export const userRoleEnum = pgEnum("user_role", ["gestor", "executor", "observador"]);
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   clerkUserId: text("clerk_user_id").notNull().unique(),
   email: text("email").notNull().default(""),
-  role: userRoleEnum("role").notNull().default("colaborador"),
+  role: userRoleEnum("role").notNull().default("observador"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

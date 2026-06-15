@@ -41,13 +41,13 @@ router.patch("/users/:id", requireGestor, async (req, res) => {
   const body = UpdateUserRoleBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
-  if (req.appUser!.id === id && body.data.role === "colaborador") {
-    return res.status(400).json({ error: "Não é possível rebaixar a si mesmo" });
+  if (req.appUser!.id === id && body.data.role !== "gestor") {
+    return res.status(400).json({ error: "Não é possível alterar o seu próprio papel" });
   }
 
   const [user] = await db
     .update(usersTable)
-    .set({ role: body.data.role as "gestor" | "colaborador" })
+    .set({ role: body.data.role as "gestor" | "executor" | "observador" })
     .where(eq(usersTable.id, id))
     .returning();
 

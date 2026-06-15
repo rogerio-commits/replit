@@ -405,7 +405,7 @@ export const GetMeResponse = zod.object({
   "id": zod.number(),
   "clerkUserId": zod.string(),
   "email": zod.string(),
-  "role": zod.enum(['gestor', 'colaborador']),
+  "role": zod.enum(['gestor', 'executor', 'observador']),
   "createdAt": zod.string()
 })
 
@@ -417,7 +417,7 @@ export const ListUsersResponseItem = zod.object({
   "id": zod.number(),
   "clerkUserId": zod.string(),
   "email": zod.string(),
-  "role": zod.enum(['gestor', 'colaborador']),
+  "role": zod.enum(['gestor', 'executor', 'observador']),
   "createdAt": zod.string()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -431,14 +431,14 @@ export const UpdateUserRoleParams = zod.object({
 })
 
 export const UpdateUserRoleBody = zod.object({
-  "role": zod.enum(['gestor', 'colaborador'])
+  "role": zod.enum(['gestor', 'executor', 'observador'])
 })
 
 export const UpdateUserRoleResponse = zod.object({
   "id": zod.number(),
   "clerkUserId": zod.string(),
   "email": zod.string(),
-  "role": zod.enum(['gestor', 'colaborador']),
+  "role": zod.enum(['gestor', 'executor', 'observador']),
   "createdAt": zod.string()
 })
 

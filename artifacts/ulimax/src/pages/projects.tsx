@@ -45,7 +45,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Briefcase, Plus, Search, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useIsGestor } from "@/hooks/useAppUser";
+import { useCanEdit } from "@/hooks/useAppUser";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -122,7 +122,7 @@ export default function Projects() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isGestor = useIsGestor();
+  const canEdit = useCanEdit();
 
   const { data: projects, isLoading } = useListProjects();
   const createProject = useCreateProject();
@@ -173,7 +173,7 @@ export default function Projects() {
           <p className="text-muted-foreground mt-1">Gerencie e acompanhe todos os projetos de engenharia.</p>
         </div>
 
-        {isGestor && <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        {canEdit && <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />

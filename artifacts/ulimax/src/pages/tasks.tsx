@@ -46,7 +46,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useIsGestor } from "@/hooks/useAppUser";
+import { useCanEdit } from "@/hooks/useAppUser";
 
 const TASK_STATUS_LABELS: Record<string, string> = {
   todo: "A Fazer",
@@ -101,7 +101,7 @@ export default function Tasks() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isGestor = useIsGestor();
+  const canEdit = useCanEdit();
 
   const { data: tasks, isLoading: isTasksLoading } = useListTasks();
   const { data: projects } = useListProjects();
@@ -201,7 +201,7 @@ export default function Tasks() {
           <p className="text-muted-foreground mt-1">Gerencie entregas em todos os projetos.</p>
         </div>
 
-        {isGestor && <Dialog open={isCreateOpen} onOpenChange={(open) => {
+        {canEdit && <Dialog open={isCreateOpen} onOpenChange={(open) => {
           setIsCreateOpen(open);
           if (!open) {
             setEditingTask(null);
@@ -461,7 +461,7 @@ export default function Tasks() {
                       </div>
                     </div>
                     
-                    {isGestor && <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                    {canEdit && <div className="flex items-center gap-2 self-end md:self-center shrink-0">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
                         <Edit className="h-4 w-4" />
                       </Button>

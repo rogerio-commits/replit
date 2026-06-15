@@ -8,3 +8,8 @@ export function useIsGestor(): boolean {
   const { data } = useAppUser();
   return data?.role === "gestor";
 }
+
+export function useCanEdit(): boolean {
+  const { data } = useAppUser();
+  return data?.role === "gestor" || data?.role === "executor";
+}
