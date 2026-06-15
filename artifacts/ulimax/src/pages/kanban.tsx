@@ -37,7 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   CalendarDays, GripVertical, Plus, User, AlertCircle,
-  Loader2, CheckSquare, Briefcase,
+  Loader2, CheckSquare, Briefcase, Pencil,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
