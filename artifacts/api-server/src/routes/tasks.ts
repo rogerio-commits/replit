@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, tasksTable, membersTable, projectsTable } from "@workspace/db";
+import { db, tasksTable, membersTable, projectsTable, projectMembersTable } from "@workspace/db";
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq, and } from "drizzle-orm";
 import {
@@ -12,6 +12,44 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
+
+async function isExecutorParticipant(email: string, projectId: number): Promise<boolean> {
+  const [member] = await db
+    .select({ id: membersTable.id })
+    .from(membersTable)
+    .where(eq(membersTable.email, email))
+    .limit(1);
+  if (!member) return false;
+
+  const [pm] = await db
+    .select({ id: projectMembersTable.id })
+    .from(projectMembersTable)
+    .where(
+      and(
+        eq(projectMembersTable.projectId, projectId),
+        eq(projectMembersTable.memberId, member.id)
+      )
+    )
+    .limit(1);
+
+  return !!pm;
+}
+
+function taskRow(row: { task: typeof tasksTable.$inferSelect; memberName: string | null; projectName: string | null }) {
+  return {
+    id: row.task.id,
+    projectId: row.task.projectId,
+    title: row.task.title,
+    description: row.task.description ?? null,
+    status: row.task.status,
+    priority: row.task.priority,
+    assignedTo: row.task.assignedTo ?? null,
+    assigneeName: row.memberName ?? null,
+    projectName: row.projectName ?? null,
+    dueDate: row.task.dueDate ?? null,
+    createdAt: row.task.createdAt.toISOString(),
+  };
+}
 
 router.get("/tasks", async (req, res) => {
   const query = ListTasksQueryParams.safeParse({
@@ -50,26 +88,17 @@ router.get("/tasks", async (req, res) => {
     filtered = filtered.filter((r) => r.task.assignedTo === query.data.assignedTo);
   }
 
-  return res.json(
-    filtered.map((r) => ({
-      id: r.task.id,
-      projectId: r.task.projectId,
-      title: r.task.title,
-      description: r.task.description ?? null,
-      status: r.task.status,
-      priority: r.task.priority,
-      assignedTo: r.task.assignedTo ?? null,
-      assigneeName: r.memberName ?? null,
-      projectName: r.projectName ?? null,
-      dueDate: r.task.dueDate ?? null,
-      createdAt: r.task.createdAt.toISOString(),
-    }))
-  );
+  return res.json(filtered.map(taskRow));
 });
 
 router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
   const body = CreateTaskBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
+
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, body.data.projectId);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
 
   const [task] = await db
     .insert(tasksTable)
@@ -95,19 +124,7 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
     .where(eq(tasksTable.id, task.id));
 
-  return res.status(201).json({
-    id: row.task.id,
-    projectId: row.task.projectId,
-    title: row.task.title,
-    description: row.task.description ?? null,
-    status: row.task.status,
-    priority: row.task.priority,
-    assignedTo: row.task.assignedTo ?? null,
-    assigneeName: row.memberName ?? null,
-    projectName: row.projectName ?? null,
-    dueDate: row.task.dueDate ?? null,
-    createdAt: row.task.createdAt.toISOString(),
-  });
+  return res.status(201).json(taskRow(row));
 });
 
 router.get("/tasks/:id", async (req, res) => {
@@ -127,19 +144,7 @@ router.get("/tasks/:id", async (req, res) => {
 
   if (!row) return res.status(404).json({ error: "Not found" });
 
-  return res.json({
-    id: row.task.id,
-    projectId: row.task.projectId,
-    title: row.task.title,
-    description: row.task.description ?? null,
-    status: row.task.status,
-    priority: row.task.priority,
-    assignedTo: row.task.assignedTo ?? null,
-    assigneeName: row.memberName ?? null,
-    projectName: row.projectName ?? null,
-    dueDate: row.task.dueDate ?? null,
-    createdAt: row.task.createdAt.toISOString(),
-  });
+  return res.json(taskRow(row));
 });
 
 router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
@@ -147,6 +152,18 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   const body = UpdateTaskBody.safeParse(req.body);
   if (!params.success || !body.success) {
     return res.status(400).json({ error: "Invalid input" });
+  }
+
+  if (req.appUser!.role === "executor") {
+    const [existing] = await db
+      .select({ projectId: tasksTable.projectId })
+      .from(tasksTable)
+      .where(eq(tasksTable.id, params.data.id))
+      .limit(1);
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    const ok = await isExecutorParticipant(req.appUser!.email, existing.projectId);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
   }
 
   const updateData: Record<string, unknown> = {};
@@ -177,24 +194,24 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
     .where(eq(tasksTable.id, task.id));
 
-  return res.json({
-    id: row.task.id,
-    projectId: row.task.projectId,
-    title: row.task.title,
-    description: row.task.description ?? null,
-    status: row.task.status,
-    priority: row.task.priority,
-    assignedTo: row.task.assignedTo ?? null,
-    assigneeName: row.memberName ?? null,
-    projectName: row.projectName ?? null,
-    dueDate: row.task.dueDate ?? null,
-    createdAt: row.task.createdAt.toISOString(),
-  });
+  return res.json(taskRow(row));
 });
 
 router.delete("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   const params = DeleteTaskParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  if (req.appUser!.role === "executor") {
+    const [existing] = await db
+      .select({ projectId: tasksTable.projectId })
+      .from(tasksTable)
+      .where(eq(tasksTable.id, params.data.id))
+      .limit(1);
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    const ok = await isExecutorParticipant(req.appUser!.email, existing.projectId);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
 
   await db.delete(tasksTable).where(eq(tasksTable.id, params.data.id));
   return res.status(204).send();

@@ -166,6 +166,47 @@ export const GetProjectStatsResponse = zod.object({
 
 
 /**
+ * @summary List participants of a project
+ */
+export const ListProjectMembersParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectMembersResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberRole": zod.string(),
+  "memberEmail": zod.string(),
+  "memberAvatarUrl": zod.string().nullish(),
+  "addedAt": zod.string()
+})
+export const ListProjectMembersResponse = zod.array(ListProjectMembersResponseItem)
+
+
+/**
+ * @summary Add a participant to a project
+ */
+export const AddProjectMemberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AddProjectMemberBody = zod.object({
+  "memberId": zod.number()
+})
+
+
+/**
+ * @summary Remove a participant from a project
+ */
+export const RemoveProjectMemberParams = zod.object({
+  "id": zod.coerce.number(),
+  "memberId": zod.coerce.number()
+})
+
+
+/**
  * @summary List tasks
  */
 export const ListTasksQueryParams = zod.object({

@@ -8,6 +8,7 @@
 
 export * from './activityItem';
 export * from './activityItemType';
+export * from './addProjectMemberInput';
 export * from './appUser';
 export * from './createInviteBody';
 export * from './dashboardSummary';
@@ -36,6 +37,7 @@ export * from './projectInputMaterialType';
 export * from './projectInputPriority';
 export * from './projectInputStatus';
 export * from './projectMaterialType';
+export * from './projectMember';
 export * from './projectPriority';
 export * from './projectStats';
 export * from './projectStatus';

@@ -432,6 +432,22 @@ export interface InstallationEventUpdate {
   color?: string;
 }
 
+export interface ProjectMember {
+  id: number;
+  projectId: number;
+  memberId: number;
+  memberName: string;
+  memberRole: string;
+  memberEmail: string;
+  /** @nullable */
+  memberAvatarUrl?: string | null;
+  addedAt: string;
+}
+
+export interface AddProjectMemberInput {
+  memberId: number;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

@@ -1,18 +1,23 @@
 import { useState } from "react";
-import { useParams, Link, useLocation } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { 
-  useGetProject, 
+import {
+  useGetProject,
   useGetProjectStats,
   useListTasks,
   useUpdateProject,
   useDeleteProject,
   useCreateTask,
+  useListProjectMembers,
+  useAddProjectMember,
+  useRemoveProjectMember,
+  useListMembers,
   getGetProjectQueryKey,
   getListTasksQueryKey,
   getGetProjectStatsQueryKey,
-  getListProjectsQueryKey
+  getListProjectsQueryKey,
+  getListProjectMembersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -22,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { DateWithDaysCalc } from "@/components/date-with-days-calc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +35,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -49,8 +55,23 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Calendar, Edit, Trash2, CheckSquare, Clock, Plus, AlertCircle, HardHat } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Edit,
+  Trash2,
+  CheckSquare,
+  Clock,
+  Plus,
+  AlertCircle,
+  HardHat,
+  Users,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
+import { cn } from "@/lib/utils";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -138,54 +159,72 @@ export default function ProjectDetail() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isGestor = useIsGestor();
+  const { data: me } = useAppUser();
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   const { data: project, isLoading: isProjectLoading } = useGetProject(projectId, {
-    query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) }
+    query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) },
   });
-
   const { data: stats, isLoading: isStatsLoading } = useGetProjectStats(projectId, {
-    query: { enabled: !!projectId, queryKey: getGetProjectStatsQueryKey(projectId) }
+    query: { enabled: !!projectId, queryKey: getGetProjectStatsQueryKey(projectId) },
   });
-
   const { data: tasks, isLoading: isTasksLoading } = useListTasks({ projectId }, {
-    query: { enabled: !!projectId, queryKey: getListTasksQueryKey({ projectId }) }
+    query: { enabled: !!projectId, queryKey: getListTasksQueryKey({ projectId }) },
   });
+  const { data: projectMembers, isLoading: isMembersLoading } = useListProjectMembers(projectId, {
+    query: { enabled: !!projectId, queryKey: getListProjectMembersQueryKey(projectId) },
+  });
+  const { data: allMembers } = useListMembers();
 
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const createTask = useCreateTask();
+  const addProjectMember = useAddProjectMember();
+  const removeProjectMember = useRemoveProjectMember();
+
+  // Participation check for executors
+  const myMember = allMembers?.find(
+    (m) => m.email.toLowerCase() === (me?.email ?? "").toLowerCase()
+  );
+  const isParticipant = projectMembers?.some((pm) => pm.memberId === myMember?.id) ?? false;
+  const isExecutor = me?.role === "executor";
+  const canEdit = isGestor || (isExecutor && isParticipant);
+
+  // Members available to add (not yet in the project)
+  const participantMemberIds = new Set(projectMembers?.map((pm) => pm.memberId) ?? []);
+  const availableToAdd = allMembers?.filter((m) => !participantMemberIds.has(m.id)) ?? [];
+
+  // Selected member for add dialog
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
 
   const projectForm = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    values: project ? {
-      name: project.name,
-      description: project.description || "",
-      status: project.status as "a_iniciar" | "em_projeto" | "em_aprovacao" | "em_producao" | "aguardando_instalacao" | "em_instalacao",
-      priority: project.priority,
-      startDate: project.startDate ? project.startDate.split('T')[0] : "",
-      endDate: project.endDate ? project.endDate.split('T')[0] : "",
-      finalDate: project.finalDate ? project.finalDate.split('T')[0] : "",
-      producaoStartDate: project.producaoStartDate ? project.producaoStartDate.split('T')[0] : "",
-      producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split('T')[0] : "",
-      producaoFinalDate: project.producaoFinalDate ? project.producaoFinalDate.split('T')[0] : "",
-      medicaoDate: project.medicaoDate ? project.medicaoDate.split('T')[0] : "",
-      instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split('T')[0] : "",
-      materialType: (project.materialType as "madeira" | "aluminio" | undefined) ?? undefined,
-    } : undefined,
+    values: project
+      ? {
+          name: project.name,
+          description: project.description || "",
+          status: project.status as ProjectFormValues["status"],
+          priority: project.priority as ProjectFormValues["priority"],
+          startDate: project.startDate ? project.startDate.split("T")[0] : "",
+          endDate: project.endDate ? project.endDate.split("T")[0] : "",
+          finalDate: project.finalDate ? project.finalDate.split("T")[0] : "",
+          producaoStartDate: project.producaoStartDate ? project.producaoStartDate.split("T")[0] : "",
+          producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split("T")[0] : "",
+          producaoFinalDate: project.producaoFinalDate ? project.producaoFinalDate.split("T")[0] : "",
+          medicaoDate: project.medicaoDate ? project.medicaoDate.split("T")[0] : "",
+          instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split("T")[0] : "",
+          materialType: (project.materialType as "madeira" | "aluminio" | undefined) ?? undefined,
+        }
+      : undefined,
   });
 
   const taskForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      status: "todo",
-      priority: "medium",
-      dueDate: "",
-    },
+    defaultValues: { title: "", description: "", status: "todo", priority: "medium", dueDate: "" },
   });
 
   const onUpdateProject = (data: ProjectFormValues) => {
@@ -196,9 +235,7 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setIsEditOpen(false);
       },
-      onError: () => {
-        toast({ title: "Erro ao atualizar projeto", variant: "destructive" });
-      }
+      onError: () => toast({ title: "Erro ao atualizar projeto", variant: "destructive" }),
     });
   };
 
@@ -209,9 +246,7 @@ export default function ProjectDetail() {
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setLocation("/projects");
       },
-      onError: () => {
-        toast({ title: "Erro ao excluir projeto", variant: "destructive" });
-      }
+      onError: () => toast({ title: "Erro ao excluir projeto", variant: "destructive" }),
     });
   };
 
@@ -224,10 +259,37 @@ export default function ProjectDetail() {
         setIsCreateTaskOpen(false);
         taskForm.reset();
       },
-      onError: () => {
-        toast({ title: "Erro ao criar tarefa", variant: "destructive" });
-      }
+      onError: () => toast({ title: "Erro ao criar tarefa", variant: "destructive" }),
     });
+  };
+
+  const onAddMember = () => {
+    if (!selectedMemberId) return;
+    addProjectMember.mutate(
+      { id: projectId, data: { memberId: Number(selectedMemberId) } },
+      {
+        onSuccess: () => {
+          toast({ title: "Participante adicionado com sucesso" });
+          queryClient.invalidateQueries({ queryKey: getListProjectMembersQueryKey(projectId) });
+          setIsAddMemberOpen(false);
+          setSelectedMemberId("");
+        },
+        onError: () => toast({ title: "Erro ao adicionar participante", variant: "destructive" }),
+      }
+    );
+  };
+
+  const onRemoveMember = (memberId: number, memberName: string) => {
+    removeProjectMember.mutate(
+      { id: projectId, memberId },
+      {
+        onSuccess: () => {
+          toast({ title: `${memberName} removido do projeto` });
+          queryClient.invalidateQueries({ queryKey: getListProjectMembersQueryKey(projectId) });
+        },
+        onError: () => toast({ title: "Erro ao remover participante", variant: "destructive" }),
+      }
+    );
   };
 
   if (isProjectLoading) {
@@ -236,10 +298,7 @@ export default function ProjectDetail() {
         <Skeleton className="h-10 w-32" />
         <Skeleton className="h-32 w-full" />
         <div className="grid gap-4 md:grid-cols-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
         </div>
       </div>
     );
@@ -256,6 +315,7 @@ export default function ProjectDetail() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
       <div>
         <Button variant="ghost" size="sm" className="mb-4 -ml-3 text-muted-foreground" onClick={() => setLocation("/projects")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -263,268 +323,208 @@ export default function ProjectDetail() {
         </Button>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-3xl font-bold tracking-tight text-foreground">{project.name}</h1>
               <Badge variant="outline" className={getStatusColor(project.status)}>
                 {STATUS_LABELS[project.status] ?? project.status}
               </Badge>
+              {isExecutor && !isGestor && (
+                <Badge variant="outline" className={cn(
+                  "text-xs",
+                  isParticipant
+                    ? "border-emerald-300 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20"
+                    : "border-slate-300 text-slate-500 bg-slate-50 dark:bg-slate-800"
+                )}>
+                  {isParticipant ? "Você é participante" : "Somente visualização"}
+                </Badge>
+              )}
             </div>
             <p className="text-muted-foreground mt-2 max-w-3xl">{project.description || "Sem descrição."}</p>
           </div>
 
           <div className="flex items-center gap-2">
-            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar Projeto
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Editar Projeto</DialogTitle>
-                </DialogHeader>
-                <Form {...projectForm}>
-                  <form onSubmit={projectForm.handleSubmit(onUpdateProject)} className="space-y-4">
-                    <FormField
-                      control={projectForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome do Projeto</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ex.: Edifício Alpha" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={projectForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Descrição</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Breve descrição do projeto..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={projectForm.control}
-                        name="status"
-                        render={({ field }) => (
+            {canEdit && (
+              <>
+                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Edit className="mr-2 h-4 w-4" />
+                      Editar Projeto
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Editar Projeto</DialogTitle>
+                    </DialogHeader>
+                    <Form {...projectForm}>
+                      <form onSubmit={projectForm.handleSubmit(onUpdateProject)} className="space-y-4">
+                        <FormField control={projectForm.control} name="name" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Nome do Projeto</FormLabel>
+                            <FormControl><Input placeholder="Ex.: Edifício Alpha" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={projectForm.control} name="description" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Descrição</FormLabel>
+                            <FormControl><Input placeholder="Breve descrição do projeto..." {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField control={projectForm.control} name="status" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Status</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger><SelectValue placeholder="Selecione o status" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="a_iniciar">A Iniciar</SelectItem>
+                                  <SelectItem value="em_projeto">Em Projeto</SelectItem>
+                                  <SelectItem value="em_aprovacao">Em Aprovação</SelectItem>
+                                  <SelectItem value="em_producao">Em Produção</SelectItem>
+                                  <SelectItem value="aguardando_instalacao">Aguardando Instalação</SelectItem>
+                                  <SelectItem value="em_instalacao">Em Instalação</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={projectForm.control} name="priority" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Prioridade</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger><SelectValue placeholder="Selecione a prioridade" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="low">Baixa</SelectItem>
+                                  <SelectItem value="medium">Média</SelectItem>
+                                  <SelectItem value="high">Alta</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <FormField control={projectForm.control} name="startDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Início do Projeto</FormLabel>
+                              <FormControl><Input type="date" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={projectForm.control} name="endDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Fim Estimado</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o status" />
-                                </SelectTrigger>
+                                <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("startDate")} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={projectForm.control} name="finalDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data Final</FormLabel>
+                              <FormControl><Input type="date" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <FormField control={projectForm.control} name="producaoStartDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Início da Produção</FormLabel>
+                              <FormControl><Input type="date" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={projectForm.control} name="producaoEndDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Fim Est. Produção</FormLabel>
+                              <FormControl>
+                                <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("producaoStartDate")} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={projectForm.control} name="producaoFinalDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Final da Produção</FormLabel>
+                              <FormControl><Input type="date" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField control={projectForm.control} name="medicaoDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Data de Medição</FormLabel>
+                              <FormControl><Input type="date" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                          <FormField control={projectForm.control} name="instalacaoStartDate" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Início Est. da Instalação</FormLabel>
+                              <FormControl><Input type="date" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        </div>
+                        <FormField control={projectForm.control} name="materialType" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo de Material</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Selecione o material" /></SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="a_iniciar">A Iniciar</SelectItem>
-                                <SelectItem value="em_projeto">Em Projeto</SelectItem>
-                                <SelectItem value="em_aprovacao">Em Aprovação</SelectItem>
-                                <SelectItem value="em_producao">Em Produção</SelectItem>
-                                <SelectItem value="aguardando_instalacao">Aguardando Instalação</SelectItem>
-                                <SelectItem value="em_instalacao">Em Instalação</SelectItem>
+                                <SelectItem value="madeira">Madeira</SelectItem>
+                                <SelectItem value="aluminio">Alumínio</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={projectForm.control}
-                        name="priority"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Prioridade</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione a prioridade" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="low">Baixa</SelectItem>
-                                <SelectItem value="medium">Média</SelectItem>
-                                <SelectItem value="high">Alta</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        )} />
+                        <DialogFooter>
+                          <Button type="submit" disabled={updateProject.isPending}>
+                            {updateProject.isPending ? "Salvando..." : "Salvar Alterações"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="icon">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Excluir Projeto</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita e removerá todas as tarefas associadas.
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={projectForm.control}
-                        name="startDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Início do Projeto</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={projectForm.control}
-                        name="endDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Fim Estimado</FormLabel>
-                            <FormControl>
-                              <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("startDate")} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={projectForm.control}
-                        name="finalDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Data Final</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <FormField
-                        control={projectForm.control}
-                        name="producaoStartDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Início da Produção</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={projectForm.control}
-                        name="producaoEndDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Fim Est. Produção</FormLabel>
-                            <FormControl>
-                              <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("producaoStartDate")} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={projectForm.control}
-                        name="producaoFinalDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Final da Produção</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={projectForm.control}
-                        name="medicaoDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Data de Medição</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={projectForm.control}
-                        name="instalacaoStartDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Início Est. da Instalação</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={projectForm.control}
-                      name="materialType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo de Material</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o material" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="madeira">Madeira</SelectItem>
-                              <SelectItem value="aluminio">Alumínio</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                     <DialogFooter>
-                      <Button type="submit" disabled={updateProject.isPending}>
-                        {updateProject.isPending ? "Salvando..." : "Salvar Alterações"}
+                      <DialogClose asChild>
+                        <Button variant="outline">Cancelar</Button>
+                      </DialogClose>
+                      <Button variant="destructive" onClick={onDeleteProject} disabled={deleteProject.isPending}>
+                        {deleteProject.isPending ? "Excluindo..." : "Excluir Projeto"}
                       </Button>
                     </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive" size="icon">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Excluir Projeto</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita e removerá todas as tarefas associadas.
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button variant="destructive" onClick={onDeleteProject} disabled={deleteProject.isPending}>
-                    {deleteProject.isPending ? "Excluindo..." : "Excluir Projeto"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
           </div>
         </div>
 
@@ -535,21 +535,19 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>Início: <span className="font-medium text-foreground">{project.startDate ? format(new Date(project.startDate), "d MMM yyyy", { locale: ptBR }) : '—'}</span></span>
+            <span>Início: <span className="font-medium text-foreground">{project.startDate ? format(new Date(project.startDate), "d MMM yyyy", { locale: ptBR }) : "—"}</span></span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>Fim Previsto: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), "d MMM yyyy", { locale: ptBR }) : '—'}</span></span>
+            <span>Fim Previsto: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), "d MMM yyyy", { locale: ptBR }) : "—"}</span></span>
           </div>
         </div>
       </div>
 
+      {/* Stats */}
       {isStatsLoading ? (
         <div className="grid gap-4 md:grid-cols-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
         </div>
       ) : stats ? (
         <div className="grid gap-4 md:grid-cols-4">
@@ -588,63 +586,145 @@ export default function ProjectDetail() {
         </div>
       ) : null}
 
+      {/* Participants */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Participantes</CardTitle>
+            {projectMembers && (
+              <span className="text-xs text-muted-foreground font-normal">({projectMembers.length})</span>
+            )}
+          </div>
+          {isGestor && (
+            <Dialog open={isAddMemberOpen} onOpenChange={(open) => { setIsAddMemberOpen(open); if (!open) setSelectedMemberId(""); }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={availableToAdd.length === 0}>
+                  <UserPlus className="mr-2 h-3.5 w-3.5" />
+                  Adicionar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[380px]">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Participante</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Membro da equipe</label>
+                    <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um membro..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableToAdd.map((m) => (
+                          <SelectItem key={m.id} value={String(m.id)}>
+                            <span className="flex flex-col">
+                              <span className="font-medium">{m.name}</span>
+                              <span className="text-xs text-muted-foreground">{m.role}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button onClick={onAddMember} disabled={!selectedMemberId || addProjectMember.isPending}>
+                    {addProjectMember.isPending ? "Adicionando..." : "Adicionar"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isMembersLoading ? (
+            <div className="flex gap-3">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-10 rounded-full" />)}
+            </div>
+          ) : projectMembers && projectMembers.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {projectMembers.map((pm) => (
+                <div key={pm.id} className="group relative flex items-center gap-2 rounded-full border bg-background pl-1 pr-3 py-1 text-sm hover:bg-muted/50 transition-colors">
+                  <Avatar className="h-7 w-7 border">
+                    {pm.memberAvatarUrl ? (
+                      <AvatarImage src={pm.memberAvatarUrl} alt={pm.memberName} />
+                    ) : (
+                      <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                        {pm.memberName.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="leading-tight">
+                    <div className="font-medium text-xs">{pm.memberName}</div>
+                    <div className="text-[10px] text-muted-foreground">{pm.memberRole}</div>
+                  </div>
+                  {isGestor && (
+                    <button
+                      onClick={() => onRemoveMember(pm.memberId, pm.memberName)}
+                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      title="Remover participante"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Users className="h-4 w-4 opacity-40" />
+              <span>{isGestor ? "Nenhum participante. Clique em Adicionar para incluir membros." : "Nenhum participante definido."}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tasks */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Tarefas do Projeto</CardTitle>
             <CardDescription>Todas as tarefas vinculadas a este projeto.</CardDescription>
           </div>
-          <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Tarefa
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>Nova Tarefa</DialogTitle>
-              </DialogHeader>
-              <Form {...taskForm}>
-                <form onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
-                  <FormField
-                    control={taskForm.control}
-                    name="title"
-                    render={({ field }) => (
+          {canEdit && (
+            <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nova Tarefa
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Nova Tarefa</DialogTitle>
+                </DialogHeader>
+                <Form {...taskForm}>
+                  <form onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
+                    <FormField control={taskForm.control} name="title" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Título da Tarefa</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ex.: Concretagem fase 1" {...field} />
-                        </FormControl>
+                        <FormControl><Input placeholder="Ex.: Concretagem fase 1" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={taskForm.control}
-                    name="description"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={taskForm.control} name="description" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Descrição</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Detalhes sobre a tarefa..." {...field} />
-                        </FormControl>
+                        <FormControl><Input placeholder="Detalhes sobre a tarefa..." {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={taskForm.control}
-                      name="status"
-                      render={({ field }) => (
+                    )} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={taskForm.control} name="status" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Status</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o status" />
-                              </SelectTrigger>
+                              <SelectTrigger><SelectValue placeholder="Selecione o status" /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="todo">A Fazer</SelectItem>
@@ -655,19 +735,13 @@ export default function ProjectDetail() {
                           </Select>
                           <FormMessage />
                         </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={taskForm.control}
-                      name="priority"
-                      render={({ field }) => (
+                      )} />
+                      <FormField control={taskForm.control} name="priority" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Prioridade</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione a prioridade" />
-                              </SelectTrigger>
+                              <SelectTrigger><SelectValue placeholder="Selecione a prioridade" /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="low">Baixa</SelectItem>
@@ -677,78 +751,80 @@ export default function ProjectDetail() {
                           </Select>
                           <FormMessage />
                         </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={taskForm.control}
-                    name="dueDate"
-                    render={({ field }) => (
+                      )} />
+                    </div>
+                    <FormField control={taskForm.control} name="dueDate" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prazo</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormLabel>Data de Vencimento</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <DialogFooter>
-                    <Button type="submit" disabled={createTask.isPending}>
-                      {createTask.isPending ? "Criando..." : "Criar Tarefa"}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+                    )} />
+                    <DialogFooter>
+                      <Button type="submit" disabled={createTask.isPending}>
+                        {createTask.isPending ? "Criando..." : "Criar Tarefa"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          )}
         </CardHeader>
         <CardContent>
           {isTasksLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
           ) : tasks && tasks.length > 0 ? (
-            <div className="divide-y border border-border rounded-md overflow-hidden">
+            <div className="space-y-3">
               {tasks.map((task) => (
-                <div key={task.id} className="p-4 hover:bg-muted/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <CheckSquare className={`h-5 w-5 mt-0.5 ${task.status === 'done' ? 'text-emerald-500' : 'text-muted-foreground'}`} />
-                    <div>
-                      <div className="font-medium">{task.title}</div>
-                      {task.description && (
-                        <div className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.description}</div>
-                      )}
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span className={`font-medium flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
-                          <AlertCircle className="h-3 w-3" />
-                          <span>{PRIORITY_LABELS[task.priority] ?? task.priority}</span>
+                <div
+                  key={task.id}
+                  className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
+                >
+                  <CheckSquare className={cn("h-4 w-4 mt-0.5 shrink-0", task.status === "done" ? "text-emerald-500" : "text-muted-foreground")} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={cn("font-medium text-sm", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</span>
+                      <Badge variant="outline" className={cn("text-xs", getTaskStatusColor(task.status))}>
+                        {TASK_STATUS_LABELS[task.status] ?? task.status}
+                      </Badge>
+                      <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+                        {PRIORITY_LABELS[task.priority] ?? task.priority}
+                      </Badge>
+                    </div>
+                    {task.description && (
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{task.description}</p>
+                    )}
+                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      {task.assigneeName && (
+                        <span className="flex items-center gap-1">
+                          <HardHat className="h-3 w-3" />
+                          {task.assigneeName}
                         </span>
-                        {task.dueDate && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {format(new Date(task.dueDate), "d MMM yyyy", { locale: ptBR })}
-                          </span>
-                        )}
-                        {task.assigneeName && (
-                          <span className="flex items-center gap-1">
-                            <HardHat className="h-3 w-3" />
-                            {task.assigneeName}
-                          </span>
-                        )}
-                      </div>
+                      )}
+                      {task.dueDate && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(task.dueDate), "d MMM yyyy", { locale: ptBR })}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <Badge variant="outline" className={getTaskStatusColor(task.status)}>
-                    {TASK_STATUS_LABELS[task.status] ?? task.status}
-                  </Badge>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-muted-foreground border border-dashed rounded-md">
-              Nenhuma tarefa criada ainda.
+            <div className="py-12 text-center flex flex-col items-center">
+              <CheckSquare className="h-10 w-10 text-muted-foreground mb-3 opacity-20" />
+              <p className="text-muted-foreground">Nenhuma tarefa ainda.</p>
+              {canEdit && (
+                <Button size="sm" variant="outline" className="mt-3" onClick={() => setIsCreateTaskOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar primeira tarefa
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable } from "@workspace/db";
-import { requireExecutorOrGestor } from "../middlewares/requireAuth";
-import { eq, sql } from "drizzle-orm";
+import { projectsTable, membersTable, projectMembersTable } from "@workspace/db";
+import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
+import { and, eq } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
   CreateProjectBody,
@@ -11,6 +11,10 @@ import {
   DeleteProjectParams,
   GetProjectParams,
   GetProjectStatsParams,
+  ListProjectMembersParams,
+  AddProjectMemberParams,
+  AddProjectMemberBody,
+  RemoveProjectMemberParams,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -33,6 +37,28 @@ function projectRow(p: typeof projectsTable.$inferSelect) {
     materialType: p.materialType ?? null,
     createdAt: p.createdAt.toISOString(),
   };
+}
+
+async function isExecutorParticipant(email: string, projectId: number): Promise<boolean> {
+  const [member] = await db
+    .select({ id: membersTable.id })
+    .from(membersTable)
+    .where(eq(membersTable.email, email))
+    .limit(1);
+  if (!member) return false;
+
+  const [pm] = await db
+    .select({ id: projectMembersTable.id })
+    .from(projectMembersTable)
+    .where(
+      and(
+        eq(projectMembersTable.projectId, projectId),
+        eq(projectMembersTable.memberId, member.id)
+      )
+    )
+    .limit(1);
+
+  return !!pm;
 }
 
 router.get("/projects", async (req, res) => {
@@ -103,6 +129,11 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     return res.status(400).json({ error: "Invalid input" });
   }
 
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
+
   const raw = req.body as Record<string, unknown>;
   const updateData: Record<string, unknown> = {};
   if (body.data.name !== undefined) updateData.name = body.data.name;
@@ -134,6 +165,11 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
   const params = DeleteProjectParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
+
   await db.delete(projectsTable).where(eq(projectsTable.id, params.data.id));
   return res.status(204).send();
 });
@@ -162,6 +198,97 @@ router.get("/projects/:id/stats", async (req, res) => {
     done: tasks.filter((t) => t.status === "done").length,
     overdue,
   });
+});
+
+router.get("/projects/:id/members", async (req, res) => {
+  const params = ListProjectMembersParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select({
+      pm: projectMembersTable,
+      member: membersTable,
+    })
+    .from(projectMembersTable)
+    .innerJoin(membersTable, eq(projectMembersTable.memberId, membersTable.id))
+    .where(eq(projectMembersTable.projectId, params.data.id))
+    .orderBy(membersTable.name);
+
+  return res.json(
+    rows.map(({ pm, member }) => ({
+      id: pm.id,
+      projectId: pm.projectId,
+      memberId: pm.memberId,
+      memberName: member.name,
+      memberRole: member.role,
+      memberEmail: member.email,
+      memberAvatarUrl: member.avatarUrl ?? null,
+      addedAt: pm.addedAt.toISOString(),
+    }))
+  );
+});
+
+router.post("/projects/:id/members", requireGestor, async (req, res) => {
+  const params = AddProjectMemberParams.safeParse({ id: Number(req.params.id) });
+  const body = AddProjectMemberBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
+
+  const existing = await db
+    .select({ id: projectMembersTable.id })
+    .from(projectMembersTable)
+    .where(
+      and(
+        eq(projectMembersTable.projectId, params.data.id),
+        eq(projectMembersTable.memberId, body.data.memberId)
+      )
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    return res.status(409).json({ error: "Membro já está neste projeto" });
+  }
+
+  const [pm] = await db
+    .insert(projectMembersTable)
+    .values({ projectId: params.data.id, memberId: body.data.memberId })
+    .returning();
+
+  const [member] = await db
+    .select()
+    .from(membersTable)
+    .where(eq(membersTable.id, pm.memberId));
+
+  return res.status(201).json({
+    id: pm.id,
+    projectId: pm.projectId,
+    memberId: pm.memberId,
+    memberName: member.name,
+    memberRole: member.role,
+    memberEmail: member.email,
+    memberAvatarUrl: member.avatarUrl ?? null,
+    addedAt: pm.addedAt.toISOString(),
+  });
+});
+
+router.delete("/projects/:id/members/:memberId", requireGestor, async (req, res) => {
+  const params = RemoveProjectMemberParams.safeParse({
+    id: Number(req.params.id),
+    memberId: Number(req.params.memberId),
+  });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  await db
+    .delete(projectMembersTable)
+    .where(
+      and(
+        eq(projectMembersTable.projectId, params.data.id),
+        eq(projectMembersTable.memberId, params.data.memberId)
+      )
+    );
+
+  return res.status(204).send();
 });
 
 export default router;

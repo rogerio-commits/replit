@@ -158,6 +158,72 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProjectStats"
 
+  /projects/{id}/members:
+    get:
+      operationId: listProjectMembers
+      tags: [projects]
+      summary: List participants of a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of project members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectMember"
+    post:
+      operationId: addProjectMember
+      tags: [projects]
+      summary: Add a participant to a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddProjectMemberInput"
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectMember"
+        "409":
+          description: Already a member
+
+  /projects/{id}/members/{memberId}:
+    delete:
+      operationId: removeProjectMember
+      tags: [projects]
+      summary: Remove a participant from a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
   /tasks:
     get:
       operationId: listTasks
@@ -1019,3 +1085,31 @@ components:
           type: string
         color:
           type: string
+
+    ProjectMember:
+      type: object
+      required: [id, projectId, memberId, memberName, memberRole, memberEmail, addedAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        memberId:
+          type: integer
+        memberName:
+          type: string
+        memberRole:
+          type: string
+        memberEmail:
+          type: string
+        memberAvatarUrl:
+          type: ["string", "null"]
+        addedAt:
+          type: string
+
+    AddProjectMemberInput:
+      type: object
+      required: [memberId]
+      properties:
+        memberId:
+          type: integer

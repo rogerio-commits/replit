@@ -1,0 +1,1 @@
+- [Project participant authorization](project-participant-auth.md) — executors can only edit projects/tasks where they are listed as participants; gestors bypass the check.
