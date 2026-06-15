@@ -57,6 +57,9 @@ const projectSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  producaoStartDate: z.string().optional(),
+  producaoEndDate: z.string().optional(),
+  medicaoDate: z.string().optional(),
 });
 
 const taskSchema = z.object({
@@ -145,6 +148,9 @@ export default function ProjectDetail() {
       priority: project.priority,
       startDate: project.startDate ? project.startDate.split('T')[0] : "",
       endDate: project.endDate ? project.endDate.split('T')[0] : "",
+      producaoStartDate: (project as Record<string, unknown>).producaoStartDate ? String((project as Record<string, unknown>).producaoStartDate).split('T')[0] : "",
+      producaoEndDate: (project as Record<string, unknown>).producaoEndDate ? String((project as Record<string, unknown>).producaoEndDate).split('T')[0] : "",
+      medicaoDate: (project as Record<string, unknown>).medicaoDate ? String((project as Record<string, unknown>).medicaoDate).split('T')[0] : "",
     } : undefined,
   });
 
@@ -338,7 +344,7 @@ export default function ProjectDetail() {
                         name="startDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Start Date</FormLabel>
+                            <FormLabel>Início do Projeto</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
@@ -351,7 +357,7 @@ export default function ProjectDetail() {
                         name="endDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Target End Date</FormLabel>
+                            <FormLabel>Fim Estimado do Projeto</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
@@ -360,6 +366,47 @@ export default function ProjectDetail() {
                         )}
                       />
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={projectForm.control}
+                        name="producaoStartDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Início da Produção</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={projectForm.control}
+                        name="producaoEndDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Fim Estimado da Produção</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={projectForm.control}
+                      name="medicaoDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Medição</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <DialogFooter>
                       <Button type="submit" disabled={updateProject.isPending}>
                         {updateProject.isPending ? "Saving..." : "Save Changes"}

@@ -33,6 +33,9 @@ export const ListProjectsResponseItem = zod.object({
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
+  "producaoStartDate": zod.string().nullish(),
+  "producaoEndDate": zod.string().nullish(),
+  "medicaoDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
@@ -50,7 +53,10 @@ export const CreateProjectBody = zod.object({
   "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().optional(),
-  "endDate": zod.string().optional()
+  "endDate": zod.string().optional(),
+  "producaoStartDate": zod.string().optional(),
+  "producaoEndDate": zod.string().optional(),
+  "medicaoDate": zod.string().optional()
 })
 
 
@@ -69,6 +75,9 @@ export const GetProjectResponse = zod.object({
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
+  "producaoStartDate": zod.string().nullish(),
+  "producaoEndDate": zod.string().nullish(),
+  "medicaoDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -89,7 +98,10 @@ export const UpdateProjectBody = zod.object({
   "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']).optional(),
   "priority": zod.enum(['low', 'medium', 'high']).optional(),
   "startDate": zod.string().optional(),
-  "endDate": zod.string().optional()
+  "endDate": zod.string().optional(),
+  "producaoStartDate": zod.string().optional(),
+  "producaoEndDate": zod.string().optional(),
+  "medicaoDate": zod.string().optional()
 })
 
 export const UpdateProjectResponse = zod.object({
@@ -100,6 +112,9 @@ export const UpdateProjectResponse = zod.object({
   "priority": zod.enum(['low', 'medium', 'high']),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
+  "producaoStartDate": zod.string().nullish(),
+  "producaoEndDate": zod.string().nullish(),
+  "medicaoDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

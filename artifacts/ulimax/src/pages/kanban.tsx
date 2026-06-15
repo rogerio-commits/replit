@@ -334,11 +334,14 @@ function NewTaskDialog({ open, defaultStatus, onOpenChange }: {
 // ── New Project Dialog ────────────────────────────────────────────────────────
 
 const newProjectSchema = z.object({
-  name:        z.string().min(1, "Nome obrigatório"),
-  description: z.string().optional(),
-  priority:    z.enum(["low", "medium", "high"]),
-  startDate:   z.string().optional(),
-  endDate:     z.string().optional(),
+  name:             z.string().min(1, "Nome obrigatório"),
+  description:      z.string().optional(),
+  priority:         z.enum(["low", "medium", "high"]),
+  startDate:        z.string().optional(),
+  endDate:          z.string().optional(),
+  producaoStartDate: z.string().optional(),
+  producaoEndDate:  z.string().optional(),
+  medicaoDate:      z.string().optional(),
 });
 
 function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
@@ -349,7 +352,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
   const createProject = useCreateProject();
   const form = useForm<z.infer<typeof newProjectSchema>>({
     resolver: zodResolver(newProjectSchema),
-    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "" },
+    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "" },
   });
 
   function onSubmit(values: z.infer<typeof newProjectSchema>) {
@@ -357,6 +360,9 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
       name: values.name, description: values.description || undefined,
       priority: values.priority, status: defaultStatus,
       startDate: values.startDate || undefined, endDate: values.endDate || undefined,
+      producaoStartDate: values.producaoStartDate || undefined,
+      producaoEndDate: values.producaoEndDate || undefined,
+      medicaoDate: values.medicaoDate || undefined,
     }}, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
@@ -395,14 +401,28 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
             )} />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="startDate" render={({ field }) => (
-                <FormItem><FormLabel>Início</FormLabel>
+                <FormItem><FormLabel>Início do Projeto</FormLabel>
                   <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
-                <FormItem><FormLabel>Fim</FormLabel>
+                <FormItem><FormLabel>Fim Estimado do Projeto</FormLabel>
                   <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
+                <FormItem><FormLabel>Início da Produção</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
+                <FormItem><FormLabel>Fim Estimado da Produção</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="medicaoDate" render={({ field }) => (
+              <FormItem><FormLabel>Data de Medição</FormLabel>
+                <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+            )} />
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
               <Button type="submit" disabled={createProject.isPending} data-testid="button-create-project">

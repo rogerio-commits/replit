@@ -41,6 +41,12 @@ export interface Project {
   startDate?: string | null;
   /** @nullable */
   endDate?: string | null;
+  /** @nullable */
+  producaoStartDate?: string | null;
+  /** @nullable */
+  producaoEndDate?: string | null;
+  /** @nullable */
+  medicaoDate?: string | null;
   createdAt: string;
 }
 
@@ -73,6 +79,9 @@ export interface ProjectInput {
   priority: ProjectInputPriority;
   startDate?: string;
   endDate?: string;
+  producaoStartDate?: string;
+  producaoEndDate?: string;
+  medicaoDate?: string;
 }
 
 export type ProjectUpdateStatus = typeof ProjectUpdateStatus[keyof typeof ProjectUpdateStatus];
@@ -104,6 +113,9 @@ export interface ProjectUpdate {
   priority?: ProjectUpdatePriority;
   startDate?: string;
   endDate?: string;
+  producaoStartDate?: string;
+  producaoEndDate?: string;
+  medicaoDate?: string;
 }
 
 export interface ProjectStats {

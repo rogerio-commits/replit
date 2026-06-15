@@ -16,4 +16,7 @@ export interface ProjectInput {
   priority: ProjectInputPriority;
   startDate?: string;
   endDate?: string;
+  producaoStartDate?: string;
+  producaoEndDate?: string;
+  medicaoDate?: string;
 }

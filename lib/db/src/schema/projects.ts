@@ -13,6 +13,9 @@ export const projectsTable = pgTable("projects", {
   priority: projectPriorityEnum("priority").notNull().default("medium"),
   startDate: text("start_date"),
   endDate: text("end_date"),
+  producaoStartDate: text("producao_start_date"),
+  producaoEndDate: text("producao_end_date"),
+  medicaoDate: text("medicao_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

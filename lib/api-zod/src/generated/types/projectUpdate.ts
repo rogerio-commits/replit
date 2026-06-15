@@ -16,4 +16,7 @@ export interface ProjectUpdate {
   priority?: ProjectUpdatePriority;
   startDate?: string;
   endDate?: string;
+  producaoStartDate?: string;
+  producaoEndDate?: string;
+  medicaoDate?: string;
 }

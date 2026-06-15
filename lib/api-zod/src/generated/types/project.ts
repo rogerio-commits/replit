@@ -19,5 +19,11 @@ export interface Project {
   startDate?: string | null;
   /** @nullable */
   endDate?: string | null;
+  /** @nullable */
+  producaoStartDate?: string | null;
+  /** @nullable */
+  producaoEndDate?: string | null;
+  /** @nullable */
+  medicaoDate?: string | null;
   createdAt: string;
 }

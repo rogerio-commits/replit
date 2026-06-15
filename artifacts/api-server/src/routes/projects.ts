@@ -15,6 +15,22 @@ import {
 
 const router = Router();
 
+function projectRow(p: typeof projectsTable.$inferSelect) {
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description ?? null,
+    status: p.status,
+    priority: p.priority,
+    startDate: p.startDate ?? null,
+    endDate: p.endDate ?? null,
+    producaoStartDate: p.producaoStartDate ?? null,
+    producaoEndDate: p.producaoEndDate ?? null,
+    medicaoDate: p.medicaoDate ?? null,
+    createdAt: p.createdAt.toISOString(),
+  };
+}
+
 router.get("/projects", async (req, res) => {
   const query = ListProjectsQueryParams.safeParse(req.query);
   if (!query.success) {
@@ -30,18 +46,7 @@ router.get("/projects", async (req, res) => {
     rows = rows.filter((p) => p.priority === query.data.priority);
   }
 
-  return res.json(
-    rows.map((p) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description ?? null,
-      status: p.status,
-      priority: p.priority,
-      startDate: p.startDate ?? null,
-      endDate: p.endDate ?? null,
-      createdAt: p.createdAt.toISOString(),
-    }))
-  );
+  return res.json(rows.map(projectRow));
 });
 
 router.post("/projects", requireGestor, async (req, res) => {
@@ -55,23 +60,17 @@ router.post("/projects", requireGestor, async (req, res) => {
     .values({
       name: body.data.name,
       description: body.data.description ?? null,
-      status: (body.data.status as "a_iniciar" | "em_projeto" | "em_producao" | "aguardando_instalacao" | "em_instalacao") ?? "a_iniciar",
+      status: (body.data.status as "a_iniciar" | "em_projeto" | "em_aprovacao" | "em_producao" | "aguardando_instalacao" | "em_instalacao") ?? "a_iniciar",
       priority: (body.data.priority as "low" | "medium" | "high") ?? "medium",
       startDate: body.data.startDate ?? null,
       endDate: body.data.endDate ?? null,
+      producaoStartDate: (body.data as Record<string, unknown>).producaoStartDate as string ?? null,
+      producaoEndDate: (body.data as Record<string, unknown>).producaoEndDate as string ?? null,
+      medicaoDate: (body.data as Record<string, unknown>).medicaoDate as string ?? null,
     })
     .returning();
 
-  return res.status(201).json({
-    id: project.id,
-    name: project.name,
-    description: project.description ?? null,
-    status: project.status,
-    priority: project.priority,
-    startDate: project.startDate ?? null,
-    endDate: project.endDate ?? null,
-    createdAt: project.createdAt.toISOString(),
-  });
+  return res.status(201).json(projectRow(project));
 });
 
 router.get("/projects/:id", async (req, res) => {
@@ -85,16 +84,7 @@ router.get("/projects/:id", async (req, res) => {
 
   if (!project) return res.status(404).json({ error: "Not found" });
 
-  return res.json({
-    id: project.id,
-    name: project.name,
-    description: project.description ?? null,
-    status: project.status,
-    priority: project.priority,
-    startDate: project.startDate ?? null,
-    endDate: project.endDate ?? null,
-    createdAt: project.createdAt.toISOString(),
-  });
+  return res.json(projectRow(project));
 });
 
 router.patch("/projects/:id", requireGestor, async (req, res) => {
@@ -104,6 +94,7 @@ router.patch("/projects/:id", requireGestor, async (req, res) => {
     return res.status(400).json({ error: "Invalid input" });
   }
 
+  const raw = req.body as Record<string, unknown>;
   const updateData: Record<string, unknown> = {};
   if (body.data.name !== undefined) updateData.name = body.data.name;
   if (body.data.description !== undefined) updateData.description = body.data.description;
@@ -111,6 +102,9 @@ router.patch("/projects/:id", requireGestor, async (req, res) => {
   if (body.data.priority !== undefined) updateData.priority = body.data.priority;
   if (body.data.startDate !== undefined) updateData.startDate = body.data.startDate;
   if (body.data.endDate !== undefined) updateData.endDate = body.data.endDate;
+  if (raw.producaoStartDate !== undefined) updateData.producaoStartDate = raw.producaoStartDate;
+  if (raw.producaoEndDate !== undefined) updateData.producaoEndDate = raw.producaoEndDate;
+  if (raw.medicaoDate !== undefined) updateData.medicaoDate = raw.medicaoDate;
 
   const [project] = await db
     .update(projectsTable)
@@ -120,16 +114,7 @@ router.patch("/projects/:id", requireGestor, async (req, res) => {
 
   if (!project) return res.status(404).json({ error: "Not found" });
 
-  return res.json({
-    id: project.id,
-    name: project.name,
-    description: project.description ?? null,
-    status: project.status,
-    priority: project.priority,
-    startDate: project.startDate ?? null,
-    endDate: project.endDate ?? null,
-    createdAt: project.createdAt.toISOString(),
-  });
+  return res.json(projectRow(project));
 });
 
 router.delete("/projects/:id", requireGestor, async (req, res) => {

@@ -470,6 +470,12 @@ components:
           type: ["string", "null"]
         endDate:
           type: ["string", "null"]
+        producaoStartDate:
+          type: ["string", "null"]
+        producaoEndDate:
+          type: ["string", "null"]
+        medicaoDate:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -492,6 +498,12 @@ components:
           type: string
         endDate:
           type: string
+        producaoStartDate:
+          type: string
+        producaoEndDate:
+          type: string
+        medicaoDate:
+          type: string
 
     ProjectUpdate:
       type: object
@@ -510,6 +522,12 @@ components:
         startDate:
           type: string
         endDate:
+          type: string
+        producaoStartDate:
+          type: string
+        producaoEndDate:
+          type: string
+        medicaoDate:
           type: string
 
     ProjectStats:
