@@ -30,6 +30,17 @@ export const ProjectPriority = {
   high: 'high',
 } as const;
 
+/**
+ * @nullable
+ */
+export type ProjectMaterialType = typeof ProjectMaterialType[keyof typeof ProjectMaterialType] | null;
+
+
+export const ProjectMaterialType = {
+  madeira: 'madeira',
+  aluminio: 'aluminio',
+} as const;
+
 export interface Project {
   id: number;
   name: string;
@@ -49,6 +60,8 @@ export interface Project {
   medicaoDate?: string | null;
   /** @nullable */
   instalacaoStartDate?: string | null;
+  /** @nullable */
+  materialType?: ProjectMaterialType;
   createdAt: string;
 }
 
@@ -73,6 +86,14 @@ export const ProjectInputPriority = {
   high: 'high',
 } as const;
 
+export type ProjectInputMaterialType = typeof ProjectInputMaterialType[keyof typeof ProjectInputMaterialType];
+
+
+export const ProjectInputMaterialType = {
+  madeira: 'madeira',
+  aluminio: 'aluminio',
+} as const;
+
 export interface ProjectInput {
   /** @minLength 1 */
   name: string;
@@ -85,6 +106,7 @@ export interface ProjectInput {
   producaoEndDate?: string;
   medicaoDate?: string;
   instalacaoStartDate?: string;
+  materialType?: ProjectInputMaterialType;
 }
 
 export type ProjectUpdateStatus = typeof ProjectUpdateStatus[keyof typeof ProjectUpdateStatus];
@@ -108,6 +130,14 @@ export const ProjectUpdatePriority = {
   high: 'high',
 } as const;
 
+export type ProjectUpdateMaterialType = typeof ProjectUpdateMaterialType[keyof typeof ProjectUpdateMaterialType];
+
+
+export const ProjectUpdateMaterialType = {
+  madeira: 'madeira',
+  aluminio: 'aluminio',
+} as const;
+
 export interface ProjectUpdate {
   /** @minLength 1 */
   name?: string;
@@ -120,6 +150,7 @@ export interface ProjectUpdate {
   producaoEndDate?: string;
   medicaoDate?: string;
   instalacaoStartDate?: string;
+  materialType?: ProjectUpdateMaterialType;
 }
 
 export interface ProjectStats {

@@ -5,6 +5,7 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
+import type { ProjectUpdateMaterialType } from './projectUpdateMaterialType';
 import type { ProjectUpdatePriority } from './projectUpdatePriority';
 import type { ProjectUpdateStatus } from './projectUpdateStatus';
 
@@ -20,4 +21,5 @@ export interface ProjectUpdate {
   producaoEndDate?: string;
   medicaoDate?: string;
   instalacaoStartDate?: string;
+  materialType?: ProjectUpdateMaterialType;
 }

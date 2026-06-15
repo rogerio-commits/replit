@@ -28,6 +28,7 @@ function projectRow(p: typeof projectsTable.$inferSelect) {
     producaoEndDate: p.producaoEndDate ?? null,
     medicaoDate: p.medicaoDate ?? null,
     instalacaoStartDate: p.instalacaoStartDate ?? null,
+    materialType: p.materialType ?? null,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -69,6 +70,7 @@ router.post("/projects", requireGestor, async (req, res) => {
       producaoEndDate: (body.data as Record<string, unknown>).producaoEndDate as string ?? null,
       medicaoDate: (body.data as Record<string, unknown>).medicaoDate as string ?? null,
       instalacaoStartDate: (body.data as Record<string, unknown>).instalacaoStartDate as string ?? null,
+      materialType: (body.data as Record<string, unknown>).materialType as "madeira" | "aluminio" ?? null,
     })
     .returning();
 
@@ -108,6 +110,7 @@ router.patch("/projects/:id", requireGestor, async (req, res) => {
   if (raw.producaoEndDate !== undefined) updateData.producaoEndDate = raw.producaoEndDate;
   if (raw.medicaoDate !== undefined) updateData.medicaoDate = raw.medicaoDate;
   if (raw.instalacaoStartDate !== undefined) updateData.instalacaoStartDate = raw.instalacaoStartDate;
+  if (raw.materialType !== undefined) updateData.materialType = raw.materialType as "madeira" | "aluminio";
 
   const [project] = await db
     .update(projectsTable)

@@ -355,6 +355,7 @@ const newProjectSchema = z.object({
   producaoEndDate:     z.string().optional(),
   medicaoDate:         z.string().optional(),
   instalacaoStartDate: z.string().optional(),
+  materialType: z.enum(["madeira", "aluminio"]).optional(),
 });
 
 function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
@@ -365,7 +366,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
   const createProject = useCreateProject();
   const form = useForm<z.infer<typeof newProjectSchema>>({
     resolver: zodResolver(newProjectSchema),
-    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "", instalacaoStartDate: "" },
+    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "", instalacaoStartDate: "", materialType: undefined },
   });
 
   function onSubmit(values: z.infer<typeof newProjectSchema>) {
@@ -377,6 +378,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
       producaoEndDate: values.producaoEndDate || undefined,
       medicaoDate: values.medicaoDate || undefined,
       instalacaoStartDate: values.instalacaoStartDate || undefined,
+      materialType: values.materialType || undefined,
     }}, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
@@ -443,6 +445,16 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
                   <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
+            <FormField control={form.control} name="materialType" render={({ field }) => (
+              <FormItem><FormLabel>Tipo de Material</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Selecione o material" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="madeira">Madeira</SelectItem>
+                    <SelectItem value="aluminio">Alumínio</SelectItem>
+                  </SelectContent>
+                </Select></FormItem>
+            )} />
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
               <Button type="submit" disabled={createProject.isPending} data-testid="button-create-project">
@@ -469,6 +481,7 @@ const editProjectSchema = z.object({
   producaoEndDate:     z.string().optional(),
   medicaoDate:         z.string().optional(),
   instalacaoStartDate: z.string().optional(),
+  materialType: z.enum(["madeira", "aluminio"]).optional(),
 });
 
 function EditProjectDialog({ project, open, onOpenChange }: {
@@ -496,6 +509,7 @@ function EditProjectDialog({ project, open, onOpenChange }: {
       producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split("T")[0] : "",
       medicaoDate: project.medicaoDate ? project.medicaoDate.split("T")[0] : "",
       instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split("T")[0] : "",
+      materialType: (project.materialType as "madeira" | "aluminio" | undefined) ?? undefined,
     });
   }
 
@@ -509,6 +523,7 @@ function EditProjectDialog({ project, open, onOpenChange }: {
       producaoEndDate: values.producaoEndDate || undefined,
       medicaoDate: values.medicaoDate || undefined,
       instalacaoStartDate: values.instalacaoStartDate || undefined,
+      materialType: values.materialType || undefined,
     }}, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
@@ -593,6 +608,16 @@ function EditProjectDialog({ project, open, onOpenChange }: {
                   <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
+            <FormField control={form.control} name="materialType" render={({ field }) => (
+              <FormItem><FormLabel>Tipo de Material</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Selecione o material" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="madeira">Madeira</SelectItem>
+                    <SelectItem value="aluminio">Alumínio</SelectItem>
+                  </SelectContent>
+                </Select></FormItem>
+            )} />
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
               <Button type="submit" disabled={updateProject.isPending}>

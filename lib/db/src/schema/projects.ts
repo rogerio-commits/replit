@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const projectStatusEnum = pgEnum("project_status", ["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]);
 export const projectPriorityEnum = pgEnum("project_priority", ["low", "medium", "high"]);
+export const projectMaterialTypeEnum = pgEnum("project_material_type", ["madeira", "aluminio"]);
 
 export const projectsTable = pgTable("projects", {
   id: serial("id").primaryKey(),
@@ -17,6 +18,7 @@ export const projectsTable = pgTable("projects", {
   producaoEndDate: text("producao_end_date"),
   medicaoDate: text("medicao_date"),
   instalacaoStartDate: text("instalacao_start_date"),
+  materialType: projectMaterialTypeEnum("material_type"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

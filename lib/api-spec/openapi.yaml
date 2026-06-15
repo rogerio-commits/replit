@@ -478,6 +478,9 @@ components:
           type: ["string", "null"]
         instalacaoStartDate:
           type: ["string", "null"]
+        materialType:
+          type: ["string", "null"]
+          enum: [madeira, aluminio]
         createdAt:
           type: string
 
@@ -508,6 +511,9 @@ components:
           type: string
         instalacaoStartDate:
           type: string
+        materialType:
+          type: string
+          enum: [madeira, aluminio]
 
     ProjectUpdate:
       type: object
@@ -535,6 +541,9 @@ components:
           type: string
         instalacaoStartDate:
           type: string
+        materialType:
+          type: string
+          enum: [madeira, aluminio]
 
     ProjectStats:
       type: object

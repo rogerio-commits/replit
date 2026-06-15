@@ -37,6 +37,7 @@ export const ListProjectsResponseItem = zod.object({
   "producaoEndDate": zod.string().nullish(),
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
+  "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
   "createdAt": zod.string()
 })
 export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
@@ -58,7 +59,8 @@ export const CreateProjectBody = zod.object({
   "producaoStartDate": zod.string().optional(),
   "producaoEndDate": zod.string().optional(),
   "medicaoDate": zod.string().optional(),
-  "instalacaoStartDate": zod.string().optional()
+  "instalacaoStartDate": zod.string().optional(),
+  "materialType": zod.enum(['madeira', 'aluminio']).optional()
 })
 
 
@@ -81,6 +83,7 @@ export const GetProjectResponse = zod.object({
   "producaoEndDate": zod.string().nullish(),
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
+  "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
   "createdAt": zod.string()
 })
 
@@ -105,7 +108,8 @@ export const UpdateProjectBody = zod.object({
   "producaoStartDate": zod.string().optional(),
   "producaoEndDate": zod.string().optional(),
   "medicaoDate": zod.string().optional(),
-  "instalacaoStartDate": zod.string().optional()
+  "instalacaoStartDate": zod.string().optional(),
+  "materialType": zod.enum(['madeira', 'aluminio']).optional()
 })
 
 export const UpdateProjectResponse = zod.object({
@@ -120,6 +124,7 @@ export const UpdateProjectResponse = zod.object({
   "producaoEndDate": zod.string().nullish(),
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
+  "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
   "createdAt": zod.string()
 })
 

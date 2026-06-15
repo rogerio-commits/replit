@@ -61,6 +61,7 @@ const projectSchema = z.object({
   producaoEndDate: z.string().optional(),
   medicaoDate: z.string().optional(),
   instalacaoStartDate: z.string().optional(),
+  materialType: z.enum(["madeira", "aluminio"]).optional(),
 });
 
 const taskSchema = z.object({
@@ -153,6 +154,7 @@ export default function ProjectDetail() {
       producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split('T')[0] : "",
       medicaoDate: project.medicaoDate ? project.medicaoDate.split('T')[0] : "",
       instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split('T')[0] : "",
+      materialType: (project.materialType as "madeira" | "aluminio" | undefined) ?? undefined,
     } : undefined,
   });
 
@@ -424,6 +426,27 @@ export default function ProjectDetail() {
                         )}
                       />
                     </div>
+                    <FormField
+                      control={projectForm.control}
+                      name="materialType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de Material</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o material" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="madeira">Madeira</SelectItem>
+                              <SelectItem value="aluminio">Alumínio</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <DialogFooter>
                       <Button type="submit" disabled={updateProject.isPending}>
                         {updateProject.isPending ? "Saving..." : "Save Changes"}

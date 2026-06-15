@@ -56,6 +56,7 @@ const projectSchema = z.object({
   producaoEndDate: z.string().optional(),
   medicaoDate: z.string().optional(),
   instalacaoStartDate: z.string().optional(),
+  materialType: z.enum(["madeira", "aluminio"]).optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -114,6 +115,7 @@ export default function Projects() {
       producaoEndDate: "",
       medicaoDate: "",
       instalacaoStartDate: "",
+      materialType: undefined,
     },
   });
 
@@ -318,6 +320,27 @@ export default function Projects() {
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="materialType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Material</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o material" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="madeira">Madeira</SelectItem>
+                          <SelectItem value="aluminio">Alumínio</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <DialogFooter>
                   <Button type="submit" disabled={createProject.isPending}>
                     {createProject.isPending ? "Creating..." : "Create Project"}
