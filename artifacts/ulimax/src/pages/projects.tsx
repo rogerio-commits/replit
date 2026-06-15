@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateWithDaysCalc } from "@/components/date-with-days-calc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -244,7 +245,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Início do Projeto</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -257,7 +258,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Fim Estimado do Projeto</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("startDate")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -272,7 +273,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Início da Produção</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("endDate")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -285,7 +286,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Fim Estimado da Produção</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoStartDate")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -300,7 +301,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Data de Medição</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoEndDate")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -313,7 +314,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Início Est. da Instalação</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("medicaoDate")} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
