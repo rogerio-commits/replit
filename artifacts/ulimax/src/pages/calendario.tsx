@@ -514,6 +514,8 @@ export default function Calendario() {
   const [defaultTeam, setDefaultTeam]   = useState("");
   const [editingEvent, setEditingEvent] = useState<InstallationEvent | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InstallationEvent | null>(null);
+  const [newTeamOpen, setNewTeamOpen]   = useState(false);
+  const [newTeamName, setNewTeamName]   = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { toast }      = useToast();
@@ -623,6 +625,9 @@ export default function Calendario() {
             </Button>
           </div>
           <Button variant="ghost" size="sm" className="h-8" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
+          <Button variant="outline" size="sm" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
+            <Users className="mr-1.5 h-4 w-4" /> Nova Equipe
+          </Button>
           <Button size="sm" onClick={() => openCreate("", isoDate(new Date()))}>
             <Plus className="mr-1.5 h-4 w-4" /> Novo Evento
           </Button>
@@ -711,6 +716,54 @@ export default function Calendario() {
         defaultTeam={defaultTeam}
         editing={editingEvent}
       />
+
+      {/* ── Nova Equipe dialog ───────────────────────────────────────────── */}
+      <Dialog open={newTeamOpen} onOpenChange={(v) => { setNewTeamOpen(v); if (!v) setNewTeamName(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> Nova Equipe
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Nome da equipe</label>
+              <Input
+                placeholder="Ex: Equipe A — João, Maria"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const trimmed = newTeamName.trim();
+                    if (!trimmed) return;
+                    setNewTeamOpen(false);
+                    openCreate(trimmed, isoDate(new Date()));
+                  }
+                }}
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                Você poderá adicionar eventos a esta equipe no próximo passo.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setNewTeamOpen(false)}>Cancelar</Button>
+              <Button
+                disabled={!newTeamName.trim()}
+                onClick={() => {
+                  const trimmed = newTeamName.trim();
+                  if (!trimmed) return;
+                  setNewTeamOpen(false);
+                  openCreate(trimmed, isoDate(new Date()));
+                }}
+              >
+                Continuar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(v) => { if (!v) setDeleteTarget(null); }}>
         <AlertDialogContent>
