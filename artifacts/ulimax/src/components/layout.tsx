@@ -11,9 +11,11 @@ import {
   LogOut,
   ChevronDown,
   ShieldCheck,
+  Bell,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
+import { useAlertCounts } from "@/hooks/useAlerts";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import {
@@ -33,6 +35,7 @@ export function Layout({ children }: LayoutProps) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const isGestor = useIsGestor();
+  const alertCounts = useAlertCounts();
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -43,8 +46,9 @@ export function Layout({ children }: LayoutProps) {
     { href: "/kanban", label: "Kanban", icon: Columns3 },
     { href: "/members", label: "Equipe", icon: Users },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
+    { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
     ...(isGestor ? [{ href: "/access", label: "Acesso", icon: ShieldCheck }] : []),
-  ];
+  ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
 
   const initials = user?.firstName && user?.lastName
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
@@ -86,7 +90,17 @@ export function Layout({ children }: LayoutProps) {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge !== undefined && (
+                      <span className={cn(
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none",
+                        item.badgeDanger
+                          ? "bg-red-500 text-white"
+                          : "bg-amber-400 text-amber-900"
+                      )}>
+                        {item.badge}
+                      </span>
+                    )}
                   </div>
                 </Link>
               );

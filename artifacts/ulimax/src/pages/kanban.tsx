@@ -180,11 +180,25 @@ function DraggableTaskCard({ task }: { task: TaskItem }) {
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
+function instStatus(instalacaoStartDate: string | null | undefined, status: string): "overdue" | "approaching" | "ok" | "none" {
+  if (!instalacaoStartDate) return "none";
+  if (status === "em_instalacao") return "ok";
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const d = new Date(instalacaoStartDate.split("T")[0] + "T00:00:00");
+  const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return "overdue";
+  if (diff <= 7) return "approaching";
+  return "ok";
+}
+
 function ProjectCard({ project, isDragging = false, onEdit }: { project: ProjectItem; isDragging?: boolean; onEdit?: () => void }) {
+  const instState = instStatus(project.instalacaoStartDate, project.status);
   return (
     <div data-testid={`kanban-card-project-${project.id}`} className={cn(
       "bg-card border rounded-lg p-3 space-y-2 shadow-sm select-none",
       isDragging ? "shadow-xl rotate-1 opacity-90 ring-2 ring-primary/30" : "hover:shadow-md transition-shadow",
+      instState === "overdue"    && "border-red-400 dark:border-red-600",
+      instState === "approaching" && "border-amber-400 dark:border-amber-600",
     )}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-snug flex-1">{project.name}</p>
@@ -210,8 +224,13 @@ function ProjectCard({ project, isDragging = false, onEdit }: { project: Project
           {PRIORITY_LABELS[project.priority]}
         </Badge>
         {project.instalacaoStartDate && (
-          <div className="flex items-center gap-1 text-[11px] text-red-600 font-medium">
-            <CalendarDays className="h-3 w-3" />
+          <div className={cn(
+            "flex items-center gap-1 text-[11px] font-medium",
+            instState === "overdue"     ? "text-red-600"   :
+            instState === "approaching" ? "text-amber-600" :
+            "text-muted-foreground"
+          )}>
+            {instState === "overdue" ? <AlertCircle className="h-3 w-3" /> : <CalendarDays className="h-3 w-3" />}
             <span>Inst. {formatDate(project.instalacaoStartDate)}</span>
           </div>
         )}
