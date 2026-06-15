@@ -9,6 +9,7 @@
 export type DashboardSummaryProjectsByStatus = {
   a_iniciar: number;
   em_projeto: number;
+  em_aprovacao: number;
   em_producao: number;
   aguardando_instalacao: number;
   em_instalacao: number;

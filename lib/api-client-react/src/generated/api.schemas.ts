@@ -15,6 +15,7 @@ export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
 export const ProjectStatus = {
   a_iniciar: 'a_iniciar',
   em_projeto: 'em_projeto',
+  em_aprovacao: 'em_aprovacao',
   em_producao: 'em_producao',
   aguardando_instalacao: 'aguardando_instalacao',
   em_instalacao: 'em_instalacao',
@@ -49,6 +50,7 @@ export type ProjectInputStatus = typeof ProjectInputStatus[keyof typeof ProjectI
 export const ProjectInputStatus = {
   a_iniciar: 'a_iniciar',
   em_projeto: 'em_projeto',
+  em_aprovacao: 'em_aprovacao',
   em_producao: 'em_producao',
   aguardando_instalacao: 'aguardando_instalacao',
   em_instalacao: 'em_instalacao',
@@ -79,6 +81,7 @@ export type ProjectUpdateStatus = typeof ProjectUpdateStatus[keyof typeof Projec
 export const ProjectUpdateStatus = {
   a_iniciar: 'a_iniciar',
   em_projeto: 'em_projeto',
+  em_aprovacao: 'em_aprovacao',
   em_producao: 'em_producao',
   aguardando_instalacao: 'aguardando_instalacao',
   em_instalacao: 'em_instalacao',
@@ -239,6 +242,7 @@ export interface MemberUpdate {
 export type DashboardSummaryProjectsByStatus = {
   a_iniciar: number;
   em_projeto: number;
+  em_aprovacao: number;
   em_producao: number;
   aguardando_instalacao: number;
   em_instalacao: number;
@@ -320,6 +324,7 @@ export type ListProjectsStatus = typeof ListProjectsStatus[keyof typeof ListProj
 export const ListProjectsStatus = {
   a_iniciar: 'a_iniciar',
   em_projeto: 'em_projeto',
+  em_aprovacao: 'em_aprovacao',
   em_producao: 'em_producao',
   aguardando_instalacao: 'aguardando_instalacao',
   em_instalacao: 'em_instalacao',

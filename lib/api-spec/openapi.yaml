@@ -45,7 +45,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
+            enum: [a_iniciar, em_projeto, em_aprovacao, em_producao, aguardando_instalacao, em_instalacao]
         - name: priority
           in: query
           schema:
@@ -462,7 +462,7 @@ components:
           type: ["string", "null"]
         status:
           type: string
-          enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
+          enum: [a_iniciar, em_projeto, em_aprovacao, em_producao, aguardando_instalacao, em_instalacao]
         priority:
           type: string
           enum: [low, medium, high]
@@ -484,7 +484,7 @@ components:
           type: string
         status:
           type: string
-          enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
+          enum: [a_iniciar, em_projeto, em_aprovacao, em_producao, aguardando_instalacao, em_instalacao]
         priority:
           type: string
           enum: [low, medium, high]
@@ -503,7 +503,7 @@ components:
           type: string
         status:
           type: string
-          enum: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
+          enum: [a_iniciar, em_projeto, em_aprovacao, em_producao, aguardando_instalacao, em_instalacao]
         priority:
           type: string
           enum: [low, medium, high]
@@ -669,10 +669,11 @@ components:
           properties:
             a_iniciar: { type: integer }
             em_projeto: { type: integer }
+            em_aprovacao: { type: integer }
             em_producao: { type: integer }
             aguardando_instalacao: { type: integer }
             em_instalacao: { type: integer }
-          required: [a_iniciar, em_projeto, em_producao, aguardando_instalacao, em_instalacao]
+          required: [a_iniciar, em_projeto, em_aprovacao, em_producao, aguardando_instalacao, em_instalacao]
         tasksByStatus:
           type: object
           properties:

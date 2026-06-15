@@ -48,7 +48,7 @@ import { useIsGestor } from "@/hooks/useAppUser";
 const projectSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  status: z.enum(["a_iniciar", "em_projeto", "em_producao", "aguardando_instalacao", "em_instalacao"]),
+  status: z.enum(["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]),
   priority: z.enum(["low", "medium", "high"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -59,6 +59,7 @@ type ProjectFormValues = z.infer<typeof projectSchema>;
 const STATUS_LABELS: Record<string, string> = {
   a_iniciar: "A Iniciar",
   em_projeto: "Em Projeto",
+  em_aprovacao: "Em Aprovação",
   em_producao: "Em Produção",
   aguardando_instalacao: "Aguardando Instalação",
   em_instalacao: "Em Instalação",
@@ -68,6 +69,7 @@ function getStatusColor(status: string) {
   switch (status) {
     case "a_iniciar": return "bg-slate-500/10 text-slate-600 border-slate-200";
     case "em_projeto": return "bg-violet-500/10 text-violet-600 border-violet-200";
+    case "em_aprovacao": return "bg-purple-500/10 text-purple-600 border-purple-200";
     case "em_producao": return "bg-blue-500/10 text-blue-600 border-blue-200";
     case "aguardando_instalacao": return "bg-amber-500/10 text-amber-600 border-amber-200";
     case "em_instalacao": return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
@@ -191,6 +193,7 @@ export default function Projects() {
                           <SelectContent>
                             <SelectItem value="a_iniciar">A Iniciar</SelectItem>
                             <SelectItem value="em_projeto">Em Projeto</SelectItem>
+                            <SelectItem value="em_aprovacao">Em Aprovação</SelectItem>
                             <SelectItem value="em_producao">Em Produção</SelectItem>
                             <SelectItem value="aguardando_instalacao">Aguardando Instalação</SelectItem>
                             <SelectItem value="em_instalacao">Em Instalação</SelectItem>
@@ -282,6 +285,7 @@ export default function Projects() {
                 <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="a_iniciar">A Iniciar</SelectItem>
                 <SelectItem value="em_projeto">Em Projeto</SelectItem>
+                <SelectItem value="em_aprovacao">Em Aprovação</SelectItem>
                 <SelectItem value="em_producao">Em Produção</SelectItem>
                 <SelectItem value="aguardando_instalacao">Aguardando Instalação</SelectItem>
                 <SelectItem value="em_instalacao">Em Instalação</SelectItem>

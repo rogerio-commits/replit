@@ -2,7 +2,7 @@ import { pgTable, text, serial, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const projectStatusEnum = pgEnum("project_status", ["a_iniciar", "em_projeto", "em_producao", "aguardando_instalacao", "em_instalacao"]);
+export const projectStatusEnum = pgEnum("project_status", ["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]);
 export const projectPriorityEnum = pgEnum("project_priority", ["low", "medium", "high"]);
 
 export const projectsTable = pgTable("projects", {
