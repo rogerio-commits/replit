@@ -444,6 +444,38 @@ export const UpdateUserRoleResponse = zod.object({
 
 
 /**
+ * @summary List pending invitations (gestor only)
+ */
+export const ListInvitationsResponseItem = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "intendedRole": zod.enum(['gestor', 'executor', 'observador']),
+  "clerkInvitationId": zod.string().nullish(),
+  "invitedAt": zod.string()
+})
+export const ListInvitationsResponse = zod.array(ListInvitationsResponseItem)
+
+
+/**
+ * @summary Send a team invitation (gestor only)
+ */
+export const CreateInvitationBody = zod.object({
+  "email": zod.string(),
+  "name": zod.string(),
+  "intendedRole": zod.enum(['gestor', 'executor', 'observador'])
+})
+
+
+/**
+ * @summary Revoke a pending invitation (gestor only)
+ */
+export const DeleteInvitationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List installation events
  */
 export const ListInstallationEventsQueryParams = zod.object({

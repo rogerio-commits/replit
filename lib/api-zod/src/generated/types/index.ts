@@ -9,6 +9,7 @@
 export * from './activityItem';
 export * from './activityItemType';
 export * from './appUser';
+export * from './createInviteBody';
 export * from './dashboardSummary';
 export * from './dashboardSummaryProjectsByStatus';
 export * from './dashboardSummaryTasksByPriority';
@@ -18,6 +19,7 @@ export * from './installationEvent';
 export * from './installationEventInput';
 export * from './installationEventType';
 export * from './installationEventUpdate';
+export * from './invite';
 export * from './listInstallationEventsParams';
 export * from './listProjectsParams';
 export * from './listProjectsPriority';

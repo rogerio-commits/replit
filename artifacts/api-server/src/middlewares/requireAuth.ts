@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { getAuth } from "@clerk/express";
 import { clerkClient } from "@clerk/express";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, invitesTable } from "@workspace/db";
 import { eq, count } from "drizzle-orm";
 
 export type AppUserRole = "gestor" | "executor" | "observador";
@@ -51,7 +51,18 @@ export async function requireAuth(
       .select({ value: count() })
       .from(usersTable);
 
-    const role: AppUserRole = userCount === 0 ? "gestor" : "observador";
+    let role: AppUserRole = userCount === 0 ? "gestor" : "observador";
+
+    if (email) {
+      const [pending] = await db
+        .select()
+        .from(invitesTable)
+        .where(eq(invitesTable.email, email.toLowerCase()));
+      if (pending) {
+        role = pending.intendedRole as AppUserRole;
+        await db.delete(invitesTable).where(eq(invitesTable.id, pending.id));
+      }
+    }
 
     [user] = await db
       .insert(usersTable)

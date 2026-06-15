@@ -7,6 +7,7 @@ import membersRouter from "./members";
 import dashboardRouter from "./dashboard";
 import usersRouter from "./users";
 import installationEventsRouter from "./installation-events";
+import invitationsRouter from "./invitations";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(membersRouter);
 router.use(dashboardRouter);
 router.use(usersRouter);
 router.use(installationEventsRouter);
+router.use(invitationsRouter);
 
 export default router;

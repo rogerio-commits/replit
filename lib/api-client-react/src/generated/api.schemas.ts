@@ -369,6 +369,22 @@ export interface UserRoleUpdate {
   role: UserRole;
 }
 
+export interface Invite {
+  id: number;
+  email: string;
+  name: string;
+  intendedRole: UserRole;
+  /** @nullable */
+  clerkInvitationId?: string | null;
+  invitedAt: string;
+}
+
+export interface CreateInviteBody {
+  email: string;
+  name: string;
+  intendedRole: UserRole;
+}
+
 export type InstallationEventType = typeof InstallationEventType[keyof typeof InstallationEventType];
 
 

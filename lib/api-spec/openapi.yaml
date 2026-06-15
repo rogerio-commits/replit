@@ -22,6 +22,8 @@ tags:
     description: User and role management
   - name: calendario
     description: Installation calendar events
+  - name: invitations
+    description: Team invite management
 paths:
   /healthz:
     get:
@@ -437,6 +439,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AppUser"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /invitations:
+    get:
+      operationId: listInvitations
+      tags: [invitations]
+      summary: List pending invitations (gestor only)
+      responses:
+        "200":
+          description: List of pending invitations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invite"
+        "403":
+          description: Forbidden
+    post:
+      operationId: createInvitation
+      tags: [invitations]
+      summary: Send a team invitation (gestor only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInviteBody"
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invite"
+        "403":
+          description: Forbidden
+        "409":
+          description: Already invited or already has an account
+
+  /invitations/{id}:
+    delete:
+      operationId: deleteInvitation
+      tags: [invitations]
+      summary: Revoke a pending invitation (gestor only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Invitation revoked
         "403":
           description: Forbidden
         "404":
@@ -861,6 +920,34 @@ components:
       required: [role]
       properties:
         role:
+          $ref: "#/components/schemas/UserRole"
+
+    Invite:
+      type: object
+      required: [id, email, name, intendedRole, invitedAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        intendedRole:
+          $ref: "#/components/schemas/UserRole"
+        clerkInvitationId:
+          type: ["string", "null"]
+        invitedAt:
+          type: string
+
+    CreateInviteBody:
+      type: object
+      required: [email, name, intendedRole]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        intendedRole:
           $ref: "#/components/schemas/UserRole"
 
     InstallationEventType:
