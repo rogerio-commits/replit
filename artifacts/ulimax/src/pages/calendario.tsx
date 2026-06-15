@@ -302,6 +302,7 @@ function GanttRow({
   onDayClick,
   onEditEvent,
   onDeleteEvent,
+  onRenameTeam,
 }: {
   team: string;
   events: InstallationEvent[];
@@ -312,7 +313,25 @@ function GanttRow({
   onDayClick: (team: string, date: string) => void;
   onEditEvent: (e: InstallationEvent) => void;
   onDeleteEvent: (e: InstallationEvent) => void;
+  onRenameTeam: (oldName: string, newName: string) => void;
 }) {
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue]     = useState(team);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function startEdit() {
+    setNameValue(team);
+    setEditingName(true);
+    setTimeout(() => inputRef.current?.select(), 0);
+  }
+
+  function commitEdit() {
+    setEditingName(false);
+    const trimmed = nameValue.trim();
+    if (trimmed && trimmed !== team) onRenameTeam(team, trimmed);
+    else setNameValue(team);
+  }
+
   const subRows = useMemo(() => packSubRows(events), [events]);
   const numSubRows = Math.max(1, new Set(subRows.values()).size);
   const rowH = numSubRows * (BAR_H + BAR_GAP) + ROW_PAD * 2;
@@ -347,16 +366,50 @@ function GanttRow({
 
   return (
     <div className={cn("flex", !isLast && "border-b")}>
-      {/* Left: team name */}
+      {/* Left: team name (click to rename) */}
       <div
-        className="sticky left-0 z-10 bg-card border-r flex items-center px-3 shrink-0"
+        className="sticky left-0 z-10 bg-card border-r flex items-center px-3 shrink-0 group/team"
         style={{ width: LEFT_W, minHeight: rowH }}
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0 w-full">
           <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <span className={cn("text-sm font-medium truncate", team === NO_TEAM && "text-muted-foreground italic")}>
-            {team}
-          </span>
+          {editingName ? (
+            <input
+              ref={inputRef}
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); commitEdit(); }
+                if (e.key === "Escape") { setEditingName(false); setNameValue(team); }
+              }}
+              className="flex-1 min-w-0 text-sm font-medium bg-transparent border-b border-primary outline-none py-0.5"
+              autoFocus
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={startEdit}
+              title="Clique para renomear a equipe"
+              className={cn(
+                "flex-1 min-w-0 text-left text-sm font-medium truncate",
+                "rounded px-1 -mx-1 hover:bg-muted transition-colors",
+                team === NO_TEAM && "text-muted-foreground italic"
+              )}
+            >
+              {team}
+            </button>
+          )}
+          {!editingName && (
+            <button
+              type="button"
+              onClick={startEdit}
+              title="Renomear equipe"
+              className="shrink-0 opacity-0 group-hover/team:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
+            >
+              <Pencil className="h-3 w-3 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -466,8 +519,25 @@ export default function Calendario() {
   const { toast }      = useToast();
   const qc             = useQueryClient();
   const deleteMut      = useDeleteInstallationEvent();
+  const updateMut      = useUpdateInstallationEvent();
 
   const { data: events = [], isLoading } = useListInstallationEvents();
+
+  async function handleRenameTeam(oldName: string, newName: string) {
+    const toUpdate = events.filter(
+      (e) => (e.teamDescription?.trim() || NO_TEAM) === oldName
+    );
+    await Promise.all(
+      toUpdate.map((ev) =>
+        updateMut.mutateAsync({
+          id: ev.id,
+          data: { teamDescription: newName === NO_TEAM ? undefined : newName },
+        })
+      )
+    );
+    qc.invalidateQueries({ queryKey: getListInstallationEventsQueryKey() });
+    toast({ title: `Equipe renomeada para "${newName}".` });
+  }
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd   = endOfMonth(currentMonth);
@@ -617,6 +687,7 @@ export default function Calendario() {
                 onDayClick={(t, d) => openCreate(t, d)}
                 onEditEvent={openEdit}
                 onDeleteEvent={(e) => setDeleteTarget(e)}
+                onRenameTeam={handleRenameTeam}
               />
             ))}
 
