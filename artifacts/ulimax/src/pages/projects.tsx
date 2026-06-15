@@ -43,6 +43,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Briefcase, Plus, Search, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsGestor } from "@/hooks/useAppUser";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -89,6 +90,7 @@ export default function Projects() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isGestor = useIsGestor();
 
   const { data: projects, isLoading } = useListProjects();
   const createProject = useCreateProject();
@@ -134,11 +136,11 @@ export default function Projects() {
           <p className="text-muted-foreground mt-1">Manage and track all engineering projects.</p>
         </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        {isGestor && <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Project
+              Novo Projeto
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
@@ -257,7 +259,7 @@ export default function Projects() {
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       <Card>

@@ -35,6 +35,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Search, Plus, Trash2, Edit, Mail, HardHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsGestor } from "@/hooks/useAppUser";
 
 const memberSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -51,6 +52,7 @@ export default function Members() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isGestor = useIsGestor();
 
   const { data: members, isLoading } = useListMembers();
   
@@ -132,7 +134,7 @@ export default function Members() {
           <p className="text-muted-foreground mt-1">Manage personnel, roles, and contact info.</p>
         </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={(open) => {
+        {isGestor && <Dialog open={isCreateOpen} onOpenChange={(open) => {
           setIsCreateOpen(open);
           if (!open) {
             setEditingMember(null);
@@ -146,7 +148,7 @@ export default function Members() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Member
+              Adicionar Membro
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -202,7 +204,7 @@ export default function Members() {
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       <Card>
@@ -250,7 +252,7 @@ export default function Members() {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2">
+                  {isGestor && <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(member)} className="h-8 text-muted-foreground">
                       <Edit className="h-3.5 w-3.5 mr-1" />
                       Edit
@@ -279,7 +281,7 @@ export default function Members() {
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
-                  </div>
+                  </div>}
                 </Card>
               ))}
             </div>

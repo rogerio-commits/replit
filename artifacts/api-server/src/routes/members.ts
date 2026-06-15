@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, membersTable } from "@workspace/db";
+import { requireGestor } from "../middlewares/requireAuth";
 import { eq } from "drizzle-orm";
 import {
   CreateMemberBody,
@@ -25,7 +26,7 @@ router.get("/members", async (_req, res) => {
   );
 });
 
-router.post("/members", async (req, res) => {
+router.post("/members", requireGestor, async (req, res) => {
   const body = CreateMemberBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
@@ -70,7 +71,7 @@ router.get("/members/:id", async (req, res) => {
   });
 });
 
-router.patch("/members/:id", async (req, res) => {
+router.patch("/members/:id", requireGestor, async (req, res) => {
   const params = UpdateMemberParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateMemberBody.safeParse(req.body);
   if (!params.success || !body.success) {
@@ -101,7 +102,7 @@ router.patch("/members/:id", async (req, res) => {
   });
 });
 
-router.delete("/members/:id", async (req, res) => {
+router.delete("/members/:id", requireGestor, async (req, res) => {
   const params = DeleteMemberParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 

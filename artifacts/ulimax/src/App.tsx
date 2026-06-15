@@ -14,6 +14,7 @@ import ProjectDetail from "@/pages/project-detail";
 import Tasks from "@/pages/tasks";
 import Members from "@/pages/members";
 import Kanban from "@/pages/kanban";
+import Access from "@/pages/access";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -159,6 +160,7 @@ function ProtectedRoutes() {
             <Route path="/tasks" component={Tasks} />
             <Route path="/kanban" component={Kanban} />
             <Route path="/members" component={Members} />
+            <Route path="/access" component={Access} />
             <Route component={NotFound} />
           </Switch>
         </Layout>

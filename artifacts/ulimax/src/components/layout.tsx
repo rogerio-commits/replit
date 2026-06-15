@@ -9,8 +9,10 @@ import {
   Columns3,
   LogOut,
   ChevronDown,
+  ShieldCheck,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
+import { useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import {
@@ -29,6 +31,7 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { signOut } = useClerk();
   const { user } = useUser();
+  const isGestor = useIsGestor();
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -38,6 +41,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/tasks", label: "Tarefas", icon: CheckSquare },
     { href: "/kanban", label: "Kanban", icon: Columns3 },
     { href: "/members", label: "Equipe", icon: Users },
+    ...(isGestor ? [{ href: "/access", label: "Acesso", icon: ShieldCheck }] : []),
   ];
 
   const initials = user?.firstName && user?.lastName

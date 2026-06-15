@@ -362,3 +362,48 @@ export const GetRecentActivityResponseItem = zod.object({
 export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem)
 
 
+/**
+ * @summary Get current authenticated user
+ */
+export const GetMeResponse = zod.object({
+  "id": zod.number(),
+  "clerkUserId": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['gestor', 'colaborador']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary List all users (gestor only)
+ */
+export const ListUsersResponseItem = zod.object({
+  "id": zod.number(),
+  "clerkUserId": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['gestor', 'colaborador']),
+  "createdAt": zod.string()
+})
+export const ListUsersResponse = zod.array(ListUsersResponseItem)
+
+
+/**
+ * @summary Update user role (gestor only)
+ */
+export const UpdateUserRoleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateUserRoleBody = zod.object({
+  "role": zod.enum(['gestor', 'colaborador'])
+})
+
+export const UpdateUserRoleResponse = zod.object({
+  "id": zod.number(),
+  "clerkUserId": zod.string(),
+  "email": zod.string(),
+  "role": zod.enum(['gestor', 'colaborador']),
+  "createdAt": zod.string()
+})
+
+

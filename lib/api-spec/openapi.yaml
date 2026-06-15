@@ -18,6 +18,8 @@ tags:
     description: Team member management
   - name: dashboard
     description: Dashboard and summary endpoints
+  - name: users
+    description: User and role management
 paths:
   /healthz:
     get:
@@ -377,6 +379,67 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityItem"
 
+  /me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+        "401":
+          description: Unauthorized
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (gestor only)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppUser"
+        "403":
+          description: Forbidden
+
+  /users/{id}:
+    patch:
+      operationId: updateUserRole
+      tags: [users]
+      summary: Update user role (gestor only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRoleUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppUser"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -645,3 +708,29 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+
+    UserRole:
+      type: string
+      enum: [gestor, colaborador]
+
+    AppUser:
+      type: object
+      required: [id, clerkUserId, email, role, createdAt]
+      properties:
+        id:
+          type: integer
+        clerkUserId:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+
+    UserRoleUpdate:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: "#/components/schemas/UserRole"

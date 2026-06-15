@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { projectsTable } from "@workspace/db";
+import { requireGestor } from "../middlewares/requireAuth";
 import { eq, sql } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
@@ -43,7 +44,7 @@ router.get("/projects", async (req, res) => {
   );
 });
 
-router.post("/projects", async (req, res) => {
+router.post("/projects", requireGestor, async (req, res) => {
   const body = CreateProjectBody.safeParse(req.body);
   if (!body.success) {
     return res.status(400).json({ error: "Invalid body" });
@@ -96,7 +97,7 @@ router.get("/projects/:id", async (req, res) => {
   });
 });
 
-router.patch("/projects/:id", async (req, res) => {
+router.patch("/projects/:id", requireGestor, async (req, res) => {
   const params = UpdateProjectParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateProjectBody.safeParse(req.body);
   if (!params.success || !body.success) {
@@ -131,7 +132,7 @@ router.patch("/projects/:id", async (req, res) => {
   });
 });
 
-router.delete("/projects/:id", async (req, res) => {
+router.delete("/projects/:id", requireGestor, async (req, res) => {
   const params = DeleteProjectParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 

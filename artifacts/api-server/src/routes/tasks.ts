@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, tasksTable, membersTable, projectsTable } from "@workspace/db";
+import { requireGestor } from "../middlewares/requireAuth";
 import { eq, and } from "drizzle-orm";
 import {
   ListTasksQueryParams,
@@ -66,7 +67,7 @@ router.get("/tasks", async (req, res) => {
   );
 });
 
-router.post("/tasks", async (req, res) => {
+router.post("/tasks", requireGestor, async (req, res) => {
   const body = CreateTaskBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
@@ -141,7 +142,7 @@ router.get("/tasks/:id", async (req, res) => {
   });
 });
 
-router.patch("/tasks/:id", async (req, res) => {
+router.patch("/tasks/:id", requireGestor, async (req, res) => {
   const params = UpdateTaskParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateTaskBody.safeParse(req.body);
   if (!params.success || !body.success) {
@@ -191,7 +192,7 @@ router.patch("/tasks/:id", async (req, res) => {
   });
 });
 
-router.delete("/tasks/:id", async (req, res) => {
+router.delete("/tasks/:id", requireGestor, async (req, res) => {
   const params = DeleteTaskParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 

@@ -45,6 +45,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useIsGestor } from "@/hooks/useAppUser";
 
 const taskSchema = z.object({
   projectId: z.coerce.number().min(1, "Project is required"),
@@ -86,6 +87,7 @@ export default function Tasks() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isGestor = useIsGestor();
 
   const { data: tasks, isLoading: isTasksLoading } = useListTasks();
   const { data: projects } = useListProjects();
@@ -186,7 +188,7 @@ export default function Tasks() {
           <p className="text-muted-foreground mt-1">Manage deliverables across all projects.</p>
         </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={(open) => {
+        {isGestor && <Dialog open={isCreateOpen} onOpenChange={(open) => {
           setIsCreateOpen(open);
           if (!open) {
             setEditingTask(null);
@@ -204,7 +206,7 @@ export default function Tasks() {
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Task
+              Nova Tarefa
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
@@ -353,7 +355,7 @@ export default function Tasks() {
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
 
       <Card>
@@ -446,7 +448,7 @@ export default function Tasks() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                    {isGestor && <div className="flex items-center gap-2 self-end md:self-center shrink-0">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -473,7 +475,7 @@ export default function Tasks() {
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
-                    </div>
+                    </div>}
                   </div>
                 </Card>
               ))}

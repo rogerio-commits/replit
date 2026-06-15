@@ -289,6 +289,26 @@ export interface ActivityItem {
   createdAt: string;
 }
 
+export type UserRole = typeof UserRole[keyof typeof UserRole];
+
+
+export const UserRole = {
+  gestor: 'gestor',
+  colaborador: 'colaborador',
+} as const;
+
+export interface AppUser {
+  id: number;
+  clerkUserId: string;
+  email: string;
+  role: UserRole;
+  createdAt: string;
+}
+
+export interface UserRoleUpdate {
+  role: UserRole;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

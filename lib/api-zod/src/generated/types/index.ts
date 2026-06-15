@@ -8,6 +8,7 @@
 
 export * from './activityItem';
 export * from './activityItemType';
+export * from './appUser';
 export * from './dashboardSummary';
 export * from './dashboardSummaryProjectsByStatus';
 export * from './dashboardSummaryTasksByPriority';
@@ -41,3 +42,5 @@ export * from './taskStatus';
 export * from './taskUpdate';
 export * from './taskUpdatePriority';
 export * from './taskUpdateStatus';
+export * from './userRole';
+export * from './userRoleUpdate';
