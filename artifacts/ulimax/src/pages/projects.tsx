@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { 
   useListProjects, 
   useCreateProject, 
@@ -92,6 +93,27 @@ function getPriorityColor(priority: string) {
     case "low": return "text-emerald-500";
     default: return "text-slate-500";
   }
+}
+
+const PRIORITY_LABELS: Record<string, string> = {
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
+};
+
+function DateItem({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{label}</p>
+      {value ? (
+        <p className="text-xs font-medium leading-none">
+          {format(parseISO(value), "d MMM", { locale: ptBR })}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground/40 leading-none">—</p>
+      )}
+    </div>
+  );
 }
 
 export default function Projects() {
@@ -422,24 +444,58 @@ export default function Projects() {
                 <Link key={project.id} href={`/projects/${project.id}`}>
                   <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full">
                     <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg line-clamp-1">{project.name}</CardTitle>
-                        <Badge variant="outline" className={getStatusColor(project.status)}>
+                      <div className="flex justify-between items-start gap-2">
+                        <CardTitle className="text-base line-clamp-1">{project.name}</CardTitle>
+                        <Badge variant="outline" className={`${getStatusColor(project.status)} shrink-0 text-[10px]`}>
                           {STATUS_LABELS[project.status] ?? project.status}
                         </Badge>
                       </div>
-                      <CardDescription className="line-clamp-2 mt-1 min-h-[40px]">
-                        {project.description || "No description provided."}
-                      </CardDescription>
+                      {project.description && (
+                        <CardDescription className="line-clamp-1 mt-0.5 text-xs">
+                          {project.description}
+                        </CardDescription>
+                      )}
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex justify-between items-center text-sm mt-2">
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <AlertCircle className={`h-4 w-4 ${getPriorityColor(project.priority)}`} />
-                          <span className="capitalize">{project.priority} priority</span>
+                    <CardContent className="space-y-3 pt-0">
+                      {/* Priority + Material */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <AlertCircle className={`h-3.5 w-3.5 ${getPriorityColor(project.priority)}`} />
+                          <span>{PRIORITY_LABELS[project.priority] ?? project.priority}</span>
                         </div>
-                        <div className="text-muted-foreground">
-                          {project.startDate ? format(new Date(project.startDate), 'MMM d, yyyy') : 'No start date'}
+                        {project.materialType && (
+                          <Badge variant="secondary" className="text-[10px] h-5">
+                            {project.materialType === "madeira" ? "Madeira" : "Alumínio"}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Projeto */}
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Projeto</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <DateItem label="Início" value={project.startDate} />
+                          <DateItem label="Fim Est." value={project.endDate} />
+                          <DateItem label="Final" value={project.finalDate} />
+                        </div>
+                      </div>
+
+                      {/* Produção */}
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Produção</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <DateItem label="Início" value={project.producaoStartDate} />
+                          <DateItem label="Fim Est." value={project.producaoEndDate} />
+                          <DateItem label="Final" value={project.producaoFinalDate} />
+                        </div>
+                      </div>
+
+                      {/* Medição & Instalação */}
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Medição & Instalação</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <DateItem label="Medição" value={project.medicaoDate} />
+                          <DateItem label="Início Instal." value={project.instalacaoStartDate} />
                         </div>
                       </div>
                     </CardContent>
