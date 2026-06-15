@@ -13,6 +13,21 @@ export function addBusinessDays(fromDate: string, days: number): string {
   return date.toISOString().split("T")[0];
 }
 
+function countBusinessDays(fromDate: string, toDate: string): number {
+  if (!fromDate || !toDate) return 0;
+  const from = new Date(fromDate + "T12:00:00");
+  const to = new Date(toDate + "T12:00:00");
+  if (to <= from) return 0;
+  let count = 0;
+  const current = new Date(from);
+  while (current < to) {
+    current.setDate(current.getDate() + 1);
+    const d = current.getDay();
+    if (d !== 0 && d !== 6) count++;
+  }
+  return count;
+}
+
 function formatRefLabel(iso: string): string {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
@@ -29,16 +44,15 @@ export function DateWithDaysCalc({ value, onChange, referenceDate, disabled }: D
   const [days, setDays] = useState<string>("");
 
   useEffect(() => {
-    const n = parseInt(days, 10);
-    if (n > 0 && referenceDate) {
-      const calculated = addBusinessDays(referenceDate, n);
-      if (calculated && calculated !== value) onChange(calculated);
+    if (value && referenceDate) {
+      const computed = countBusinessDays(referenceDate, value);
+      setDays(computed > 0 ? String(computed) : "");
+    } else {
+      setDays("");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [referenceDate]);
+  }, [value, referenceDate]);
 
   function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDays("");
     onChange(e.target.value);
   }
 
