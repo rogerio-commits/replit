@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <g transform="translate(10, 8)">
+    <path d="M22 28H2C2 20 8 14 15 12.5V10H17V12.5C24 14 30 20 30 28H22Z" fill="#ff8000"/>
+    <rect x="1" y="28" width="30" height="4" rx="2" fill="#ff8000"/>
+    <rect x="14" y="10" width="4" height="6" rx="1" fill="#cc6600"/>
+  </g>
+  <text x="52" y="38" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="22" letter-spacing="2" fill="#1a1a2e">ULIMAX</text>
+</svg>
