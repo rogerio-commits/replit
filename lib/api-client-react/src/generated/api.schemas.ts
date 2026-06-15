@@ -368,6 +368,42 @@ export interface UserRoleUpdate {
   role: UserRole;
 }
 
+export interface InstallationEvent {
+  id: number;
+  title: string;
+  /** @nullable */
+  projectId?: number | null;
+  /** @nullable */
+  teamDescription?: string | null;
+  startDate: string;
+  /** @nullable */
+  endDate?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  color: string;
+  createdAt: string;
+}
+
+export interface InstallationEventInput {
+  title: string;
+  projectId?: number;
+  teamDescription?: string;
+  startDate: string;
+  endDate?: string;
+  notes?: string;
+  color?: string;
+}
+
+export interface InstallationEventUpdate {
+  title?: string;
+  projectId?: number;
+  teamDescription?: string;
+  startDate?: string;
+  endDate?: string;
+  notes?: string;
+  color?: string;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;
@@ -419,4 +455,11 @@ export const ListTasksPriority = {
   medium: 'medium',
   high: 'high',
 } as const;
+
+export type ListInstallationEventsParams = {
+/**
+ * Filter by month in YYYY-MM format
+ */
+month?: string;
+};
 

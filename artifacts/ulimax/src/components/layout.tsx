@@ -7,6 +7,7 @@ import {
   Users,
   HardHat,
   Columns3,
+  CalendarDays,
   LogOut,
   ChevronDown,
   ShieldCheck,
@@ -41,6 +42,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/tasks", label: "Tarefas", icon: CheckSquare },
     { href: "/kanban", label: "Kanban", icon: Columns3 },
     { href: "/members", label: "Equipe", icon: Users },
+    { href: "/calendario", label: "Calendário", icon: CalendarDays },
     ...(isGestor ? [{ href: "/access", label: "Acesso", icon: ShieldCheck }] : []),
   ];
 

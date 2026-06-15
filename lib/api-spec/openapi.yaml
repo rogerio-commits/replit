@@ -20,6 +20,8 @@ tags:
     description: Dashboard and summary endpoints
   - name: users
     description: User and role management
+  - name: calendario
+    description: Installation calendar events
 paths:
   /healthz:
     get:
@@ -440,6 +442,86 @@ paths:
         "404":
           description: Not found
 
+  /installation-events:
+    get:
+      operationId: listInstallationEvents
+      tags: [calendario]
+      summary: List installation events
+      parameters:
+        - name: month
+          in: query
+          description: "Filter by month in YYYY-MM format"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of installation events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstallationEvent"
+    post:
+      operationId: createInstallationEvent
+      tags: [calendario]
+      summary: Create an installation event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstallationEventInput"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallationEvent"
+
+  /installation-events/{id}:
+    patch:
+      operationId: updateInstallationEvent
+      tags: [calendario]
+      summary: Update an installation event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstallationEventUpdate"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallationEvent"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteInstallationEvent
+      tags: [calendario]
+      summary: Delete an installation event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -780,3 +862,63 @@ components:
       properties:
         role:
           $ref: "#/components/schemas/UserRole"
+
+    InstallationEvent:
+      type: object
+      required: [id, title, startDate, color, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        projectId:
+          type: ["integer", "null"]
+        teamDescription:
+          type: ["string", "null"]
+        startDate:
+          type: string
+        endDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        color:
+          type: string
+        createdAt:
+          type: string
+
+    InstallationEventInput:
+      type: object
+      required: [title, startDate]
+      properties:
+        title:
+          type: string
+        projectId:
+          type: integer
+        teamDescription:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        notes:
+          type: string
+        color:
+          type: string
+
+    InstallationEventUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        projectId:
+          type: integer
+        teamDescription:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        notes:
+          type: string
+        color:
+          type: string

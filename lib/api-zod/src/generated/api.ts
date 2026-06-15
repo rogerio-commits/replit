@@ -443,3 +443,76 @@ export const UpdateUserRoleResponse = zod.object({
 })
 
 
+/**
+ * @summary List installation events
+ */
+export const ListInstallationEventsQueryParams = zod.object({
+  "month": zod.coerce.string().optional().describe('Filter by month in YYYY-MM format')
+})
+
+export const ListInstallationEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "projectId": zod.number().nullish(),
+  "teamDescription": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListInstallationEventsResponse = zod.array(ListInstallationEventsResponseItem)
+
+
+/**
+ * @summary Create an installation event
+ */
+export const CreateInstallationEventBody = zod.object({
+  "title": zod.string(),
+  "projectId": zod.number().optional(),
+  "teamDescription": zod.string().optional(),
+  "startDate": zod.string(),
+  "endDate": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "color": zod.string().optional()
+})
+
+
+/**
+ * @summary Update an installation event
+ */
+export const UpdateInstallationEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateInstallationEventBody = zod.object({
+  "title": zod.string().optional(),
+  "projectId": zod.number().optional(),
+  "teamDescription": zod.string().optional(),
+  "startDate": zod.string().optional(),
+  "endDate": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "color": zod.string().optional()
+})
+
+export const UpdateInstallationEventResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "projectId": zod.number().nullish(),
+  "teamDescription": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an installation event
+ */
+export const DeleteInstallationEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
