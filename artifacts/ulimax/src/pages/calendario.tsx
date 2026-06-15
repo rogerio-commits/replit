@@ -36,6 +36,8 @@ import {
   Loader2,
   Users,
   CalendarRange,
+  Wrench,
+  HardHat,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,24 +252,27 @@ function EventDialog({
                 <FormLabel>Tipo de Atividade</FormLabel>
                 <div className="flex gap-2 pt-1">
                   {([
-                    { value: "instalacao",  label: "Instalação",  icon: "🔧" },
-                    { value: "assistencia", label: "Assistência", icon: "🛠️" },
-                  ] as const).map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => field.onChange(opt.value)}
-                      className={cn(
-                        "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-colors",
-                        field.value === opt.value
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background text-muted-foreground border-input hover:bg-muted"
-                      )}
-                    >
-                      <span>{opt.icon}</span>
-                      {opt.label}
-                    </button>
-                  ))}
+                    { value: "instalacao",  label: "Instalação",  Icon: HardHat },
+                    { value: "assistencia", label: "Assistência", Icon: Wrench },
+                  ] as const).map((opt) => {
+                    const isSelected = field.value === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => field.onChange(opt.value)}
+                        className={cn(
+                          "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-colors",
+                          isSelected
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-input hover:bg-muted"
+                        )}
+                      >
+                        <opt.Icon className="h-4 w-4" />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </FormItem>
             )} />
@@ -378,6 +383,7 @@ function GanttRow({
     const duration     = differenceInDays(clampedEnd, clampedStart) + 1;
     const subRow       = subRows.get(event.id) ?? 0;
 
+    const isAssistencia = event.eventType === "assistencia";
     return {
       position: "absolute",
       left:  startIdx * DAY_W + 2,
@@ -385,6 +391,11 @@ function GanttRow({
       top:   ROW_PAD + subRow * (BAR_H + BAR_GAP),
       height: BAR_H,
       backgroundColor: colorHex(event.color),
+      backgroundImage: isAssistencia
+        ? "repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.22) 5px, rgba(255,255,255,0.22) 10px)"
+        : undefined,
+      outline: isAssistencia ? "2px dashed rgba(255,255,255,0.5)" : undefined,
+      outlineOffset: isAssistencia ? "-2px" : undefined,
       borderRadius: 6,
       // Visual hint for overflow
       borderTopLeftRadius:    evStart < monthStart ? 0 : 6,
@@ -498,7 +509,9 @@ function GanttRow({
                     )}
                   >
                     {overflowLeft && <span className="mr-1 text-[10px] opacity-70">◂</span>}
-                    <span className="mr-1 text-[11px] opacity-80">{event.eventType === "assistencia" ? "🛠️" : "🔧"}</span>
+                    {event.eventType === "assistencia"
+                      ? <Wrench className="h-3 w-3 mr-1 shrink-0 opacity-90" />
+                      : <HardHat className="h-3 w-3 mr-1 shrink-0 opacity-90" />}
                     <span className="text-[11px] font-semibold truncate flex-1">{event.title}</span>
                     {overflowRight && <span className="ml-1 text-[10px] opacity-70">▸</span>}
                     {/* Hover actions */}
