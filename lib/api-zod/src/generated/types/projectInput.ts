@@ -17,8 +17,10 @@ export interface ProjectInput {
   priority: ProjectInputPriority;
   startDate?: string;
   endDate?: string;
+  finalDate?: string;
   producaoStartDate?: string;
   producaoEndDate?: string;
+  producaoFinalDate?: string;
   medicaoDate?: string;
   instalacaoStartDate?: string;
   materialType?: ProjectInputMaterialType;

@@ -470,9 +470,13 @@ components:
           type: ["string", "null"]
         endDate:
           type: ["string", "null"]
+        finalDate:
+          type: ["string", "null"]
         producaoStartDate:
           type: ["string", "null"]
         producaoEndDate:
+          type: ["string", "null"]
+        producaoFinalDate:
           type: ["string", "null"]
         medicaoDate:
           type: ["string", "null"]
@@ -503,9 +507,13 @@ components:
           type: string
         endDate:
           type: string
+        finalDate:
+          type: string
         producaoStartDate:
           type: string
         producaoEndDate:
+          type: string
+        producaoFinalDate:
           type: string
         medicaoDate:
           type: string
@@ -533,9 +541,13 @@ components:
           type: string
         endDate:
           type: string
+        finalDate:
+          type: string
         producaoStartDate:
           type: string
         producaoEndDate:
+          type: string
+        producaoFinalDate:
           type: string
         medicaoDate:
           type: string

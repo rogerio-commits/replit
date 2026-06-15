@@ -53,9 +53,13 @@ export interface Project {
   /** @nullable */
   endDate?: string | null;
   /** @nullable */
+  finalDate?: string | null;
+  /** @nullable */
   producaoStartDate?: string | null;
   /** @nullable */
   producaoEndDate?: string | null;
+  /** @nullable */
+  producaoFinalDate?: string | null;
   /** @nullable */
   medicaoDate?: string | null;
   /** @nullable */
@@ -102,8 +106,10 @@ export interface ProjectInput {
   priority: ProjectInputPriority;
   startDate?: string;
   endDate?: string;
+  finalDate?: string;
   producaoStartDate?: string;
   producaoEndDate?: string;
+  producaoFinalDate?: string;
   medicaoDate?: string;
   instalacaoStartDate?: string;
   materialType?: ProjectInputMaterialType;
@@ -146,8 +152,10 @@ export interface ProjectUpdate {
   priority?: ProjectUpdatePriority;
   startDate?: string;
   endDate?: string;
+  finalDate?: string;
   producaoStartDate?: string;
   producaoEndDate?: string;
+  producaoFinalDate?: string;
   medicaoDate?: string;
   instalacaoStartDate?: string;
   materialType?: ProjectUpdateMaterialType;

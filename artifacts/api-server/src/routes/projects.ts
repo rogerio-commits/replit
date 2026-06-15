@@ -24,8 +24,10 @@ function projectRow(p: typeof projectsTable.$inferSelect) {
     priority: p.priority,
     startDate: p.startDate ?? null,
     endDate: p.endDate ?? null,
+    finalDate: p.finalDate ?? null,
     producaoStartDate: p.producaoStartDate ?? null,
     producaoEndDate: p.producaoEndDate ?? null,
+    producaoFinalDate: p.producaoFinalDate ?? null,
     medicaoDate: p.medicaoDate ?? null,
     instalacaoStartDate: p.instalacaoStartDate ?? null,
     materialType: p.materialType ?? null,
@@ -57,6 +59,7 @@ router.post("/projects", requireGestor, async (req, res) => {
     return res.status(400).json({ error: "Invalid body" });
   }
 
+  const raw = req.body as Record<string, unknown>;
   const [project] = await db
     .insert(projectsTable)
     .values({
@@ -66,11 +69,13 @@ router.post("/projects", requireGestor, async (req, res) => {
       priority: (body.data.priority as "low" | "medium" | "high") ?? "medium",
       startDate: body.data.startDate ?? null,
       endDate: body.data.endDate ?? null,
-      producaoStartDate: (body.data as Record<string, unknown>).producaoStartDate as string ?? null,
-      producaoEndDate: (body.data as Record<string, unknown>).producaoEndDate as string ?? null,
-      medicaoDate: (body.data as Record<string, unknown>).medicaoDate as string ?? null,
-      instalacaoStartDate: (body.data as Record<string, unknown>).instalacaoStartDate as string ?? null,
-      materialType: (body.data as Record<string, unknown>).materialType as "madeira" | "aluminio" ?? null,
+      finalDate: raw.finalDate as string ?? null,
+      producaoStartDate: raw.producaoStartDate as string ?? null,
+      producaoEndDate: raw.producaoEndDate as string ?? null,
+      producaoFinalDate: raw.producaoFinalDate as string ?? null,
+      medicaoDate: raw.medicaoDate as string ?? null,
+      instalacaoStartDate: raw.instalacaoStartDate as string ?? null,
+      materialType: raw.materialType as "madeira" | "aluminio" ?? null,
     })
     .returning();
 
@@ -106,8 +111,10 @@ router.patch("/projects/:id", requireGestor, async (req, res) => {
   if (body.data.priority !== undefined) updateData.priority = body.data.priority;
   if (body.data.startDate !== undefined) updateData.startDate = body.data.startDate;
   if (body.data.endDate !== undefined) updateData.endDate = body.data.endDate;
+  if (raw.finalDate !== undefined) updateData.finalDate = raw.finalDate;
   if (raw.producaoStartDate !== undefined) updateData.producaoStartDate = raw.producaoStartDate;
   if (raw.producaoEndDate !== undefined) updateData.producaoEndDate = raw.producaoEndDate;
+  if (raw.producaoFinalDate !== undefined) updateData.producaoFinalDate = raw.producaoFinalDate;
   if (raw.medicaoDate !== undefined) updateData.medicaoDate = raw.medicaoDate;
   if (raw.instalacaoStartDate !== undefined) updateData.instalacaoStartDate = raw.instalacaoStartDate;
   if (raw.materialType !== undefined) updateData.materialType = raw.materialType as "madeira" | "aluminio";

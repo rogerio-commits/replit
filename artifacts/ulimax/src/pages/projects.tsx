@@ -53,8 +53,10 @@ const projectSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  finalDate: z.string().optional(),
   producaoStartDate: z.string().optional(),
   producaoEndDate: z.string().optional(),
+  producaoFinalDate: z.string().optional(),
   medicaoDate: z.string().optional(),
   instalacaoStartDate: z.string().optional(),
   materialType: z.enum(["madeira", "aluminio"]).optional(),
@@ -237,7 +239,7 @@ export default function Projects() {
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
                     name="startDate"
@@ -256,7 +258,7 @@ export default function Projects() {
                     name="endDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fim Estimado do Projeto</FormLabel>
+                        <FormLabel>Fim Estimado</FormLabel>
                         <FormControl>
                           <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("startDate")} />
                         </FormControl>
@@ -264,8 +266,21 @@ export default function Projects() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="finalDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data Final</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
                     name="producaoStartDate"
@@ -284,9 +299,22 @@ export default function Projects() {
                     name="producaoEndDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Fim Estimado da Produção</FormLabel>
+                        <FormLabel>Fim Est. Produção</FormLabel>
                         <FormControl>
                           <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoStartDate")} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="producaoFinalDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Final da Produção</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

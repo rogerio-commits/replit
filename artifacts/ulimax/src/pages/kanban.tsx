@@ -352,8 +352,10 @@ const newProjectSchema = z.object({
   priority:         z.enum(["low", "medium", "high"]),
   startDate:        z.string().optional(),
   endDate:          z.string().optional(),
+  finalDate:        z.string().optional(),
   producaoStartDate:   z.string().optional(),
   producaoEndDate:     z.string().optional(),
+  producaoFinalDate:   z.string().optional(),
   medicaoDate:         z.string().optional(),
   instalacaoStartDate: z.string().optional(),
   materialType: z.enum(["madeira", "aluminio"]).optional(),
@@ -367,7 +369,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
   const createProject = useCreateProject();
   const form = useForm<z.infer<typeof newProjectSchema>>({
     resolver: zodResolver(newProjectSchema),
-    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "", instalacaoStartDate: "", materialType: undefined },
+    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", finalDate: "", producaoStartDate: "", producaoEndDate: "", producaoFinalDate: "", medicaoDate: "", instalacaoStartDate: "", materialType: undefined },
   });
 
   function onSubmit(values: z.infer<typeof newProjectSchema>) {
@@ -375,8 +377,10 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
       name: values.name, description: values.description || undefined,
       priority: values.priority, status: defaultStatus,
       startDate: values.startDate || undefined, endDate: values.endDate || undefined,
+      finalDate: values.finalDate || undefined,
       producaoStartDate: values.producaoStartDate || undefined,
       producaoEndDate: values.producaoEndDate || undefined,
+      producaoFinalDate: values.producaoFinalDate || undefined,
       medicaoDate: values.medicaoDate || undefined,
       instalacaoStartDate: values.instalacaoStartDate || undefined,
       materialType: values.materialType || undefined,
@@ -416,24 +420,32 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
                   </SelectContent>
                 </Select></FormItem>
             )} />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem><FormLabel>Início do Projeto</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
-                <FormItem><FormLabel>Fim Estimado do Projeto</FormLabel>
+                <FormItem><FormLabel>Fim Estimado</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("startDate")} /></FormControl></FormItem>
               )} />
+              <FormField control={form.control} name="finalDate" render={({ field }) => (
+                <FormItem><FormLabel>Data Final</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
                 <FormItem><FormLabel>Início da Produção</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("endDate")} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
-                <FormItem><FormLabel>Fim Estimado da Produção</FormLabel>
+                <FormItem><FormLabel>Fim Est. Produção</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoStartDate")} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="producaoFinalDate" render={({ field }) => (
+                <FormItem><FormLabel>Final da Produção</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -478,8 +490,10 @@ const editProjectSchema = z.object({
   priority:            z.enum(["low", "medium", "high"]),
   startDate:           z.string().optional(),
   endDate:             z.string().optional(),
+  finalDate:           z.string().optional(),
   producaoStartDate:   z.string().optional(),
   producaoEndDate:     z.string().optional(),
+  producaoFinalDate:   z.string().optional(),
   medicaoDate:         z.string().optional(),
   instalacaoStartDate: z.string().optional(),
   materialType: z.enum(["madeira", "aluminio"]).optional(),
@@ -493,7 +507,7 @@ function EditProjectDialog({ project, open, onOpenChange }: {
   const updateProject = useUpdateProject();
   const form = useForm<z.infer<typeof editProjectSchema>>({
     resolver: zodResolver(editProjectSchema),
-    defaultValues: { name: "", description: "", status: "a_iniciar", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "", instalacaoStartDate: "" },
+    defaultValues: { name: "", description: "", status: "a_iniciar", priority: "medium", startDate: "", endDate: "", finalDate: "", producaoStartDate: "", producaoEndDate: "", producaoFinalDate: "", medicaoDate: "", instalacaoStartDate: "" },
   });
 
   // Populate form whenever the target project changes
@@ -506,8 +520,10 @@ function EditProjectDialog({ project, open, onOpenChange }: {
       priority: project.priority as z.infer<typeof editProjectSchema>["priority"],
       startDate: project.startDate ? project.startDate.split("T")[0] : "",
       endDate: project.endDate ? project.endDate.split("T")[0] : "",
+      finalDate: project.finalDate ? project.finalDate.split("T")[0] : "",
       producaoStartDate: project.producaoStartDate ? project.producaoStartDate.split("T")[0] : "",
       producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split("T")[0] : "",
+      producaoFinalDate: project.producaoFinalDate ? project.producaoFinalDate.split("T")[0] : "",
       medicaoDate: project.medicaoDate ? project.medicaoDate.split("T")[0] : "",
       instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split("T")[0] : "",
       materialType: (project.materialType as "madeira" | "aluminio" | undefined) ?? undefined,
@@ -520,8 +536,10 @@ function EditProjectDialog({ project, open, onOpenChange }: {
       name: values.name, description: values.description || undefined,
       status: values.status, priority: values.priority,
       startDate: values.startDate || undefined, endDate: values.endDate || undefined,
+      finalDate: values.finalDate || undefined,
       producaoStartDate: values.producaoStartDate || undefined,
       producaoEndDate: values.producaoEndDate || undefined,
+      producaoFinalDate: values.producaoFinalDate || undefined,
       medicaoDate: values.medicaoDate || undefined,
       instalacaoStartDate: values.instalacaoStartDate || undefined,
       materialType: values.materialType || undefined,
@@ -579,24 +597,32 @@ function EditProjectDialog({ project, open, onOpenChange }: {
                   <FormMessage /></FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem><FormLabel>Início do Projeto</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
-                <FormItem><FormLabel>Fim do Projeto</FormLabel>
+                <FormItem><FormLabel>Fim Estimado</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("startDate")} /></FormControl></FormItem>
               )} />
+              <FormField control={form.control} name="finalDate" render={({ field }) => (
+                <FormItem><FormLabel>Data Final</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
                 <FormItem><FormLabel>Início da Produção</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("endDate")} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
-                <FormItem><FormLabel>Fim Est. da Produção</FormLabel>
+                <FormItem><FormLabel>Fim Est. Produção</FormLabel>
                   <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoStartDate")} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="producaoFinalDate" render={({ field }) => (
+                <FormItem><FormLabel>Final da Produção</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
             <div className="grid grid-cols-2 gap-3">

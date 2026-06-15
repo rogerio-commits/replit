@@ -21,9 +21,13 @@ export interface Project {
   /** @nullable */
   endDate?: string | null;
   /** @nullable */
+  finalDate?: string | null;
+  /** @nullable */
   producaoStartDate?: string | null;
   /** @nullable */
   producaoEndDate?: string | null;
+  /** @nullable */
+  producaoFinalDate?: string | null;
   /** @nullable */
   medicaoDate?: string | null;
   /** @nullable */

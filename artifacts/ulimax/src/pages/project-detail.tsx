@@ -58,8 +58,10 @@ const projectSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  finalDate: z.string().optional(),
   producaoStartDate: z.string().optional(),
   producaoEndDate: z.string().optional(),
+  producaoFinalDate: z.string().optional(),
   medicaoDate: z.string().optional(),
   instalacaoStartDate: z.string().optional(),
   materialType: z.enum(["madeira", "aluminio"]).optional(),
@@ -151,8 +153,10 @@ export default function ProjectDetail() {
       priority: project.priority,
       startDate: project.startDate ? project.startDate.split('T')[0] : "",
       endDate: project.endDate ? project.endDate.split('T')[0] : "",
+      finalDate: project.finalDate ? project.finalDate.split('T')[0] : "",
       producaoStartDate: project.producaoStartDate ? project.producaoStartDate.split('T')[0] : "",
       producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split('T')[0] : "",
+      producaoFinalDate: project.producaoFinalDate ? project.producaoFinalDate.split('T')[0] : "",
       medicaoDate: project.medicaoDate ? project.medicaoDate.split('T')[0] : "",
       instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split('T')[0] : "",
       materialType: (project.materialType as "madeira" | "aluminio" | undefined) ?? undefined,
@@ -343,7 +347,7 @@ export default function ProjectDetail() {
                         )}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                       <FormField
                         control={projectForm.control}
                         name="startDate"
@@ -362,7 +366,7 @@ export default function ProjectDetail() {
                         name="endDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Fim Estimado do Projeto</FormLabel>
+                            <FormLabel>Fim Estimado</FormLabel>
                             <FormControl>
                               <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("startDate")} />
                             </FormControl>
@@ -370,8 +374,21 @@ export default function ProjectDetail() {
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={projectForm.control}
+                        name="finalDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data Final</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                       <FormField
                         control={projectForm.control}
                         name="producaoStartDate"
@@ -390,9 +407,22 @@ export default function ProjectDetail() {
                         name="producaoEndDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Fim Estimado da Produção</FormLabel>
+                            <FormLabel>Fim Est. Produção</FormLabel>
                             <FormControl>
                               <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("producaoStartDate")} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={projectForm.control}
+                        name="producaoFinalDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Final da Produção</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
