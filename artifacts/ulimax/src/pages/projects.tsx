@@ -470,34 +470,47 @@ export default function Projects() {
                         )}
                       </div>
 
-                      {/* Projeto */}
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Projeto</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          <DateItem label="Início" value={project.startDate} />
-                          <DateItem label="Fim Est." value={project.endDate} />
-                          <DateItem label="Final" value={project.finalDate} />
+                      {/* Projeto — only if at least one date is set */}
+                      {(project.startDate || project.endDate || project.finalDate) && (
+                        <div>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Projeto</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <DateItem label="Início"   value={project.startDate} />
+                            <DateItem label="Fim Est." value={project.endDate} />
+                            <DateItem label="Final"    value={project.finalDate} />
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Produção */}
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Produção</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          <DateItem label="Início" value={project.producaoStartDate} />
-                          <DateItem label="Fim Est." value={project.producaoEndDate} />
-                          <DateItem label="Final" value={project.producaoFinalDate} />
+                      {/* Produção — only if at least one date is set */}
+                      {(project.producaoStartDate || project.producaoEndDate || project.producaoFinalDate) && (
+                        <div>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Produção</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <DateItem label="Início"   value={project.producaoStartDate} />
+                            <DateItem label="Fim Est." value={project.producaoEndDate} />
+                            <DateItem label="Final"    value={project.producaoFinalDate} />
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Medição & Instalação */}
-                      <div>
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Medição & Instalação</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <DateItem label="Medição" value={project.medicaoDate} />
-                          <DateItem label="Início Instal." value={project.instalacaoStartDate} />
+                      {/* Medição & Instalação — only if at least one date is set */}
+                      {(project.medicaoDate || project.instalacaoStartDate) && (
+                        <div>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Medição & Instalação</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <DateItem label="Medição"      value={project.medicaoDate} />
+                            <DateItem label="Início Instal." value={project.instalacaoStartDate} />
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {/* Fallback when no dates at all */}
+                      {!project.startDate && !project.endDate && !project.finalDate &&
+                       !project.producaoStartDate && !project.producaoEndDate && !project.producaoFinalDate &&
+                       !project.medicaoDate && !project.instalacaoStartDate && (
+                        <p className="text-xs text-muted-foreground/50 italic">Nenhuma data cadastrada</p>
+                      )}
                     </CardContent>
                   </Card>
                 </Link>
