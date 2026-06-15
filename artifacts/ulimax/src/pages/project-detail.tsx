@@ -355,7 +355,7 @@ export default function ProjectDetail() {
                           <FormItem>
                             <FormLabel>Início do Projeto</FormLabel>
                             <FormControl>
-                              <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} />
+                              <Input type="date" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -396,7 +396,7 @@ export default function ProjectDetail() {
                           <FormItem>
                             <FormLabel>Início da Produção</FormLabel>
                             <FormControl>
-                              <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("endDate")} />
+                              <Input type="date" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -437,7 +437,7 @@ export default function ProjectDetail() {
                           <FormItem>
                             <FormLabel>Data de Medição</FormLabel>
                             <FormControl>
-                              <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("producaoEndDate")} />
+                              <Input type="date" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -450,7 +450,7 @@ export default function ProjectDetail() {
                           <FormItem>
                             <FormLabel>Início Est. da Instalação</FormLabel>
                             <FormControl>
-                              <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("medicaoDate")} />
+                              <Input type="date" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

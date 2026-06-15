@@ -423,7 +423,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
             <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem><FormLabel>Início do Projeto</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
                 <FormItem><FormLabel>Fim Estimado</FormLabel>
@@ -437,7 +437,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
             <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
                 <FormItem><FormLabel>Início da Produção</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("endDate")} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
                 <FormItem><FormLabel>Fim Est. Produção</FormLabel>
@@ -451,11 +451,11 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="medicaoDate" render={({ field }) => (
                 <FormItem><FormLabel>Data de Medição</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoEndDate")} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="instalacaoStartDate" render={({ field }) => (
                 <FormItem><FormLabel>Início Est. da Instalação</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("medicaoDate")} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
             <FormField control={form.control} name="materialType" render={({ field }) => (
@@ -600,7 +600,7 @@ function EditProjectDialog({ project, open, onOpenChange }: {
             <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="startDate" render={({ field }) => (
                 <FormItem><FormLabel>Início do Projeto</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="endDate" render={({ field }) => (
                 <FormItem><FormLabel>Fim Estimado</FormLabel>
@@ -614,7 +614,7 @@ function EditProjectDialog({ project, open, onOpenChange }: {
             <div className="grid grid-cols-3 gap-2">
               <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
                 <FormItem><FormLabel>Início da Produção</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("endDate")} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
                 <FormItem><FormLabel>Fim Est. Produção</FormLabel>
@@ -628,11 +628,11 @@ function EditProjectDialog({ project, open, onOpenChange }: {
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="medicaoDate" render={({ field }) => (
                 <FormItem><FormLabel>Data de Medição</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoEndDate")} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
               <FormField control={form.control} name="instalacaoStartDate" render={({ field }) => (
                 <FormItem><FormLabel>Início Est. da Instalação</FormLabel>
-                  <FormControl><DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("medicaoDate")} /></FormControl></FormItem>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
             <FormField control={form.control} name="materialType" render={({ field }) => (

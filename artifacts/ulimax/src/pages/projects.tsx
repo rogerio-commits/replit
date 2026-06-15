@@ -247,7 +247,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Início do Projeto</FormLabel>
                         <FormControl>
-                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} />
+                          <Input type="date" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -288,7 +288,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Início da Produção</FormLabel>
                         <FormControl>
-                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("endDate")} />
+                          <Input type="date" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -329,7 +329,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Data de Medição</FormLabel>
                         <FormControl>
-                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("producaoEndDate")} />
+                          <Input type="date" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -342,7 +342,7 @@ export default function Projects() {
                       <FormItem>
                         <FormLabel>Início Est. da Instalação</FormLabel>
                         <FormControl>
-                          <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={form.watch("medicaoDate")} />
+                          <Input type="date" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
