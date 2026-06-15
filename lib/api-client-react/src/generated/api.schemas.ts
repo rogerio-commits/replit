@@ -368,6 +368,14 @@ export interface UserRoleUpdate {
   role: UserRole;
 }
 
+export type InstallationEventType = typeof InstallationEventType[keyof typeof InstallationEventType];
+
+
+export const InstallationEventType = {
+  instalacao: 'instalacao',
+  assistencia: 'assistencia',
+} as const;
+
 export interface InstallationEvent {
   id: number;
   title: string;
@@ -375,6 +383,7 @@ export interface InstallationEvent {
   projectId?: number | null;
   /** @nullable */
   teamDescription?: string | null;
+  eventType: InstallationEventType;
   startDate: string;
   /** @nullable */
   endDate?: string | null;
@@ -388,6 +397,7 @@ export interface InstallationEventInput {
   title: string;
   projectId?: number;
   teamDescription?: string;
+  eventType?: InstallationEventType;
   startDate: string;
   endDate?: string;
   notes?: string;
@@ -398,6 +408,7 @@ export interface InstallationEventUpdate {
   title?: string;
   projectId?: number;
   teamDescription?: string;
+  eventType?: InstallationEventType;
   startDate?: string;
   endDate?: string;
   notes?: string;

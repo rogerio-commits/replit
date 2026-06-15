@@ -16,6 +16,7 @@ export * from './dashboardSummaryTasksByStatus';
 export * from './healthStatus';
 export * from './installationEvent';
 export * from './installationEventInput';
+export * from './installationEventType';
 export * from './installationEventUpdate';
 export * from './listInstallationEventsParams';
 export * from './listProjectsParams';

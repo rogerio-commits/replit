@@ -1,12 +1,15 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+export const installationEventTypeEnum = pgEnum("installation_event_type", ["instalacao", "assistencia"]);
 
 export const installationEventsTable = pgTable("installation_events", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   projectId: integer("project_id"),
   teamDescription: text("team_description"),
+  eventType: installationEventTypeEnum("event_type").notNull().default("instalacao"),
   startDate: text("start_date").notNull(),
   endDate: text("end_date"),
   notes: text("notes"),

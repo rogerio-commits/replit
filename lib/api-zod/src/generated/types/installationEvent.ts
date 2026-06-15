@@ -5,6 +5,7 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
+import type { InstallationEventType } from './installationEventType';
 
 export interface InstallationEvent {
   id: number;
@@ -13,6 +14,7 @@ export interface InstallationEvent {
   projectId?: number | null;
   /** @nullable */
   teamDescription?: string | null;
+  eventType: InstallationEventType;
   startDate: string;
   /** @nullable */
   endDate?: string | null;

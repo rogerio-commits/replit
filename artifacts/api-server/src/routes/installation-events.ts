@@ -16,6 +16,7 @@ function eventRow(e: typeof installationEventsTable.$inferSelect) {
     title: e.title,
     projectId: e.projectId ?? null,
     teamDescription: e.teamDescription ?? null,
+    eventType: e.eventType,
     startDate: e.startDate,
     endDate: e.endDate ?? null,
     notes: e.notes ?? null,
@@ -58,6 +59,7 @@ router.post("/installation-events", async (req, res) => {
       title: body.data.title,
       projectId: body.data.projectId ?? null,
       teamDescription: body.data.teamDescription ?? null,
+      eventType: body.data.eventType ?? "instalacao",
       startDate: body.data.startDate,
       endDate: body.data.endDate ?? null,
       notes: body.data.notes ?? null,
@@ -79,6 +81,7 @@ router.patch("/installation-events/:id", async (req, res) => {
   if (body.data.title !== undefined) update.title = body.data.title;
   if (body.data.projectId !== undefined) update.projectId = body.data.projectId;
   if (body.data.teamDescription !== undefined) update.teamDescription = body.data.teamDescription;
+  if (body.data.eventType !== undefined) update.eventType = body.data.eventType;
   if (body.data.startDate !== undefined) update.startDate = body.data.startDate;
   if (body.data.endDate !== undefined) update.endDate = body.data.endDate;
   if (body.data.notes !== undefined) update.notes = body.data.notes;

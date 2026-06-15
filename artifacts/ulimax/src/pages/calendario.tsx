@@ -133,6 +133,7 @@ function packSubRows(events: InstallationEvent[]): Map<number, number> {
 const eventSchema = z.object({
   title:           z.string().min(1, "Título obrigatório"),
   teamDescription: z.string().optional(),
+  eventType:       z.enum(["instalacao", "assistencia"]).default("instalacao"),
   startDate:       z.string().min(1, "Data de início obrigatória"),
   endDate:         z.string().optional(),
   notes:           z.string().optional(),
@@ -166,6 +167,7 @@ function EventDialog({
       ? {
           title:           editing.title,
           teamDescription: editing.teamDescription ?? "",
+          eventType:       (editing.eventType ?? "instalacao") as "instalacao" | "assistencia",
           startDate:       editing.startDate,
           endDate:         editing.endDate ?? "",
           notes:           editing.notes ?? "",
@@ -174,6 +176,7 @@ function EventDialog({
       : {
           title:           "",
           teamDescription: defaultTeam === NO_TEAM ? "" : defaultTeam,
+          eventType:       "instalacao" as const,
           startDate:       defaultDate,
           endDate:         "",
           notes:           "",
@@ -185,6 +188,7 @@ function EventDialog({
     const payload = {
       title:           values.title,
       teamDescription: values.teamDescription || undefined,
+      eventType:       values.eventType,
       startDate:       values.startDate,
       endDate:         values.endDate || undefined,
       notes:           values.notes || undefined,
@@ -239,6 +243,32 @@ function EventDialog({
                     {...field}
                   />
                 </FormControl>
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="eventType" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Atividade</FormLabel>
+                <div className="flex gap-2 pt-1">
+                  {([
+                    { value: "instalacao",  label: "Instalação",  icon: "🔧" },
+                    { value: "assistencia", label: "Assistência", icon: "🛠️" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => field.onChange(opt.value)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-colors",
+                        field.value === opt.value
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-input hover:bg-muted"
+                      )}
+                    >
+                      <span>{opt.icon}</span>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </FormItem>
             )} />
             <div className="grid grid-cols-2 gap-3">
@@ -468,6 +498,7 @@ function GanttRow({
                     )}
                   >
                     {overflowLeft && <span className="mr-1 text-[10px] opacity-70">◂</span>}
+                    <span className="mr-1 text-[11px] opacity-80">{event.eventType === "assistencia" ? "🛠️" : "🔧"}</span>
                     <span className="text-[11px] font-semibold truncate flex-1">{event.title}</span>
                     {overflowRight && <span className="ml-1 text-[10px] opacity-70">▸</span>}
                     {/* Hover actions */}
@@ -492,6 +523,9 @@ function GanttRow({
                   <p className="text-xs text-muted-foreground">
                     {format(evStart, "d MMM", { locale: ptBR })}
                     {!isSameDay(evStart, evEnd) && <> — {format(evEnd, "d MMM", { locale: ptBR })}</>}
+                  </p>
+                  <p className="text-xs mt-0.5">
+                    {event.eventType === "assistencia" ? "🛠️ Assistência" : "🔧 Instalação"}
                   </p>
                   {event.teamDescription && <p className="text-xs mt-0.5">{event.teamDescription}</p>}
                   {event.notes && <p className="text-xs mt-1 opacity-80">{event.notes}</p>}

@@ -863,9 +863,13 @@ components:
         role:
           $ref: "#/components/schemas/UserRole"
 
+    InstallationEventType:
+      type: string
+      enum: [instalacao, assistencia]
+
     InstallationEvent:
       type: object
-      required: [id, title, startDate, color, createdAt]
+      required: [id, title, startDate, color, eventType, createdAt]
       properties:
         id:
           type: integer
@@ -875,6 +879,8 @@ components:
           type: ["integer", "null"]
         teamDescription:
           type: ["string", "null"]
+        eventType:
+          $ref: "#/components/schemas/InstallationEventType"
         startDate:
           type: string
         endDate:
@@ -896,6 +902,8 @@ components:
           type: integer
         teamDescription:
           type: string
+        eventType:
+          $ref: "#/components/schemas/InstallationEventType"
         startDate:
           type: string
         endDate:
@@ -914,6 +922,8 @@ components:
           type: integer
         teamDescription:
           type: string
+        eventType:
+          $ref: "#/components/schemas/InstallationEventType"
         startDate:
           type: string
         endDate:
