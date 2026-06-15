@@ -446,8 +446,8 @@ export default function Tasks() {
                             </span>
                           )}
                           {task.assigneeName && (
-                            <span className="flex items-center gap-1">
-                              <HardHat className="h-3.5 w-3.5" />
+                            <span className="flex items-center gap-1 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 rounded-full px-2 py-0.5 font-medium">
+                              <HardHat className="h-3 w-3" />
                               {task.assigneeName}
                             </span>
                           )}

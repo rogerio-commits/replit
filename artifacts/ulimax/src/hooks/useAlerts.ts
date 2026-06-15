@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useListProjects, useListTasks } from "@workspace/api-client-react";
+import { useListProjects, useListTasks, useListMembers, useGetMe } from "@workspace/api-client-react";
 import type { Project, Task } from "@workspace/api-client-react";
 
 export type AlertSeverity = "danger" | "warning" | "info";
@@ -10,7 +10,8 @@ export type AlertType =
   | "overdue_task"
   | "no_installation_date"
   | "stalled_project"
-  | "no_assignee";
+  | "no_assignee"
+  | "task_assigned_to_me";
 
 export interface Alert {
   id: string;
@@ -44,7 +45,11 @@ function fmtDate(s: string) {
   return parseDate(s).toLocaleDateString("pt-BR");
 }
 
-export function computeAlerts(projects: Project[], tasks: Task[]): Alert[] {
+export function computeAlerts(
+  projects: Project[],
+  tasks: Task[],
+  myMemberId?: number | null,
+): Alert[] {
   const t = todayMidnight();
   const alerts: Alert[] = [];
 
@@ -127,6 +132,21 @@ export function computeAlerts(projects: Project[], tasks: Task[]): Alert[] {
         taskId: task.id,
       });
     }
+
+    if (myMemberId && task.assignedTo === myMemberId && task.status !== "done") {
+      const duePart = task.dueDate
+        ? ` · Prazo: ${fmtDate(task.dueDate)}`
+        : "";
+      alerts.push({
+        id: `my-task-${task.id}`,
+        type: "task_assigned_to_me",
+        severity: "info",
+        title: `Tarefa para você: ${task.title}`,
+        description: `${task.projectName ?? "Sem projeto"}${duePart}`,
+        href: "/tasks",
+        taskId: task.id,
+      });
+    }
   }
 
   const order: Record<AlertSeverity, number> = { danger: 0, warning: 1, info: 2 };
@@ -136,18 +156,27 @@ export function computeAlerts(projects: Project[], tasks: Task[]): Alert[] {
 export function useAlerts() {
   const { data: projects } = useListProjects();
   const { data: tasks } = useListTasks();
+  const { data: members } = useListMembers();
+  const { data: me } = useGetMe({ query: { staleTime: 5 * 60 * 1000, queryKey: ["/api/me"] } });
+
+  const myMemberId = useMemo(() => {
+    if (!me?.email || !members) return null;
+    const match = members.find((m) => m.email.toLowerCase() === me.email.toLowerCase());
+    return match?.id ?? null;
+  }, [me, members]);
 
   return useMemo(
-    () => computeAlerts(projects ?? [], tasks ?? []),
-    [projects, tasks],
+    () => computeAlerts(projects ?? [], tasks ?? [], myMemberId),
+    [projects, tasks, myMemberId],
   );
 }
 
 export function useAlertCounts() {
   const alerts = useAlerts();
   return {
-    danger: alerts.filter((a) => a.severity === "danger").length,
+    danger:  alerts.filter((a) => a.severity === "danger").length,
     warning: alerts.filter((a) => a.severity === "warning").length,
-    total: alerts.filter((a) => a.severity !== "info").length,
+    myTasks: alerts.filter((a) => a.type === "task_assigned_to_me").length,
+    total:   alerts.filter((a) => a.severity !== "info").length,
   };
 }

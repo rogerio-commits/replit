@@ -1,7 +1,7 @@
 import { Link } from "wouter";
-import { AlertTriangle, AlertCircle, Info, Calendar, CheckSquare, Briefcase, Clock, UserX, ArrowRight } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, Calendar, CheckSquare, Briefcase, Clock, UserX, ArrowRight, HardHat } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAlerts } from "@/hooks/useAlerts";
+import { useAlerts, useAlertCounts } from "@/hooks/useAlerts";
 import type { Alert, AlertSeverity, AlertType } from "@/hooks/useAlerts";
 
 const SEVERITY_STYLES: Record<AlertSeverity, { border: string; bg: string; icon: string; badge: string }> = {
@@ -11,12 +11,13 @@ const SEVERITY_STYLES: Record<AlertSeverity, { border: string; bg: string; icon:
 };
 
 const TYPE_META: Record<AlertType, { label: string; icon: React.ElementType }> = {
-  overdue_installation:    { label: "Instalação Atrasada",   icon: Calendar },
-  approaching_installation: { label: "Instalação Próxima",  icon: Calendar },
-  overdue_task:            { label: "Tarefa Atrasada",       icon: CheckSquare },
+  overdue_installation:    { label: "Instalação Atrasada",    icon: Calendar },
+  approaching_installation: { label: "Instalação Próxima",   icon: Calendar },
+  overdue_task:            { label: "Tarefa Atrasada",        icon: CheckSquare },
   no_installation_date:    { label: "Sem Data de Instalação", icon: Info },
-  stalled_project:         { label: "Projeto Parado",        icon: Clock },
-  no_assignee:             { label: "Sem Responsável",       icon: UserX },
+  stalled_project:         { label: "Projeto Parado",         icon: Clock },
+  no_assignee:             { label: "Sem Responsável",        icon: UserX },
+  task_assigned_to_me:     { label: "Minha Tarefa",           icon: HardHat },
 };
 
 function SeverityIcon({ severity, className }: { severity: AlertSeverity; className?: string }) {
@@ -74,10 +75,12 @@ function Section({ title, icon: Icon, alerts, color }: {
 }
 
 export default function Alertas() {
-  const alerts = useAlerts();
+  const alerts  = useAlerts();
+  const { myTasks } = useAlertCounts();
+  const myTaskAlerts = alerts.filter((a) => a.type === "task_assigned_to_me");
   const danger  = alerts.filter((a) => a.severity === "danger");
   const warning = alerts.filter((a) => a.severity === "warning");
-  const info    = alerts.filter((a) => a.severity === "info");
+  const info    = alerts.filter((a) => a.severity === "info" && a.type !== "task_assigned_to_me");
 
   return (
     <div className="space-y-6">
@@ -101,11 +104,12 @@ export default function Alertas() {
       )}
 
       {alerts.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Críticos",  count: danger.length,  color: "text-red-600",   bg: "bg-red-50 dark:bg-red-950/30",    border: "border-red-200 dark:border-red-800" },
-            { label: "Atenção",   count: warning.length, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800" },
-            { label: "Informativos", count: info.length, color: "text-blue-600",  bg: "bg-blue-50 dark:bg-blue-950/30",   border: "border-blue-200 dark:border-blue-800" },
+            { label: "Minhas Tarefas", count: myTasks,        color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-950/30",  border: "border-violet-200 dark:border-violet-800" },
+            { label: "Críticos",       count: danger.length,  color: "text-red-600",    bg: "bg-red-50 dark:bg-red-950/30",        border: "border-red-200 dark:border-red-800" },
+            { label: "Atenção",        count: warning.length, color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-950/30",    border: "border-amber-200 dark:border-amber-800" },
+            { label: "Informativos",   count: info.length,    color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/30",      border: "border-blue-200 dark:border-blue-800" },
           ].map(({ label, count, color, bg, border }) => (
             <div key={label} className={cn("rounded-lg border p-4 text-center", bg, border)}>
               <p className={cn("text-2xl font-bold", color)}>{count}</p>
@@ -116,9 +120,10 @@ export default function Alertas() {
       )}
 
       <div className="space-y-6">
-        <Section title="Críticos" icon={AlertCircle} alerts={danger} color="text-red-600" />
-        <Section title="Atenção" icon={AlertTriangle} alerts={warning} color="text-amber-600" />
-        <Section title="Informativos" icon={Info} alerts={info} color="text-blue-500" />
+        <Section title="Minhas Tarefas" icon={HardHat} alerts={myTaskAlerts} color="text-violet-600" />
+        <Section title="Críticos"       icon={AlertCircle}  alerts={danger}   color="text-red-600" />
+        <Section title="Atenção"        icon={AlertTriangle} alerts={warning} color="text-amber-600" />
+        <Section title="Informativos"   icon={Info}          alerts={info}    color="text-blue-500" />
       </div>
     </div>
   );
