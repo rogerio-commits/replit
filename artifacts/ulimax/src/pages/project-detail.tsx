@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { 
   useGetProject, 
   useGetProjectStats,
@@ -52,7 +53,7 @@ import { ArrowLeft, Calendar, Edit, Trash2, CheckSquare, Clock, Plus, AlertCircl
 import { useToast } from "@/hooks/use-toast";
 
 const projectSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Nome obrigatório"),
   description: z.string().optional(),
   status: z.enum(["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]),
   priority: z.enum(["low", "medium", "high"]),
@@ -68,7 +69,7 @@ const projectSchema = z.object({
 });
 
 const taskSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1, "Título obrigatório"),
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
@@ -85,6 +86,19 @@ const STATUS_LABELS: Record<string, string> = {
   em_producao: "Em Produção",
   aguardando_instalacao: "Aguardando Instalação",
   em_instalacao: "Em Instalação",
+};
+
+const TASK_STATUS_LABELS: Record<string, string> = {
+  todo: "A Fazer",
+  in_progress: "Em Andamento",
+  review: "Em Revisão",
+  done: "Concluído",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
 };
 
 function getStatusColor(status: string) {
@@ -177,13 +191,13 @@ export default function ProjectDetail() {
   const onUpdateProject = (data: ProjectFormValues) => {
     updateProject.mutate({ id: projectId, data }, {
       onSuccess: () => {
-        toast({ title: "Project updated successfully" });
+        toast({ title: "Projeto atualizado com sucesso" });
         queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setIsEditOpen(false);
       },
       onError: () => {
-        toast({ title: "Failed to update project", variant: "destructive" });
+        toast({ title: "Erro ao atualizar projeto", variant: "destructive" });
       }
     });
   };
@@ -191,12 +205,12 @@ export default function ProjectDetail() {
   const onDeleteProject = () => {
     deleteProject.mutate({ id: projectId }, {
       onSuccess: () => {
-        toast({ title: "Project deleted" });
+        toast({ title: "Projeto excluído" });
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setLocation("/projects");
       },
       onError: () => {
-        toast({ title: "Failed to delete project", variant: "destructive" });
+        toast({ title: "Erro ao excluir projeto", variant: "destructive" });
       }
     });
   };
@@ -204,14 +218,14 @@ export default function ProjectDetail() {
   const onCreateTask = (data: TaskFormValues) => {
     createTask.mutate({ data: { ...data, projectId } }, {
       onSuccess: () => {
-        toast({ title: "Task created successfully" });
+        toast({ title: "Tarefa criada com sucesso" });
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({ projectId }) });
         queryClient.invalidateQueries({ queryKey: getGetProjectStatsQueryKey(projectId) });
         setIsCreateTaskOpen(false);
         taskForm.reset();
       },
       onError: () => {
-        toast({ title: "Failed to create task", variant: "destructive" });
+        toast({ title: "Erro ao criar tarefa", variant: "destructive" });
       }
     });
   };
@@ -234,8 +248,8 @@ export default function ProjectDetail() {
   if (!project) {
     return (
       <div className="py-20 text-center">
-        <h2 className="text-2xl font-bold">Project not found</h2>
-        <Button className="mt-4" onClick={() => setLocation("/projects")}>Back to Projects</Button>
+        <h2 className="text-2xl font-bold">Projeto não encontrado</h2>
+        <Button className="mt-4" onClick={() => setLocation("/projects")}>Voltar para Projetos</Button>
       </div>
     );
   }
@@ -245,7 +259,7 @@ export default function ProjectDetail() {
       <div>
         <Button variant="ghost" size="sm" className="mb-4 -ml-3 text-muted-foreground" onClick={() => setLocation("/projects")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Projects
+          Voltar para Projetos
         </Button>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -255,7 +269,7 @@ export default function ProjectDetail() {
                 {STATUS_LABELS[project.status] ?? project.status}
               </Badge>
             </div>
-            <p className="text-muted-foreground mt-2 max-w-3xl">{project.description || "No description provided."}</p>
+            <p className="text-muted-foreground mt-2 max-w-3xl">{project.description || "Sem descrição."}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -263,12 +277,12 @@ export default function ProjectDetail() {
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit Project
+                  Editar Projeto
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Edit Project</DialogTitle>
+                  <DialogTitle>Editar Projeto</DialogTitle>
                 </DialogHeader>
                 <Form {...projectForm}>
                   <form onSubmit={projectForm.handleSubmit(onUpdateProject)} className="space-y-4">
@@ -277,9 +291,9 @@ export default function ProjectDetail() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Project Name</FormLabel>
+                          <FormLabel>Nome do Projeto</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Edifício Alpha" {...field} />
+                            <Input placeholder="Ex.: Edifício Alpha" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -290,9 +304,9 @@ export default function ProjectDetail() {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>Descrição</FormLabel>
                           <FormControl>
-                            <Input placeholder="Brief overview of the project..." {...field} />
+                            <Input placeholder="Breve descrição do projeto..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -308,7 +322,7 @@ export default function ProjectDetail() {
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select a status" />
+                                  <SelectValue placeholder="Selecione o status" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -329,17 +343,17 @@ export default function ProjectDetail() {
                         name="priority"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Priority</FormLabel>
+                            <FormLabel>Prioridade</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select a priority" />
+                                  <SelectValue placeholder="Selecione a prioridade" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="low">Low</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="low">Baixa</SelectItem>
+                                <SelectItem value="medium">Média</SelectItem>
+                                <SelectItem value="high">Alta</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -480,7 +494,7 @@ export default function ProjectDetail() {
                     />
                     <DialogFooter>
                       <Button type="submit" disabled={updateProject.isPending}>
-                        {updateProject.isPending ? "Saving..." : "Save Changes"}
+                        {updateProject.isPending ? "Salvando..." : "Salvar Alterações"}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -496,17 +510,17 @@ export default function ProjectDetail() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Delete Project</DialogTitle>
+                  <DialogTitle>Excluir Projeto</DialogTitle>
                 </DialogHeader>
                 <div className="py-4">
-                  Are you sure you want to delete this project? This action cannot be undone and will delete all associated tasks.
+                  Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita e removerá todas as tarefas associadas.
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button variant="outline">Cancel</Button>
+                    <Button variant="outline">Cancelar</Button>
                   </DialogClose>
                   <Button variant="destructive" onClick={onDeleteProject} disabled={deleteProject.isPending}>
-                    {deleteProject.isPending ? "Deleting..." : "Delete Project"}
+                    {deleteProject.isPending ? "Excluindo..." : "Excluir Projeto"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -517,15 +531,15 @@ export default function ProjectDetail() {
         <div className="flex flex-wrap gap-6 mt-6 pt-6 border-t border-border/50 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <AlertCircle className={`h-4 w-4 ${getPriorityColor(project.priority)}`} />
-            <span className="font-medium text-foreground capitalize">{project.priority} Priority</span>
+            <span className="font-medium text-foreground">{PRIORITY_LABELS[project.priority] ?? project.priority}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>Started: <span className="font-medium text-foreground">{project.startDate ? format(new Date(project.startDate), 'MMM d, yyyy') : 'N/A'}</span></span>
+            <span>Início: <span className="font-medium text-foreground">{project.startDate ? format(new Date(project.startDate), "d MMM yyyy", { locale: ptBR }) : '—'}</span></span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>Target End: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), 'MMM d, yyyy') : 'N/A'}</span></span>
+            <span>Fim Previsto: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), "d MMM yyyy", { locale: ptBR }) : '—'}</span></span>
           </div>
         </div>
       </div>
@@ -541,7 +555,7 @@ export default function ProjectDetail() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-slate-50 dark:bg-slate-900/50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">To Do</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">A Fazer</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.todo}</div>
@@ -549,7 +563,7 @@ export default function ProjectDetail() {
           </Card>
           <Card className="bg-blue-50 dark:bg-blue-900/10">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-500 uppercase tracking-wider">In Progress</CardTitle>
+              <CardTitle className="text-sm font-medium text-blue-500 uppercase tracking-wider">Em Andamento</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.inProgress}</div>
@@ -557,7 +571,7 @@ export default function ProjectDetail() {
           </Card>
           <Card className="bg-amber-50 dark:bg-amber-900/10">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-amber-500 uppercase tracking-wider">In Review</CardTitle>
+              <CardTitle className="text-sm font-medium text-amber-500 uppercase tracking-wider">Em Revisão</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">{stats.review}</div>
@@ -565,7 +579,7 @@ export default function ProjectDetail() {
           </Card>
           <Card className="bg-emerald-50 dark:bg-emerald-900/10">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-emerald-500 uppercase tracking-wider">Done</CardTitle>
+              <CardTitle className="text-sm font-medium text-emerald-500 uppercase tracking-wider">Concluído</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{stats.done}</div>
@@ -577,19 +591,19 @@ export default function ProjectDetail() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Project Tasks</CardTitle>
-            <CardDescription>All tasks associated with this project.</CardDescription>
+            <CardTitle>Tarefas do Projeto</CardTitle>
+            <CardDescription>Todas as tarefas vinculadas a este projeto.</CardDescription>
           </div>
           <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Task
+                Nova Tarefa
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create Task</DialogTitle>
+                <DialogTitle>Nova Tarefa</DialogTitle>
               </DialogHeader>
               <Form {...taskForm}>
                 <form onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
@@ -598,9 +612,9 @@ export default function ProjectDetail() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Task Title</FormLabel>
+                        <FormLabel>Título da Tarefa</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Concrete pouring phase 1" {...field} />
+                          <Input placeholder="Ex.: Concretagem fase 1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -611,9 +625,9 @@ export default function ProjectDetail() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>Descrição</FormLabel>
                         <FormControl>
-                          <Input placeholder="Details about the task..." {...field} />
+                          <Input placeholder="Detalhes sobre a tarefa..." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -629,14 +643,14 @@ export default function ProjectDetail() {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a status" />
+                                <SelectValue placeholder="Selecione o status" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="todo">To Do</SelectItem>
-                              <SelectItem value="in_progress">In Progress</SelectItem>
-                              <SelectItem value="review">Review</SelectItem>
-                              <SelectItem value="done">Done</SelectItem>
+                              <SelectItem value="todo">A Fazer</SelectItem>
+                              <SelectItem value="in_progress">Em Andamento</SelectItem>
+                              <SelectItem value="review">Em Revisão</SelectItem>
+                              <SelectItem value="done">Concluído</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -648,17 +662,17 @@ export default function ProjectDetail() {
                       name="priority"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Priority</FormLabel>
+                          <FormLabel>Prioridade</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a priority" />
+                                <SelectValue placeholder="Selecione a prioridade" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="low">Low</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="high">High</SelectItem>
+                              <SelectItem value="low">Baixa</SelectItem>
+                              <SelectItem value="medium">Média</SelectItem>
+                              <SelectItem value="high">Alta</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -671,7 +685,7 @@ export default function ProjectDetail() {
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Due Date</FormLabel>
+                        <FormLabel>Prazo</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -681,7 +695,7 @@ export default function ProjectDetail() {
                   />
                   <DialogFooter>
                     <Button type="submit" disabled={createTask.isPending}>
-                      {createTask.isPending ? "Creating..." : "Create Task"}
+                      {createTask.isPending ? "Criando..." : "Criar Tarefa"}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -709,12 +723,12 @@ export default function ProjectDetail() {
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         <span className={`font-medium flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
                           <AlertCircle className="h-3 w-3" />
-                          <span className="capitalize">{task.priority}</span>
+                          <span>{PRIORITY_LABELS[task.priority] ?? task.priority}</span>
                         </span>
                         {task.dueDate && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                            {format(new Date(task.dueDate), "d MMM yyyy", { locale: ptBR })}
                           </span>
                         )}
                         {task.assigneeName && (
@@ -727,14 +741,14 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                   <Badge variant="outline" className={getTaskStatusColor(task.status)}>
-                    {task.status.replace("_", " ").toUpperCase()}
+                    {TASK_STATUS_LABELS[task.status] ?? task.status}
                   </Badge>
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground border border-dashed rounded-md">
-              No tasks created yet.
+              Nenhuma tarefa criada ainda.
             </div>
           )}
         </CardContent>

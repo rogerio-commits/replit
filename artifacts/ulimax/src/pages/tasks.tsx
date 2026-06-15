@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { 
   useListTasks, 
   useCreateTask,
@@ -47,9 +48,22 @@ import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Tras
 import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
 
+const TASK_STATUS_LABELS: Record<string, string> = {
+  todo: "A Fazer",
+  in_progress: "Em Andamento",
+  review: "Em Revisão",
+  done: "Concluído",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+};
+
 const taskSchema = z.object({
-  projectId: z.coerce.number().min(1, "Project is required"),
-  title: z.string().min(1, "Title is required"),
+  projectId: z.coerce.number().min(1, "Projeto obrigatório"),
+  title: z.string().min(1, "Título obrigatório"),
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
@@ -111,20 +125,19 @@ export default function Tasks() {
   });
 
   const onSubmit = (data: TaskFormValues) => {
-    // If we're creating
     if (editingTask === null) {
       createTask.mutate({ data: {
         ...data,
         assignedTo: data.assignedTo || undefined
       }}, {
         onSuccess: () => {
-          toast({ title: "Task created successfully" });
+          toast({ title: "Tarefa criada com sucesso" });
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
           setIsCreateOpen(false);
           form.reset();
         },
         onError: () => {
-          toast({ title: "Failed to create task", variant: "destructive" });
+          toast({ title: "Erro ao criar tarefa", variant: "destructive" });
         }
       });
     } else {
@@ -133,14 +146,14 @@ export default function Tasks() {
         assignedTo: data.assignedTo || undefined
       }}, {
         onSuccess: () => {
-          toast({ title: "Task updated successfully" });
+          toast({ title: "Tarefa atualizada com sucesso" });
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
           setIsCreateOpen(false);
           setEditingTask(null);
           form.reset();
         },
         onError: () => {
-          toast({ title: "Failed to update task", variant: "destructive" });
+          toast({ title: "Erro ao atualizar tarefa", variant: "destructive" });
         }
       });
     }
@@ -163,11 +176,11 @@ export default function Tasks() {
   const handleDelete = (id: number) => {
     deleteTask.mutate({ id }, {
       onSuccess: () => {
-        toast({ title: "Task deleted" });
+        toast({ title: "Tarefa removida" });
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
       },
       onError: () => {
-        toast({ title: "Failed to delete task", variant: "destructive" });
+        toast({ title: "Erro ao remover tarefa", variant: "destructive" });
       }
     });
   };
@@ -184,8 +197,8 @@ export default function Tasks() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Tasks</h1>
-          <p className="text-muted-foreground mt-1">Manage deliverables across all projects.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Tarefas</h1>
+          <p className="text-muted-foreground mt-1">Gerencie entregas em todos os projetos.</p>
         </div>
 
         {isGestor && <Dialog open={isCreateOpen} onOpenChange={(open) => {
@@ -211,7 +224,7 @@ export default function Tasks() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingTask ? "Edit Task" : "Create Task"}</DialogTitle>
+              <DialogTitle>{editingTask ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -220,11 +233,11 @@ export default function Tasks() {
                   name="projectId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project</FormLabel>
+                      <FormLabel>Projeto</FormLabel>
                       <Select onValueChange={(val) => field.onChange(parseInt(val, 10))} value={field.value ? field.value.toString() : undefined}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select project" />
+                            <SelectValue placeholder="Selecione o projeto" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -242,9 +255,9 @@ export default function Tasks() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Task Title</FormLabel>
+                      <FormLabel>Título da Tarefa</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Concrete pouring phase 1" {...field} />
+                        <Input placeholder="Ex.: Concretagem fase 1" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -255,9 +268,9 @@ export default function Tasks() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
-                        <Input placeholder="Details about the task..." {...field} />
+                        <Input placeholder="Detalhes sobre a tarefa..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -273,14 +286,14 @@ export default function Tasks() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a status" />
+                              <SelectValue placeholder="Selecione o status" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="todo">To Do</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="review">Review</SelectItem>
-                            <SelectItem value="done">Done</SelectItem>
+                            <SelectItem value="todo">A Fazer</SelectItem>
+                            <SelectItem value="in_progress">Em Andamento</SelectItem>
+                            <SelectItem value="review">Em Revisão</SelectItem>
+                            <SelectItem value="done">Concluído</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -292,17 +305,17 @@ export default function Tasks() {
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Priority</FormLabel>
+                        <FormLabel>Prioridade</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a priority" />
+                              <SelectValue placeholder="Selecione a prioridade" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="low">Baixa</SelectItem>
+                            <SelectItem value="medium">Média</SelectItem>
+                            <SelectItem value="high">Alta</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -316,11 +329,11 @@ export default function Tasks() {
                     name="assignedTo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Assignee</FormLabel>
+                        <FormLabel>Responsável</FormLabel>
                         <Select onValueChange={(val) => field.onChange(parseInt(val, 10))} value={field.value ? field.value.toString() : undefined}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Unassigned" />
+                              <SelectValue placeholder="Sem responsável" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -338,7 +351,7 @@ export default function Tasks() {
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Due Date</FormLabel>
+                        <FormLabel>Prazo</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -349,7 +362,7 @@ export default function Tasks() {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={createTask.isPending || updateTask.isPending}>
-                    {createTask.isPending || updateTask.isPending ? "Saving..." : (editingTask ? "Update Task" : "Create Task")}
+                    {createTask.isPending || updateTask.isPending ? "Salvando..." : (editingTask ? "Atualizar Tarefa" : "Criar Tarefa")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -364,7 +377,7 @@ export default function Tasks() {
             <div className="relative w-full md:max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search tasks..."
+                placeholder="Buscar tarefas..."
                 className="pl-8"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -376,19 +389,19 @@ export default function Tasks() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="review">Review</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="todo">A Fazer</SelectItem>
+                  <SelectItem value="in_progress">Em Andamento</SelectItem>
+                  <SelectItem value="review">Em Revisão</SelectItem>
+                  <SelectItem value="done">Concluído</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={projectFilter} onValueChange={setProjectFilter}>
                 <SelectTrigger className="w-full md:w-[200px]">
-                  <SelectValue placeholder="Project" />
+                  <SelectValue placeholder="Projeto" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Projects</SelectItem>
+                  <SelectItem value="all">Todos os Projetos</SelectItem>
                   {projects?.map(p => (
                     <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                   ))}
@@ -415,7 +428,7 @@ export default function Tasks() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">{task.title}</span>
                           <Badge variant="outline" className={getTaskStatusColor(task.status)}>
-                            {task.status.replace("_", " ").toUpperCase()}
+                            {TASK_STATUS_LABELS[task.status] ?? task.status}
                           </Badge>
                         </div>
                         {task.description && (
@@ -424,7 +437,7 @@ export default function Tasks() {
                         <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
                           <span className={`font-medium flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
                             <AlertCircle className="h-3.5 w-3.5" />
-                            <span className="capitalize">{task.priority} Priority</span>
+                            <span>{PRIORITY_LABELS[task.priority] ?? task.priority}</span>
                           </span>
                           {task.projectName && (
                             <span className="flex items-center gap-1">
@@ -441,7 +454,7 @@ export default function Tasks() {
                           {task.dueDate && (
                             <span className="flex items-center gap-1">
                               <Clock className="h-3.5 w-3.5" />
-                              Due: {format(new Date(task.dueDate), 'MMM d, yyyy')}
+                              Prazo: {format(new Date(task.dueDate), "d MMM yyyy", { locale: ptBR })}
                             </span>
                           )}
                         </div>
@@ -460,17 +473,17 @@ export default function Tasks() {
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Delete Task</DialogTitle>
+                            <DialogTitle>Excluir Tarefa</DialogTitle>
                           </DialogHeader>
                           <div className="py-4">
-                            Are you sure you want to delete this task? This action cannot be undone.
+                            Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.
                           </div>
                           <DialogFooter>
                             <DialogClose asChild>
-                              <Button variant="outline">Cancel</Button>
+                              <Button variant="outline">Cancelar</Button>
                             </DialogClose>
                             <Button variant="destructive" onClick={() => handleDelete(task.id)} disabled={deleteTask.isPending}>
-                              {deleteTask.isPending ? "Deleting..." : "Delete"}
+                              {deleteTask.isPending ? "Excluindo..." : "Excluir"}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -483,11 +496,11 @@ export default function Tasks() {
           ) : (
             <div className="py-16 text-center flex flex-col items-center border border-dashed rounded-md bg-muted/20">
               <CheckSquare className="h-10 w-10 text-muted-foreground mb-3 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground">No tasks found</h3>
+              <h3 className="text-lg font-medium text-foreground">Nenhuma tarefa encontrada</h3>
               <p className="text-muted-foreground mt-1">
                 {search || statusFilter !== "all" || projectFilter !== "all"
-                  ? "Try adjusting your filters" 
-                  : "Get started by creating a new task"}
+                  ? "Tente ajustar os filtros" 
+                  : "Comece criando uma nova tarefa"}
               </p>
             </div>
           )}

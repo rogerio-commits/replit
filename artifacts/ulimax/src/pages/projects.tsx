@@ -48,7 +48,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
 
 const projectSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Nome obrigatório"),
   description: z.string().optional(),
   status: z.enum(["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]),
   priority: z.enum(["low", "medium", "high"]),
@@ -74,6 +74,12 @@ const STATUS_LABELS: Record<string, string> = {
   em_instalacao: "Em Instalação",
 };
 
+const PRIORITY_LABELS: Record<string, string> = {
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa",
+};
+
 function getStatusColor(status: string) {
   switch (status) {
     case "a_iniciar": return "bg-slate-500/10 text-slate-600 border-slate-200";
@@ -94,12 +100,6 @@ function getPriorityColor(priority: string) {
     default: return "text-slate-500";
   }
 }
-
-const PRIORITY_LABELS: Record<string, string> = {
-  high: "Alta",
-  medium: "Média",
-  low: "Baixa",
-};
 
 function DateItem({ label, value }: { label: string; value?: string | null }) {
   return (
@@ -147,13 +147,13 @@ export default function Projects() {
   const onSubmit = (data: ProjectFormValues) => {
     createProject.mutate({ data }, {
       onSuccess: () => {
-        toast({ title: "Project created successfully" });
+        toast({ title: "Projeto criado com sucesso" });
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setIsCreateOpen(false);
         form.reset();
       },
       onError: () => {
-        toast({ title: "Failed to create project", variant: "destructive" });
+        toast({ title: "Erro ao criar projeto", variant: "destructive" });
       }
     });
   };
@@ -169,8 +169,8 @@ export default function Projects() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Projects</h1>
-          <p className="text-muted-foreground mt-1">Manage and track all engineering projects.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Projetos</h1>
+          <p className="text-muted-foreground mt-1">Gerencie e acompanhe todos os projetos de engenharia.</p>
         </div>
 
         {isGestor && <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -182,7 +182,7 @@ export default function Projects() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Create Project</DialogTitle>
+              <DialogTitle>Novo Projeto</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -191,9 +191,9 @@ export default function Projects() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project Name</FormLabel>
+                      <FormLabel>Nome do Projeto</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Edifício Alpha" {...field} />
+                        <Input placeholder="Ex.: Edifício Alpha" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,9 +204,9 @@ export default function Projects() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Descrição</FormLabel>
                       <FormControl>
-                        <Input placeholder="Brief overview of the project..." {...field} />
+                        <Input placeholder="Breve descrição do projeto..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -222,7 +222,7 @@ export default function Projects() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a status" />
+                              <SelectValue placeholder="Selecione o status" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -243,17 +243,17 @@ export default function Projects() {
                     name="priority"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Priority</FormLabel>
+                        <FormLabel>Prioridade</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a priority" />
+                              <SelectValue placeholder="Selecione a prioridade" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="low">Baixa</SelectItem>
+                            <SelectItem value="medium">Média</SelectItem>
+                            <SelectItem value="high">Alta</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -394,7 +394,7 @@ export default function Projects() {
                 />
                 <DialogFooter>
                   <Button type="submit" disabled={createProject.isPending}>
-                    {createProject.isPending ? "Creating..." : "Create Project"}
+                    {createProject.isPending ? "Criando..." : "Criar Projeto"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -409,7 +409,7 @@ export default function Projects() {
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search projects..."
+                placeholder="Buscar projetos..."
                 className="pl-8"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -417,7 +417,7 @@ export default function Projects() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:max-w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
@@ -457,7 +457,6 @@ export default function Projects() {
                       )}
                     </CardHeader>
                     <CardContent className="space-y-3 pt-0">
-                      {/* Priority + Material */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <AlertCircle className={`h-3.5 w-3.5 ${getPriorityColor(project.priority)}`} />
@@ -470,7 +469,6 @@ export default function Projects() {
                         )}
                       </div>
 
-                      {/* Projeto — only if at least one date is set */}
                       {(project.startDate || project.endDate || project.finalDate) && (
                         <div>
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Projeto</p>
@@ -482,7 +480,6 @@ export default function Projects() {
                         </div>
                       )}
 
-                      {/* Produção — only if at least one date is set */}
                       {(project.producaoStartDate || project.producaoEndDate || project.producaoFinalDate) && (
                         <div>
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Produção</p>
@@ -494,18 +491,16 @@ export default function Projects() {
                         </div>
                       )}
 
-                      {/* Medição & Instalação — only if at least one date is set */}
                       {(project.medicaoDate || project.instalacaoStartDate) && (
                         <div>
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Medição & Instalação</p>
                           <div className="grid grid-cols-2 gap-2">
-                            <DateItem label="Medição"      value={project.medicaoDate} />
+                            <DateItem label="Medição"        value={project.medicaoDate} />
                             <DateItem label="Início Instal." value={project.instalacaoStartDate} />
                           </div>
                         </div>
                       )}
 
-                      {/* Fallback when no dates at all */}
                       {!project.startDate && !project.endDate && !project.finalDate &&
                        !project.producaoStartDate && !project.producaoEndDate && !project.producaoFinalDate &&
                        !project.medicaoDate && !project.instalacaoStartDate && (
@@ -519,11 +514,11 @@ export default function Projects() {
           ) : (
             <div className="py-12 text-center flex flex-col items-center">
               <Briefcase className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground">No projects found</h3>
+              <h3 className="text-lg font-medium text-foreground">Nenhum projeto encontrado</h3>
               <p className="text-muted-foreground mt-1">
                 {search || statusFilter !== "all" 
-                  ? "Try adjusting your filters" 
-                  : "Get started by creating a new project"}
+                  ? "Tente ajustar os filtros" 
+                  : "Comece criando um novo projeto"}
               </p>
             </div>
           )}

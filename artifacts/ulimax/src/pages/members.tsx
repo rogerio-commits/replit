@@ -38,9 +38,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
 
 const memberSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  role: z.string().min(1, "Role is required"),
-  email: z.string().email("Valid email is required"),
+  name: z.string().min(1, "Nome obrigatório"),
+  role: z.string().min(1, "Cargo obrigatório"),
+  email: z.string().email("E-mail válido obrigatório"),
 });
 
 type MemberFormValues = z.infer<typeof memberSchema>;
@@ -73,26 +73,26 @@ export default function Members() {
     if (editingMember === null) {
       createMember.mutate({ data }, {
         onSuccess: () => {
-          toast({ title: "Member added successfully" });
+          toast({ title: "Membro adicionado com sucesso" });
           queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
           setIsCreateOpen(false);
           form.reset();
         },
         onError: () => {
-          toast({ title: "Failed to add member", variant: "destructive" });
+          toast({ title: "Erro ao adicionar membro", variant: "destructive" });
         }
       });
     } else {
       updateMember.mutate({ id: editingMember, data }, {
         onSuccess: () => {
-          toast({ title: "Member updated successfully" });
+          toast({ title: "Membro atualizado com sucesso" });
           queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
           setIsCreateOpen(false);
           setEditingMember(null);
           form.reset();
         },
         onError: () => {
-          toast({ title: "Failed to update member", variant: "destructive" });
+          toast({ title: "Erro ao atualizar membro", variant: "destructive" });
         }
       });
     }
@@ -111,11 +111,11 @@ export default function Members() {
   const handleDelete = (id: number) => {
     deleteMember.mutate({ id }, {
       onSuccess: () => {
-        toast({ title: "Member removed" });
+        toast({ title: "Membro removido" });
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
       },
       onError: () => {
-        toast({ title: "Failed to remove member", variant: "destructive" });
+        toast({ title: "Erro ao remover membro", variant: "destructive" });
       }
     });
   };
@@ -130,8 +130,8 @@ export default function Members() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Team Members</h1>
-          <p className="text-muted-foreground mt-1">Manage personnel, roles, and contact info.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Equipe</h1>
+          <p className="text-muted-foreground mt-1">Gerencie colaboradores, cargos e contatos.</p>
         </div>
 
         {isGestor && <Dialog open={isCreateOpen} onOpenChange={(open) => {
@@ -153,7 +153,7 @@ export default function Members() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{editingMember ? "Edit Member" : "Add Team Member"}</DialogTitle>
+              <DialogTitle>{editingMember ? "Editar Membro" : "Adicionar Membro"}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -162,9 +162,9 @@ export default function Members() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Nome Completo</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Carlos Silva" {...field} />
+                        <Input placeholder="Ex.: Carlos Silva" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -175,9 +175,9 @@ export default function Members() {
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role / Title</FormLabel>
+                      <FormLabel>Cargo / Função</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Civil Engineer" {...field} />
+                        <Input placeholder="Ex.: Engenheiro Civil" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -188,7 +188,7 @@ export default function Members() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>E-mail</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="carlos@ulimax.com.br" {...field} />
                       </FormControl>
@@ -198,7 +198,7 @@ export default function Members() {
                 />
                 <DialogFooter>
                   <Button type="submit" disabled={createMember.isPending || updateMember.isPending}>
-                    {createMember.isPending || updateMember.isPending ? "Saving..." : (editingMember ? "Update" : "Add Member")}
+                    {createMember.isPending || updateMember.isPending ? "Salvando..." : (editingMember ? "Atualizar" : "Adicionar")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -212,7 +212,7 @@ export default function Members() {
           <div className="relative w-full max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, role, or email..."
+              placeholder="Buscar por nome, cargo ou e-mail..."
               className="pl-8"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -255,28 +255,28 @@ export default function Members() {
                   {isGestor && <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(member)} className="h-8 text-muted-foreground">
                       <Edit className="h-3.5 w-3.5 mr-1" />
-                      Edit
+                      Editar
                     </Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive">
                           <Trash2 className="h-3.5 w-3.5 mr-1" />
-                          Remove
+                          Remover
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Remove Member</DialogTitle>
+                          <DialogTitle>Remover Membro</DialogTitle>
                         </DialogHeader>
                         <div className="py-4">
-                          Are you sure you want to remove <strong>{member.name}</strong> from the team? This action cannot be undone.
+                          Tem certeza que deseja remover <strong>{member.name}</strong> da equipe? Esta ação não pode ser desfeita.
                         </div>
                         <DialogFooter>
                           <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">Cancelar</Button>
                           </DialogClose>
                           <Button variant="destructive" onClick={() => handleDelete(member.id)} disabled={deleteMember.isPending}>
-                            {deleteMember.isPending ? "Removing..." : "Remove"}
+                            {deleteMember.isPending ? "Removendo..." : "Remover"}
                           </Button>
                         </DialogFooter>
                       </DialogContent>
@@ -288,9 +288,9 @@ export default function Members() {
           ) : (
             <div className="py-16 text-center flex flex-col items-center">
               <HardHat className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground">No members found</h3>
+              <h3 className="text-lg font-medium text-foreground">Nenhum membro encontrado</h3>
               <p className="text-muted-foreground mt-1">
-                {search ? "Try adjusting your search query" : "Get started by adding team members"}
+                {search ? "Tente ajustar sua busca" : "Comece adicionando membros à equipe"}
               </p>
             </div>
           )}
