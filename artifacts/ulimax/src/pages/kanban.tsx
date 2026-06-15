@@ -181,12 +181,10 @@ function DraggableTaskCard({ task }: { task: TaskItem }) {
 // ── Project Card ──────────────────────────────────────────────────────────────
 
 function ProjectCard({ project, isDragging = false, onEdit }: { project: ProjectItem; isDragging?: boolean; onEdit?: () => void }) {
-  const overdueEnd = isOverdue(project.endDate, project.status);
   return (
     <div data-testid={`kanban-card-project-${project.id}`} className={cn(
       "bg-card border rounded-lg p-3 space-y-2 shadow-sm select-none",
       isDragging ? "shadow-xl rotate-1 opacity-90 ring-2 ring-primary/30" : "hover:shadow-md transition-shadow",
-      overdueEnd && "border-red-300"
     )}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-snug flex-1">{project.name}</p>
@@ -207,22 +205,14 @@ function ProjectCard({ project, isDragging = false, onEdit }: { project: Project
       {project.description && (
         <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
       )}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex items-center justify-between gap-2 pt-0.5">
         <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PRIORITY_COLORS[project.priority])}>
           {PRIORITY_LABELS[project.priority]}
         </Badge>
-      </div>
-      <div className="flex items-center justify-between gap-2 pt-0.5">
-        {project.startDate && (
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+        {project.instalacaoStartDate && (
+          <div className="flex items-center gap-1 text-[11px] text-red-600 font-medium">
             <CalendarDays className="h-3 w-3" />
-            <span>Início {formatDate(project.startDate)}</span>
-          </div>
-        )}
-        {project.endDate && (
-          <div className={cn("flex items-center gap-1 text-[11px]", overdueEnd ? "text-red-600 font-medium" : "text-muted-foreground")}>
-            {overdueEnd ? <AlertCircle className="h-3 w-3" /> : <CalendarDays className="h-3 w-3" />}
-            <span>Fim {formatDate(project.endDate)}</span>
+            <span>Inst. {formatDate(project.instalacaoStartDate)}</span>
           </div>
         )}
       </div>
