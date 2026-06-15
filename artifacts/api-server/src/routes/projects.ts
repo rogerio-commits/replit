@@ -27,6 +27,7 @@ function projectRow(p: typeof projectsTable.$inferSelect) {
     producaoStartDate: p.producaoStartDate ?? null,
     producaoEndDate: p.producaoEndDate ?? null,
     medicaoDate: p.medicaoDate ?? null,
+    instalacaoStartDate: p.instalacaoStartDate ?? null,
     createdAt: p.createdAt.toISOString(),
   };
 }
@@ -67,6 +68,7 @@ router.post("/projects", requireGestor, async (req, res) => {
       producaoStartDate: (body.data as Record<string, unknown>).producaoStartDate as string ?? null,
       producaoEndDate: (body.data as Record<string, unknown>).producaoEndDate as string ?? null,
       medicaoDate: (body.data as Record<string, unknown>).medicaoDate as string ?? null,
+      instalacaoStartDate: (body.data as Record<string, unknown>).instalacaoStartDate as string ?? null,
     })
     .returning();
 
@@ -105,6 +107,7 @@ router.patch("/projects/:id", requireGestor, async (req, res) => {
   if (raw.producaoStartDate !== undefined) updateData.producaoStartDate = raw.producaoStartDate;
   if (raw.producaoEndDate !== undefined) updateData.producaoEndDate = raw.producaoEndDate;
   if (raw.medicaoDate !== undefined) updateData.medicaoDate = raw.medicaoDate;
+  if (raw.instalacaoStartDate !== undefined) updateData.instalacaoStartDate = raw.instalacaoStartDate;
 
   const [project] = await db
     .update(projectsTable)

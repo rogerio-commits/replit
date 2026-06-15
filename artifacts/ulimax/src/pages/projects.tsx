@@ -55,6 +55,7 @@ const projectSchema = z.object({
   producaoStartDate: z.string().optional(),
   producaoEndDate: z.string().optional(),
   medicaoDate: z.string().optional(),
+  instalacaoStartDate: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -112,6 +113,7 @@ export default function Projects() {
       producaoStartDate: "",
       producaoEndDate: "",
       medicaoDate: "",
+      instalacaoStartDate: "",
     },
   });
 
@@ -288,19 +290,34 @@ export default function Projects() {
                     )}
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="medicaoDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Medição</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="medicaoDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Data de Medição</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="instalacaoStartDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Início Est. da Instalação</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <DialogFooter>
                   <Button type="submit" disabled={createProject.isPending}>
                     {createProject.isPending ? "Creating..." : "Create Project"}

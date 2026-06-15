@@ -25,5 +25,7 @@ export interface Project {
   producaoEndDate?: string | null;
   /** @nullable */
   medicaoDate?: string | null;
+  /** @nullable */
+  instalacaoStartDate?: string | null;
   createdAt: string;
 }

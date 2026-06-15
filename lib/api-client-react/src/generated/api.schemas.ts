@@ -47,6 +47,8 @@ export interface Project {
   producaoEndDate?: string | null;
   /** @nullable */
   medicaoDate?: string | null;
+  /** @nullable */
+  instalacaoStartDate?: string | null;
   createdAt: string;
 }
 
@@ -82,6 +84,7 @@ export interface ProjectInput {
   producaoStartDate?: string;
   producaoEndDate?: string;
   medicaoDate?: string;
+  instalacaoStartDate?: string;
 }
 
 export type ProjectUpdateStatus = typeof ProjectUpdateStatus[keyof typeof ProjectUpdateStatus];
@@ -116,6 +119,7 @@ export interface ProjectUpdate {
   producaoStartDate?: string;
   producaoEndDate?: string;
   medicaoDate?: string;
+  instalacaoStartDate?: string;
 }
 
 export interface ProjectStats {

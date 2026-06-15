@@ -179,7 +179,7 @@ function DraggableTaskCard({ task }: { task: TaskItem }) {
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
-function ProjectCard({ project, isDragging = false }: { project: ProjectItem; isDragging?: boolean }) {
+function ProjectCard({ project, isDragging = false, onEdit }: { project: ProjectItem; isDragging?: boolean; onEdit?: () => void }) {
   const overdueEnd = isOverdue(project.endDate, project.status);
   return (
     <div data-testid={`kanban-card-project-${project.id}`} className={cn(
@@ -189,7 +189,19 @@ function ProjectCard({ project, isDragging = false }: { project: ProjectItem; is
     )}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-snug flex-1">{project.name}</p>
-        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+        <div className="flex items-center gap-1 shrink-0">
+          {onEdit && !isDragging && (
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title="Editar projeto"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5" />
+        </div>
       </div>
       {project.description && (
         <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
@@ -217,11 +229,11 @@ function ProjectCard({ project, isDragging = false }: { project: ProjectItem; is
   );
 }
 
-function DraggableProjectCard({ project }: { project: ProjectItem }) {
+function DraggableProjectCard({ project, onEdit }: { project: ProjectItem; onEdit: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `project-${project.id}` });
   return (
     <div ref={setNodeRef} {...listeners} {...attributes} style={{ opacity: isDragging ? 0 : 1 }}>
-      <ProjectCard project={project} />
+      <ProjectCard project={project} onEdit={onEdit} />
     </div>
   );
 }
@@ -339,9 +351,10 @@ const newProjectSchema = z.object({
   priority:         z.enum(["low", "medium", "high"]),
   startDate:        z.string().optional(),
   endDate:          z.string().optional(),
-  producaoStartDate: z.string().optional(),
-  producaoEndDate:  z.string().optional(),
-  medicaoDate:      z.string().optional(),
+  producaoStartDate:   z.string().optional(),
+  producaoEndDate:     z.string().optional(),
+  medicaoDate:         z.string().optional(),
+  instalacaoStartDate: z.string().optional(),
 });
 
 function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
@@ -352,7 +365,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
   const createProject = useCreateProject();
   const form = useForm<z.infer<typeof newProjectSchema>>({
     resolver: zodResolver(newProjectSchema),
-    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "" },
+    defaultValues: { name: "", description: "", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "", instalacaoStartDate: "" },
   });
 
   function onSubmit(values: z.infer<typeof newProjectSchema>) {
@@ -363,6 +376,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
       producaoStartDate: values.producaoStartDate || undefined,
       producaoEndDate: values.producaoEndDate || undefined,
       medicaoDate: values.medicaoDate || undefined,
+      instalacaoStartDate: values.instalacaoStartDate || undefined,
     }}, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
@@ -419,14 +433,170 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
                   <FormControl><Input type="date" {...field} /></FormControl></FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="medicaoDate" render={({ field }) => (
-              <FormItem><FormLabel>Data de Medição</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl></FormItem>
-            )} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="medicaoDate" render={({ field }) => (
+                <FormItem><FormLabel>Data de Medição</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="instalacaoStartDate" render={({ field }) => (
+                <FormItem><FormLabel>Início Est. da Instalação</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+            </div>
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
               <Button type="submit" disabled={createProject.isPending} data-testid="button-create-project">
                 {createProject.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Edit Project Dialog ────────────────────────────────────────────────────────
+
+const editProjectSchema = z.object({
+  name:                z.string().min(1, "Nome obrigatório"),
+  description:         z.string().optional(),
+  status:              z.enum(["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]),
+  priority:            z.enum(["low", "medium", "high"]),
+  startDate:           z.string().optional(),
+  endDate:             z.string().optional(),
+  producaoStartDate:   z.string().optional(),
+  producaoEndDate:     z.string().optional(),
+  medicaoDate:         z.string().optional(),
+  instalacaoStartDate: z.string().optional(),
+});
+
+function EditProjectDialog({ project, open, onOpenChange }: {
+  project: ProjectItem | null; open: boolean; onOpenChange: (v: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const updateProject = useUpdateProject();
+  const form = useForm<z.infer<typeof editProjectSchema>>({
+    resolver: zodResolver(editProjectSchema),
+    defaultValues: { name: "", description: "", status: "a_iniciar", priority: "medium", startDate: "", endDate: "", producaoStartDate: "", producaoEndDate: "", medicaoDate: "", instalacaoStartDate: "" },
+  });
+
+  // Populate form whenever the target project changes
+  const prevId = form.getValues("name");
+  if (project && (prevId !== project.name || !open)) {
+    form.reset({
+      name: project.name,
+      description: project.description ?? "",
+      status: project.status as z.infer<typeof editProjectSchema>["status"],
+      priority: project.priority as z.infer<typeof editProjectSchema>["priority"],
+      startDate: project.startDate ? project.startDate.split("T")[0] : "",
+      endDate: project.endDate ? project.endDate.split("T")[0] : "",
+      producaoStartDate: project.producaoStartDate ? project.producaoStartDate.split("T")[0] : "",
+      producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split("T")[0] : "",
+      medicaoDate: project.medicaoDate ? project.medicaoDate.split("T")[0] : "",
+      instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split("T")[0] : "",
+    });
+  }
+
+  function onSubmit(values: z.infer<typeof editProjectSchema>) {
+    if (!project) return;
+    updateProject.mutate({ id: project.id, data: {
+      name: values.name, description: values.description || undefined,
+      status: values.status, priority: values.priority,
+      startDate: values.startDate || undefined, endDate: values.endDate || undefined,
+      producaoStartDate: values.producaoStartDate || undefined,
+      producaoEndDate: values.producaoEndDate || undefined,
+      medicaoDate: values.medicaoDate || undefined,
+      instalacaoStartDate: values.instalacaoStartDate || undefined,
+    }}, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+        toast({ title: "Projeto atualizado com sucesso." });
+        onOpenChange(false);
+      },
+      onError: () => toast({ title: "Erro ao atualizar projeto.", variant: "destructive" }),
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Editar Projeto</DialogTitle></DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem><FormLabel>Nome</FormLabel>
+                <FormControl><Input placeholder="Nome do projeto" {...field} /></FormControl>
+                <FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem><FormLabel>Descrição</FormLabel>
+                <FormControl><Textarea placeholder="Descrição opcional" rows={2} {...field} /></FormControl></FormItem>
+            )} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="status" render={({ field }) => (
+                <FormItem><FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="a_iniciar">A Iniciar</SelectItem>
+                      <SelectItem value="em_projeto">Em Projeto</SelectItem>
+                      <SelectItem value="em_aprovacao">Em Aprovação</SelectItem>
+                      <SelectItem value="em_producao">Em Produção</SelectItem>
+                      <SelectItem value="aguardando_instalacao">Aguard. Instalação</SelectItem>
+                      <SelectItem value="em_instalacao">Em Instalação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="priority" render={({ field }) => (
+                <FormItem><FormLabel>Prioridade</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      <SelectItem value="low">Baixa</SelectItem>
+                      <SelectItem value="medium">Média</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage /></FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="startDate" render={({ field }) => (
+                <FormItem><FormLabel>Início do Projeto</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="endDate" render={({ field }) => (
+                <FormItem><FormLabel>Fim do Projeto</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
+                <FormItem><FormLabel>Início da Produção</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
+                <FormItem><FormLabel>Fim Est. da Produção</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="medicaoDate" render={({ field }) => (
+                <FormItem><FormLabel>Data de Medição</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+              <FormField control={form.control} name="instalacaoStartDate" render={({ field }) => (
+                <FormItem><FormLabel>Início Est. da Instalação</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl></FormItem>
+              )} />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button type="submit" disabled={updateProject.isPending}>
+                {updateProject.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar
               </Button>
             </div>
           </form>
@@ -530,6 +700,7 @@ function ProjectsBoard() {
   const { toast } = useToast();
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
   const [dialog, setDialog] = useState<{ open: boolean; status: ProjectStatus }>({ open: false, status: "a_iniciar" });
+  const [editProject, setEditProject] = useState<ProjectItem | null>(null);
 
   const { data: projects, isLoading } = useListProjects();
   const updateProject = useUpdateProject();
@@ -583,7 +754,7 @@ function ProjectsBoard() {
           {PROJECT_COLUMNS.map((col) => (
             <KanbanColumn key={col.id} colId={col.id} label={col.label} color={col.color} bg={col.bg}
               count={projectsByColumn[col.id].length} onAdd={() => setDialog({ open: true, status: col.id })}>
-              {projectsByColumn[col.id].map((p) => <DraggableProjectCard key={p.id} project={p} />)}
+              {projectsByColumn[col.id].map((p) => <DraggableProjectCard key={p.id} project={p} onEdit={() => setEditProject(p)} />)}
             </KanbanColumn>
           ))}
         </div>
@@ -594,6 +765,8 @@ function ProjectsBoard() {
 
       <NewProjectDialog open={dialog.open} defaultStatus={dialog.status}
         onOpenChange={(v) => setDialog((s) => ({ ...s, open: v }))} />
+      <EditProjectDialog project={editProject} open={editProject !== null}
+        onOpenChange={(v) => { if (!v) setEditProject(null); }} />
     </>
   );
 }

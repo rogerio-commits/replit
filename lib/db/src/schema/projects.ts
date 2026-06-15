@@ -16,6 +16,7 @@ export const projectsTable = pgTable("projects", {
   producaoStartDate: text("producao_start_date"),
   producaoEndDate: text("producao_end_date"),
   medicaoDate: text("medicao_date"),
+  instalacaoStartDate: text("instalacao_start_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

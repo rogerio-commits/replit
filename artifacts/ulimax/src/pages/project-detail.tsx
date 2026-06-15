@@ -60,6 +60,7 @@ const projectSchema = z.object({
   producaoStartDate: z.string().optional(),
   producaoEndDate: z.string().optional(),
   medicaoDate: z.string().optional(),
+  instalacaoStartDate: z.string().optional(),
 });
 
 const taskSchema = z.object({
@@ -148,9 +149,10 @@ export default function ProjectDetail() {
       priority: project.priority,
       startDate: project.startDate ? project.startDate.split('T')[0] : "",
       endDate: project.endDate ? project.endDate.split('T')[0] : "",
-      producaoStartDate: (project as Record<string, unknown>).producaoStartDate ? String((project as Record<string, unknown>).producaoStartDate).split('T')[0] : "",
-      producaoEndDate: (project as Record<string, unknown>).producaoEndDate ? String((project as Record<string, unknown>).producaoEndDate).split('T')[0] : "",
-      medicaoDate: (project as Record<string, unknown>).medicaoDate ? String((project as Record<string, unknown>).medicaoDate).split('T')[0] : "",
+      producaoStartDate: project.producaoStartDate ? project.producaoStartDate.split('T')[0] : "",
+      producaoEndDate: project.producaoEndDate ? project.producaoEndDate.split('T')[0] : "",
+      medicaoDate: project.medicaoDate ? project.medicaoDate.split('T')[0] : "",
+      instalacaoStartDate: project.instalacaoStartDate ? project.instalacaoStartDate.split('T')[0] : "",
     } : undefined,
   });
 
@@ -394,19 +396,34 @@ export default function ProjectDetail() {
                         )}
                       />
                     </div>
-                    <FormField
-                      control={projectForm.control}
-                      name="medicaoDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data de Medição</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={projectForm.control}
+                        name="medicaoDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data de Medição</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={projectForm.control}
+                        name="instalacaoStartDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Início Est. da Instalação</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     <DialogFooter>
                       <Button type="submit" disabled={updateProject.isPending}>
                         {updateProject.isPending ? "Saving..." : "Save Changes"}

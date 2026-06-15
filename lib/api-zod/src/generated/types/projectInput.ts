@@ -19,4 +19,5 @@ export interface ProjectInput {
   producaoStartDate?: string;
   producaoEndDate?: string;
   medicaoDate?: string;
+  instalacaoStartDate?: string;
 }

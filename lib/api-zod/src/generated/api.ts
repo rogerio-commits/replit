@@ -36,6 +36,7 @@ export const ListProjectsResponseItem = zod.object({
   "producaoStartDate": zod.string().nullish(),
   "producaoEndDate": zod.string().nullish(),
   "medicaoDate": zod.string().nullish(),
+  "instalacaoStartDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
@@ -56,7 +57,8 @@ export const CreateProjectBody = zod.object({
   "endDate": zod.string().optional(),
   "producaoStartDate": zod.string().optional(),
   "producaoEndDate": zod.string().optional(),
-  "medicaoDate": zod.string().optional()
+  "medicaoDate": zod.string().optional(),
+  "instalacaoStartDate": zod.string().optional()
 })
 
 
@@ -78,6 +80,7 @@ export const GetProjectResponse = zod.object({
   "producaoStartDate": zod.string().nullish(),
   "producaoEndDate": zod.string().nullish(),
   "medicaoDate": zod.string().nullish(),
+  "instalacaoStartDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -101,7 +104,8 @@ export const UpdateProjectBody = zod.object({
   "endDate": zod.string().optional(),
   "producaoStartDate": zod.string().optional(),
   "producaoEndDate": zod.string().optional(),
-  "medicaoDate": zod.string().optional()
+  "medicaoDate": zod.string().optional(),
+  "instalacaoStartDate": zod.string().optional()
 })
 
 export const UpdateProjectResponse = zod.object({
@@ -115,6 +119,7 @@ export const UpdateProjectResponse = zod.object({
   "producaoStartDate": zod.string().nullish(),
   "producaoEndDate": zod.string().nullish(),
   "medicaoDate": zod.string().nullish(),
+  "instalacaoStartDate": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
