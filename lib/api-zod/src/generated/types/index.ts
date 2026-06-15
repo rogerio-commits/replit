@@ -38,6 +38,7 @@ export * from './projectInputPriority';
 export * from './projectInputStatus';
 export * from './projectMaterialType';
 export * from './projectMember';
+export * from './projectParticipantSummary';
 export * from './projectPriority';
 export * from './projectStats';
 export * from './projectStatus';

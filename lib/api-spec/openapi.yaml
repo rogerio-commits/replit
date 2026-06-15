@@ -657,9 +657,20 @@ components:
       required:
         - status
 
+    ProjectParticipantSummary:
+      type: object
+      required: [memberId, memberName]
+      properties:
+        memberId:
+          type: integer
+        memberName:
+          type: string
+        memberAvatarUrl:
+          type: ["string", "null"]
+
     Project:
       type: object
-      required: [id, name, status, priority, createdAt]
+      required: [id, name, status, priority, createdAt, participants]
       properties:
         id:
           type: integer
@@ -694,6 +705,10 @@ components:
           enum: [madeira, aluminio]
         createdAt:
           type: string
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectParticipantSummary"
 
     ProjectInput:
       type: object

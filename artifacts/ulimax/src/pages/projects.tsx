@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { DateWithDaysCalc } from "@/components/date-with-days-calc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Dialog, 
   DialogContent, 
@@ -505,6 +506,47 @@ export default function Projects() {
                        !project.producaoStartDate && !project.producaoEndDate && !project.producaoFinalDate &&
                        !project.medicaoDate && !project.instalacaoStartDate && (
                         <p className="text-xs text-muted-foreground/50 italic">Nenhuma data cadastrada</p>
+                      )}
+
+                      {project.participants.length > 0 && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <div className="flex -space-x-2">
+                            {project.participants.slice(0, 4).map((p) => {
+                              const initials = p.memberName
+                                .split(" ")
+                                .map((w) => w[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase();
+                              return (
+                                <Avatar
+                                  key={p.memberId}
+                                  className="h-6 w-6 border-2 border-background ring-0 text-[9px]"
+                                  title={p.memberName}
+                                >
+                                  {p.memberAvatarUrl && (
+                                    <AvatarImage src={p.memberAvatarUrl} alt={p.memberName} />
+                                  )}
+                                  <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
+                                    {initials}
+                                  </AvatarFallback>
+                                </Avatar>
+                              );
+                            })}
+                            {project.participants.length > 4 && (
+                              <div className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center">
+                                <span className="text-[9px] text-muted-foreground font-medium">
+                                  +{project.participants.length - 4}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">
+                            {project.participants.length === 1
+                              ? "1 participante"
+                              : `${project.participants.length} participantes`}
+                          </span>
+                        </div>
                       )}
                     </CardContent>
                   </Card>

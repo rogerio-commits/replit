@@ -40,7 +40,12 @@ export const ListProjectsResponseItem = zod.object({
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
   "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "participants": zod.array(zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberAvatarUrl": zod.string().nullish()
+}))
 })
 export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
 
@@ -90,7 +95,12 @@ export const GetProjectResponse = zod.object({
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
   "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "participants": zod.array(zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberAvatarUrl": zod.string().nullish()
+}))
 })
 
 
@@ -135,7 +145,12 @@ export const UpdateProjectResponse = zod.object({
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
   "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "participants": zod.array(zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberAvatarUrl": zod.string().nullish()
+}))
 })
 
 

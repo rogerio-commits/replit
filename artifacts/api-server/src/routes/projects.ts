@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { projectsTable, membersTable, projectMembersTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
   CreateProjectBody,
@@ -19,7 +19,10 @@ import {
 
 const router = Router();
 
-function projectRow(p: typeof projectsTable.$inferSelect) {
+function projectRow(
+  p: typeof projectsTable.$inferSelect,
+  participants: { memberId: number; memberName: string; memberAvatarUrl: string | null }[] = []
+) {
   return {
     id: p.id,
     name: p.name,
@@ -36,7 +39,32 @@ function projectRow(p: typeof projectsTable.$inferSelect) {
     instalacaoStartDate: p.instalacaoStartDate ?? null,
     materialType: p.materialType ?? null,
     createdAt: p.createdAt.toISOString(),
+    participants,
   };
+}
+
+async function fetchParticipantsByProject(projectIds: number[]) {
+  if (projectIds.length === 0) return new Map<number, { memberId: number; memberName: string; memberAvatarUrl: string | null }[]>();
+  const rows = await db
+    .select({
+      projectId: projectMembersTable.projectId,
+      memberId: membersTable.id,
+      memberName: membersTable.name,
+      memberAvatarUrl: membersTable.avatarUrl,
+    })
+    .from(projectMembersTable)
+    .innerJoin(membersTable, eq(projectMembersTable.memberId, membersTable.id))
+    .where(
+      projectIds.length === 1
+        ? eq(projectMembersTable.projectId, projectIds[0])
+        : inArray(projectMembersTable.projectId, projectIds)
+    );
+  const map = new Map<number, { memberId: number; memberName: string; memberAvatarUrl: string | null }[]>();
+  for (const r of rows) {
+    if (!map.has(r.projectId)) map.set(r.projectId, []);
+    map.get(r.projectId)!.push({ memberId: r.memberId, memberName: r.memberName, memberAvatarUrl: r.memberAvatarUrl ?? null });
+  }
+  return map;
 }
 
 async function isExecutorParticipant(email: string, projectId: number): Promise<boolean> {
@@ -76,7 +104,8 @@ router.get("/projects", async (req, res) => {
     rows = rows.filter((p) => p.priority === query.data.priority);
   }
 
-  return res.json(rows.map(projectRow));
+  const participantsMap = await fetchParticipantsByProject(rows.map((p) => p.id));
+  return res.json(rows.map((p) => projectRow(p, participantsMap.get(p.id) ?? [])));
 });
 
 router.post("/projects", requireExecutorOrGestor, async (req, res) => {
@@ -105,7 +134,7 @@ router.post("/projects", requireExecutorOrGestor, async (req, res) => {
     })
     .returning();
 
-  return res.status(201).json(projectRow(project));
+  return res.status(201).json(projectRow(project, []));
 });
 
 router.get("/projects/:id", async (req, res) => {
@@ -119,7 +148,8 @@ router.get("/projects/:id", async (req, res) => {
 
   if (!project) return res.status(404).json({ error: "Not found" });
 
-  return res.json(projectRow(project));
+  const participantsMap = await fetchParticipantsByProject([project.id]);
+  return res.json(projectRow(project, participantsMap.get(project.id) ?? []));
 });
 
 router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
@@ -158,7 +188,8 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
 
   if (!project) return res.status(404).json({ error: "Not found" });
 
-  return res.json(projectRow(project));
+  const participantsMap = await fetchParticipantsByProject([project.id]);
+  return res.json(projectRow(project, participantsMap.get(project.id) ?? []));
 });
 
 router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ProjectMaterialType } from './projectMaterialType';
+import type { ProjectParticipantSummary } from './projectParticipantSummary';
 import type { ProjectPriority } from './projectPriority';
 import type { ProjectStatus } from './projectStatus';
 
@@ -35,4 +36,5 @@ export interface Project {
   /** @nullable */
   materialType?: ProjectMaterialType;
   createdAt: string;
+  participants: ProjectParticipantSummary[];
 }

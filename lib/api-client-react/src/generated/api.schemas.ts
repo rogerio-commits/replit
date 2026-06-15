@@ -9,6 +9,13 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface ProjectParticipantSummary {
+  memberId: number;
+  memberName: string;
+  /** @nullable */
+  memberAvatarUrl?: string | null;
+}
+
 export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
 
 
@@ -67,6 +74,7 @@ export interface Project {
   /** @nullable */
   materialType?: ProjectMaterialType;
   createdAt: string;
+  participants: ProjectParticipantSummary[];
 }
 
 export type ProjectInputStatus = typeof ProjectInputStatus[keyof typeof ProjectInputStatus];
