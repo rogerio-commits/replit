@@ -5,6 +5,8 @@ import { ptBR } from "date-fns/locale";
 import { 
   useListProjects, 
   useCreateProject, 
+  useAddProjectMember,
+  useListMembers,
   getListProjectsQueryKey,
   ProjectStatus,
   ProjectPriority
@@ -18,6 +20,8 @@ import { DateWithDaysCalc } from "@/components/date-with-days-calc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Dialog, 
   DialogContent, 
@@ -44,7 +48,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Briefcase, Plus, Search, AlertCircle } from "lucide-react";
+import { Briefcase, Plus, Search, AlertCircle, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 
@@ -121,12 +125,15 @@ export default function Projects() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canEdit = useCanEdit();
 
   const { data: projects, isLoading } = useListProjects();
+  const { data: allMembers } = useListMembers();
   const createProject = useCreateProject();
+  const addMember = useAddProjectMember();
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -147,15 +154,28 @@ export default function Projects() {
 
   const onSubmit = (data: ProjectFormValues) => {
     createProject.mutate({ data }, {
-      onSuccess: () => {
+      onSuccess: async (project) => {
+        const ids = Array.from(selectedMemberIds);
+        for (const memberId of ids) {
+          await addMember.mutateAsync({ id: project.id, data: { memberId } });
+        }
         toast({ title: "Projeto criado com sucesso" });
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setIsCreateOpen(false);
+        setSelectedMemberIds(new Set());
         form.reset();
       },
       onError: () => {
         toast({ title: "Erro ao criar projeto", variant: "destructive" });
       }
+    });
+  };
+
+  const toggleMember = (id: number) => {
+    setSelectedMemberIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
     });
   };
 
@@ -393,9 +413,58 @@ export default function Projects() {
                     </FormItem>
                   )}
                 />
+                {allMembers && allMembers.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-sm font-medium">Participantes</span>
+                      {selectedMemberIds.size > 0 && (
+                        <Badge variant="secondary" className="h-4 text-[10px] px-1.5">
+                          {selectedMemberIds.size}
+                        </Badge>
+                      )}
+                    </div>
+                    <ScrollArea className="h-32 rounded-md border p-2">
+                      <div className="space-y-1">
+                        {allMembers.map((member) => {
+                          const initials = member.name
+                            .split(" ")
+                            .map((w: string) => w[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase();
+                          return (
+                            <label
+                              key={member.id}
+                              className="flex items-center gap-2.5 px-1 py-1 rounded hover:bg-muted cursor-pointer select-none"
+                            >
+                              <Checkbox
+                                checked={selectedMemberIds.has(member.id)}
+                                onCheckedChange={() => toggleMember(member.id)}
+                              />
+                              <Avatar className="h-6 w-6 text-[9px]">
+                                {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt={member.name} />}
+                                <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
+                                  {initials}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <p className="text-sm leading-none truncate">{member.name}</p>
+                                {member.role && (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{member.role}</p>
+                                )}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
+
                 <DialogFooter>
-                  <Button type="submit" disabled={createProject.isPending}>
-                    {createProject.isPending ? "Criando..." : "Criar Projeto"}
+                  <Button type="submit" disabled={createProject.isPending || addMember.isPending}>
+                    {createProject.isPending || addMember.isPending ? "Criando..." : "Criar Projeto"}
                   </Button>
                 </DialogFooter>
               </form>
