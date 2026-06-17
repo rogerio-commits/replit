@@ -203,11 +203,10 @@ export default function ChecklistPage() {
                 {canEdit && <th className="w-8 px-4 py-3" />}
               </tr>
             </thead>
-            <tbody>
-              {Object.entries(grouped).map(([projectKey, group]) => (
-                <>
+            {Object.entries(grouped).map(([projectKey, group]) => (
+              <tbody key={projectKey}>
                   {/* Group header row */}
-                  <tr key={`group-${projectKey}`} className="border-t bg-muted/20">
+                  <tr className="border-t bg-muted/20">
                     <td colSpan={canEdit ? 6 : 5} className="px-4 py-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -349,9 +348,8 @@ export default function ChecklistPage() {
                       </tr>
                     );
                   })}
-                </>
-              ))}
-            </tbody>
+              </tbody>
+            ))}
           </table>
         </div>
       )}
