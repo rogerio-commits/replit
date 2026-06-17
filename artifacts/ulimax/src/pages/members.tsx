@@ -561,6 +561,74 @@ export default function Members() {
           )}
         </CardContent>
       </Card>
+
+      {isGestor && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <h2 className="text-base font-semibold">Acesso ao sistema</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mt-0.5">Gerencie os papéis dos usuários cadastrados.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-sm text-muted-foreground bg-muted/40 border rounded-lg p-4 grid gap-3 sm:grid-cols-3">
+              {(Object.entries(ROLE_META) as [SystemRole, (typeof ROLE_META)[SystemRole]][]).map(([role, meta]) => {
+                const Icon = meta.icon;
+                return (
+                  <div key={role} className="flex items-start gap-2">
+                    <Icon className={cn("h-4 w-4 mt-0.5 shrink-0", role === "gestor" ? "text-emerald-600" : role === "executor" ? "text-blue-600" : "text-slate-500")} />
+                    <div>
+                      <p className="font-medium text-foreground">{meta.label}</p>
+                      <p className="text-xs leading-snug mt-0.5 text-muted-foreground">
+                        {role === "gestor"     && "Acesso total — gerencia equipe, papéis, projetos e tarefas."}
+                        {role === "executor"   && "Cria e edita projetos e tarefas, atribui responsáveis."}
+                        {role === "observador" && "Apenas visualiza informações, sem criar ou editar."}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {users && users.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs uppercase tracking-wider">E-mail</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs uppercase tracking-wider w-52">Papel</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {users.map((u) => (
+                      <tr key={u.id} className="bg-card hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3 font-medium">{u.email}</td>
+                        <td className="px-4 py-3">
+                          <Select
+                            value={u.role}
+                            onValueChange={(v) => handleRoleChange(u.id, v as SystemRole)}
+                            disabled={pendingRoleId === u.id}
+                          >
+                            <SelectTrigger className="h-8 w-44">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="gestor">Gestor</SelectItem>
+                              <SelectItem value="executor">Executor</SelectItem>
+                              <SelectItem value="observador">Observador</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

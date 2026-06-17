@@ -10,7 +10,6 @@ import {
   CalendarDays,
   LogOut,
   ChevronDown,
-  ShieldCheck,
   Bell,
   ClipboardList,
 } from "lucide-react";
@@ -49,7 +48,6 @@ export function Layout({ children }: LayoutProps) {
     { href: "/members", label: "Equipe", icon: Users },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
-    ...(isGestor ? [{ href: "/access", label: "Acesso", icon: ShieldCheck }] : []),
   ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
 
   const initials = user?.firstName && user?.lastName
