@@ -204,6 +204,27 @@ paths:
         "409":
           description: Already a member
 
+  /projects/{id}/phase-history:
+    get:
+      operationId: listProjectPhaseHistory
+      tags: [projects]
+      summary: List phase change history for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Phase history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectPhaseHistory"
+
   /projects/{id}/members/{memberId}:
     delete:
       operationId: removeProjectMember
@@ -887,7 +908,7 @@ components:
 
     Project:
       type: object
-      required: [id, name, status, priority, createdAt, participants]
+      required: [id, name, status, priority, createdAt, participants, taskTotal, taskDone]
       properties:
         id:
           type: integer
@@ -901,6 +922,10 @@ components:
         priority:
           type: string
           enum: [low, medium, high]
+        taskTotal:
+          type: integer
+        taskDone:
+          type: integer
         startDate:
           type: ["string", "null"]
         endDate:
@@ -1450,6 +1475,21 @@ components:
           type: string
           minLength: 1
         notes:
+          type: string
+
+    ProjectPhaseHistory:
+      type: object
+      required: [id, projectId, fromStatus, toStatus, changedAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        fromStatus:
+          type: ["string", "null"]
+        toStatus:
+          type: string
+        changedAt:
           type: string
 
     ProjectObservation:

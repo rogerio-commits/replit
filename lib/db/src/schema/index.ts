@@ -8,3 +8,4 @@ export * from "./project-members";
 export * from "./checklist-items";
 export * from "./site-visits";
 export * from "./observations";
+export * from "./phase-history";

@@ -17,6 +17,8 @@ export interface Project {
   description?: string | null;
   status: ProjectStatus;
   priority: ProjectPriority;
+  taskTotal: number;
+  taskDone: number;
   /** @nullable */
   startDate?: string | null;
   /** @nullable */

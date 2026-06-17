@@ -55,6 +55,8 @@ export interface Project {
   description?: string | null;
   status: ProjectStatus;
   priority: ProjectPriority;
+  taskTotal: number;
+  taskDone: number;
   /** @nullable */
   startDate?: string | null;
   /** @nullable */
@@ -551,6 +553,15 @@ export interface SiteVisitInput {
   /** @minLength 1 */
   objective: string;
   notes?: string;
+}
+
+export interface ProjectPhaseHistory {
+  id: number;
+  projectId: number;
+  /** @nullable */
+  fromStatus: string | null;
+  toStatus: string;
+  changedAt: string;
 }
 
 export interface ProjectObservation {

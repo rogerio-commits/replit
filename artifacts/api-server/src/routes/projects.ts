@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, count } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
   CreateProjectBody,
@@ -28,13 +28,16 @@ import {
   ListProjectObservationsParams,
   CreateProjectObservationParams,
   CreateProjectObservationBody,
+  ListProjectPhaseHistoryParams,
 } from "@workspace/api-zod";
 
 const router = Router();
 
 function projectRow(
   p: typeof projectsTable.$inferSelect,
-  participants: { memberId: number; memberName: string; memberAvatarUrl: string | null }[] = []
+  participants: { memberId: number; memberName: string; memberAvatarUrl: string | null }[] = [],
+  taskTotal = 0,
+  taskDone = 0,
 ) {
   return {
     id: p.id,
@@ -53,7 +56,26 @@ function projectRow(
     materialType: p.materialType ?? null,
     createdAt: p.createdAt.toISOString(),
     participants,
+    taskTotal,
+    taskDone,
   };
+}
+
+async function fetchTaskCountsByProject(projectIds: number[]) {
+  if (projectIds.length === 0) return { total: new Map<number, number>(), done: new Map<number, number>() };
+  const totalRows = await db
+    .select({ projectId: tasksTable.projectId, cnt: count() })
+    .from(tasksTable)
+    .where(inArray(tasksTable.projectId, projectIds))
+    .groupBy(tasksTable.projectId);
+  const doneRows = await db
+    .select({ projectId: tasksTable.projectId, cnt: count() })
+    .from(tasksTable)
+    .where(and(inArray(tasksTable.projectId, projectIds), eq(tasksTable.status, "done")))
+    .groupBy(tasksTable.projectId);
+  const total = new Map<number, number>(totalRows.map(r => [r.projectId, r.cnt]));
+  const done = new Map<number, number>(doneRows.map(r => [r.projectId, r.cnt]));
+  return { total, done };
 }
 
 async function fetchParticipantsByProject(projectIds: number[]) {
@@ -117,8 +139,15 @@ router.get("/projects", async (req, res) => {
     rows = rows.filter((p) => p.priority === query.data.priority);
   }
 
-  const participantsMap = await fetchParticipantsByProject(rows.map((p) => p.id));
-  return res.json(rows.map((p) => projectRow(p, participantsMap.get(p.id) ?? [])));
+  const ids = rows.map((p) => p.id);
+  const participantsMap = await fetchParticipantsByProject(ids);
+  const taskCounts = await fetchTaskCountsByProject(ids);
+  return res.json(rows.map((p) => projectRow(
+    p,
+    participantsMap.get(p.id) ?? [],
+    taskCounts.total.get(p.id) ?? 0,
+    taskCounts.done.get(p.id) ?? 0,
+  )));
 });
 
 router.post("/projects", requireExecutorOrGestor, async (req, res) => {
@@ -162,7 +191,13 @@ router.get("/projects/:id", async (req, res) => {
   if (!project) return res.status(404).json({ error: "Not found" });
 
   const participantsMap = await fetchParticipantsByProject([project.id]);
-  return res.json(projectRow(project, participantsMap.get(project.id) ?? []));
+  const taskCounts = await fetchTaskCountsByProject([project.id]);
+  return res.json(projectRow(
+    project,
+    participantsMap.get(project.id) ?? [],
+    taskCounts.total.get(project.id) ?? 0,
+    taskCounts.done.get(project.id) ?? 0,
+  ));
 });
 
 router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
@@ -208,6 +243,14 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
 
   if (!project) return res.status(404).json({ error: "Not found" });
 
+  if (body.data.status !== undefined && body.data.status !== existing.status) {
+    await db.insert(projectPhaseHistoryTable).values({
+      projectId: params.data.id,
+      fromStatus: existing.status,
+      toStatus: body.data.status,
+    });
+  }
+
   if (body.data.status === "em_instalacao" && existing.status !== "em_instalacao") {
     const existingItems = await db
       .select({ id: checklistItemsTable.id })
@@ -226,7 +269,13 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
   }
 
   const participantsMap = await fetchParticipantsByProject([project.id]);
-  return res.json(projectRow(project, participantsMap.get(project.id) ?? []));
+  const taskCounts = await fetchTaskCountsByProject([project.id]);
+  return res.json(projectRow(
+    project,
+    participantsMap.get(project.id) ?? [],
+    taskCounts.total.get(project.id) ?? 0,
+    taskCounts.done.get(project.id) ?? 0,
+  ));
 });
 
 router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
@@ -240,6 +289,25 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
 
   await db.delete(projectsTable).where(eq(projectsTable.id, params.data.id));
   return res.status(204).send();
+});
+
+router.get("/projects/:id/phase-history", async (req, res) => {
+  const params = ListProjectPhaseHistoryParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select()
+    .from(projectPhaseHistoryTable)
+    .where(eq(projectPhaseHistoryTable.projectId, params.data.id))
+    .orderBy(projectPhaseHistoryTable.changedAt);
+
+  return res.json(rows.map(r => ({
+    id: r.id,
+    projectId: r.projectId,
+    fromStatus: r.fromStatus ?? null,
+    toStatus: r.toStatus,
+    changedAt: r.changedAt.toISOString(),
+  })));
 });
 
 router.get("/projects/:id/stats", async (req, res) => {

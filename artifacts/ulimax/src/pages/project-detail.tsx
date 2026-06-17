@@ -18,6 +18,7 @@ import {
   useDeleteSiteVisit,
   useListProjectObservations,
   useCreateProjectObservation,
+  useListProjectPhaseHistory,
   getGetProjectQueryKey,
   getListTasksQueryKey,
   getGetProjectStatsQueryKey,
@@ -80,6 +81,8 @@ import {
   Eye,
   MessageSquare,
   Send,
+  History,
+  ArrowRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -206,6 +209,9 @@ export default function ProjectDetail() {
   });
   const { data: observations } = useListProjectObservations(projectId, {
     query: { enabled: !!projectId, queryKey: getListProjectObservationsQueryKey(projectId) },
+  });
+  const { data: phaseHistory } = useListProjectPhaseHistory(projectId, {
+    query: { enabled: !!projectId, queryKey: ["projectPhaseHistory", projectId] },
   });
 
   const updateProject = useUpdateProject();
@@ -1150,6 +1156,46 @@ export default function ProjectDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Histórico de Fases ── */}
+      {phaseHistory && phaseHistory.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-base">Histórico de Fases</CardTitle>
+              <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                {phaseHistory.length}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {[...phaseHistory].reverse().map((h) => (
+                <div key={h.id} className="flex items-center gap-2 text-sm py-1.5 border-b last:border-0">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    {h.fromStatus ? (
+                      <>
+                        <span className="text-xs text-muted-foreground truncate">{STATUS_LABELS[h.fromStatus] ?? h.fromStatus}</span>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs text-muted-foreground italic">criado</span>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                      </>
+                    )}
+                    <span className="text-xs font-medium text-foreground truncate">{STATUS_LABELS[h.toStatus] ?? h.toStatus}</span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+                    {format(new Date(h.changedAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

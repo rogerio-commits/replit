@@ -44,6 +44,7 @@ import type {
   ProjectMember,
   ProjectObservation,
   ProjectObservationInput,
+  ProjectPhaseHistory,
   ProjectStats,
   ProjectUpdate,
   SiteVisit,
@@ -743,6 +744,83 @@ export const useAddProjectMember = <TError = ErrorType<void>,
       > => {
       return useMutation(getAddProjectMemberMutationOptions(options));
     }
+
+export const getListProjectPhaseHistoryUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/phase-history`
+}
+
+/**
+ * @summary List phase change history for a project
+ */
+export const listProjectPhaseHistory = async (id: number, options?: RequestInit): Promise<ProjectPhaseHistory[]> => {
+
+  return customFetch<ProjectPhaseHistory[]>(getListProjectPhaseHistoryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectPhaseHistoryQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/phase-history`
+    ] as const;
+    }
+
+
+export const getListProjectPhaseHistoryQueryOptions = <TData = Awaited<ReturnType<typeof listProjectPhaseHistory>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectPhaseHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectPhaseHistoryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectPhaseHistory>>> = ({ signal }) => listProjectPhaseHistory(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectPhaseHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectPhaseHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectPhaseHistory>>>
+export type ListProjectPhaseHistoryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List phase change history for a project
+ */
+
+export function useListProjectPhaseHistory<TData = Awaited<ReturnType<typeof listProjectPhaseHistory>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectPhaseHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectPhaseHistoryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getRemoveProjectMemberUrl = (id: number,
     memberId: number,) => {

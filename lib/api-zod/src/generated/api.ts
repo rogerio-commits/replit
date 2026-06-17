@@ -31,6 +31,8 @@ export const ListProjectsResponseItem = zod.object({
   "description": zod.string().nullish(),
   "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
+  "taskTotal": zod.number(),
+  "taskDone": zod.number(),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
   "finalDate": zod.string().nullish(),
@@ -86,6 +88,8 @@ export const GetProjectResponse = zod.object({
   "description": zod.string().nullish(),
   "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
+  "taskTotal": zod.number(),
+  "taskDone": zod.number(),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
   "finalDate": zod.string().nullish(),
@@ -136,6 +140,8 @@ export const UpdateProjectResponse = zod.object({
   "description": zod.string().nullish(),
   "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
   "priority": zod.enum(['low', 'medium', 'high']),
+  "taskTotal": zod.number(),
+  "taskDone": zod.number(),
   "startDate": zod.string().nullish(),
   "endDate": zod.string().nullish(),
   "finalDate": zod.string().nullish(),
@@ -210,6 +216,23 @@ export const AddProjectMemberParams = zod.object({
 export const AddProjectMemberBody = zod.object({
   "memberId": zod.number()
 })
+
+
+/**
+ * @summary List phase change history for a project
+ */
+export const ListProjectPhaseHistoryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectPhaseHistoryResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "fromStatus": zod.string().nullable(),
+  "toStatus": zod.string(),
+  "changedAt": zod.string()
+})
+export const ListProjectPhaseHistoryResponse = zod.array(ListProjectPhaseHistoryResponseItem)
 
 
 /**

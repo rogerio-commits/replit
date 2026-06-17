@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -191,8 +191,16 @@ function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; s
 }
 
 export default function Projects() {
+  const searchStr = useSearch();
+  const initialStatus = useMemo(() => {
+    const p = new URLSearchParams(searchStr);
+    const s = p.get("status");
+    const valid = ["a_iniciar","em_projeto","em_aprovacao","em_producao","aguardando_instalacao","em_instalacao"];
+    return s && valid.includes(s) ? s : "all";
+  }, [searchStr]);
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -555,6 +563,7 @@ export default function Projects() {
                     <th className={thCls} onClick={() => handleSort("name")}>
                       <div className={thInner}>Projeto <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
+                    <th className={cn(thCls, "min-w-[90px]")}>Tarefas</th>
                     <th className={thCls} onClick={() => handleSort("status")}>
                       <div className={thInner}>Status <SortIcon col="status" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
@@ -607,6 +616,25 @@ export default function Projects() {
                           </p>
                           {project.description && (
                             <p className="text-xs text-muted-foreground truncate mt-0.5">{project.description}</p>
+                          )}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2.5 min-w-[90px]">
+                        <Link href={`/projects/${project.id}`} className="block">
+                          {project.taskTotal > 0 ? (
+                            <div className="space-y-1">
+                              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-emerald-500 transition-all"
+                                  style={{ width: `${Math.round((project.taskDone / project.taskTotal) * 100)}%` }}
+                                />
+                              </div>
+                              <p className="text-[10px] text-muted-foreground tabular-nums">
+                                {project.taskDone}/{project.taskTotal}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/40 text-xs">—</span>
                           )}
                         </Link>
                       </td>

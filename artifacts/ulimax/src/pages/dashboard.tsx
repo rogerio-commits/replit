@@ -186,7 +186,7 @@ export default function Dashboard() {
               {PHASE_CONFIG.map((phase) => {
                 const count = phaseCounts[phase.id] ?? 0;
                 return (
-                  <Link key={phase.id} href="/projects">
+                  <Link key={phase.id} href={`/projects?status=${phase.id}`}>
                     <div className={cn(
                       "rounded-lg border p-3 text-center cursor-pointer hover:opacity-80 transition-opacity",
                       phase.bg, phase.border
