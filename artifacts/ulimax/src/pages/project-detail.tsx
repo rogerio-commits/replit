@@ -482,7 +482,7 @@ export default function ProjectDetail() {
                           )} />
                           <FormField control={projectForm.control} name="endDate" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Fim Estimado</FormLabel>
+                              <FormLabel>Fim Est. Projeto</FormLabel>
                               <FormControl>
                                 <DateWithDaysCalc value={field.value ?? ""} onChange={field.onChange} referenceDate={projectForm.watch("startDate")} />
                               </FormControl>
@@ -602,7 +602,7 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>Fim Previsto: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), "d MMM yyyy", { locale: ptBR }) : "—"}</span></span>
+            <span>Fim Est. Projeto: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), "d MMM yyyy", { locale: ptBR }) : "—"}</span></span>
           </div>
         </div>
       </div>
