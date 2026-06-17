@@ -170,6 +170,13 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
   }
 
+  const [existing] = await db
+    .select({ status: projectsTable.status, name: projectsTable.name })
+    .from(projectsTable)
+    .where(eq(projectsTable.id, params.data.id));
+
+  if (!existing) return res.status(404).json({ error: "Not found" });
+
   const raw = req.body as Record<string, unknown>;
   const updateData: Record<string, unknown> = {};
   if (body.data.name !== undefined) updateData.name = body.data.name;
@@ -193,6 +200,23 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     .returning();
 
   if (!project) return res.status(404).json({ error: "Not found" });
+
+  if (body.data.status === "em_instalacao" && existing.status !== "em_instalacao") {
+    const existingItems = await db
+      .select({ id: checklistItemsTable.id })
+      .from(checklistItemsTable)
+      .where(eq(checklistItemsTable.projectId, params.data.id))
+      .limit(1);
+
+    if (existingItems.length === 0) {
+      await db.insert(checklistItemsTable).values({
+        projectId: params.data.id,
+        peca: "Instalação",
+        status: "nao_instalado",
+      });
+      req.log.info({ projectId: params.data.id }, "Auto-created checklist entry on em_instalacao transition");
+    }
+  }
 
   const participantsMap = await fetchParticipantsByProject([project.id]);
   return res.json(projectRow(project, participantsMap.get(project.id) ?? []));
