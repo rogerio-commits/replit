@@ -190,6 +190,7 @@ export default function ProjectDetail() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [togglingTaskId, setTogglingTaskId] = useState<number | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
 
@@ -349,6 +350,41 @@ export default function ProjectDetail() {
       },
       onError: () => toast({ title: "Erro ao criar tarefa", variant: "destructive" }),
     });
+  };
+
+  const toggleTaskDone = (task: { id: number; title: string; status: string; priority: string; description?: string | null; dueDate?: string | null }) => {
+    const newStatus = task.status === "done" ? "todo" : "done";
+    const markingDone = newStatus === "done";
+    setTogglingTaskId(task.id);
+    updateTask.mutate(
+      {
+        id: task.id,
+        data: {
+          title: task.title,
+          description: task.description ?? undefined,
+          status: newStatus,
+          priority: task.priority as TaskFormValues["priority"],
+          dueDate: task.dueDate ? task.dueDate.slice(0, 10) : undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({ projectId }) });
+          queryClient.invalidateQueries({ queryKey: getGetProjectStatsQueryKey(projectId) });
+          if (markingDone) {
+            const now = format(new Date(), "d MMM yyyy 'às' HH:mm", { locale: ptBR });
+            createObservation.mutate(
+              { id: projectId, data: { text: `✓ Tarefa concluída: "${task.title}" — ${now}` } },
+              {
+                onSuccess: () =>
+                  queryClient.invalidateQueries({ queryKey: getListProjectObservationsQueryKey(projectId) }),
+              }
+            );
+          }
+        },
+        onSettled: () => setTogglingTaskId(null),
+      }
+    );
   };
 
   const onAddMember = () => {
@@ -1078,7 +1114,18 @@ export default function ProjectDetail() {
                   key={task.id}
                   className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
                 >
-                  <CheckSquare className={cn("h-4 w-4 mt-0.5 shrink-0", task.status === "done" ? "text-emerald-500" : "text-muted-foreground")} />
+                  <button
+                    onClick={() => canEdit && toggleTaskDone(task)}
+                    disabled={togglingTaskId === task.id}
+                    className={cn(
+                      "mt-0.5 shrink-0 transition-all rounded",
+                      canEdit ? "cursor-pointer hover:scale-110 hover:opacity-80" : "cursor-default",
+                      togglingTaskId === task.id && "opacity-40"
+                    )}
+                    title={task.status === "done" ? "Reabrir tarefa" : "Marcar como concluída"}
+                  >
+                    <CheckSquare className={cn("h-4 w-4", task.status === "done" ? "text-emerald-500" : "text-muted-foreground")} />
+                  </button>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={cn("font-medium text-sm", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</span>
