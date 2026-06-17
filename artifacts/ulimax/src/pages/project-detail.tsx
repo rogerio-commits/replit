@@ -277,6 +277,7 @@ export default function ProjectDetail() {
         toast({ title: "Projeto atualizado com sucesso" });
         queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: ["projectPhaseHistory", projectId] });
         setIsEditOpen(false);
       },
       onError: () => toast({ title: "Erro ao atualizar projeto", variant: "destructive" }),
