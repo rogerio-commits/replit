@@ -45,7 +45,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/projects", label: "Projetos", icon: Briefcase },
     { href: "/tasks", label: "Tarefas", icon: CheckSquare },
     { href: "/kanban", label: "Kanban", icon: Columns3 },
-    { href: "/checklist", label: "Checklist", icon: ClipboardList },
+    { href: "/checklist", label: "Instalações", icon: ClipboardList },
     { href: "/members", label: "Equipe", icon: Users },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
