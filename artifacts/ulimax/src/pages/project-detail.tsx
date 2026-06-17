@@ -1114,18 +1114,7 @@ export default function ProjectDetail() {
                   key={task.id}
                   className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors"
                 >
-                  <button
-                    onClick={() => canEdit && toggleTaskDone(task)}
-                    disabled={togglingTaskId === task.id}
-                    className={cn(
-                      "mt-0.5 shrink-0 transition-all rounded",
-                      canEdit ? "cursor-pointer hover:scale-110 hover:opacity-80" : "cursor-default",
-                      togglingTaskId === task.id && "opacity-40"
-                    )}
-                    title={task.status === "done" ? "Reabrir tarefa" : "Marcar como concluída"}
-                  >
-                    <CheckSquare className={cn("h-4 w-4", task.status === "done" ? "text-emerald-500" : "text-muted-foreground")} />
-                  </button>
+                  <CheckSquare className={cn("h-4 w-4 mt-0.5 shrink-0", task.status === "done" ? "text-emerald-500" : "text-muted-foreground")} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={cn("font-medium text-sm", task.status === "done" && "line-through text-muted-foreground")}>{task.title}</span>
@@ -1155,14 +1144,38 @@ export default function ProjectDetail() {
                     </div>
                   </div>
                   {canEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 shrink-0 text-muted-foreground hover:text-foreground"
-                      onClick={() => openEditTask(task)}
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {task.status !== "done" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2.5 text-xs gap-1.5 text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
+                          onClick={() => toggleTaskDone(task)}
+                          disabled={togglingTaskId === task.id}
+                        >
+                          <CheckSquare className="h-3.5 w-3.5" />
+                          {togglingTaskId === task.id ? "..." : "Concluir"}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2.5 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+                          onClick={() => toggleTaskDone(task)}
+                          disabled={togglingTaskId === task.id}
+                        >
+                          {togglingTaskId === task.id ? "..." : "Reabrir"}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                        onClick={() => openEditTask(task)}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               ))}
