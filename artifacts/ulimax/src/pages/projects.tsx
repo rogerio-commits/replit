@@ -77,7 +77,7 @@ const projectSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
-type SortKey = "name" | "status" | "priority" | "startDate" | "endDate" | "producaoStartDate" | "instalacaoStartDate" | "materialType";
+type SortKey = "name" | "status" | "priority" | "startDate" | "endDate" | "finalDate" | "producaoStartDate" | "producaoEndDate" | "producaoFinalDate" | "medicaoDate" | "instalacaoStartDate" | "materialType";
 type SortDir = "asc" | "desc";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -220,12 +220,16 @@ export default function Projects() {
       else if (sortKey === "materialType") cmp = (a.materialType ?? "").localeCompare(b.materialType ?? "");
       else {
         const dateFields: Record<string, string | null | undefined> = {
-          startDate: a.startDate, endDate: a.endDate,
-          producaoStartDate: a.producaoStartDate, instalacaoStartDate: a.instalacaoStartDate,
+          startDate: a.startDate, endDate: a.endDate, finalDate: a.finalDate,
+          producaoStartDate: a.producaoStartDate, producaoEndDate: a.producaoEndDate,
+          producaoFinalDate: a.producaoFinalDate, medicaoDate: a.medicaoDate,
+          instalacaoStartDate: a.instalacaoStartDate,
         };
         const dateFieldsB: Record<string, string | null | undefined> = {
-          startDate: b.startDate, endDate: b.endDate,
-          producaoStartDate: b.producaoStartDate, instalacaoStartDate: b.instalacaoStartDate,
+          startDate: b.startDate, endDate: b.endDate, finalDate: b.finalDate,
+          producaoStartDate: b.producaoStartDate, producaoEndDate: b.producaoEndDate,
+          producaoFinalDate: b.producaoFinalDate, medicaoDate: b.medicaoDate,
+          instalacaoStartDate: b.instalacaoStartDate,
         };
         const av = dateFields[sortKey] ?? "";
         const bv = dateFieldsB[sortKey] ?? "";
@@ -512,16 +516,28 @@ export default function Projects() {
                     <th className={thCls} onClick={() => handleSort("materialType")}>
                       <div className={thInner}>Material <SortIcon col="materialType" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} onClick={() => handleSort("startDate")}>
+                    <th className={cn(thCls, "bg-violet-50/60 border-l border-violet-100")} onClick={() => handleSort("startDate")}>
                       <div className={thInner}>Início Proj. <SortIcon col="startDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} onClick={() => handleSort("endDate")}>
-                      <div className={thInner}>Fim Est. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    <th className={cn(thCls, "bg-violet-50/60")} onClick={() => handleSort("endDate")}>
+                      <div className={thInner}>Fim Est. Proj. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} onClick={() => handleSort("producaoStartDate")}>
+                    <th className={cn(thCls, "bg-violet-50/60 border-r border-violet-100")} onClick={() => handleSort("finalDate")}>
+                      <div className={thInner}>Final Proj. <SortIcon col="finalDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "bg-blue-50/60 border-l border-blue-100")} onClick={() => handleSort("producaoStartDate")}>
                       <div className={thInner}>Início Prod. <SortIcon col="producaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} onClick={() => handleSort("instalacaoStartDate")}>
+                    <th className={cn(thCls, "bg-blue-50/60")} onClick={() => handleSort("producaoEndDate")}>
+                      <div className={thInner}>Fim Est. Prod. <SortIcon col="producaoEndDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "bg-blue-50/60 border-r border-blue-100")} onClick={() => handleSort("producaoFinalDate")}>
+                      <div className={thInner}>Final Prod. <SortIcon col="producaoFinalDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "bg-amber-50/60 border-l border-amber-100")} onClick={() => handleSort("medicaoDate")}>
+                      <div className={thInner}>Medição <SortIcon col="medicaoDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "bg-emerald-50/60 border-l border-emerald-100 border-r border-emerald-100")} onClick={() => handleSort("instalacaoStartDate")}>
                       <div className={thInner}>Início Inst. <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
                     <th className={cn(thCls, "pr-4")}>Equipe</th>
@@ -571,16 +587,28 @@ export default function Projects() {
                           )}
                         </Link>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-l border-violet-100/60">
                         <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.startDate)}</Link>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30">
                         <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.endDate)}</Link>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-r border-violet-100/60">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.finalDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-l border-blue-100/60">
                         <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoStartDate)}</Link>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoEndDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-r border-blue-100/60">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoFinalDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-amber-50/30 border-l border-amber-100/60 border-r border-amber-100/60">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.medicaoDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-emerald-50/30 border-l border-emerald-100/60 border-r border-emerald-100/60">
                         <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.instalacaoStartDate)}</Link>
                       </td>
                       <td className="pr-4 py-2.5">
