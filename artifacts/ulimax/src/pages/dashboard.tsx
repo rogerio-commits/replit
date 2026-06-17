@@ -15,7 +15,7 @@ import {
   AlertCircle,
   Clock,
   CheckSquare,
-  Layers,
+  Users,
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -165,7 +165,7 @@ export default function Dashboard() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <KpiCard icon={Briefcase}    label="Total de Projetos"   value={total}                       sub={`${activeProjects.length} em andamento`} />
-          <KpiCard icon={Layers}       label="Projetos Ativos"     value={activeProjects.length}          sub={`de ${total} no total`} />
+          <KpiCard icon={Users}        label="Membros da Equipe"   value={summary?.totalMembers ?? "—"}   sub="cadastrados no sistema" />
           <KpiCard icon={AlertCircle}  label="Alertas de Prazo"    value={alerts.length}               sub={`${alerts.filter(a => a.level === "overdue").length} vencidos · ${alerts.filter(a => a.level === "soon").length} próximos`} accent={alerts.length > 0 ? "text-red-600" : undefined} />
           <KpiCard icon={CheckSquare}  label="Tarefas Concluídas"  value={summary ? `${summary.doneTasks}/${summary.totalTasks}` : "—"} sub={summary?.overdueTasks ? `${summary.overdueTasks} tarefa(s) atrasada(s)` : "nenhuma tarefa atrasada"} />
         </div>
