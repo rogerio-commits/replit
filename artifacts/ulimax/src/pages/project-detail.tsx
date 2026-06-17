@@ -16,12 +16,15 @@ import {
   useListSiteVisits,
   useCreateSiteVisit,
   useDeleteSiteVisit,
+  useListProjectObservations,
+  useCreateProjectObservation,
   getGetProjectQueryKey,
   getListTasksQueryKey,
   getGetProjectStatsQueryKey,
   getListProjectsQueryKey,
   getListProjectMembersQueryKey,
   getListSiteVisitsQueryKey,
+  getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -59,6 +62,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
   Calendar,
@@ -74,6 +78,8 @@ import {
   X,
   MapPin,
   Eye,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -198,6 +204,9 @@ export default function ProjectDetail() {
   const { data: siteVisits } = useListSiteVisits(projectId, {
     query: { enabled: !!projectId, queryKey: getListSiteVisitsQueryKey(projectId) },
   });
+  const { data: observations } = useListProjectObservations(projectId, {
+    query: { enabled: !!projectId, queryKey: getListProjectObservationsQueryKey(projectId) },
+  });
 
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
@@ -206,6 +215,9 @@ export default function ProjectDetail() {
   const removeProjectMember = useRemoveProjectMember();
   const createSiteVisit = useCreateSiteVisit();
   const deleteSiteVisit = useDeleteSiteVisit();
+  const createObservation = useCreateProjectObservation();
+
+  const [obsText, setObsText] = useState("");
 
   // Participation check for executors
   const myMember = allMembers?.find(
@@ -263,6 +275,20 @@ export default function ProjectDetail() {
       },
       onError: () => toast({ title: "Erro ao atualizar projeto", variant: "destructive" }),
     });
+  };
+
+  const onAddObservation = () => {
+    if (!obsText.trim()) return;
+    createObservation.mutate(
+      { id: projectId, data: { text: obsText.trim() } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListProjectObservationsQueryKey(projectId) });
+          setObsText("");
+        },
+        onError: () => toast({ title: "Erro ao salvar observação", variant: "destructive" }),
+      }
+    );
   };
 
   const onDeleteProject = () => {
@@ -1057,6 +1083,71 @@ export default function ProjectDetail() {
                   Criar primeira tarefa
                 </Button>
               )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Observations */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Observações</CardTitle>
+            {observations && observations.length > 0 && (
+              <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                {observations.length}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {canEdit && (
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Escreva uma observação sobre este projeto..."
+                className="min-h-[80px] resize-none text-sm flex-1"
+                value={obsText}
+                onChange={(e) => setObsText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) onAddObservation();
+                }}
+              />
+              <Button
+                size="sm"
+                className="self-end"
+                onClick={onAddObservation}
+                disabled={!obsText.trim() || createObservation.isPending}
+              >
+                <Send className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+
+          {observations && observations.length > 0 ? (
+            <div className="space-y-3">
+              {[...observations].reverse().map((obs) => (
+                <div key={obs.id} className="flex gap-3 p-3 rounded-lg bg-muted/30 border">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">{obs.text}</p>
+                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                      <span className="font-medium truncate max-w-[200px]">{obs.authorName}</span>
+                      <span>·</span>
+                      <span className="whitespace-nowrap">
+                        {format(new Date(obs.createdAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center flex flex-col items-center gap-2">
+              <MessageSquare className="h-8 w-8 text-muted-foreground opacity-20" />
+              <p className="text-sm text-muted-foreground">Nenhuma observação ainda.</p>
             </div>
           )}
         </CardContent>

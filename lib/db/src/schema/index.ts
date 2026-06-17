@@ -7,3 +7,4 @@ export * from "./invites";
 export * from "./project-members";
 export * from "./checklist-items";
 export * from "./site-visits";
+export * from "./observations";

@@ -553,6 +553,19 @@ export interface SiteVisitInput {
   notes?: string;
 }
 
+export interface ProjectObservation {
+  id: number;
+  projectId: number;
+  text: string;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface ProjectObservationInput {
+  /** @minLength 1 */
+  text: string;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

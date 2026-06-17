@@ -42,6 +42,8 @@ import type {
   Project,
   ProjectInput,
   ProjectMember,
+  ProjectObservation,
+  ProjectObservationInput,
   ProjectStats,
   ProjectUpdate,
   SiteVisit,
@@ -1405,6 +1407,155 @@ export const useDeleteSiteVisit = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteSiteVisitMutationOptions(options));
+    }
+
+export const getListProjectObservationsUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/observations`
+}
+
+/**
+ * @summary List observations for a project
+ */
+export const listProjectObservations = async (id: number, options?: RequestInit): Promise<ProjectObservation[]> => {
+
+  return customFetch<ProjectObservation[]>(getListProjectObservationsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectObservationsQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/observations`
+    ] as const;
+    }
+
+
+export const getListProjectObservationsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectObservations>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectObservations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectObservationsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectObservations>>> = ({ signal }) => listProjectObservations(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectObservations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectObservationsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectObservations>>>
+export type ListProjectObservationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List observations for a project
+ */
+
+export function useListProjectObservations<TData = Awaited<ReturnType<typeof listProjectObservations>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectObservations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectObservationsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateProjectObservationUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/observations`
+}
+
+/**
+ * @summary Create an observation for a project
+ */
+export const createProjectObservation = async (id: number,
+    projectObservationInput: ProjectObservationInput, options?: RequestInit): Promise<ProjectObservation> => {
+
+  return customFetch<ProjectObservation>(getCreateProjectObservationUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectObservationInput,)
+  }
+);}
+
+
+
+
+export const getCreateProjectObservationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectObservation>>, TError,{id: number;data: BodyType<ProjectObservationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectObservation>>, TError,{id: number;data: BodyType<ProjectObservationInput>}, TContext> => {
+
+const mutationKey = ['createProjectObservation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectObservation>>, {id: number;data: BodyType<ProjectObservationInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createProjectObservation(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectObservationMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectObservation>>>
+    export type CreateProjectObservationMutationBody = BodyType<ProjectObservationInput>
+    export type CreateProjectObservationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an observation for a project
+ */
+export const useCreateProjectObservation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectObservation>>, TError,{id: number;data: BodyType<ProjectObservationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectObservation>>,
+        TError,
+        {id: number;data: BodyType<ProjectObservationInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectObservationMutationOptions(options));
     }
 
 export const getListTasksUrl = (params?: ListTasksParams,) => {

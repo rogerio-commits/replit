@@ -44,6 +44,8 @@ export * from './projectInputPriority';
 export * from './projectInputStatus';
 export * from './projectMaterialType';
 export * from './projectMember';
+export * from './projectObservation';
+export * from './projectObservationInput';
 export * from './projectParticipantSummary';
 export * from './projectPriority';
 export * from './projectStats';

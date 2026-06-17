@@ -379,6 +379,38 @@ export const DeleteSiteVisitParams = zod.object({
 
 
 /**
+ * @summary List observations for a project
+ */
+export const ListProjectObservationsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectObservationsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "text": zod.string(),
+  "authorName": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListProjectObservationsResponse = zod.array(ListProjectObservationsResponseItem)
+
+
+/**
+ * @summary Create an observation for a project
+ */
+export const CreateProjectObservationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateProjectObservationBody = zod.object({
+  "text": zod.string().min(1)
+})
+
+
+/**
  * @summary List tasks
  */
 export const ListTasksQueryParams = zod.object({

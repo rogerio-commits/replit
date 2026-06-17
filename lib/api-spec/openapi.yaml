@@ -397,6 +397,50 @@ paths:
         "204":
           description: Deleted
 
+  /projects/{id}/observations:
+    get:
+      operationId: listProjectObservations
+      tags: [projects]
+      summary: List observations for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of observations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectObservation"
+    post:
+      operationId: createProjectObservation
+      tags: [projects]
+      summary: Create an observation for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectObservationInput"
+      responses:
+        "201":
+          description: Created observation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectObservation"
+
   /tasks:
     get:
       operationId: listTasks
@@ -1407,3 +1451,26 @@ components:
           minLength: 1
         notes:
           type: string
+
+    ProjectObservation:
+      type: object
+      required: [id, projectId, text, authorName, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        text:
+          type: string
+        authorName:
+          type: string
+        createdAt:
+          type: string
+
+    ProjectObservationInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1

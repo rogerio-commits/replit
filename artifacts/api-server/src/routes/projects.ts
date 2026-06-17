@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { and, eq, inArray } from "drizzle-orm";
 import {
@@ -25,6 +25,9 @@ import {
   CreateSiteVisitParams,
   CreateSiteVisitBody,
   DeleteSiteVisitParams,
+  ListProjectObservationsParams,
+  CreateProjectObservationParams,
+  CreateProjectObservationBody,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -573,6 +576,54 @@ router.delete("/projects/:id/visits/:visitId", requireExecutorOrGestor, async (r
     );
 
   return res.status(204).send();
+});
+
+// ── Observations ──────────────────────────────────────────────────────────────
+
+router.get("/projects/:id/observations", async (req, res) => {
+  const params = ListProjectObservationsParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const rows = await db
+    .select()
+    .from(projectObservationsTable)
+    .where(eq(projectObservationsTable.projectId, params.data.id))
+    .orderBy(projectObservationsTable.createdAt);
+
+  return res.json(rows.map((r) => ({
+    id: r.id,
+    projectId: r.projectId,
+    text: r.text,
+    authorName: r.authorName,
+    createdAt: r.createdAt.toISOString(),
+  })));
+});
+
+router.post("/projects/:id/observations", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateProjectObservationParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const body = CreateProjectObservationBody.safeParse(req.body);
+  if (!body.success) return res.status(400).json({ error: "Invalid body" });
+
+  const authorName = req.appUser?.email ?? "Sistema";
+
+  const [obs] = await db
+    .insert(projectObservationsTable)
+    .values({
+      projectId: params.data.id,
+      text: body.data.text,
+      authorName,
+    })
+    .returning();
+
+  return res.status(201).json({
+    id: obs.id,
+    projectId: obs.projectId,
+    text: obs.text,
+    authorName: obs.authorName,
+    createdAt: obs.createdAt.toISOString(),
+  });
 });
 
 export default router;
