@@ -1,19 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { 
-  useListProjects, 
-  useCreateProject, 
+import {
+  useListProjects,
+  useCreateProject,
   useAddProjectMember,
   useListMembers,
   getListProjectsQueryKey,
-  ProjectStatus,
-  ProjectPriority
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateWithDaysCalc } from "@/components/date-with-days-calc";
@@ -22,13 +20,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -48,9 +46,18 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Briefcase, Plus, Search, AlertCircle, Users } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  Briefcase,
+  Users,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
+import { cn } from "@/lib/utils";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -70,14 +77,28 @@ const projectSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
+type SortKey = "name" | "status" | "priority" | "startDate" | "endDate" | "producaoStartDate" | "instalacaoStartDate" | "materialType";
+type SortDir = "asc" | "desc";
+
 const STATUS_LABELS: Record<string, string> = {
   a_iniciar: "A Iniciar",
   em_projeto: "Em Projeto",
   em_aprovacao: "Em Aprovação",
   em_producao: "Em Produção",
-  aguardando_instalacao: "Aguardando Instalação",
+  aguardando_instalacao: "Aguard. Instalação",
   em_instalacao: "Em Instalação",
 };
+
+const STATUS_ORDER: Record<string, number> = {
+  a_iniciar: 0,
+  em_projeto: 1,
+  em_aprovacao: 2,
+  em_producao: 3,
+  aguardando_instalacao: 4,
+  em_instalacao: 5,
+};
+
+const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 const PRIORITY_LABELS: Record<string, string> = {
   high: "Alta",
@@ -97,33 +118,34 @@ function getStatusColor(status: string) {
   }
 }
 
-function getPriorityColor(priority: string) {
+function getPriorityDot(priority: string) {
   switch (priority) {
-    case "high": return "text-destructive";
-    case "medium": return "text-amber-500";
-    case "low": return "text-emerald-500";
-    default: return "text-slate-500";
+    case "high": return "bg-red-500";
+    case "medium": return "bg-amber-400";
+    case "low": return "bg-emerald-500";
+    default: return "bg-slate-400";
   }
 }
 
-function DateItem({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{label}</p>
-      {value ? (
-        <p className="text-xs font-medium leading-none">
-          {format(parseISO(value), "d MMM", { locale: ptBR })}
-        </p>
-      ) : (
-        <p className="text-xs text-muted-foreground/40 leading-none">—</p>
-      )}
-    </div>
-  );
+function fmtDate(val?: string | null) {
+  if (!val) return "—";
+  try { return format(parseISO(val), "dd/MM/yy", { locale: ptBR }); }
+  catch { return "—"; }
+}
+
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (col !== sortKey) return <ChevronsUpDown className="h-3 w-3 text-muted-foreground/40" />;
+  return sortDir === "asc"
+    ? <ChevronUp className="h-3 w-3 text-primary" />
+    : <ChevronDown className="h-3 w-3 text-primary" />;
 }
 
 export default function Projects() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
   const { toast } = useToast();
@@ -155,8 +177,7 @@ export default function Projects() {
   const onSubmit = (data: ProjectFormValues) => {
     createProject.mutate({ data }, {
       onSuccess: async (project) => {
-        const ids = Array.from(selectedMemberIds);
-        for (const memberId of ids) {
+        for (const memberId of Array.from(selectedMemberIds)) {
           await addMember.mutateAsync({ id: project.id, data: { memberId } });
         }
         toast({ title: "Projeto criado com sucesso" });
@@ -165,9 +186,7 @@ export default function Projects() {
         setSelectedMemberIds(new Set());
         form.reset();
       },
-      onError: () => {
-        toast({ title: "Erro ao criar projeto", variant: "destructive" });
-      }
+      onError: () => toast({ title: "Erro ao criar projeto", variant: "destructive" }),
     });
   };
 
@@ -179,72 +198,93 @@ export default function Projects() {
     });
   };
 
-  const filteredProjects = projects?.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                          (p.description && p.description.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+
+  const filtered = useMemo(() => {
+    let list = projects ?? [];
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q));
+    }
+    if (statusFilter !== "all") list = list.filter(p => p.status === statusFilter);
+    if (priorityFilter !== "all") list = list.filter(p => p.priority === priorityFilter);
+
+    list = [...list].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "name") cmp = a.name.localeCompare(b.name, "pt-BR");
+      else if (sortKey === "status") cmp = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+      else if (sortKey === "priority") cmp = (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99);
+      else if (sortKey === "materialType") cmp = (a.materialType ?? "").localeCompare(b.materialType ?? "");
+      else {
+        const dateFields: Record<string, string | null | undefined> = {
+          startDate: a.startDate, endDate: a.endDate,
+          producaoStartDate: a.producaoStartDate, instalacaoStartDate: a.instalacaoStartDate,
+        };
+        const dateFieldsB: Record<string, string | null | undefined> = {
+          startDate: b.startDate, endDate: b.endDate,
+          producaoStartDate: b.producaoStartDate, instalacaoStartDate: b.instalacaoStartDate,
+        };
+        const av = dateFields[sortKey] ?? "";
+        const bv = dateFieldsB[sortKey] ?? "";
+        cmp = av.localeCompare(bv);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return list;
+  }, [projects, search, statusFilter, priorityFilter, sortKey, sortDir]);
+
+  const thCls = "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors whitespace-nowrap";
+  const thInner = "flex items-center gap-1";
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-5 animate-in fade-in duration-500">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Projetos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie e acompanhe todos os projetos de engenharia.</p>
+          <p className="text-muted-foreground mt-1">
+            {projects ? `${filtered.length} de ${projects.length} projeto${projects.length !== 1 ? "s" : ""}` : "Carregando..."}
+          </p>
         </div>
 
-        {canEdit && <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Projeto
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Novo Projeto</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
+        {canEdit && (
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Projeto
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Novo Projeto</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nome do Projeto</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex.: Edifício Alpha" {...field} />
-                      </FormControl>
+                      <FormControl><Input placeholder="Ex.: Edifício Alpha" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
+                  )} />
+                  <FormField control={form.control} name="description" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Descrição</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Breve descrição do projeto..." {...field} />
-                      </FormControl>
+                      <FormControl><Input placeholder="Breve descrição do projeto..." {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
+                  )} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="status" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o status" />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="a_iniciar">A Iniciar</SelectItem>
@@ -257,19 +297,13 @@ export default function Projects() {
                         </Select>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="priority" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Prioridade</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione a prioridade" />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder="Prioridade" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="low">Baixa</SelectItem>
@@ -279,27 +313,17 @@ export default function Projects() {
                         </Select>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
+                    )} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormField control={form.control} name="startDate" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Início do Projeto</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="endDate" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Fim Estimado</FormLabel>
                         <FormControl>
@@ -307,40 +331,24 @@ export default function Projects() {
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="finalDate"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="finalDate" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Data Final</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="producaoStartDate"
-                    render={({ field }) => (
+                    )} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormField control={form.control} name="producaoStartDate" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Início da Produção</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormLabel>Início Produção</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="producaoEndDate"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="producaoEndDate" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Fim Est. Produção</FormLabel>
                         <FormControl>
@@ -348,61 +356,37 @@ export default function Projects() {
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="producaoFinalDate"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="producaoFinalDate" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Final da Produção</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormLabel>Final Produção</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="medicaoDate"
-                    render={({ field }) => (
+                    )} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="medicaoDate" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Data de Medição</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="instalacaoStartDate"
-                    render={({ field }) => (
+                    )} />
+                    <FormField control={form.control} name="instalacaoStartDate" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Início Est. da Instalação</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
+                        <FormLabel>Início Est. Instalação</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="materialType"
-                  render={({ field }) => (
+                    )} />
+                  </div>
+                  <FormField control={form.control} name="materialType" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de Material</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value ?? ""}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o material" />
-                          </SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder="Selecione o material" /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="madeira">Madeira</SelectItem>
@@ -411,83 +395,66 @@ export default function Projects() {
                       </Select>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-                {allMembers && allMembers.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-sm font-medium">Participantes</span>
-                      {selectedMemberIds.size > 0 && (
-                        <Badge variant="secondary" className="h-4 text-[10px] px-1.5">
-                          {selectedMemberIds.size}
-                        </Badge>
-                      )}
-                    </div>
-                    <ScrollArea className="h-32 rounded-md border p-2">
-                      <div className="space-y-1">
-                        {allMembers.map((member) => {
-                          const initials = member.name
-                            .split(" ")
-                            .map((w: string) => w[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase();
-                          return (
-                            <label
-                              key={member.id}
-                              className="flex items-center gap-2.5 px-1 py-1 rounded hover:bg-muted cursor-pointer select-none"
-                            >
-                              <Checkbox
-                                checked={selectedMemberIds.has(member.id)}
-                                onCheckedChange={() => toggleMember(member.id)}
-                              />
-                              <Avatar className="h-6 w-6 text-[9px]">
-                                {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt={member.name} />}
-                                <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
-                                  {initials}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="min-w-0">
-                                <p className="text-sm leading-none truncate">{member.name}</p>
-                                {member.role && (
-                                  <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{member.role}</p>
-                                )}
-                              </div>
-                            </label>
-                          );
-                        })}
+                  )} />
+                  {allMembers && allMembers.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-sm font-medium">Participantes</span>
+                        {selectedMemberIds.size > 0 && (
+                          <Badge variant="secondary" className="h-4 text-[10px] px-1.5">{selectedMemberIds.size}</Badge>
+                        )}
                       </div>
-                    </ScrollArea>
-                  </div>
-                )}
-
-                <DialogFooter>
-                  <Button type="submit" disabled={createProject.isPending || addMember.isPending}>
-                    {createProject.isPending || addMember.isPending ? "Criando..." : "Criar Projeto"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>}
+                      <ScrollArea className="h-32 rounded-md border p-2">
+                        <div className="space-y-1">
+                          {allMembers.map((member) => {
+                            const initials = member.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
+                            return (
+                              <label key={member.id} className="flex items-center gap-2.5 px-1 py-1 rounded hover:bg-muted cursor-pointer select-none">
+                                <Checkbox checked={selectedMemberIds.has(member.id)} onCheckedChange={() => toggleMember(member.id)} />
+                                <Avatar className="h-6 w-6">
+                                  {member.avatarUrl && <AvatarImage src={member.avatarUrl} alt={member.name} />}
+                                  <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <p className="text-sm leading-none truncate">{member.name}</p>
+                                  {member.role && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{member.role}</p>}
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button type="submit" disabled={createProject.isPending || addMember.isPending}>
+                      {createProject.isPending || addMember.isPending ? "Criando..." : "Criar Projeto"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
+      {/* Filters */}
       <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
-            <div className="relative w-full sm:max-w-xs">
+        <CardHeader className="py-3 px-4">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar projetos..."
-                className="pl-8"
+                className="pl-8 h-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:max-w-[180px]">
-                <SelectValue placeholder="Filtrar por status" />
+              <SelectTrigger className="h-9 w-[170px]">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os Status</SelectItem>
@@ -495,142 +462,152 @@ export default function Projects() {
                 <SelectItem value="em_projeto">Em Projeto</SelectItem>
                 <SelectItem value="em_aprovacao">Em Aprovação</SelectItem>
                 <SelectItem value="em_producao">Em Produção</SelectItem>
-                <SelectItem value="aguardando_instalacao">Aguardando Instalação</SelectItem>
+                <SelectItem value="aguardando_instalacao">Aguard. Instalação</SelectItem>
                 <SelectItem value="em_instalacao">Em Instalação</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="h-9 w-[140px]">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas Prior.</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="medium">Média</SelectItem>
+                <SelectItem value="low">Baixa</SelectItem>
+              </SelectContent>
+            </Select>
+            {(search || statusFilter !== "all" || priorityFilter !== "all") && (
+              <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); }}>
+                Limpar filtros
+              </Button>
+            )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
+            <div className="p-4 space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
-          ) : filteredProjects && filteredProjects.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredProjects.map((project) => (
-                <Link key={project.id} href={`/projects/${project.id}`}>
-                  <Card className="hover:border-primary/50 hover:shadow-md transition-all cursor-pointer h-full">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-base line-clamp-1">{project.name}</CardTitle>
-                        <Badge variant="outline" className={`${getStatusColor(project.status)} shrink-0 text-[10px]`}>
-                          {STATUS_LABELS[project.status] ?? project.status}
-                        </Badge>
-                      </div>
-                      {project.description && (
-                        <CardDescription className="line-clamp-1 mt-0.5 text-xs">
-                          {project.description}
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    <CardContent className="space-y-3 pt-0">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <AlertCircle className={`h-3.5 w-3.5 ${getPriorityColor(project.priority)}`} />
-                          <span>{PRIORITY_LABELS[project.priority] ?? project.priority}</span>
-                        </div>
-                        {project.materialType && (
-                          <Badge variant="secondary" className="text-[10px] h-5">
-                            {project.materialType === "madeira" ? "Madeira" : "Alumínio"}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {(project.startDate || project.endDate || project.finalDate) && (
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Projeto</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            <DateItem label="Início"   value={project.startDate} />
-                            <DateItem label="Fim Est." value={project.endDate} />
-                            <DateItem label="Final"    value={project.finalDate} />
-                          </div>
-                        </div>
-                      )}
-
-                      {(project.producaoStartDate || project.producaoEndDate || project.producaoFinalDate) && (
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Produção</p>
-                          <div className="grid grid-cols-3 gap-2">
-                            <DateItem label="Início"   value={project.producaoStartDate} />
-                            <DateItem label="Fim Est." value={project.producaoEndDate} />
-                            <DateItem label="Final"    value={project.producaoFinalDate} />
-                          </div>
-                        </div>
-                      )}
-
-                      {(project.medicaoDate || project.instalacaoStartDate) && (
-                        <div>
-                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Medição & Instalação</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            <DateItem label="Medição"        value={project.medicaoDate} />
-                            <DateItem label="Início Instal." value={project.instalacaoStartDate} />
-                          </div>
-                        </div>
-                      )}
-
-                      {!project.startDate && !project.endDate && !project.finalDate &&
-                       !project.producaoStartDate && !project.producaoEndDate && !project.producaoFinalDate &&
-                       !project.medicaoDate && !project.instalacaoStartDate && (
-                        <p className="text-xs text-muted-foreground/50 italic">Nenhuma data cadastrada</p>
-                      )}
-
-                      {project.participants.length > 0 && (
-                        <div className="flex items-center gap-2 pt-1">
-                          <div className="flex -space-x-2">
-                            {project.participants.slice(0, 4).map((p) => {
-                              const initials = p.memberName
-                                .split(" ")
-                                .map((w) => w[0])
-                                .slice(0, 2)
-                                .join("")
-                                .toUpperCase();
-                              return (
-                                <Avatar
-                                  key={p.memberId}
-                                  className="h-6 w-6 border-2 border-background ring-0 text-[9px]"
-                                  title={p.memberName}
-                                >
-                                  {p.memberAvatarUrl && (
-                                    <AvatarImage src={p.memberAvatarUrl} alt={p.memberName} />
-                                  )}
-                                  <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
-                                    {initials}
-                                  </AvatarFallback>
-                                </Avatar>
-                              );
-                            })}
-                            {project.participants.length > 4 && (
-                              <div className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                                <span className="text-[9px] text-muted-foreground font-medium">
-                                  +{project.participants.length - 4}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground">
-                            {project.participants.length === 1
-                              ? "1 participante"
-                              : `${project.participants.length} participantes`}
-                          </span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+          ) : filtered.length === 0 ? (
+            <div className="py-16 text-center flex flex-col items-center gap-3">
+              <Briefcase className="h-10 w-10 text-muted-foreground opacity-20" />
+              <p className="text-muted-foreground">Nenhum projeto encontrado.</p>
             </div>
           ) : (
-            <div className="py-12 text-center flex flex-col items-center">
-              <Briefcase className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground">Nenhum projeto encontrado</h3>
-              <p className="text-muted-foreground mt-1">
-                {search || statusFilter !== "all" 
-                  ? "Tente ajustar os filtros" 
-                  : "Comece criando um novo projeto"}
-              </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead className="border-b bg-muted/30 sticky top-0">
+                  <tr>
+                    <th className={cn(thCls, "pl-4 w-8")}>#</th>
+                    <th className={thCls} onClick={() => handleSort("name")}>
+                      <div className={thInner}>Projeto <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("status")}>
+                      <div className={thInner}>Status <SortIcon col="status" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("priority")}>
+                      <div className={thInner}>Prior. <SortIcon col="priority" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("materialType")}>
+                      <div className={thInner}>Material <SortIcon col="materialType" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("startDate")}>
+                      <div className={thInner}>Início Proj. <SortIcon col="startDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("endDate")}>
+                      <div className={thInner}>Fim Est. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("producaoStartDate")}>
+                      <div className={thInner}>Início Prod. <SortIcon col="producaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} onClick={() => handleSort("instalacaoStartDate")}>
+                      <div className={thInner}>Início Inst. <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "pr-4")}>Equipe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((project, idx) => (
+                    <tr
+                      key={project.id}
+                      className={cn(
+                        "border-b last:border-0 hover:bg-muted/40 transition-colors cursor-pointer group",
+                        idx % 2 === 0 ? "bg-background" : "bg-muted/10"
+                      )}
+                    >
+                      <td className="pl-4 py-2.5 text-xs text-muted-foreground font-mono tabular-nums w-8">{idx + 1}</td>
+                      <td className="px-3 py-2.5 max-w-[260px]">
+                        <Link href={`/projects/${project.id}`} className="block">
+                          <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate leading-snug">
+                            {project.name}
+                          </p>
+                          {project.description && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{project.description}</p>
+                          )}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <Link href={`/projects/${project.id}`} className="block">
+                          <Badge variant="outline" className={cn("text-[10px] font-medium whitespace-nowrap", getStatusColor(project.status))}>
+                            {STATUS_LABELS[project.status] ?? project.status}
+                          </Badge>
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <Link href={`/projects/${project.id}`} className="flex items-center gap-1.5">
+                          <span className={cn("h-2 w-2 rounded-full shrink-0", getPriorityDot(project.priority))} />
+                          <span className="text-xs text-muted-foreground">{PRIORITY_LABELS[project.priority]}</span>
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <Link href={`/projects/${project.id}`} className="block">
+                          {project.materialType ? (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {project.materialType === "madeira" ? "Madeira" : "Alumínio"}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground/40 text-xs">—</span>
+                          )}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.startDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.endDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoStartDate)}</Link>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap">
+                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.instalacaoStartDate)}</Link>
+                      </td>
+                      <td className="pr-4 py-2.5">
+                        <Link href={`/projects/${project.id}`} className="flex -space-x-1.5">
+                          {(project.participants ?? []).slice(0, 4).map((p) => {
+                            const initials = p.memberName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
+                            return (
+                              <Avatar key={p.memberId} className="h-6 w-6 border-2 border-background">
+                                {p.memberAvatarUrl && <AvatarImage src={p.memberAvatarUrl} alt={p.memberName} />}
+                                <AvatarFallback className="text-[8px] bg-muted text-muted-foreground">{initials}</AvatarFallback>
+                              </Avatar>
+                            );
+                          })}
+                          {(project.participants ?? []).length > 4 && (
+                            <div className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center">
+                              <span className="text-[8px] text-muted-foreground font-medium">+{(project.participants ?? []).length - 4}</span>
+                            </div>
+                          )}
+                          {(project.participants ?? []).length === 0 && (
+                            <span className="text-muted-foreground/30 text-xs">—</span>
+                          )}
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
