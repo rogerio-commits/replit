@@ -9,6 +9,7 @@ import {
   useUpdateProject,
   useDeleteProject,
   useCreateTask,
+  useUpdateTask,
   useListProjectMembers,
   useAddProjectMember,
   useRemoveProjectMember,
@@ -188,6 +189,7 @@ export default function ProjectDetail() {
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
 
@@ -217,6 +219,7 @@ export default function ProjectDetail() {
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
   const addProjectMember = useAddProjectMember();
   const removeProjectMember = useRemoveProjectMember();
   const createSiteVisit = useCreateSiteVisit();
@@ -309,7 +312,33 @@ export default function ProjectDetail() {
     });
   };
 
+  const openEditTask = (task: { id: number; title: string; description?: string | null; status: string; priority: string; dueDate?: string | null }) => {
+    setEditingTaskId(task.id);
+    taskForm.reset({
+      title: task.title,
+      description: task.description ?? "",
+      status: task.status as TaskFormValues["status"],
+      priority: task.priority as TaskFormValues["priority"],
+      dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
+    });
+    setIsCreateTaskOpen(true);
+  };
+
   const onCreateTask = (data: TaskFormValues) => {
+    if (editingTaskId !== null) {
+      updateTask.mutate({ id: editingTaskId, data }, {
+        onSuccess: () => {
+          toast({ title: "Tarefa atualizada com sucesso" });
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({ projectId }) });
+          queryClient.invalidateQueries({ queryKey: getGetProjectStatsQueryKey(projectId) });
+          setIsCreateTaskOpen(false);
+          setEditingTaskId(null);
+          taskForm.reset();
+        },
+        onError: () => toast({ title: "Erro ao atualizar tarefa", variant: "destructive" }),
+      });
+      return;
+    }
     createTask.mutate({ data: { ...data, projectId } }, {
       onSuccess: () => {
         toast({ title: "Tarefa criada com sucesso" });
@@ -955,7 +984,10 @@ export default function ProjectDetail() {
             <CardDescription>Todas as tarefas vinculadas a este projeto.</CardDescription>
           </div>
           {canEdit && (
-            <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
+            <Dialog open={isCreateTaskOpen} onOpenChange={(open) => {
+              setIsCreateTaskOpen(open);
+              if (!open) { setEditingTaskId(null); taskForm.reset(); }
+            }}>
               <DialogTrigger asChild>
                 <Button size="sm">
                   <Plus className="mr-2 h-4 w-4" />
@@ -964,7 +996,7 @@ export default function ProjectDetail() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>Nova Tarefa</DialogTitle>
+                  <DialogTitle>{editingTaskId ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
                 </DialogHeader>
                 <Form {...taskForm}>
                   <form onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
@@ -1024,8 +1056,8 @@ export default function ProjectDetail() {
                       </FormItem>
                     )} />
                     <DialogFooter>
-                      <Button type="submit" disabled={createTask.isPending}>
-                        {createTask.isPending ? "Criando..." : "Criar Tarefa"}
+                      <Button type="submit" disabled={createTask.isPending || updateTask.isPending}>
+                        {createTask.isPending || updateTask.isPending ? "Salvando..." : editingTaskId ? "Salvar Alterações" : "Criar Tarefa"}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -1075,6 +1107,16 @@ export default function ProjectDetail() {
                       )}
                     </div>
                   </div>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={() => openEditTask(task)}
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
