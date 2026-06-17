@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import {
   useListAllChecklistItems,
   useListProjects,
+  useListMembers,
   useCreateChecklistItem,
   useUpdateChecklistItem,
   useDeleteChecklistItem,
@@ -44,13 +45,15 @@ import {
   Circle,
   Loader2,
   Plus,
+  FileText,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG = {
   nao_instalado: { label: "Não Instalado", color: "bg-slate-100 text-slate-600", dot: "bg-slate-400" },
-  instalado: { label: "Instalado", color: "bg-blue-50 text-blue-700", dot: "bg-blue-500" },
-  finalizado: { label: "Finalizado", color: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
+  instalado:     { label: "Instalado",     color: "bg-blue-50 text-blue-700",    dot: "bg-blue-500"  },
+  finalizado:    { label: "Finalizado",    color: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
 };
 
 function getAlertInfo(item: ChecklistItem): { level: "overdue" | "soon" | null; daysLeft: number } {
@@ -62,6 +65,8 @@ function getAlertInfo(item: ChecklistItem): { level: "overdue" | "soon" | null; 
   return { level: null, daysLeft };
 }
 
+type PlanDraft = { actionDescription: string; responsibleId: string; actionDueDate: string };
+
 export default function ChecklistPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -71,21 +76,32 @@ export default function ChecklistPage() {
     query: { queryKey: getListAllChecklistItemsQueryKey() },
   });
   const { data: projects } = useListProjects();
-  const createItem = useCreateChecklistItem();
-  const updateItem = useUpdateChecklistItem();
-  const deleteItem = useDeleteChecklistItem();
+  const { data: members } = useListMembers();
+  const createItem  = useCreateChecklistItem();
+  const updateItem  = useUpdateChecklistItem();
+  const deleteItem  = useDeleteChecklistItem();
 
+  // ── filters ──────────────────────────────────────────────────────────────
   const [filterProject, setFilterProject] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus,  setFilterStatus]  = useState<string>("all");
 
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  // ── add dialog ────────────────────────────────────────────────────────────
+  const [isAddOpen,    setIsAddOpen]    = useState(false);
   const [newProjectId, setNewProjectId] = useState<string>("");
-  const [newPeca, setNewPeca] = useState("");
-  const [newLocal, setNewLocal] = useState("");
+  const [newPeca,      setNewPeca]      = useState("");
+  const [newLocal,     setNewLocal]     = useState("");
+
+  // ── plan dialog ───────────────────────────────────────────────────────────
+  const [planItem,    setPlanItem]    = useState<ChecklistItem | null>(null);
+  const [planEditing, setPlanEditing] = useState(false);
+  const [planDraft,   setPlanDraft]   = useState<PlanDraft>({
+    actionDescription: "", responsibleId: "none", actionDueDate: "",
+  });
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getListAllChecklistItemsQueryKey() });
 
+  // ── handlers ──────────────────────────────────────────────────────────────
   const handleAdd = () => {
     if (!newPeca.trim() || !newProjectId) return;
     createItem.mutate(
@@ -93,9 +109,7 @@ export default function ChecklistPage() {
       {
         onSuccess: () => {
           toast({ title: "Esquadria adicionada" });
-          setNewPeca("");
-          setNewLocal("");
-          setNewProjectId("");
+          setNewPeca(""); setNewLocal(""); setNewProjectId("");
           setIsAddOpen(false);
           invalidate();
         },
@@ -106,11 +120,7 @@ export default function ChecklistPage() {
 
   const handleStatusChange = (item: ChecklistItem, status: string) => {
     updateItem.mutate(
-      {
-        id: item.projectId,
-        itemId: item.id,
-        data: { status: status as "nao_instalado" | "instalado" | "finalizado" },
-      },
+      { id: item.projectId, itemId: item.id, data: { status: status as ChecklistItem["status"] } },
       {
         onSuccess: () => invalidate(),
         onError: () => toast({ title: "Erro ao atualizar status", variant: "destructive" }),
@@ -122,18 +132,67 @@ export default function ChecklistPage() {
     deleteItem.mutate(
       { id: item.projectId, itemId: item.id },
       {
-        onSuccess: () => {
-          toast({ title: "Item removido" });
-          invalidate();
-        },
-        onError: () => toast({ title: "Erro ao remover item", variant: "destructive" }),
+        onSuccess: () => { toast({ title: "Item removido" }); invalidate(); },
+        onError:   () => toast({ title: "Erro ao remover item", variant: "destructive" }),
       }
     );
   };
 
+  const openPlan = (item: ChecklistItem) => {
+    setPlanItem(item);
+    setPlanEditing(false);
+    setPlanDraft({
+      actionDescription: item.actionDescription ?? "",
+      responsibleId:     item.responsibleId ? String(item.responsibleId) : "none",
+      actionDueDate:     item.actionDueDate  ?? "",
+    });
+  };
+
+  const startEditPlan = () => setPlanEditing(true);
+
+  const handleSavePlan = () => {
+    if (!planItem) return;
+    updateItem.mutate(
+      {
+        id:     planItem.projectId,
+        itemId: planItem.id,
+        data: {
+          actionDescription: planDraft.actionDescription || null,
+          responsibleId:     planDraft.responsibleId !== "none" ? Number(planDraft.responsibleId) : null,
+          actionDueDate:     planDraft.actionDueDate  || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Plano de ação salvo" });
+          setPlanEditing(false);
+          setPlanItem(null);
+          invalidate();
+        },
+        onError: () => toast({ title: "Erro ao salvar plano", variant: "destructive" }),
+      }
+    );
+  };
+
+  const handleClearPlan = () => {
+    if (!planItem) return;
+    updateItem.mutate(
+      { id: planItem.projectId, itemId: planItem.id, data: { actionDescription: null, responsibleId: null, actionDueDate: null } },
+      {
+        onSuccess: () => {
+          toast({ title: "Plano de ação removido" });
+          setPlanItem(null);
+          invalidate();
+        },
+        onError: () => toast({ title: "Erro ao remover plano", variant: "destructive" }),
+      }
+    );
+  };
+
+  // ── derived data ──────────────────────────────────────────────────────────
   const filtered = (items ?? []).filter((item) => {
     if (filterProject !== "all" && String(item.projectId) !== filterProject) return false;
-    if (filterStatus !== "all" && item.status !== filterStatus) return false;
+    if (filterStatus  !== "all" && item.status !== filterStatus)              return false;
     return true;
   });
 
@@ -147,13 +206,18 @@ export default function ChecklistPage() {
     {}
   );
 
-  const allItems = items ?? [];
-  const totalAlerts = allItems.filter((i) => getAlertInfo(i).level !== null).length;
+  const allItems     = items ?? [];
+  const totalAlerts  = allItems.filter((i) => getAlertInfo(i).level !== null).length;
   const overdueCount = allItems.filter((i) => getAlertInfo(i).level === "overdue").length;
   const finalizedCount = allItems.filter((i) => i.status === "finalizado").length;
 
+  const planAlert = planItem ? getAlertInfo(planItem) : null;
+  const planHasPlan = !!(planItem?.actionDescription || planItem?.responsibleId || planItem?.actionDueDate);
+
+  // ── render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -171,7 +235,7 @@ export default function ChecklistPage() {
         )}
       </div>
 
-      {/* Dialog — adicionar esquadria */}
+      {/* ── Dialog: adicionar esquadria ──────────────────────────────────── */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
@@ -181,14 +245,10 @@ export default function ChecklistPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Projeto</label>
               <Select value={newProjectId} onValueChange={setNewProjectId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o projeto..." />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione o projeto..." /></SelectTrigger>
                 <SelectContent>
                   {(projects ?? []).map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.name}
-                    </SelectItem>
+                    <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -214,26 +274,147 @@ export default function ChecklistPage() {
             </div>
           </div>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancelar</Button>
-            </DialogClose>
-            <Button
-              onClick={handleAdd}
-              disabled={!newPeca.trim() || !newProjectId || createItem.isPending}
-            >
+            <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+            <Button onClick={handleAdd} disabled={!newPeca.trim() || !newProjectId || createItem.isPending}>
               {createItem.isPending ? "Adicionando..." : "Adicionar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* ── Dialog: plano de ação ────────────────────────────────────────── */}
+      <Dialog open={!!planItem} onOpenChange={(open) => { if (!open) setPlanItem(null); }}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              Plano de Ação
+            </DialogTitle>
+            {planItem && (
+              <p className="text-sm text-muted-foreground pt-1">
+                <span className="font-medium text-foreground">{planItem.peca}</span>
+                {planItem.local && <> · {planItem.local}</>}
+              </p>
+            )}
+          </DialogHeader>
+
+          {planItem && (
+            <div className="py-1">
+              {planEditing ? (
+                /* ── edit form ─────────────────────────────────────────── */
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Descrição da ação
+                    </label>
+                    <Input
+                      placeholder="Descreva a ação necessária..."
+                      value={planDraft.actionDescription}
+                      onChange={(e) => setPlanDraft((d) => ({ ...d, actionDescription: e.target.value }))}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Responsável
+                      </label>
+                      <Select
+                        value={planDraft.responsibleId}
+                        onValueChange={(v) => setPlanDraft((d) => ({ ...d, responsibleId: v }))}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sem responsável</SelectItem>
+                          {(members ?? []).map((m) => (
+                            <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        Data limite
+                      </label>
+                      <Input
+                        type="date"
+                        className="h-8 text-xs"
+                        value={planDraft.actionDueDate}
+                        onChange={(e) => setPlanDraft((d) => ({ ...d, actionDueDate: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" onClick={handleSavePlan} disabled={updateItem.isPending}>
+                      {updateItem.isPending ? "Salvando..." : "Salvar"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setPlanEditing(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : planHasPlan ? (
+                /* ── read view ─────────────────────────────────────────── */
+                <div className="space-y-3">
+                  {planItem.actionDescription && (
+                    <p className="text-sm text-foreground">{planItem.actionDescription}</p>
+                  )}
+                  <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                    {planItem.responsibleName && (
+                      <span className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {planItem.responsibleName}
+                      </span>
+                    )}
+                    {planItem.actionDueDate && (
+                      <span className={cn(
+                        "flex items-center gap-1",
+                        planAlert?.level === "overdue" && "text-destructive font-medium",
+                        planAlert?.level === "soon"    && "text-amber-600 font-medium",
+                      )}>
+                        <Clock className="h-3 w-3" />
+                        {format(parseISO(planItem.actionDueDate), "d 'de' MMMM yyyy", { locale: ptBR })}
+                        {planAlert?.level === "overdue" && " — ATRASADO"}
+                        {planAlert?.level === "soon"    && (planAlert.daysLeft === 0 ? " — vence hoje" : ` — falta ${planAlert.daysLeft}d`)}
+                      </span>
+                    )}
+                  </div>
+                  {canEdit && (
+                    <div className="flex gap-2 pt-1">
+                      <Button size="sm" variant="outline" onClick={startEditPlan}>Editar plano</Button>
+                      <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={handleClearPlan}>
+                        Remover plano
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ── empty ─────────────────────────────────────────────── */
+                <div className="flex flex-col items-center gap-3 py-6 text-center">
+                  <FileText className="h-8 w-8 text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">Nenhum plano de ação definido para esta esquadria.</p>
+                  {canEdit && (
+                    <Button size="sm" variant="outline" onClick={startEditPlan}>
+                      <Plus className="h-3.5 w-3.5 mr-1.5" />
+                      Definir plano
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Total", value: allItems.length, color: "text-foreground" },
-          { label: "Finalizadas", value: finalizedCount, color: "text-emerald-600" },
-          { label: "Alertas", value: totalAlerts, color: "text-amber-600" },
-          { label: "Atrasadas", value: overdueCount, color: "text-destructive" },
+          { label: "Total",       value: allItems.length,  color: "text-foreground"   },
+          { label: "Finalizadas", value: finalizedCount,   color: "text-emerald-600"  },
+          { label: "Alertas",     value: totalAlerts,      color: "text-amber-600"    },
+          { label: "Atrasadas",   value: overdueCount,     color: "text-destructive"  },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-xl border bg-card p-4">
             <p className="text-xs text-muted-foreground font-medium">{kpi.label}</p>
@@ -251,9 +432,7 @@ export default function ChecklistPage() {
           <SelectContent>
             <SelectItem value="all">Todos os projetos</SelectItem>
             {projects?.map((p) => (
-              <SelectItem key={p.id} value={String(p.id)}>
-                {p.name}
-              </SelectItem>
+              <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -275,9 +454,7 @@ export default function ChecklistPage() {
       {isLoading ? (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="p-4 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
           </div>
         </div>
       ) : filtered.length === 0 ? (
@@ -305,14 +482,14 @@ export default function ChecklistPage() {
                 <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3 hidden sm:table-cell">Local</th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Status</th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3 hidden md:table-cell">Alerta</th>
-                {canEdit && <th className="w-8 px-4 py-3" />}
+                <th className="w-20 px-3 py-3" />
               </tr>
             </thead>
             {Object.entries(grouped).map(([projectKey, group]) => (
               <tbody key={projectKey}>
-                {/* Group header row */}
+                {/* Group header */}
                 <tr className="border-t bg-muted/20">
-                  <td colSpan={canEdit ? 6 : 5} className="px-4 py-2">
+                  <td colSpan={6} className="px-4 py-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                         {group.projectName}
@@ -328,9 +505,10 @@ export default function ChecklistPage() {
 
                 {/* Item rows */}
                 {group.items.map((item, idx) => {
-                  const alert = getAlertInfo(item);
-                  const s = STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG];
-                  const isLast = idx === group.items.length - 1;
+                  const alert   = getAlertInfo(item);
+                  const s       = STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG];
+                  const isLast  = idx === group.items.length - 1;
+                  const hasPlan = !!(item.actionDescription || item.responsibleId || item.actionDueDate);
 
                   return (
                     <tr
@@ -338,9 +516,9 @@ export default function ChecklistPage() {
                       className={cn(
                         "transition-colors hover:bg-muted/30",
                         !isLast && "border-b border-border/50",
-                        isLast && "border-b",
+                        isLast  && "border-b",
                         alert.level === "overdue" && "bg-destructive/5 hover:bg-destructive/10",
-                        alert.level === "soon" && "bg-amber-50/60 hover:bg-amber-50 dark:bg-amber-900/10"
+                        alert.level === "soon"    && "bg-amber-50/60 hover:bg-amber-50 dark:bg-amber-900/10",
                       )}
                     >
                       {/* Status icon */}
@@ -373,26 +551,19 @@ export default function ChecklistPage() {
                       <td className="px-4 py-2.5 hidden sm:table-cell">
                         {item.local ? (
                           <span className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3 w-3 shrink-0" />
-                            {item.local}
+                            <MapPin className="h-3 w-3 shrink-0" /> {item.local}
                           </span>
                         ) : (
                           <span className="text-muted-foreground/30">—</span>
                         )}
                       </td>
 
-                      {/* Status */}
+                      {/* Status selector */}
                       <td className="px-4 py-2.5">
                         {canEdit ? (
-                          <Select
-                            value={item.status}
-                            onValueChange={(v) => handleStatusChange(item, v)}
-                          >
+                          <Select value={item.status} onValueChange={(v) => handleStatusChange(item, v)}>
                             <SelectTrigger className="h-7 w-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 gap-1.5">
-                              <span className={cn(
-                                "inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md",
-                                s.color
-                              )}>
+                              <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md", s.color)}>
                                 <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
                                 {s.label}
                               </span>
@@ -404,10 +575,7 @@ export default function ChecklistPage() {
                             </SelectContent>
                           </Select>
                         ) : (
-                          <span className={cn(
-                            "inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md",
-                            s.color
-                          )}>
+                          <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md", s.color)}>
                             <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
                             {s.label}
                           </span>
@@ -418,8 +586,7 @@ export default function ChecklistPage() {
                       <td className="px-4 py-2.5 hidden md:table-cell">
                         {alert.level === "overdue" ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 px-2 py-1 rounded-md">
-                            <AlertTriangle className="h-3 w-3" />
-                            {Math.abs(alert.daysLeft)}d atraso
+                            <AlertTriangle className="h-3 w-3" /> {Math.abs(alert.daysLeft)}d atraso
                           </span>
                         ) : alert.level === "soon" ? (
                           <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
@@ -435,20 +602,34 @@ export default function ChecklistPage() {
                         )}
                       </td>
 
-                      {/* Delete */}
-                      {canEdit && (
-                        <td className="px-3 py-2.5 text-center">
+                      {/* Actions: plan + delete */}
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => handleDelete(item)}
-                            title="Remover item"
+                            className={cn(
+                              "h-6 w-6 text-muted-foreground hover:text-foreground",
+                              hasPlan && "text-primary/70 hover:text-primary"
+                            )}
+                            onClick={() => openPlan(item)}
+                            title={hasPlan ? "Ver plano de ação" : "Adicionar plano de ação"}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <FileText className="h-3.5 w-3.5" />
                           </Button>
-                        </td>
-                      )}
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleDelete(item)}
+                              title="Remover item"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
