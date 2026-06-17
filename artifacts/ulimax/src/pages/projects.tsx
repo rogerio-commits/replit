@@ -516,28 +516,28 @@ export default function Projects() {
                     <th className={thCls} onClick={() => handleSort("materialType")}>
                       <div className={thInner}>Material <SortIcon col="materialType" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-50/60 border-l border-violet-100")} onClick={() => handleSort("startDate")}>
+                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-l-2 border-violet-300")} onClick={() => handleSort("startDate")}>
                       <div className={thInner}>Início Proj. <SortIcon col="startDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-50/60")} onClick={() => handleSort("endDate")}>
+                    <th className={cn(thCls, "bg-violet-200 text-violet-800")} onClick={() => handleSort("endDate")}>
                       <div className={thInner}>Fim Est. Proj. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-50/60 border-r border-violet-100")} onClick={() => handleSort("finalDate")}>
+                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-r-2 border-violet-300")} onClick={() => handleSort("finalDate")}>
                       <div className={thInner}>Final Proj. <SortIcon col="finalDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-blue-50/60 border-l border-blue-100")} onClick={() => handleSort("producaoStartDate")}>
+                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-l-2 border-blue-300")} onClick={() => handleSort("producaoStartDate")}>
                       <div className={thInner}>Início Prod. <SortIcon col="producaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-blue-50/60")} onClick={() => handleSort("producaoEndDate")}>
+                    <th className={cn(thCls, "bg-blue-200 text-blue-800")} onClick={() => handleSort("producaoEndDate")}>
                       <div className={thInner}>Fim Est. Prod. <SortIcon col="producaoEndDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-blue-50/60 border-r border-blue-100")} onClick={() => handleSort("producaoFinalDate")}>
+                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-r-2 border-blue-300")} onClick={() => handleSort("producaoFinalDate")}>
                       <div className={thInner}>Final Prod. <SortIcon col="producaoFinalDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-amber-50/60 border-l border-amber-100")} onClick={() => handleSort("medicaoDate")}>
+                    <th className={cn(thCls, "bg-amber-200 text-amber-800 border-l-2 border-r-2 border-amber-300")} onClick={() => handleSort("medicaoDate")}>
                       <div className={thInner}>Medição <SortIcon col="medicaoDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-emerald-50/60 border-l border-emerald-100 border-r border-emerald-100")} onClick={() => handleSort("instalacaoStartDate")}>
+                    <th className={cn(thCls, "bg-emerald-200 text-emerald-800 border-l-2 border-r-2 border-emerald-300")} onClick={() => handleSort("instalacaoStartDate")}>
                       <div className={thInner}>Início Inst. <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
                     <th className={cn(thCls, "pr-4")}>Equipe</th>
