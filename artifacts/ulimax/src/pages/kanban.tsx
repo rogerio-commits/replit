@@ -72,7 +72,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   medium: "bg-amber-100 text-amber-700 border-amber-200",
   low:    "bg-slate-100 text-slate-600 border-slate-200",
 };
-const PRIORITY_LABELS: Record<string, string> = { high: "Alta", medium: "Média", low: "Baixa" };
+const PRIORITY_LABELS: Record<string, string> = { high: "Alta", medium: "Normal", low: "Normal" };
 
 function isOverdue(dueDate: string | null | undefined, status: string) {
   if (!dueDate || status === "done" || status === "em_instalacao" || status === "em_aprovacao") return false;
@@ -338,8 +338,7 @@ function NewTaskDialog({ open, defaultStatus, onOpenChange }: {
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger data-testid="select-priority"><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Baixa</SelectItem>
-                      <SelectItem value="medium">Média</SelectItem>
+                      <SelectItem value="medium">Normal</SelectItem>
                       <SelectItem value="high">Alta</SelectItem>
                     </SelectContent>
                   </Select></FormItem>
@@ -444,8 +443,7 @@ function NewProjectDialog({ open, defaultStatus, onOpenChange }: {
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl><SelectTrigger data-testid="select-project-priority"><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
-                    <SelectItem value="low">Baixa</SelectItem>
-                    <SelectItem value="medium">Média</SelectItem>
+                    <SelectItem value="medium">Normal</SelectItem>
                     <SelectItem value="high">Alta</SelectItem>
                   </SelectContent>
                 </Select></FormItem>
@@ -619,8 +617,7 @@ function EditProjectDialog({ project, open, onOpenChange }: {
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Baixa</SelectItem>
-                      <SelectItem value="medium">Média</SelectItem>
+                      <SelectItem value="medium">Normal</SelectItem>
                       <SelectItem value="high">Alta</SelectItem>
                     </SelectContent>
                   </Select>

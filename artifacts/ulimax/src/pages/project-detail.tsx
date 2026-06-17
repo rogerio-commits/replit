@@ -139,8 +139,8 @@ const TASK_STATUS_LABELS: Record<string, string> = {
 
 const PRIORITY_LABELS: Record<string, string> = {
   high: "Alta",
-  medium: "Média",
-  low: "Baixa",
+  medium: "Normal",
+  low: "Normal",
 };
 
 function getStatusColor(status: string) {
@@ -489,8 +489,7 @@ export default function ProjectDetail() {
                                   <SelectTrigger><SelectValue placeholder="Selecione a prioridade" /></SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="low">Baixa</SelectItem>
-                                  <SelectItem value="medium">Média</SelectItem>
+                                  <SelectItem value="medium">Normal</SelectItem>
                                   <SelectItem value="high">Alta</SelectItem>
                                 </SelectContent>
                               </Select>
@@ -1002,8 +1001,7 @@ export default function ProjectDetail() {
                               <SelectTrigger><SelectValue placeholder="Selecione a prioridade" /></SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="low">Baixa</SelectItem>
-                              <SelectItem value="medium">Média</SelectItem>
+                              <SelectItem value="medium">Normal</SelectItem>
                               <SelectItem value="high">Alta</SelectItem>
                             </SelectContent>
                           </Select>

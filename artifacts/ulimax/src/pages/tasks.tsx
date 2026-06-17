@@ -56,8 +56,8 @@ const TASK_STATUS_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
-  low: "Baixa",
-  medium: "Média",
+  low: "Normal",
+  medium: "Normal",
   high: "Alta",
 };
 
@@ -313,8 +313,7 @@ export default function Tasks() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="low">Baixa</SelectItem>
-                            <SelectItem value="medium">Média</SelectItem>
+                            <SelectItem value="medium">Normal</SelectItem>
                             <SelectItem value="high">Alta</SelectItem>
                           </SelectContent>
                         </Select>

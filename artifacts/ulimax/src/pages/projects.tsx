@@ -104,8 +104,8 @@ const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
 
 const PRIORITY_LABELS: Record<string, string> = {
   high: "Alta",
-  medium: "Média",
-  low: "Baixa",
+  medium: "Normal",
+  low: "Normal",
 };
 
 function getStatusColor(status: string) {
@@ -360,8 +360,7 @@ export default function Projects() {
                             <SelectTrigger><SelectValue placeholder="Prioridade" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="low">Baixa</SelectItem>
-                            <SelectItem value="medium">Média</SelectItem>
+                            <SelectItem value="medium">Normal</SelectItem>
                             <SelectItem value="high">Alta</SelectItem>
                           </SelectContent>
                         </Select>
@@ -527,8 +526,7 @@ export default function Projects() {
               <SelectContent>
                 <SelectItem value="all">Todas Prior.</SelectItem>
                 <SelectItem value="high">Alta</SelectItem>
-                <SelectItem value="medium">Média</SelectItem>
-                <SelectItem value="low">Baixa</SelectItem>
+                <SelectItem value="medium">Normal</SelectItem>
               </SelectContent>
             </Select>
             {(search || statusFilter !== "all" || priorityFilter !== "all") && (
