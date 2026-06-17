@@ -1035,7 +1035,7 @@ export default function ProjectDetail() {
                   <DialogTitle>{editingTaskId ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
                 </DialogHeader>
                 <Form {...taskForm}>
-                  <form onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
+                  <form key={editingTaskId ?? "new"} onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
                     <FormField control={taskForm.control} name="title" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Título da Tarefa</FormLabel>
@@ -1054,7 +1054,7 @@ export default function ProjectDetail() {
                       <FormField control={taskForm.control} name="status" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger><SelectValue placeholder="Selecione o status" /></SelectTrigger>
                             </FormControl>
@@ -1071,7 +1071,7 @@ export default function ProjectDetail() {
                       <FormField control={taskForm.control} name="priority" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Prioridade</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger><SelectValue placeholder="Selecione a prioridade" /></SelectTrigger>
                             </FormControl>
