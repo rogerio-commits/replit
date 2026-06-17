@@ -157,7 +157,7 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
   const startEditPlan = (item: ChecklistItem) => {
     setPlanDraft({
       actionDescription: item.actionDescription ?? "",
-      responsibleId: item.responsibleId ? String(item.responsibleId) : "",
+      responsibleId: item.responsibleId ? String(item.responsibleId) : "none",
       actionDueDate: item.actionDueDate ?? "",
     });
     setEditingPlan(item.id);
@@ -170,7 +170,7 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
         itemId,
         data: {
           actionDescription: planDraft.actionDescription || null,
-          responsibleId: planDraft.responsibleId ? Number(planDraft.responsibleId) : null,
+          responsibleId: planDraft.responsibleId && planDraft.responsibleId !== "none" ? Number(planDraft.responsibleId) : null,
           actionDueDate: planDraft.actionDueDate || null,
         },
       },
@@ -452,7 +452,7 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
                                     <SelectValue placeholder="Selecione..." />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="">Sem responsável</SelectItem>
+                                    <SelectItem value="none">Sem responsável</SelectItem>
                                     {allMembers?.map((m) => (
                                       <SelectItem key={m.id} value={String(m.id)}>
                                         {m.name}
