@@ -812,6 +812,83 @@ export const useRemoveProjectMember = <TError = ErrorType<unknown>,
       return useMutation(getRemoveProjectMemberMutationOptions(options));
     }
 
+export const getListAllChecklistItemsUrl = () => {
+
+
+
+
+  return `/api/checklist`
+}
+
+/**
+ * @summary List all checklist items across all projects
+ */
+export const listAllChecklistItems = async ( options?: RequestInit): Promise<ChecklistItem[]> => {
+
+  return customFetch<ChecklistItem[]>(getListAllChecklistItemsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAllChecklistItemsQueryKey = () => {
+    return [
+    `/api/checklist`
+    ] as const;
+    }
+
+
+export const getListAllChecklistItemsQueryOptions = <TData = Awaited<ReturnType<typeof listAllChecklistItems>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllChecklistItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAllChecklistItemsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAllChecklistItems>>> = ({ signal }) => listAllChecklistItems({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAllChecklistItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAllChecklistItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listAllChecklistItems>>>
+export type ListAllChecklistItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all checklist items across all projects
+ */
+
+export function useListAllChecklistItems<TData = Awaited<ReturnType<typeof listAllChecklistItems>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllChecklistItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAllChecklistItemsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getListChecklistItemsUrl = (id: number,) => {
 
 

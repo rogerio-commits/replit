@@ -224,6 +224,21 @@ paths:
         "204":
           description: Removed
 
+  /checklist:
+    get:
+      operationId: listAllChecklistItems
+      tags: [checklist]
+      summary: List all checklist items across all projects
+      responses:
+        "200":
+          description: List of all checklist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChecklistItem"
+
   /projects/{id}/checklist:
     get:
       operationId: listChecklistItems
@@ -1231,6 +1246,8 @@ components:
           type: integer
         projectId:
           type: integer
+        projectName:
+          type: ["string", "null"]
         peca:
           type: string
         local:

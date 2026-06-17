@@ -18,6 +18,7 @@ import Kanban from "@/pages/kanban";
 import Access from "@/pages/access";
 import Calendario from "@/pages/calendario";
 import Alertas from "@/pages/alertas";
+import Checklist from "@/pages/checklist";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -182,6 +183,7 @@ function ProtectedRoutes() {
             <Route path="/members" component={Members} />
             <Route path="/calendario" component={Calendario} />
             <Route path="/alertas" component={Alertas} />
+            <Route path="/checklist" component={Checklist} />
             <Route path="/access" component={Access} />
             <Route component={NotFound} />
           </Switch>

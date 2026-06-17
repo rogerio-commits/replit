@@ -332,11 +332,13 @@ router.delete("/projects/:id/members/:memberId", requireGestor, async (req, res)
 
 function checklistRow(
   item: typeof checklistItemsTable.$inferSelect,
-  responsibleName: string | null
+  responsibleName: string | null,
+  projectName?: string | null
 ) {
   return {
     id: item.id,
     projectId: item.projectId,
+    projectName: projectName ?? null,
     peca: item.peca,
     local: item.local ?? null,
     status: item.status,
@@ -347,6 +349,23 @@ function checklistRow(
     createdAt: item.createdAt.toISOString(),
   };
 }
+
+router.get("/checklist", async (_req, res) => {
+  const rows = await db
+    .select({
+      item: checklistItemsTable,
+      memberName: membersTable.name,
+      projectName: projectsTable.name,
+    })
+    .from(checklistItemsTable)
+    .leftJoin(membersTable, eq(checklistItemsTable.responsibleId, membersTable.id))
+    .leftJoin(projectsTable, eq(checklistItemsTable.projectId, projectsTable.id))
+    .orderBy(checklistItemsTable.projectId, checklistItemsTable.createdAt);
+
+  return res.json(rows.map(({ item, memberName, projectName }) =>
+    checklistRow(item, memberName ?? null, projectName ?? null)
+  ));
+});
 
 router.get("/projects/:id/checklist", async (req, res) => {
   const params = ListChecklistItemsParams.safeParse({ id: Number(req.params.id) });

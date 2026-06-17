@@ -222,6 +222,25 @@ export const RemoveProjectMemberParams = zod.object({
 
 
 /**
+ * @summary List all checklist items across all projects
+ */
+export const ListAllChecklistItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectName": zod.string().nullish(),
+  "peca": zod.string(),
+  "local": zod.string().nullish(),
+  "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),
+  "actionDescription": zod.string().nullish(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "actionDueDate": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAllChecklistItemsResponse = zod.array(ListAllChecklistItemsResponseItem)
+
+
+/**
  * @summary List checklist items for a project
  */
 export const ListChecklistItemsParams = zod.object({
@@ -231,6 +250,7 @@ export const ListChecklistItemsParams = zod.object({
 export const ListChecklistItemsResponseItem = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
+  "projectName": zod.string().nullish(),
   "peca": zod.string(),
   "local": zod.string().nullish(),
   "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),
@@ -286,6 +306,7 @@ export const UpdateChecklistItemBody = zod.object({
 export const UpdateChecklistItemResponse = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
+  "projectName": zod.string().nullish(),
   "peca": zod.string(),
   "local": zod.string().nullish(),
   "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),

@@ -10,6 +10,8 @@ import type { ChecklistItemStatus } from './checklistItemStatus';
 export interface ChecklistItem {
   id: number;
   projectId: number;
+  /** @nullable */
+  projectName?: string | null;
   peca: string;
   /** @nullable */
   local?: string | null;

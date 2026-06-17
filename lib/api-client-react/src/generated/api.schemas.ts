@@ -468,6 +468,8 @@ export const ChecklistItemStatus = {
 export interface ChecklistItem {
   id: number;
   projectId: number;
+  /** @nullable */
+  projectName?: string | null;
   peca: string;
   /** @nullable */
   local?: string | null;
