@@ -540,7 +540,6 @@ export default function Projects() {
                     <th className={cn(thCls, "bg-emerald-200 text-emerald-800 border-l-2 border-r-2 border-emerald-300")} onClick={() => handleSort("instalacaoStartDate")}>
                       <div className={thInner}>Início Inst. <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "pr-4")}>Equipe</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -610,27 +609,6 @@ export default function Projects() {
                       </td>
                       <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-emerald-50/30 border-l border-emerald-100/60 border-r border-emerald-100/60">
                         <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.instalacaoStartDate)}</Link>
-                      </td>
-                      <td className="pr-4 py-2.5">
-                        <Link href={`/projects/${project.id}`} className="flex -space-x-1.5">
-                          {(project.participants ?? []).slice(0, 4).map((p) => {
-                            const initials = p.memberName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
-                            return (
-                              <Avatar key={p.memberId} className="h-6 w-6 border-2 border-background">
-                                {p.memberAvatarUrl && <AvatarImage src={p.memberAvatarUrl} alt={p.memberName} />}
-                                <AvatarFallback className="text-[8px] bg-muted text-muted-foreground">{initials}</AvatarFallback>
-                              </Avatar>
-                            );
-                          })}
-                          {(project.participants ?? []).length > 4 && (
-                            <div className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                              <span className="text-[8px] text-muted-foreground font-medium">+{(project.participants ?? []).length - 4}</span>
-                            </div>
-                          )}
-                          {(project.participants ?? []).length === 0 && (
-                            <span className="text-muted-foreground/30 text-xs">—</span>
-                          )}
-                        </Link>
                       </td>
                     </tr>
                   ))}
