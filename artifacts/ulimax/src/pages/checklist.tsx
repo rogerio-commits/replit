@@ -12,8 +12,6 @@ import {
 import type { ChecklistItem } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -38,16 +36,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STATUS_LABELS: Record<string, string> = {
-  nao_instalado: "Não Instalado",
-  instalado: "Instalado",
-  finalizado: "Finalizado",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  nao_instalado: "bg-slate-100 text-slate-700 border-slate-200",
-  instalado: "bg-blue-50 text-blue-700 border-blue-200",
-  finalizado: "bg-emerald-50 text-emerald-700 border-emerald-200",
+const STATUS_CONFIG = {
+  nao_instalado: { label: "Não Instalado", color: "bg-slate-100 text-slate-600", dot: "bg-slate-400" },
+  instalado: { label: "Instalado", color: "bg-blue-50 text-blue-700", dot: "bg-blue-500" },
+  finalizado: { label: "Finalizado", color: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
 };
 
 function getAlertInfo(item: ChecklistItem): { level: "overdue" | "soon" | null; daysLeft: number } {
@@ -110,54 +102,46 @@ export default function ChecklistPage() {
     return true;
   });
 
-  const grouped = filtered.reduce<Record<string, { projectName: string; items: ChecklistItem[] }>>(
+  const grouped = filtered.reduce<Record<string, { projectName: string; projectId: number; items: ChecklistItem[] }>>(
     (acc, item) => {
       const key = String(item.projectId);
-      if (!acc[key]) acc[key] = { projectName: item.projectName ?? `Projeto ${item.projectId}`, items: [] };
+      if (!acc[key]) acc[key] = { projectName: item.projectName ?? `Projeto ${item.projectId}`, projectId: item.projectId, items: [] };
       acc[key].items.push(item);
       return acc;
     },
     {}
   );
 
-  const totalAlerts = (items ?? []).filter((i) => getAlertInfo(i).level !== null).length;
-  const overdueCount = (items ?? []).filter((i) => getAlertInfo(i).level === "overdue").length;
-  const finalizedCount = (items ?? []).filter((i) => i.status === "finalizado").length;
+  const allItems = items ?? [];
+  const totalAlerts = allItems.filter((i) => getAlertInfo(i).level !== null).length;
+  const overdueCount = allItems.filter((i) => getAlertInfo(i).level === "overdue").length;
+  const finalizedCount = allItems.filter((i) => i.status === "finalizado").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Checklist de Instalação</h1>
+      <div className="flex items-center gap-2">
+        <ClipboardList className="h-5 w-5 text-primary" />
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Checklist de Instalação</h1>
+          <p className="text-sm text-muted-foreground">Visão consolidada de todas as esquadrias</p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Acompanhe o status de instalação das esquadrias em todos os projetos.
-        </p>
       </div>
 
-      {/* Summary cards */}
-      {items && items.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold">{items.length}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Finalizadas</p>
-            <p className="text-2xl font-bold text-emerald-600">{finalizedCount}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Alertas</p>
-            <p className="text-2xl font-bold text-amber-600">{totalAlerts}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-muted-foreground">Atrasadas</p>
-            <p className="text-2xl font-bold text-destructive">{overdueCount}</p>
-          </Card>
-        </div>
-      )}
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Total", value: allItems.length, color: "text-foreground" },
+          { label: "Finalizadas", value: finalizedCount, color: "text-emerald-600" },
+          { label: "Alertas", value: totalAlerts, color: "text-amber-600" },
+          { label: "Atrasadas", value: overdueCount, color: "text-destructive" },
+        ].map((kpi) => (
+          <div key={kpi.label} className="rounded-xl border bg-card p-4">
+            <p className="text-xs text-muted-foreground font-medium">{kpi.label}</p>
+            <p className={cn("text-2xl font-bold mt-0.5", kpi.color)}>{kpi.value}</p>
+          </div>
+        ))}
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
@@ -190,152 +174,185 @@ export default function ChecklistPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-40" />
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {Array.from({ length: 2 }).map((_, j) => (
-                  <Skeleton key={j} className="h-12 w-full" />
-                ))}
-              </CardContent>
-            </Card>
-          ))}
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
         </div>
       ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-3">
-            <ClipboardList className="h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              {items?.length === 0
-                ? "Nenhuma esquadria cadastrada. Abra um projeto e adicione itens ao checklist."
-                : "Nenhum item corresponde aos filtros selecionados."}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border bg-card flex flex-col items-center justify-center py-16 gap-3 text-center">
+          <ClipboardList className="h-10 w-10 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">
+            {allItems.length === 0
+              ? "Nenhuma esquadria cadastrada. Abra um projeto e adicione itens ao checklist."
+              : "Nenhum item corresponde aos filtros selecionados."}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
-          {Object.entries(grouped).map(([projectId, group]) => (
-            <Card key={projectId}>
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-base">{group.projectName}</CardTitle>
-                  <span className="text-xs text-muted-foreground">
-                    ({group.items.filter((i) => i.status === "finalizado").length}/{group.items.length})
-                  </span>
-                  {group.items.some((i) => getAlertInfo(i).level === "overdue") && (
-                    <Badge variant="destructive" className="h-5 text-[10px] px-1.5 gap-0.5">
-                      <AlertTriangle className="h-3 w-3" />
-                      atrasado
-                    </Badge>
-                  )}
-                </div>
-                <Link href={`/projects/${projectId}`}>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground gap-1">
-                    Ver projeto
-                    <ExternalLink className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent className="pt-0 space-y-1.5">
-                {group.items.map((item) => {
-                  const alert = getAlertInfo(item);
-                  return (
-                    <div
-                      key={item.id}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
-                        alert.level === "overdue" && "border-destructive/40 bg-destructive/5",
-                        alert.level === "soon" && "border-amber-400/40 bg-amber-50/50 dark:bg-amber-900/10"
-                      )}
-                    >
-                      {/* Status icon */}
-                      {item.status === "finalizado" ? (
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                      ) : item.status === "instalado" ? (
-                        <Loader2 className="h-4 w-4 shrink-0 text-blue-500" />
-                      ) : (
-                        <Circle className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-                      )}
-
-                      {/* Name + local */}
-                      <div className="flex-1 min-w-0">
-                        <span
-                          className={cn(
-                            "block text-sm font-medium truncate",
-                            item.status === "finalizado" && "line-through text-muted-foreground"
-                          )}
-                        >
-                          {item.peca}
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="w-8 px-4 py-3" />
+                <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Esquadria</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3 hidden sm:table-cell">Local</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Status</th>
+                <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3 hidden md:table-cell">Alerta</th>
+                {canEdit && <th className="w-8 px-4 py-3" />}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(grouped).map(([projectKey, group]) => (
+                <>
+                  {/* Group header row */}
+                  <tr key={`group-${projectKey}`} className="border-t bg-muted/20">
+                    <td colSpan={canEdit ? 6 : 5} className="px-4 py-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          {group.projectName}
                         </span>
-                        {item.local && (
-                          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                            <MapPin className="h-2.5 w-2.5 shrink-0" />
-                            {item.local}
-                          </span>
-                        )}
+                        <Link href={`/projects/${group.projectId}`}>
+                          <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                            Ver projeto <ExternalLink className="h-3 w-3" />
+                          </button>
+                        </Link>
                       </div>
+                    </td>
+                  </tr>
 
-                      {/* Alert badges */}
-                      {alert.level === "overdue" && (
-                        <Badge variant="destructive" className="text-[9px] h-4 px-1.5 shrink-0">
-                          Atrasado {Math.abs(alert.daysLeft)}d
-                        </Badge>
-                      )}
-                      {alert.level === "soon" && (
-                        <Badge className="text-[9px] h-4 px-1.5 bg-amber-500 hover:bg-amber-500 shrink-0">
-                          {alert.daysLeft === 0 ? "Vence hoje" : `${alert.daysLeft}d`}
-                        </Badge>
-                      )}
-                      {item.actionDueDate && alert.level === null && item.status !== "finalizado" && (
-                        <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-muted-foreground shrink-0">
-                          <Clock className="h-2.5 w-2.5 mr-0.5" />
-                          {format(parseISO(item.actionDueDate), "d MMM", { locale: ptBR })}
-                        </Badge>
-                      )}
+                  {/* Item rows */}
+                  {group.items.map((item, idx) => {
+                    const alert = getAlertInfo(item);
+                    const s = STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG];
+                    const isLast = idx === group.items.length - 1;
 
-                      {/* Status selector */}
-                      {canEdit && (
-                        <Select
-                          value={item.status}
-                          onValueChange={(v) => handleStatusChange(item, v)}
-                        >
-                          <SelectTrigger className="h-7 w-auto min-w-[128px] text-xs border-0 bg-transparent p-0 shadow-none focus:ring-0">
-                            <Badge
-                              variant="outline"
-                              className={cn("text-[10px] cursor-pointer", STATUS_COLORS[item.status])}
+                    return (
+                      <tr
+                        key={item.id}
+                        className={cn(
+                          "transition-colors hover:bg-muted/30",
+                          !isLast && "border-b border-border/50",
+                          isLast && "border-b",
+                          alert.level === "overdue" && "bg-destructive/5 hover:bg-destructive/10",
+                          alert.level === "soon" && "bg-amber-50/60 hover:bg-amber-50 dark:bg-amber-900/10"
+                        )}
+                      >
+                        {/* Status icon */}
+                        <td className="px-4 py-2.5 text-center">
+                          {item.status === "finalizado" ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />
+                          ) : item.status === "instalado" ? (
+                            <Loader2 className="h-4 w-4 text-blue-500 mx-auto" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+                          )}
+                        </td>
+
+                        {/* Esquadria */}
+                        <td className="px-4 py-2.5">
+                          <span className={cn(
+                            "font-medium text-foreground",
+                            item.status === "finalizado" && "line-through text-muted-foreground"
+                          )}>
+                            {item.peca}
+                          </span>
+                          {/* Local shown inline on mobile */}
+                          {item.local && (
+                            <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground mt-0.5 sm:hidden">
+                              <MapPin className="h-2.5 w-2.5" /> {item.local}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Local */}
+                        <td className="px-4 py-2.5 hidden sm:table-cell">
+                          {item.local ? (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <MapPin className="h-3 w-3 shrink-0" />
+                              {item.local}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground/30">—</span>
+                          )}
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-2.5">
+                          {canEdit ? (
+                            <Select
+                              value={item.status}
+                              onValueChange={(v) => handleStatusChange(item, v)}
                             >
-                              {STATUS_LABELS[item.status]}
-                            </Badge>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="nao_instalado">Não Instalado</SelectItem>
-                            <SelectItem value="instalado">Instalado</SelectItem>
-                            <SelectItem value="finalizado">Finalizado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                              <SelectTrigger className="h-7 w-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 gap-1.5">
+                                <span className={cn(
+                                  "inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md",
+                                  s.color
+                                )}>
+                                  <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
+                                  {s.label}
+                                </span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="nao_instalado">Não Instalado</SelectItem>
+                                <SelectItem value="instalado">Instalado</SelectItem>
+                                <SelectItem value="finalizado">Finalizado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md",
+                              s.color
+                            )}>
+                              <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", s.dot)} />
+                              {s.label}
+                            </span>
+                          )}
+                        </td>
 
-                      {/* Delete */}
-                      {canEdit && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDelete(item)}
-                          title="Remover item"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          ))}
+                        {/* Alerta */}
+                        <td className="px-4 py-2.5 hidden md:table-cell">
+                          {alert.level === "overdue" ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive bg-destructive/10 px-2 py-1 rounded-md">
+                              <AlertTriangle className="h-3 w-3" />
+                              {Math.abs(alert.daysLeft)}d atraso
+                            </span>
+                          ) : alert.level === "soon" ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-md">
+                              <Clock className="h-3 w-3" />
+                              {alert.daysLeft === 0 ? "Vence hoje" : `${alert.daysLeft}d`}
+                            </span>
+                          ) : item.actionDueDate && item.status !== "finalizado" ? (
+                            <span className="text-xs text-muted-foreground">
+                              {format(parseISO(item.actionDueDate), "d MMM", { locale: ptBR })}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground/30">—</span>
+                          )}
+                        </td>
+
+                        {/* Delete */}
+                        {canEdit && (
+                          <td className="px-3 py-2.5 text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleDelete(item)}
+                              title="Remover item"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
