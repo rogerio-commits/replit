@@ -54,6 +54,8 @@ import {
   ChevronsUpDown,
   Briefcase,
   Users,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
@@ -131,6 +133,54 @@ function fmtDate(val?: string | null) {
   if (!val) return "—";
   try { return format(parseISO(val), "dd/MM/yy", { locale: ptBR }); }
   catch { return "—"; }
+}
+
+type AlertLevel = "overdue" | "soon" | null;
+
+function getDateAlert(val?: string | null): AlertLevel {
+  if (!val) return null;
+  try {
+    const d = parseISO(val);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const diff = Math.floor((d.getTime() - now.getTime()) / 86_400_000);
+    if (diff < 0) return "overdue";
+    if (diff <= 7) return "soon";
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function DateCell({
+  val,
+  href,
+  baseCls,
+  deadline = false,
+}: {
+  val?: string | null;
+  href: string;
+  baseCls: string;
+  deadline?: boolean;
+}) {
+  const alert = deadline ? getDateAlert(val) : null;
+  const alertCls =
+    alert === "overdue"
+      ? "!bg-red-100 !text-red-700 font-semibold"
+      : alert === "soon"
+      ? "!bg-amber-100 !text-amber-700 font-semibold"
+      : "";
+  const Icon =
+    alert === "overdue" ? AlertCircle : alert === "soon" ? Clock : null;
+
+  return (
+    <td className={cn(baseCls, alertCls)}>
+      <a href={href} className="flex items-center gap-1">
+        {Icon && <Icon className="h-3 w-3 shrink-0" />}
+        {fmtDate(val)}
+      </a>
+    </td>
+  );
 }
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
@@ -586,30 +636,14 @@ export default function Projects() {
                           )}
                         </Link>
                       </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-l border-violet-100/60">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.startDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.endDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-r border-violet-100/60">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.finalDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-l border-blue-100/60">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoStartDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoEndDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-r border-blue-100/60">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.producaoFinalDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-amber-50/30 border-l border-amber-100/60 border-r border-amber-100/60">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.medicaoDate)}</Link>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-emerald-50/30 border-l border-emerald-100/60 border-r border-emerald-100/60">
-                        <Link href={`/projects/${project.id}`} className="block">{fmtDate(project.instalacaoStartDate)}</Link>
-                      </td>
+                      <DateCell val={project.startDate}         href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-l border-violet-100/60" />
+                      <DateCell val={project.endDate}           href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30" deadline />
+                      <DateCell val={project.finalDate}         href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-r border-violet-100/60" deadline />
+                      <DateCell val={project.producaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-l border-blue-100/60" />
+                      <DateCell val={project.producaoEndDate}   href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30" deadline />
+                      <DateCell val={project.producaoFinalDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-r border-blue-100/60" deadline />
+                      <DateCell val={project.medicaoDate}       href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-amber-50/30 border-l border-amber-100/60 border-r border-amber-100/60" deadline />
+                      <DateCell val={project.instalacaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-emerald-50/30 border-l border-emerald-100/60 border-r border-emerald-100/60" />
                     </tr>
                   ))}
                 </tbody>
