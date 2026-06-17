@@ -85,7 +85,7 @@ const STATUS_LABELS: Record<string, string> = {
   em_projeto: "Em Projeto",
   em_aprovacao: "Em Aprovação",
   em_producao: "Em Produção",
-  aguardando_instalacao: "Aguard. Instalação",
+  aguardando_instalacao: "Aguardando Instalação",
   em_instalacao: "Em Instalação",
 };
 
@@ -108,13 +108,13 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "a_iniciar": return "bg-slate-500/10 text-slate-600 border-slate-200";
-    case "em_projeto": return "bg-violet-500/10 text-violet-600 border-violet-200";
-    case "em_aprovacao": return "bg-purple-500/10 text-purple-600 border-purple-200";
-    case "em_producao": return "bg-blue-500/10 text-blue-600 border-blue-200";
-    case "aguardando_instalacao": return "bg-amber-500/10 text-amber-600 border-amber-200";
-    case "em_instalacao": return "bg-emerald-500/10 text-emerald-600 border-emerald-200";
-    default: return "bg-slate-500/10 text-slate-600 border-slate-200";
+    case "a_iniciar":            return "bg-slate-100 text-slate-700 border-slate-300";
+    case "em_projeto":           return "bg-violet-100 text-violet-700 border-violet-300";
+    case "em_aprovacao":         return "bg-purple-100 text-purple-700 border-purple-300";
+    case "em_producao":          return "bg-blue-100 text-blue-700 border-blue-300";
+    case "aguardando_instalacao":return "bg-amber-100 text-amber-700 border-amber-300";
+    case "em_instalacao":        return "bg-green-100 text-green-700 border-green-300";
+    default:                     return "bg-slate-100 text-slate-700 border-slate-300";
   }
 }
 
