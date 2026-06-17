@@ -328,6 +328,57 @@ export const DeleteChecklistItemParams = zod.object({
 
 
 /**
+ * @summary List site visits for a project
+ */
+export const ListSiteVisitsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListSiteVisitsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "date": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "visitors": zod.string(),
+  "objective": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListSiteVisitsResponse = zod.array(ListSiteVisitsResponseItem)
+
+
+/**
+ * @summary Create a site visit
+ */
+export const CreateSiteVisitParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+
+export const CreateSiteVisitBody = zod.object({
+  "date": zod.string().min(1),
+  "responsibleId": zod.number().optional(),
+  "visitors": zod.string().min(1),
+  "objective": zod.string().min(1),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a site visit
+ */
+export const DeleteSiteVisitParams = zod.object({
+  "id": zod.coerce.number(),
+  "visitId": zod.coerce.number()
+})
+
+
+/**
  * @summary List tasks
  */
 export const ListTasksQueryParams = zod.object({

@@ -13,11 +13,15 @@ import {
   useAddProjectMember,
   useRemoveProjectMember,
   useListMembers,
+  useListSiteVisits,
+  useCreateSiteVisit,
+  useDeleteSiteVisit,
   getGetProjectQueryKey,
   getListTasksQueryKey,
   getGetProjectStatsQueryKey,
   getListProjectsQueryKey,
   getListProjectMembersQueryKey,
+  getListSiteVisitsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -68,6 +72,8 @@ import {
   Users,
   UserPlus,
   X,
+  MapPin,
+  Eye,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -97,8 +103,17 @@ const taskSchema = z.object({
   dueDate: z.string().optional(),
 });
 
+const visitSchema = z.object({
+  date: z.string().min(1, "Data obrigatória"),
+  responsibleId: z.string().optional(),
+  visitors: z.string().min(1, "Informe quem foi à obra"),
+  objective: z.string().min(1, "Objetivo obrigatório"),
+  notes: z.string().optional(),
+});
+
 type ProjectFormValues = z.infer<typeof projectSchema>;
 type TaskFormValues = z.infer<typeof taskSchema>;
+type VisitFormValues = z.infer<typeof visitSchema>;
 
 const STATUS_LABELS: Record<string, string> = {
   a_iniciar: "A Iniciar",
@@ -165,6 +180,7 @@ export default function ProjectDetail() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
 
   const { data: project, isLoading: isProjectLoading } = useGetProject(projectId, {
     query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) },
@@ -179,12 +195,17 @@ export default function ProjectDetail() {
     query: { enabled: !!projectId, queryKey: getListProjectMembersQueryKey(projectId) },
   });
   const { data: allMembers } = useListMembers();
+  const { data: siteVisits } = useListSiteVisits(projectId, {
+    query: { enabled: !!projectId, queryKey: getListSiteVisitsQueryKey(projectId) },
+  });
 
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const createTask = useCreateTask();
   const addProjectMember = useAddProjectMember();
   const removeProjectMember = useRemoveProjectMember();
+  const createSiteVisit = useCreateSiteVisit();
+  const deleteSiteVisit = useDeleteSiteVisit();
 
   // Participation check for executors
   const myMember = allMembers?.find(
@@ -225,6 +246,11 @@ export default function ProjectDetail() {
   const taskForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: { title: "", description: "", status: "todo", priority: "medium", dueDate: "" },
+  });
+
+  const visitForm = useForm<VisitFormValues>({
+    resolver: zodResolver(visitSchema),
+    defaultValues: { date: "", responsibleId: "none", visitors: "", objective: "", notes: "" },
   });
 
   const onUpdateProject = (data: ProjectFormValues) => {
@@ -288,6 +314,43 @@ export default function ProjectDetail() {
           queryClient.invalidateQueries({ queryKey: getListProjectMembersQueryKey(projectId) });
         },
         onError: () => toast({ title: "Erro ao remover participante", variant: "destructive" }),
+      }
+    );
+  };
+
+  const onCreateVisit = (data: VisitFormValues) => {
+    createSiteVisit.mutate(
+      {
+        id: projectId,
+        data: {
+          date: data.date,
+          visitors: data.visitors,
+          objective: data.objective,
+          notes: data.notes || undefined,
+          responsibleId: data.responsibleId && data.responsibleId !== "none" ? Number(data.responsibleId) : undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({ title: "Visita registrada com sucesso" });
+          queryClient.invalidateQueries({ queryKey: getListSiteVisitsQueryKey(projectId) });
+          setIsAddVisitOpen(false);
+          visitForm.reset({ date: "", responsibleId: "none", visitors: "", objective: "", notes: "" });
+        },
+        onError: () => toast({ title: "Erro ao registrar visita", variant: "destructive" }),
+      }
+    );
+  };
+
+  const onDeleteVisit = (visitId: number) => {
+    deleteSiteVisit.mutate(
+      { id: projectId, visitId },
+      {
+        onSuccess: () => {
+          toast({ title: "Visita removida" });
+          queryClient.invalidateQueries({ queryKey: getListSiteVisitsQueryKey(projectId) });
+        },
+        onError: () => toast({ title: "Erro ao remover visita", variant: "destructive" }),
       }
     );
   };
@@ -678,6 +741,173 @@ export default function ProjectDetail() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
               <Users className="h-4 w-4 opacity-40" />
               <span>{isGestor ? "Nenhum participante. Clique em Adicionar para incluir membros." : "Nenhum participante definido."}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Visitas na Obra */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-orange-50 p-2">
+              <MapPin className="h-5 w-5 text-orange-500" />
+            </div>
+            <div>
+              <CardTitle>Visitas na Obra</CardTitle>
+              <CardDescription>
+                {siteVisits && siteVisits.length > 0
+                  ? `${siteVisits.length} visita${siteVisits.length > 1 ? "s" : ""} registrada${siteVisits.length > 1 ? "s" : ""}`
+                  : "Nenhuma visita registrada ainda"}
+              </CardDescription>
+            </div>
+          </div>
+          {canEdit && (
+            <Dialog open={isAddVisitOpen} onOpenChange={setIsAddVisitOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Registrar Visita
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Registrar Visita na Obra</DialogTitle>
+                </DialogHeader>
+                <Form {...visitForm}>
+                  <form onSubmit={visitForm.handleSubmit(onCreateVisit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={visitForm.control} name="date" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data da Visita</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={visitForm.control} name="responsibleId" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Responsável</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">— Sem responsável —</SelectItem>
+                              {allMembers?.map((m) => (
+                                <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
+                    <FormField control={visitForm.control} name="visitors" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quem foi à obra</FormLabel>
+                        <FormControl><Input placeholder="Ex.: João Silva, Maria Souza" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={visitForm.control} name="objective" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Objetivo da visita</FormLabel>
+                        <FormControl><Input placeholder="Ex.: Vistoria de instalação, medição..." {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={visitForm.control} name="notes" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Observações <span className="text-muted-foreground text-xs">(opcional)</span></FormLabel>
+                        <FormControl><Input placeholder="Detalhes adicionais..." {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline">Cancelar</Button>
+                      </DialogClose>
+                      <Button type="submit" disabled={createSiteVisit.isPending}>
+                        {createSiteVisit.isPending ? "Salvando..." : "Registrar Visita"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </CardHeader>
+        <CardContent>
+          {siteVisits && siteVisits.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Quem foi</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Responsável</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Objetivo</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Observações</th>
+                    {canEdit && <th className="px-3 py-2" />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {siteVisits.map((visit) => (
+                    <tr key={visit.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-3 py-3 whitespace-nowrap font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {visit.date ? format(new Date(visit.date + "T00:00:00"), "dd/MM/yyyy", { locale: ptBR }) : "—"}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <Eye className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>{visit.visitors}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        {visit.responsibleName ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 border border-orange-100">
+                            {visit.responsibleName}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 max-w-[220px]">
+                        <span className="text-foreground">{visit.objective}</span>
+                      </td>
+                      <td className="px-3 py-3 max-w-[180px]">
+                        <span className="text-muted-foreground text-xs">{visit.notes || "—"}</span>
+                      </td>
+                      {canEdit && (
+                        <td className="px-3 py-3">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => onDeleteVisit(visit.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-12 text-center flex flex-col items-center">
+              <MapPin className="h-10 w-10 text-muted-foreground mb-3 opacity-20" />
+              <p className="text-muted-foreground">Nenhuma visita registrada ainda.</p>
+              {canEdit && (
+                <Button size="sm" variant="outline" className="mt-3" onClick={() => setIsAddVisitOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Registrar primeira visita
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

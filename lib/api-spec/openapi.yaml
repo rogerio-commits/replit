@@ -333,6 +333,70 @@ paths:
         "204":
           description: Deleted
 
+  /projects/{id}/visits:
+    get:
+      operationId: listSiteVisits
+      tags: [projects]
+      summary: List site visits for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of site visits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SiteVisit"
+    post:
+      operationId: createSiteVisit
+      tags: [projects]
+      summary: Create a site visit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteVisitInput"
+      responses:
+        "201":
+          description: Created site visit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteVisit"
+
+  /projects/{id}/visits/{visitId}:
+    delete:
+      operationId: deleteSiteVisit
+      tags: [projects]
+      summary: Delete a site visit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: visitId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /tasks:
     get:
       operationId: listTasks
@@ -1302,3 +1366,44 @@ components:
           type: ["integer", "null"]
         actionDueDate:
           type: ["string", "null"]
+
+    SiteVisit:
+      type: object
+      required: [id, projectId, date, visitors, objective, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        date:
+          type: string
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleName:
+          type: ["string", "null"]
+        visitors:
+          type: string
+        objective:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SiteVisitInput:
+      type: object
+      required: [date, visitors, objective]
+      properties:
+        date:
+          type: string
+          minLength: 1
+        responsibleId:
+          type: integer
+        visitors:
+          type: string
+          minLength: 1
+        objective:
+          type: string
+          minLength: 1
+        notes:
+          type: string

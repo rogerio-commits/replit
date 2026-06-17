@@ -527,6 +527,32 @@ export interface ChecklistItemUpdate {
   actionDueDate?: string | null;
 }
 
+export interface SiteVisit {
+  id: number;
+  projectId: number;
+  date: string;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  visitors: string;
+  objective: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface SiteVisitInput {
+  /** @minLength 1 */
+  date: string;
+  responsibleId?: number;
+  /** @minLength 1 */
+  visitors: string;
+  /** @minLength 1 */
+  objective: string;
+  notes?: string;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

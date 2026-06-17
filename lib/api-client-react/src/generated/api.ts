@@ -44,6 +44,8 @@ import type {
   ProjectMember,
   ProjectStats,
   ProjectUpdate,
+  SiteVisit,
+  SiteVisitInput,
   Task,
   TaskInput,
   TaskUpdate,
@@ -1182,6 +1184,227 @@ export const useDeleteChecklistItem = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteChecklistItemMutationOptions(options));
+    }
+
+export const getListSiteVisitsUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/visits`
+}
+
+/**
+ * @summary List site visits for a project
+ */
+export const listSiteVisits = async (id: number, options?: RequestInit): Promise<SiteVisit[]> => {
+
+  return customFetch<SiteVisit[]>(getListSiteVisitsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSiteVisitsQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/visits`
+    ] as const;
+    }
+
+
+export const getListSiteVisitsQueryOptions = <TData = Awaited<ReturnType<typeof listSiteVisits>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSiteVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSiteVisitsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSiteVisits>>> = ({ signal }) => listSiteVisits(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSiteVisits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSiteVisitsQueryResult = NonNullable<Awaited<ReturnType<typeof listSiteVisits>>>
+export type ListSiteVisitsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List site visits for a project
+ */
+
+export function useListSiteVisits<TData = Awaited<ReturnType<typeof listSiteVisits>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSiteVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSiteVisitsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSiteVisitUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/visits`
+}
+
+/**
+ * @summary Create a site visit
+ */
+export const createSiteVisit = async (id: number,
+    siteVisitInput: SiteVisitInput, options?: RequestInit): Promise<SiteVisit> => {
+
+  return customFetch<SiteVisit>(getCreateSiteVisitUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      siteVisitInput,)
+  }
+);}
+
+
+
+
+export const getCreateSiteVisitMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSiteVisit>>, TError,{id: number;data: BodyType<SiteVisitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSiteVisit>>, TError,{id: number;data: BodyType<SiteVisitInput>}, TContext> => {
+
+const mutationKey = ['createSiteVisit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSiteVisit>>, {id: number;data: BodyType<SiteVisitInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createSiteVisit(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSiteVisitMutationResult = NonNullable<Awaited<ReturnType<typeof createSiteVisit>>>
+    export type CreateSiteVisitMutationBody = BodyType<SiteVisitInput>
+    export type CreateSiteVisitMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a site visit
+ */
+export const useCreateSiteVisit = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSiteVisit>>, TError,{id: number;data: BodyType<SiteVisitInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSiteVisit>>,
+        TError,
+        {id: number;data: BodyType<SiteVisitInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSiteVisitMutationOptions(options));
+    }
+
+export const getDeleteSiteVisitUrl = (id: number,
+    visitId: number,) => {
+
+
+
+
+  return `/api/projects/${id}/visits/${visitId}`
+}
+
+/**
+ * @summary Delete a site visit
+ */
+export const deleteSiteVisit = async (id: number,
+    visitId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSiteVisitUrl(id,visitId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSiteVisitMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSiteVisit>>, TError,{id: number;visitId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSiteVisit>>, TError,{id: number;visitId: number}, TContext> => {
+
+const mutationKey = ['deleteSiteVisit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSiteVisit>>, {id: number;visitId: number}> = (props) => {
+          const {id,visitId} = props ?? {};
+
+          return  deleteSiteVisit(id,visitId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSiteVisitMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSiteVisit>>>
+
+    export type DeleteSiteVisitMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a site visit
+ */
+export const useDeleteSiteVisit = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSiteVisit>>, TError,{id: number;visitId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSiteVisit>>,
+        TError,
+        {id: number;visitId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSiteVisitMutationOptions(options));
     }
 
 export const getListTasksUrl = (params?: ListTasksParams,) => {

@@ -52,6 +52,8 @@ export * from './projectUpdate';
 export * from './projectUpdateMaterialType';
 export * from './projectUpdatePriority';
 export * from './projectUpdateStatus';
+export * from './siteVisit';
+export * from './siteVisitInput';
 export * from './task';
 export * from './taskInput';
 export * from './taskInputPriority';

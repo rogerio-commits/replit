@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { and, eq, inArray } from "drizzle-orm";
 import {
@@ -21,6 +21,10 @@ import {
   UpdateChecklistItemParams,
   UpdateChecklistItemBody,
   DeleteChecklistItemParams,
+  ListSiteVisitsParams,
+  CreateSiteVisitParams,
+  CreateSiteVisitBody,
+  DeleteSiteVisitParams,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -489,6 +493,82 @@ router.delete("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async 
       and(
         eq(checklistItemsTable.id, params.data.itemId),
         eq(checklistItemsTable.projectId, params.data.id)
+      )
+    );
+
+  return res.status(204).send();
+});
+
+function siteVisitRow(
+  visit: typeof siteVisitsTable.$inferSelect,
+  responsibleName: string | null
+) {
+  return {
+    id: visit.id,
+    projectId: visit.projectId,
+    date: visit.date,
+    responsibleId: visit.responsibleId,
+    responsibleName,
+    visitors: visit.visitors,
+    objective: visit.objective,
+    notes: visit.notes,
+    createdAt: visit.createdAt.toISOString(),
+  };
+}
+
+router.get("/projects/:id/visits", async (req, res) => {
+  const params = ListSiteVisitsParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select({ visit: siteVisitsTable, memberName: membersTable.name })
+    .from(siteVisitsTable)
+    .leftJoin(membersTable, eq(siteVisitsTable.responsibleId, membersTable.id))
+    .where(eq(siteVisitsTable.projectId, params.data.id))
+    .orderBy(siteVisitsTable.date);
+
+  return res.json(rows.map(({ visit, memberName }) => siteVisitRow(visit, memberName ?? null)));
+});
+
+router.post("/projects/:id/visits", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateSiteVisitParams.safeParse({ id: Number(req.params.id) });
+  const body = CreateSiteVisitBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [visit] = await db
+    .insert(siteVisitsTable)
+    .values({
+      projectId: params.data.id,
+      date: body.data.date,
+      responsibleId: body.data.responsibleId ?? null,
+      visitors: body.data.visitors,
+      objective: body.data.objective,
+      notes: body.data.notes ?? null,
+    })
+    .returning();
+
+  let responsibleName: string | null = null;
+  if (visit.responsibleId) {
+    const [m] = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.id, visit.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+
+  return res.status(201).json(siteVisitRow(visit, responsibleName));
+});
+
+router.delete("/projects/:id/visits/:visitId", requireExecutorOrGestor, async (req, res) => {
+  const params = DeleteSiteVisitParams.safeParse({
+    id: Number(req.params.id),
+    visitId: Number(req.params.visitId),
+  });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  await db
+    .delete(siteVisitsTable)
+    .where(
+      and(
+        eq(siteVisitsTable.id, params.data.visitId),
+        eq(siteVisitsTable.projectId, params.data.id)
       )
     );
 
