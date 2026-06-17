@@ -14,6 +14,7 @@ export const checklistItemsTable = pgTable("checklist_items", {
     .notNull()
     .references(() => projectsTable.id, { onDelete: "cascade" }),
   peca: text("peca").notNull(),
+  local: text("local"),
   status: checklistStatusEnum("status").notNull().default("nao_instalado"),
   actionDescription: text("action_description"),
   responsibleId: integer("responsible_id").references(() => membersTable.id, {

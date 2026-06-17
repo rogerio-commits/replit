@@ -11,6 +11,8 @@ export interface ChecklistItem {
   id: number;
   projectId: number;
   peca: string;
+  /** @nullable */
+  local?: string | null;
   status: ChecklistItemStatus;
   /** @nullable */
   actionDescription?: string | null;

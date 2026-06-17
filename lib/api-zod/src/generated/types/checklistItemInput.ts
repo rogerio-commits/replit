@@ -10,6 +10,7 @@ import type { ChecklistItemInputStatus } from './checklistItemInputStatus';
 export interface ChecklistItemInput {
   /** @minLength 1 */
   peca: string;
+  local?: string;
   status?: ChecklistItemInputStatus;
   actionDescription?: string;
   responsibleId?: number;

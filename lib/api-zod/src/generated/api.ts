@@ -232,6 +232,7 @@ export const ListChecklistItemsResponseItem = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
   "peca": zod.string(),
+  "local": zod.string().nullish(),
   "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),
   "actionDescription": zod.string().nullish(),
   "responsibleId": zod.number().nullish(),
@@ -254,6 +255,7 @@ export const CreateChecklistItemParams = zod.object({
 
 export const CreateChecklistItemBody = zod.object({
   "peca": zod.string().min(1),
+  "local": zod.string().optional(),
   "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']).optional(),
   "actionDescription": zod.string().optional(),
   "responsibleId": zod.number().optional(),
@@ -274,6 +276,7 @@ export const UpdateChecklistItemParams = zod.object({
 
 export const UpdateChecklistItemBody = zod.object({
   "peca": zod.string().min(1).optional(),
+  "local": zod.string().nullish(),
   "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']).optional(),
   "actionDescription": zod.string().nullish(),
   "responsibleId": zod.number().nullish(),
@@ -284,6 +287,7 @@ export const UpdateChecklistItemResponse = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
   "peca": zod.string(),
+  "local": zod.string().nullish(),
   "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),
   "actionDescription": zod.string().nullish(),
   "responsibleId": zod.number().nullish(),

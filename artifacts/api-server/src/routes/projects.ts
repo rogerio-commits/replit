@@ -338,6 +338,7 @@ function checklistRow(
     id: item.id,
     projectId: item.projectId,
     peca: item.peca,
+    local: item.local ?? null,
     status: item.status,
     actionDescription: item.actionDescription ?? null,
     responsibleId: item.responsibleId ?? null,
@@ -371,6 +372,7 @@ router.post("/projects/:id/checklist", requireExecutorOrGestor, async (req, res)
     .values({
       projectId: params.data.id,
       peca: body.data.peca,
+      local: body.data.local ?? null,
       status: (body.data.status as "nao_instalado" | "instalado" | "finalizado") ?? "nao_instalado",
       actionDescription: body.data.actionDescription ?? null,
       responsibleId: body.data.responsibleId ?? null,
@@ -400,6 +402,7 @@ router.patch("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async (
 
   const updateData: Record<string, unknown> = {};
   if (body.data.peca !== undefined) updateData.peca = body.data.peca;
+  if ("local" in body.data) updateData.local = body.data.local;
   if (body.data.status !== undefined) updateData.status = body.data.status;
   if ("actionDescription" in body.data) updateData.actionDescription = body.data.actionDescription;
   if ("responsibleId" in body.data) updateData.responsibleId = body.data.responsibleId;

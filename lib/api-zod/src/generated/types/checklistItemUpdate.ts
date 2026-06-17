@@ -10,6 +10,8 @@ import type { ChecklistItemUpdateStatus } from './checklistItemUpdateStatus';
 export interface ChecklistItemUpdate {
   /** @minLength 1 */
   peca?: string;
+  /** @nullable */
+  local?: string | null;
   status?: ChecklistItemUpdateStatus;
   /** @nullable */
   actionDescription?: string | null;

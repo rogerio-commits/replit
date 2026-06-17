@@ -1233,6 +1233,8 @@ components:
           type: integer
         peca:
           type: string
+        local:
+          type: ["string", "null"]
         status:
           type: string
           enum: [nao_instalado, instalado, finalizado]
@@ -1254,6 +1256,8 @@ components:
         peca:
           type: string
           minLength: 1
+        local:
+          type: string
         status:
           type: string
           enum: [nao_instalado, instalado, finalizado]
@@ -1270,6 +1274,8 @@ components:
         peca:
           type: string
           minLength: 1
+        local:
+          type: ["string", "null"]
         status:
           type: string
           enum: [nao_instalado, instalado, finalizado]

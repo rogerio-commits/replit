@@ -469,6 +469,8 @@ export interface ChecklistItem {
   id: number;
   projectId: number;
   peca: string;
+  /** @nullable */
+  local?: string | null;
   status: ChecklistItemStatus;
   /** @nullable */
   actionDescription?: string | null;
@@ -493,6 +495,7 @@ export const ChecklistItemInputStatus = {
 export interface ChecklistItemInput {
   /** @minLength 1 */
   peca: string;
+  local?: string;
   status?: ChecklistItemInputStatus;
   actionDescription?: string;
   responsibleId?: number;
@@ -511,6 +514,8 @@ export const ChecklistItemUpdateStatus = {
 export interface ChecklistItemUpdate {
   /** @minLength 1 */
   peca?: string;
+  /** @nullable */
+  local?: string | null;
   status?: ChecklistItemUpdateStatus;
   /** @nullable */
   actionDescription?: string | null;

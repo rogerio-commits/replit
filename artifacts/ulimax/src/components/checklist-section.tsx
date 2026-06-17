@@ -48,6 +48,7 @@ import {
   ClipboardList,
   Clock,
   User,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -92,6 +93,7 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newPeca, setNewPeca] = useState("");
+  const [newLocal, setNewLocal] = useState("");
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [editingPlan, setEditingPlan] = useState<number | null>(null);
   const [planDraft, setPlanDraft] = useState<{
@@ -115,11 +117,12 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
   const handleAddItem = () => {
     if (!newPeca.trim()) return;
     createItem.mutate(
-      { id: projectId, data: { peca: newPeca.trim() } },
+      { id: projectId, data: { peca: newPeca.trim(), local: newLocal.trim() || undefined } },
       {
         onSuccess: () => {
           toast({ title: "Item adicionado ao checklist" });
           setNewPeca("");
+          setNewLocal("");
           setIsAddOpen(false);
           invalidate();
         },
@@ -226,22 +229,31 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus className="mr-2 h-3.5 w-3.5" />
-                Nova Peça
+                Nova Esquadria
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[400px]">
               <DialogHeader>
-                <DialogTitle>Adicionar Peça ao Checklist</DialogTitle>
+                <DialogTitle>Adicionar Esquadria ao Checklist</DialogTitle>
               </DialogHeader>
               <div className="space-y-3 py-2">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Nome da peça</label>
+                  <label className="text-sm font-medium">Nome da esquadria</label>
                   <Input
                     placeholder="Ex.: Porta Principal, Janela 01..."
                     value={newPeca}
                     onChange={(e) => setNewPeca(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
                     autoFocus
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Local de instalação</label>
+                  <Input
+                    placeholder="Ex.: Sala, Quarto 2, Fachada..."
+                    value={newLocal}
+                    onChange={(e) => setNewLocal(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
                   />
                 </div>
               </div>
@@ -333,15 +345,23 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
                         </SelectContent>
                       </Select>
 
-                      {/* Piece name */}
-                      <span
-                        className={cn(
-                          "flex-1 text-sm font-medium min-w-0 truncate",
-                          item.status === "finalizado" && "line-through text-muted-foreground"
+                      {/* Esquadria name + local */}
+                      <div className="flex-1 min-w-0">
+                        <span
+                          className={cn(
+                            "block text-sm font-medium truncate",
+                            item.status === "finalizado" && "line-through text-muted-foreground"
+                          )}
+                        >
+                          {item.peca}
+                        </span>
+                        {item.local && (
+                          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground truncate">
+                            <MapPin className="h-2.5 w-2.5 shrink-0" />
+                            {item.local}
+                          </span>
                         )}
-                      >
-                        {item.peca}
-                      </span>
+                      </div>
 
                       {/* Alert badge */}
                       {alert.level === "overdue" && (
