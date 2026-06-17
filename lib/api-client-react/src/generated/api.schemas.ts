@@ -216,6 +216,8 @@ export interface Task {
   projectName?: string | null;
   /** @nullable */
   dueDate?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
   createdAt: string;
 }
 

@@ -454,6 +454,7 @@ export const ListTasksResponseItem = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListTasksResponse = zod.array(ListTasksResponseItem)
@@ -494,6 +495,7 @@ export const GetTaskResponse = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -529,6 +531,7 @@ export const UpdateTaskResponse = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

@@ -1066,6 +1066,8 @@ components:
           type: ["string", "null"]
         dueDate:
           type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
         createdAt:
           type: string
 

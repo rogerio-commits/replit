@@ -1141,6 +1141,12 @@ export default function ProjectDetail() {
                           {format(new Date(task.dueDate), "d MMM yyyy", { locale: ptBR })}
                         </span>
                       )}
+                      {task.completedAt && (
+                        <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                          <CheckSquare className="h-3 w-3" />
+                          Concluída em {format(new Date(task.completedAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {canEdit && (

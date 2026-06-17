@@ -47,6 +47,7 @@ function taskRow(row: { task: typeof tasksTable.$inferSelect; memberName: string
     assigneeName: row.memberName ?? null,
     projectName: row.projectName ?? null,
     dueDate: row.task.dueDate ?? null,
+    completedAt: row.task.completedAt ? row.task.completedAt.toISOString() : null,
     createdAt: row.task.createdAt.toISOString(),
   };
 }
@@ -169,7 +170,14 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   const updateData: Record<string, unknown> = {};
   if (body.data.title !== undefined) updateData.title = body.data.title;
   if (body.data.description !== undefined) updateData.description = body.data.description;
-  if (body.data.status !== undefined) updateData.status = body.data.status;
+  if (body.data.status !== undefined) {
+    updateData.status = body.data.status;
+    if (body.data.status === "done") {
+      updateData.completedAt = new Date();
+    } else {
+      updateData.completedAt = null;
+    }
+  }
   if (body.data.priority !== undefined) updateData.priority = body.data.priority;
   if (body.data.assignedTo !== undefined) updateData.assignedTo = body.data.assignedTo;
   if (body.data.dueDate !== undefined) updateData.dueDate = body.data.dueDate;
