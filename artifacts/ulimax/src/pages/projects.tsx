@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -201,6 +201,10 @@ export default function Projects() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
+
+  useEffect(() => {
+    setStatusFilter(initialStatus);
+  }, [initialStatus]);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
