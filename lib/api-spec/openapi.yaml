@@ -224,6 +224,100 @@ paths:
         "204":
           description: Removed
 
+  /projects/{id}/checklist:
+    get:
+      operationId: listChecklistItems
+      tags: [projects]
+      summary: List checklist items for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of checklist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChecklistItem"
+    post:
+      operationId: createChecklistItem
+      tags: [projects]
+      summary: Create a checklist item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChecklistItemInput"
+      responses:
+        "201":
+          description: Created checklist item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChecklistItem"
+
+  /projects/{id}/checklist/{itemId}:
+    patch:
+      operationId: updateChecklistItem
+      tags: [projects]
+      summary: Update a checklist item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChecklistItemUpdate"
+      responses:
+        "200":
+          description: Updated checklist item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChecklistItem"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteChecklistItem
+      tags: [projects]
+      summary: Delete a checklist item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /tasks:
     get:
       operationId: listTasks
@@ -1128,3 +1222,60 @@ components:
       properties:
         memberId:
           type: integer
+
+    ChecklistItem:
+      type: object
+      required: [id, projectId, peca, status, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        peca:
+          type: string
+        status:
+          type: string
+          enum: [nao_instalado, instalado, finalizado]
+        actionDescription:
+          type: ["string", "null"]
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleName:
+          type: ["string", "null"]
+        actionDueDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ChecklistItemInput:
+      type: object
+      required: [peca]
+      properties:
+        peca:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum: [nao_instalado, instalado, finalizado]
+        actionDescription:
+          type: string
+        responsibleId:
+          type: integer
+        actionDueDate:
+          type: string
+
+    ChecklistItemUpdate:
+      type: object
+      properties:
+        peca:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum: [nao_instalado, instalado, finalizado]
+        actionDescription:
+          type: ["string", "null"]
+        responsibleId:
+          type: ["integer", "null"]
+        actionDueDate:
+          type: ["string", "null"]

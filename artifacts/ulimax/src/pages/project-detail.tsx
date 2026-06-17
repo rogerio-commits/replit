@@ -72,6 +72,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
+import { ChecklistSection } from "@/components/checklist-section";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -682,6 +683,9 @@ export default function ProjectDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Checklist */}
+      <ChecklistSection projectId={projectId} canEdit={canEdit} />
 
       {/* Tasks */}
       <Card>

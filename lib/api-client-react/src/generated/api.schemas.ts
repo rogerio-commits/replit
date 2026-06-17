@@ -456,6 +456,70 @@ export interface AddProjectMemberInput {
   memberId: number;
 }
 
+export type ChecklistItemStatus = typeof ChecklistItemStatus[keyof typeof ChecklistItemStatus];
+
+
+export const ChecklistItemStatus = {
+  nao_instalado: 'nao_instalado',
+  instalado: 'instalado',
+  finalizado: 'finalizado',
+} as const;
+
+export interface ChecklistItem {
+  id: number;
+  projectId: number;
+  peca: string;
+  status: ChecklistItemStatus;
+  /** @nullable */
+  actionDescription?: string | null;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  /** @nullable */
+  actionDueDate?: string | null;
+  createdAt: string;
+}
+
+export type ChecklistItemInputStatus = typeof ChecklistItemInputStatus[keyof typeof ChecklistItemInputStatus];
+
+
+export const ChecklistItemInputStatus = {
+  nao_instalado: 'nao_instalado',
+  instalado: 'instalado',
+  finalizado: 'finalizado',
+} as const;
+
+export interface ChecklistItemInput {
+  /** @minLength 1 */
+  peca: string;
+  status?: ChecklistItemInputStatus;
+  actionDescription?: string;
+  responsibleId?: number;
+  actionDueDate?: string;
+}
+
+export type ChecklistItemUpdateStatus = typeof ChecklistItemUpdateStatus[keyof typeof ChecklistItemUpdateStatus];
+
+
+export const ChecklistItemUpdateStatus = {
+  nao_instalado: 'nao_instalado',
+  instalado: 'instalado',
+  finalizado: 'finalizado',
+} as const;
+
+export interface ChecklistItemUpdate {
+  /** @minLength 1 */
+  peca?: string;
+  status?: ChecklistItemUpdateStatus;
+  /** @nullable */
+  actionDescription?: string | null;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  actionDueDate?: string | null;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

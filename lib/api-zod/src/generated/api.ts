@@ -222,6 +222,87 @@ export const RemoveProjectMemberParams = zod.object({
 
 
 /**
+ * @summary List checklist items for a project
+ */
+export const ListChecklistItemsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListChecklistItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "peca": zod.string(),
+  "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),
+  "actionDescription": zod.string().nullish(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "actionDueDate": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListChecklistItemsResponse = zod.array(ListChecklistItemsResponseItem)
+
+
+/**
+ * @summary Create a checklist item
+ */
+export const CreateChecklistItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateChecklistItemBody = zod.object({
+  "peca": zod.string().min(1),
+  "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']).optional(),
+  "actionDescription": zod.string().optional(),
+  "responsibleId": zod.number().optional(),
+  "actionDueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a checklist item
+ */
+export const UpdateChecklistItemParams = zod.object({
+  "id": zod.coerce.number(),
+  "itemId": zod.coerce.number()
+})
+
+
+
+
+export const UpdateChecklistItemBody = zod.object({
+  "peca": zod.string().min(1).optional(),
+  "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']).optional(),
+  "actionDescription": zod.string().nullish(),
+  "responsibleId": zod.number().nullish(),
+  "actionDueDate": zod.string().nullish()
+})
+
+export const UpdateChecklistItemResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "peca": zod.string(),
+  "status": zod.enum(['nao_instalado', 'instalado', 'finalizado']),
+  "actionDescription": zod.string().nullish(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "actionDueDate": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a checklist item
+ */
+export const DeleteChecklistItemParams = zod.object({
+  "id": zod.coerce.number(),
+  "itemId": zod.coerce.number()
+})
+
+
+/**
  * @summary List tasks
  */
 export const ListTasksQueryParams = zod.object({

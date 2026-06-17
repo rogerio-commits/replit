@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { and, eq, inArray } from "drizzle-orm";
 import {
@@ -15,6 +15,12 @@ import {
   AddProjectMemberParams,
   AddProjectMemberBody,
   RemoveProjectMemberParams,
+  ListChecklistItemsParams,
+  CreateChecklistItemParams,
+  CreateChecklistItemBody,
+  UpdateChecklistItemParams,
+  UpdateChecklistItemBody,
+  DeleteChecklistItemParams,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -316,6 +322,127 @@ router.delete("/projects/:id/members/:memberId", requireGestor, async (req, res)
       and(
         eq(projectMembersTable.projectId, params.data.id),
         eq(projectMembersTable.memberId, params.data.memberId)
+      )
+    );
+
+  return res.status(204).send();
+});
+
+// ─── Checklist ────────────────────────────────────────────────────────────────
+
+function checklistRow(
+  item: typeof checklistItemsTable.$inferSelect,
+  responsibleName: string | null
+) {
+  return {
+    id: item.id,
+    projectId: item.projectId,
+    peca: item.peca,
+    status: item.status,
+    actionDescription: item.actionDescription ?? null,
+    responsibleId: item.responsibleId ?? null,
+    responsibleName,
+    actionDueDate: item.actionDueDate ?? null,
+    createdAt: item.createdAt.toISOString(),
+  };
+}
+
+router.get("/projects/:id/checklist", async (req, res) => {
+  const params = ListChecklistItemsParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select({ item: checklistItemsTable, memberName: membersTable.name })
+    .from(checklistItemsTable)
+    .leftJoin(membersTable, eq(checklistItemsTable.responsibleId, membersTable.id))
+    .where(eq(checklistItemsTable.projectId, params.data.id))
+    .orderBy(checklistItemsTable.createdAt);
+
+  return res.json(rows.map(({ item, memberName }) => checklistRow(item, memberName ?? null)));
+});
+
+router.post("/projects/:id/checklist", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateChecklistItemParams.safeParse({ id: Number(req.params.id) });
+  const body = CreateChecklistItemBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [item] = await db
+    .insert(checklistItemsTable)
+    .values({
+      projectId: params.data.id,
+      peca: body.data.peca,
+      status: (body.data.status as "nao_instalado" | "instalado" | "finalizado") ?? "nao_instalado",
+      actionDescription: body.data.actionDescription ?? null,
+      responsibleId: body.data.responsibleId ?? null,
+      actionDueDate: body.data.actionDueDate ?? null,
+    })
+    .returning();
+
+  let responsibleName: string | null = null;
+  if (item.responsibleId) {
+    const [m] = await db
+      .select({ name: membersTable.name })
+      .from(membersTable)
+      .where(eq(membersTable.id, item.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+
+  return res.status(201).json(checklistRow(item, responsibleName));
+});
+
+router.patch("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async (req, res) => {
+  const params = UpdateChecklistItemParams.safeParse({
+    id: Number(req.params.id),
+    itemId: Number(req.params.itemId),
+  });
+  const body = UpdateChecklistItemBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const updateData: Record<string, unknown> = {};
+  if (body.data.peca !== undefined) updateData.peca = body.data.peca;
+  if (body.data.status !== undefined) updateData.status = body.data.status;
+  if ("actionDescription" in body.data) updateData.actionDescription = body.data.actionDescription;
+  if ("responsibleId" in body.data) updateData.responsibleId = body.data.responsibleId;
+  if ("actionDueDate" in body.data) updateData.actionDueDate = body.data.actionDueDate;
+
+  const [item] = await db
+    .update(checklistItemsTable)
+    .set(updateData)
+    .where(
+      and(
+        eq(checklistItemsTable.id, params.data.itemId),
+        eq(checklistItemsTable.projectId, params.data.id)
+      )
+    )
+    .returning();
+
+  if (!item) return res.status(404).json({ error: "Not found" });
+
+  let responsibleName: string | null = null;
+  if (item.responsibleId) {
+    const [m] = await db
+      .select({ name: membersTable.name })
+      .from(membersTable)
+      .where(eq(membersTable.id, item.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+
+  return res.json(checklistRow(item, responsibleName));
+});
+
+router.delete("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async (req, res) => {
+  const params = DeleteChecklistItemParams.safeParse({
+    id: Number(req.params.id),
+    itemId: Number(req.params.itemId),
+  });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  await db
+    .delete(checklistItemsTable)
+    .where(
+      and(
+        eq(checklistItemsTable.id, params.data.itemId),
+        eq(checklistItemsTable.projectId, params.data.id)
       )
     );
 
