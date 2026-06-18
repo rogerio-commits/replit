@@ -281,6 +281,14 @@ export interface TaskUpdate {
   projectId?: number;
 }
 
+export type MemberTeam = typeof MemberTeam[keyof typeof MemberTeam];
+
+
+export const MemberTeam = {
+  projetos: 'projetos',
+  tecnica: 'tecnica',
+} as const;
+
 export interface Member {
   id: number;
   name: string;
@@ -288,6 +296,7 @@ export interface Member {
   email: string;
   /** @nullable */
   avatarUrl?: string | null;
+  team: MemberTeam;
   createdAt: string;
 }
 
@@ -297,6 +306,7 @@ export interface MemberInput {
   role: string;
   email: string;
   avatarUrl?: string;
+  team?: MemberTeam;
 }
 
 export interface MemberUpdate {
@@ -304,6 +314,7 @@ export interface MemberUpdate {
   role?: string;
   email?: string;
   avatarUrl?: string;
+  team?: MemberTeam;
 }
 
 export type DashboardSummaryProjectsByStatus = {

@@ -5,6 +5,7 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
+import type { MemberTeam } from './memberTeam';
 
 export interface Member {
   id: number;
@@ -13,5 +14,6 @@ export interface Member {
   email: string;
   /** @nullable */
   avatarUrl?: string | null;
+  team: MemberTeam;
   createdAt: string;
 }

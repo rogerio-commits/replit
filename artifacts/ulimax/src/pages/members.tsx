@@ -10,6 +10,7 @@ import {
   useCreateInvitation,
   useDeleteInvitation,
   getListMembersQueryKey,
+  type Member,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -26,7 +27,6 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -59,6 +59,8 @@ import {
   Send,
   Clock,
   X,
+  FolderKanban,
+  Settings2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -67,11 +69,29 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 type SystemRole = "gestor" | "executor" | "observador";
+type MemberTeam = "projetos" | "tecnica";
 
-const ROLE_META: Record<SystemRole, { label: string; icon: React.ElementType; cls: string; selectCls: string }> = {
-  gestor:     { label: "Gestor",     icon: ShieldCheck, cls: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700", selectCls: "text-emerald-600" },
-  executor:   { label: "Executor",   icon: Wrench,      cls: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700",                 selectCls: "text-blue-600" },
-  observador: { label: "Observador", icon: Eye,         cls: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600",               selectCls: "text-slate-500" },
+const ROLE_META: Record<SystemRole, { label: string; icon: React.ElementType; cls: string }> = {
+  gestor:     { label: "Gestor",     icon: ShieldCheck, cls: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700" },
+  executor:   { label: "Executor",   icon: Wrench,      cls: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700" },
+  observador: { label: "Observador", icon: Eye,         cls: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600" },
+};
+
+const TEAM_META: Record<MemberTeam, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> = {
+  projetos: {
+    label: "Equipe de Projetos",
+    icon: FolderKanban,
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+    border: "border-blue-200 dark:border-blue-800",
+  },
+  tecnica: {
+    label: "Equipe Técnica",
+    icon: Settings2,
+    color: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-50 dark:bg-orange-950/30",
+    border: "border-orange-200 dark:border-orange-800",
+  },
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -87,14 +107,200 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 const memberSchema = z.object({
-  name:          z.string().min(1, "Nome obrigatório"),
-  role:          z.string().min(1, "Cargo obrigatório"),
-  email:         z.string().email("E-mail válido obrigatório"),
-  intendedRole:  z.enum(["gestor", "executor", "observador"]),
-  sendInvite:    z.boolean(),
+  name:         z.string().min(1, "Nome obrigatório"),
+  role:         z.string().min(1, "Cargo obrigatório"),
+  email:        z.string().email("E-mail válido obrigatório"),
+  team:         z.enum(["projetos", "tecnica"]),
+  intendedRole: z.enum(["gestor", "executor", "observador"]),
+  sendInvite:   z.boolean(),
 });
 
 type MemberFormValues = z.infer<typeof memberSchema>;
+
+interface MemberCardProps {
+  member: Member;
+  users: { id: number; email: string; role: string }[] | undefined;
+  invitations: { id: number; email: string; name: string; intendedRole: string; invitedAt: string }[] | undefined;
+  isGestor: boolean;
+  pendingRoleId: number | null;
+  onEdit: (member: Member) => void;
+  onDelete: (id: number) => void;
+  onRoleChange: (userId: number, role: SystemRole) => void;
+  onRevokeInvite: (id: number, email: string) => void;
+  onSendInvite: (member: Member) => void;
+  deleteInvitationPending: boolean;
+}
+
+function MemberCard({
+  member, users, invitations, isGestor, pendingRoleId,
+  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, deleteInvitationPending,
+}: MemberCardProps) {
+  const linkedUser = users?.find(u => u.email.toLowerCase() === member.email.toLowerCase());
+  const pendingInvite = invitations?.find(inv => inv.email.toLowerCase() === member.email.toLowerCase());
+
+  return (
+    <Card className="overflow-hidden bg-card/50">
+      <div className="p-5 flex items-start gap-4">
+        <Avatar className="h-12 w-12 border bg-muted shrink-0">
+          {member.avatarUrl ? (
+            <AvatarImage src={member.avatarUrl} alt={member.name} />
+          ) : (
+            <AvatarFallback className="text-primary font-bold bg-primary/10">
+              {member.name.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          )}
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-foreground truncate">{member.name}</div>
+          <div className="text-sm text-primary font-medium truncate flex items-center gap-1 mt-0.5">
+            <HardHat className="h-3 w-3" />
+            {member.role}
+          </div>
+          <div className="text-sm text-muted-foreground truncate flex items-center gap-1 mt-1.5">
+            <Mail className="h-3 w-3 shrink-0" />
+            {member.email}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 pb-4">
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+          Acesso ao sistema
+        </p>
+        {linkedUser ? (
+          isGestor ? (
+            <Select
+              value={linkedUser.role}
+              onValueChange={(v) => onRoleChange(linkedUser.id, v as SystemRole)}
+              disabled={pendingRoleId === linkedUser.id}
+            >
+              <SelectTrigger className="h-8 w-full text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gestor">
+                  <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />Gestor</span>
+                </SelectItem>
+                <SelectItem value="executor">
+                  <span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-blue-600" />Executor</span>
+                </SelectItem>
+                <SelectItem value="observador">
+                  <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-slate-500" />Observador</span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <RoleBadge role={linkedUser.role} />
+          )
+        ) : pendingInvite ? (
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="border-amber-300 text-amber-600 bg-amber-50 dark:bg-amber-900/20 text-[11px] gap-1">
+              <Clock className="h-3 w-3" />
+              Convite enviado
+            </Badge>
+            <RoleBadge role={pendingInvite.intendedRole} />
+          </div>
+        ) : isGestor ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs gap-1.5 text-muted-foreground"
+            onClick={() => onSendInvite(member)}
+          >
+            <Send className="h-3 w-3" />
+            Enviar convite
+          </Button>
+        ) : (
+          <span className="text-xs text-muted-foreground italic">Sem conta cadastrada</span>
+        )}
+      </div>
+
+      {isGestor && (
+        <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(member)} className="h-8 text-muted-foreground">
+            <Edit className="h-3.5 w-3.5 mr-1" />
+            Editar
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Remover
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[360px]">
+              <DialogHeader>
+                <DialogTitle>Remover membro?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">
+                Isso remove <strong>{member.name}</strong> da equipe. Esta ação não pode ser desfeita.
+              </p>
+              <DialogFooter className="gap-2">
+                <Button variant="destructive" onClick={() => onDelete(member.id)}>Remover</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+interface TeamSectionProps {
+  team: MemberTeam;
+  members: Member[];
+  isLoading: boolean;
+  users: { id: number; email: string; role: string }[] | undefined;
+  invitations: { id: number; email: string; name: string; intendedRole: string; invitedAt: string }[] | undefined;
+  isGestor: boolean;
+  pendingRoleId: number | null;
+  onEdit: (member: Member) => void;
+  onDelete: (id: number) => void;
+  onRoleChange: (userId: number, role: SystemRole) => void;
+  onRevokeInvite: (id: number, email: string) => void;
+  onSendInvite: (member: Member) => void;
+  deleteInvitationPending: boolean;
+}
+
+function TeamSection({ team, members, isLoading, ...cardProps }: TeamSectionProps) {
+  const meta = TEAM_META[team];
+  const Icon = meta.icon;
+
+  return (
+    <div className="space-y-3">
+      <div className={cn("flex items-center gap-2.5 px-4 py-2.5 rounded-lg border", meta.bg, meta.border)}>
+        <div className={cn("h-8 w-8 rounded-md flex items-center justify-center", meta.bg)}>
+          <Icon className={cn("h-4 w-4", meta.color)} />
+        </div>
+        <div>
+          <h2 className={cn("text-sm font-semibold", meta.color)}>{meta.label}</h2>
+          <p className="text-xs text-muted-foreground">
+            {isLoading ? "..." : `${members.length} membro${members.length !== 1 ? "s" : ""}`}
+          </p>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-44 w-full" />
+          ))}
+        </div>
+      ) : members.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center border rounded-lg bg-muted/20">
+          <Icon className={cn("h-8 w-8 mb-2 opacity-30", meta.color)} />
+          <p className="text-sm text-muted-foreground">Nenhum membro nesta equipe ainda.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {members.map((member) => (
+            <MemberCard key={member.id} member={member} {...cardProps} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Members() {
   const [search, setSearch] = useState("");
@@ -118,18 +324,18 @@ export default function Members() {
 
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
-    defaultValues: { name: "", role: "", email: "", intendedRole: "executor", sendInvite: true },
+    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: true },
   });
 
   const sendInviteWatched = form.watch("sendInvite");
 
   const resetDialog = () => {
     setEditingMember(null);
-    form.reset({ name: "", role: "", email: "", intendedRole: "executor", sendInvite: true });
+    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: true });
   };
 
   const onSubmit = (data: MemberFormValues) => {
-    const memberPayload = { name: data.name, role: data.role, email: data.email };
+    const memberPayload = { name: data.name, role: data.role, email: data.email, team: data.team };
 
     if (editingMember !== null) {
       updateMember.mutate({ id: editingMember, data: memberPayload }, {
@@ -147,32 +353,23 @@ export default function Members() {
     createMember.mutate({ data: memberPayload }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
-
         if (data.sendInvite) {
           createInvitation.mutate(
             { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
             {
               onSuccess: () => {
-                toast({
-                  title: "Membro adicionado e convite enviado!",
-                  description: `Um e-mail foi enviado para ${data.email}.`,
-                });
+                toast({ title: "Membro adicionado e convite enviado!", description: `Um e-mail foi enviado para ${data.email}.` });
                 queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
               },
               onError: (err: unknown) => {
                 const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-                toast({
-                  title: "Membro adicionado, mas o convite falhou",
-                  description: msg ?? "Tente reenviar o convite manualmente.",
-                  variant: "destructive",
-                });
+                toast({ title: "Membro adicionado, mas o convite falhou", description: msg ?? "Tente reenviar o convite manualmente.", variant: "destructive" });
               },
             }
           );
         } else {
           toast({ title: "Membro adicionado com sucesso" });
         }
-
         setIsCreateOpen(false);
         resetDialog();
       },
@@ -180,8 +377,15 @@ export default function Members() {
     });
   };
 
-  const handleEdit = (member: { id: number; name: string; role: string; email: string }) => {
-    form.reset({ name: member.name, role: member.role, email: member.email, intendedRole: "executor", sendInvite: false });
+  const handleEdit = (member: Member) => {
+    form.reset({
+      name: member.name,
+      role: member.role,
+      email: member.email,
+      team: (member.team as MemberTeam) ?? "projetos",
+      intendedRole: "executor",
+      sendInvite: false,
+    });
     setEditingMember(member.id);
     setIsCreateOpen(true);
   };
@@ -218,13 +422,33 @@ export default function Members() {
     });
   };
 
-  const filteredMembers = members?.filter(m =>
+  const handleSendInvite = (member: Member) => {
+    form.reset({ name: member.name, role: member.role, email: member.email, team: (member.team as MemberTeam) ?? "projetos", intendedRole: "executor", sendInvite: true });
+    setEditingMember(null);
+    setIsCreateOpen(true);
+  };
+
+  const filtered = (members ?? []).filter((m) =>
+    !search ||
     m.name.toLowerCase().includes(search.toLowerCase()) ||
     m.role.toLowerCase().includes(search.toLowerCase()) ||
     m.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const projetosMembers = filtered.filter((m) => m.team === "projetos");
+  const tecnicaMembers  = filtered.filter((m) => m.team === "tecnica");
+
   const isPending = createMember.isPending || updateMember.isPending || createInvitation.isPending;
+
+  const cardProps = {
+    users, invitations, isGestor, pendingRoleId,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onRoleChange: handleRoleChange,
+    onRevokeInvite: handleRevokeInvite,
+    onSendInvite: handleSendInvite,
+    deleteInvitationPending: deleteInvitation.isPending,
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -232,7 +456,7 @@ export default function Members() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Equipe</h1>
-          <p className="text-muted-foreground mt-1">Gerencie colaboradores, cargos e acesso ao sistema.</p>
+          <p className="text-muted-foreground mt-1">Gerencie colaboradores por equipe, cargos e acesso ao sistema.</p>
         </div>
 
         {isGestor && (
@@ -271,78 +495,94 @@ export default function Members() {
                     </FormItem>
                   )} />
 
-                  {!editingMember && (
-                    <>
-                      {/* Divider */}
-                      <div className="border-t pt-3">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <p className="text-sm font-medium">Convidar para o sistema</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">Envia um e-mail de convite para criar conta</p>
-                          </div>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={sendInviteWatched}
-                            onClick={() => form.setValue("sendInvite", !sendInviteWatched)}
-                            className={cn(
-                              "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                              sendInviteWatched ? "bg-primary" : "bg-input"
-                            )}
-                          >
-                            <span className={cn(
-                              "inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
-                              sendInviteWatched ? "translate-x-4" : "translate-x-0.5"
-                            )} />
-                          </button>
-                        </div>
+                  <FormField control={form.control} name="team" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Equipe</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a equipe" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="projetos">
+                            <span className="flex items-center gap-2">
+                              <FolderKanban className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium">Equipe de Projetos</span>
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="tecnica">
+                            <span className="flex items-center gap-2">
+                              <Settings2 className="h-4 w-4 text-orange-600" />
+                              <span className="font-medium">Equipe Técnica</span>
+                            </span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                        {sendInviteWatched && (
-                          <FormField control={form.control} name="intendedRole" render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Papel no sistema</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione o papel" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="gestor">
-                                    <span className="flex items-center gap-2">
-                                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                                      <span>
-                                        <span className="font-medium">Gestor</span>
-                                        <span className="text-muted-foreground ml-1 text-xs">— acesso total</span>
-                                      </span>
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem value="executor">
-                                    <span className="flex items-center gap-2">
-                                      <Wrench className="h-4 w-4 text-blue-600" />
-                                      <span>
-                                        <span className="font-medium">Executor</span>
-                                        <span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span>
-                                      </span>
-                                    </span>
-                                  </SelectItem>
-                                  <SelectItem value="observador">
-                                    <span className="flex items-center gap-2">
-                                      <Eye className="h-4 w-4 text-slate-500" />
-                                      <span>
-                                        <span className="font-medium">Observador</span>
-                                        <span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span>
-                                      </span>
-                                    </span>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
+                  {!editingMember && (
+                    <div className="border-t pt-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-sm font-medium">Convidar para o sistema</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Envia um e-mail de convite para criar conta</p>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={sendInviteWatched}
+                          onClick={() => form.setValue("sendInvite", !sendInviteWatched)}
+                          className={cn(
+                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            sendInviteWatched ? "bg-primary" : "bg-input"
+                          )}
+                        >
+                          <span className={cn(
+                            "inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
+                            sendInviteWatched ? "translate-x-4" : "translate-x-0.5"
                           )} />
-                        )}
+                        </button>
                       </div>
-                    </>
+
+                      {sendInviteWatched && (
+                        <FormField control={form.control} name="intendedRole" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Papel no sistema</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o papel" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="gestor">
+                                  <span className="flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                                    <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="executor">
+                                  <span className="flex items-center gap-2">
+                                    <Wrench className="h-4 w-4 text-blue-600" />
+                                    <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="observador">
+                                  <span className="flex items-center gap-2">
+                                    <Eye className="h-4 w-4 text-slate-500" />
+                                    <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
+                    </div>
                   )}
 
                   <DialogFooter>
@@ -402,7 +642,7 @@ export default function Members() {
         </div>
       )}
 
-      {/* Members grid */}
+      {/* Search */}
       <Card>
         <CardHeader className="pb-3">
           <div className="relative w-full max-w-md">
@@ -415,220 +655,11 @@ export default function Members() {
             />
           </div>
         </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-44 w-full" />
-              ))}
-            </div>
-          ) : filteredMembers && filteredMembers.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredMembers.map((member) => {
-                const linkedUser = users?.find(
-                  (u) => u.email.toLowerCase() === member.email.toLowerCase()
-                );
-                const pendingInvite = invitations?.find(
-                  (inv) => inv.email.toLowerCase() === member.email.toLowerCase()
-                );
-
-                return (
-                  <Card key={member.id} className="overflow-hidden bg-card/50">
-                    <div className="p-5 flex items-start gap-4">
-                      <Avatar className="h-12 w-12 border bg-muted shrink-0">
-                        {member.avatarUrl ? (
-                          <AvatarImage src={member.avatarUrl} alt={member.name} />
-                        ) : (
-                          <AvatarFallback className="text-primary font-bold bg-primary/10">
-                            {member.name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-foreground truncate">{member.name}</div>
-                        <div className="text-sm text-primary font-medium truncate flex items-center gap-1 mt-0.5">
-                          <HardHat className="h-3 w-3" />
-                          {member.role}
-                        </div>
-                        <div className="text-sm text-muted-foreground truncate flex items-center gap-1 mt-1.5">
-                          <Mail className="h-3 w-3 shrink-0" />
-                          {member.email}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* System role section */}
-                    <div className="px-5 pb-4">
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
-                        Acesso ao sistema
-                      </p>
-                      {linkedUser ? (
-                        isGestor ? (
-                          <Select
-                            value={linkedUser.role}
-                            onValueChange={(v) => handleRoleChange(linkedUser.id, v as SystemRole)}
-                            disabled={pendingRoleId === linkedUser.id}
-                          >
-                            <SelectTrigger className="h-8 w-full text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="gestor">
-                                <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />Gestor</span>
-                              </SelectItem>
-                              <SelectItem value="executor">
-                                <span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-blue-600" />Executor</span>
-                              </SelectItem>
-                              <SelectItem value="observador">
-                                <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-slate-500" />Observador</span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <RoleBadge role={linkedUser.role} />
-                        )
-                      ) : pendingInvite ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="border-amber-300 text-amber-600 bg-amber-50 dark:bg-amber-900/20 text-[11px] gap-1">
-                            <Clock className="h-3 w-3" />
-                            Convite enviado
-                          </Badge>
-                          <RoleBadge role={pendingInvite.intendedRole} />
-                        </div>
-                      ) : isGestor ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1.5 text-muted-foreground"
-                          onClick={() => {
-                            form.reset({ name: member.name, role: member.role, email: member.email, intendedRole: "executor", sendInvite: true });
-                            setEditingMember(null);
-                            setIsCreateOpen(true);
-                          }}
-                        >
-                          <Send className="h-3 w-3" />
-                          Enviar convite
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic">Sem conta cadastrada</span>
-                      )}
-                    </div>
-
-                    {isGestor && (
-                      <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(member)} className="h-8 text-muted-foreground">
-                          <Edit className="h-3.5 w-3.5 mr-1" />
-                          Editar
-                        </Button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive">
-                              <Trash2 className="h-3.5 w-3.5 mr-1" />
-                              Remover
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Remover Membro</DialogTitle>
-                            </DialogHeader>
-                            <div className="py-4">
-                              Tem certeza que deseja remover <strong>{member.name}</strong> da equipe? Esta ação não pode ser desfeita.
-                            </div>
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline">Cancelar</Button>
-                              </DialogClose>
-                              <Button variant="destructive" onClick={() => handleDelete(member.id)} disabled={deleteMember.isPending}>
-                                {deleteMember.isPending ? "Removendo..." : "Remover"}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    )}
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="py-16 text-center flex flex-col items-center">
-              <HardHat className="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground">Nenhum membro encontrado</h3>
-              <p className="text-muted-foreground mt-1">
-                {search ? "Tente ajustar sua busca" : "Comece adicionando membros à equipe"}
-              </p>
-            </div>
-          )}
+        <CardContent className="space-y-8">
+          <TeamSection team="projetos" members={projetosMembers} isLoading={isLoading} {...cardProps} />
+          <TeamSection team="tecnica"  members={tecnicaMembers}  isLoading={isLoading} {...cardProps} />
         </CardContent>
       </Card>
-
-      {isGestor && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <h2 className="text-base font-semibold">Acesso ao sistema</h2>
-            </div>
-            <p className="text-sm text-muted-foreground mt-0.5">Gerencie os papéis dos usuários cadastrados.</p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm text-muted-foreground bg-muted/40 border rounded-lg p-4 grid gap-3 sm:grid-cols-3">
-              {(Object.entries(ROLE_META) as [SystemRole, (typeof ROLE_META)[SystemRole]][]).map(([role, meta]) => {
-                const Icon = meta.icon;
-                return (
-                  <div key={role} className="flex items-start gap-2">
-                    <Icon className={cn("h-4 w-4 mt-0.5 shrink-0", role === "gestor" ? "text-emerald-600" : role === "executor" ? "text-blue-600" : "text-slate-500")} />
-                    <div>
-                      <p className="font-medium text-foreground">{meta.label}</p>
-                      <p className="text-xs leading-snug mt-0.5 text-muted-foreground">
-                        {role === "gestor"     && "Acesso total — gerencia equipe, papéis, projetos e tarefas."}
-                        {role === "executor"   && "Cria e edita projetos e tarefas, atribui responsáveis."}
-                        {role === "observador" && "Apenas visualiza informações, sem criar ou editar."}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {users && users.length > 0 && (
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs uppercase tracking-wider">E-mail</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs uppercase tracking-wider w-52">Papel</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {users.map((u) => (
-                      <tr key={u.id} className="bg-card hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 font-medium">{u.email}</td>
-                        <td className="px-4 py-3">
-                          <Select
-                            value={u.role}
-                            onValueChange={(v) => handleRoleChange(u.id, v as SystemRole)}
-                            disabled={pendingRoleId === u.id}
-                          >
-                            <SelectTrigger className="h-8 w-44">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="gestor">Gestor</SelectItem>
-                              <SelectItem value="executor">Executor</SelectItem>
-                              <SelectItem value="observador">Observador</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

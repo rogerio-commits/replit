@@ -89,7 +89,7 @@ router.get("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res)
     .limit(1);
 
   if (!row) return res.status(404).json({ error: "Not found" });
-  res.json(atRow(row.at, row.memberName));
+  return res.json(atRow(row.at, row.memberName));
 });
 
 router.patch("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res) => {
@@ -142,7 +142,7 @@ router.patch("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, re
     memberName = m?.name ?? null;
   }
 
-  res.json(atRow(updated, memberName));
+  return res.json(atRow(updated, memberName));
 });
 
 router.delete("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res) => {
@@ -157,7 +157,7 @@ router.delete("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, r
   if (!existing) return res.status(404).json({ error: "Not found" });
 
   await db.delete(assistenciaTecnicaTable).where(eq(assistenciaTecnicaTable.id, id));
-  res.status(204).send();
+  return res.status(204).send();
 });
 
 export default router;

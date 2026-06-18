@@ -553,6 +553,7 @@ export const ListMembersResponseItem = zod.object({
   "role": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
+  "team": zod.enum(['projetos', 'tecnica']),
   "createdAt": zod.string()
 })
 export const ListMembersResponse = zod.array(ListMembersResponseItem)
@@ -568,7 +569,8 @@ export const CreateMemberBody = zod.object({
   "name": zod.string().min(1),
   "role": zod.string(),
   "email": zod.string(),
-  "avatarUrl": zod.string().optional()
+  "avatarUrl": zod.string().optional(),
+  "team": zod.enum(['projetos', 'tecnica']).optional()
 })
 
 
@@ -585,6 +587,7 @@ export const GetMemberResponse = zod.object({
   "role": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
+  "team": zod.enum(['projetos', 'tecnica']),
   "createdAt": zod.string()
 })
 
@@ -600,7 +603,8 @@ export const UpdateMemberBody = zod.object({
   "name": zod.string().optional(),
   "role": zod.string().optional(),
   "email": zod.string().optional(),
-  "avatarUrl": zod.string().optional()
+  "avatarUrl": zod.string().optional(),
+  "team": zod.enum(['projetos', 'tecnica']).optional()
 })
 
 export const UpdateMemberResponse = zod.object({
@@ -609,6 +613,7 @@ export const UpdateMemberResponse = zod.object({
   "role": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
+  "team": zod.enum(['projetos', 'tecnica']),
   "createdAt": zod.string()
 })
 
@@ -747,6 +752,118 @@ export const DeleteInvitationParams = zod.object({
 
 
 /**
+ * @summary List all technical assistance requests
+ */
+export const ListAssistenciaTecnicaQueryParams = zod.object({
+  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional()
+})
+
+export const ListAssistenciaTecnicaResponseItem = zod.object({
+  "id": zod.number(),
+  "clientName": zod.string(),
+  "contact": zod.string(),
+  "description": zod.string(),
+  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
+  "scheduledDate": zod.string().nullish(),
+  "responsibleMemberId": zod.number().nullish(),
+  "responsibleMemberName": zod.string().nullish(),
+  "realizado": zod.boolean(),
+  "realizadoAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListAssistenciaTecnicaResponse = zod.array(ListAssistenciaTecnicaResponseItem)
+
+
+/**
+ * @summary Create a technical assistance request
+ */
+
+
+
+
+
+export const CreateAssistenciaTecnicaBody = zod.object({
+  "clientName": zod.string().min(1),
+  "contact": zod.string().min(1),
+  "description": zod.string().min(1),
+  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional(),
+  "scheduledDate": zod.string().optional(),
+  "responsibleMemberId": zod.number().optional(),
+  "realizado": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get a single technical assistance request
+ */
+export const GetAssistenciaTecnicaParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAssistenciaTecnicaResponse = zod.object({
+  "id": zod.number(),
+  "clientName": zod.string(),
+  "contact": zod.string(),
+  "description": zod.string(),
+  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
+  "scheduledDate": zod.string().nullish(),
+  "responsibleMemberId": zod.number().nullish(),
+  "responsibleMemberName": zod.string().nullish(),
+  "realizado": zod.boolean(),
+  "realizadoAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update a technical assistance request
+ */
+export const UpdateAssistenciaTecnicaParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+
+export const UpdateAssistenciaTecnicaBody = zod.object({
+  "clientName": zod.string().min(1).optional(),
+  "contact": zod.string().min(1).optional(),
+  "description": zod.string().min(1).optional(),
+  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional(),
+  "scheduledDate": zod.string().nullish(),
+  "responsibleMemberId": zod.number().nullish(),
+  "realizado": zod.boolean().optional()
+})
+
+export const UpdateAssistenciaTecnicaResponse = zod.object({
+  "id": zod.number(),
+  "clientName": zod.string(),
+  "contact": zod.string(),
+  "description": zod.string(),
+  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
+  "scheduledDate": zod.string().nullish(),
+  "responsibleMemberId": zod.number().nullish(),
+  "responsibleMemberName": zod.string().nullish(),
+  "realizado": zod.boolean(),
+  "realizadoAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a technical assistance request
+ */
+export const DeleteAssistenciaTecnicaParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List installation events
  */
 export const ListInstallationEventsQueryParams = zod.object({
@@ -823,102 +940,3 @@ export const DeleteInstallationEventParams = zod.object({
 })
 
 
-
-
-/**
- * @summary List all technical assistance requests
- */
-export const ListAssistenciaTecnicaQueryParams = zod.object({
-  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional()
-})
-
-export const ListAssistenciaTecnicaResponseItem = zod.object({
-  "id": zod.number(),
-  "clientName": zod.string(),
-  "contact": zod.string(),
-  "description": zod.string(),
-  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
-  "scheduledDate": zod.string().nullish(),
-  "responsibleMemberId": zod.number().nullish(),
-  "responsibleMemberName": zod.string().nullish(),
-  "realizado": zod.boolean(),
-  "realizadoAt": zod.string().nullish(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-
-export const ListAssistenciaTecnicaResponse = zod.array(ListAssistenciaTecnicaResponseItem)
-
-/**
- * @summary Create a technical assistance request
- */
-export const CreateAssistenciaTecnicaBody = zod.object({
-  "clientName": zod.string().min(1),
-  "contact": zod.string().min(1),
-  "description": zod.string().min(1),
-  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional(),
-  "scheduledDate": zod.string().optional(),
-  "responsibleMemberId": zod.coerce.number().optional(),
-  "realizado": zod.boolean().optional()
-})
-
-/**
- * @summary Get a single technical assistance request
- */
-export const GetAssistenciaTecnicaParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const GetAssistenciaTecnicaResponse = zod.object({
-  "id": zod.number(),
-  "clientName": zod.string(),
-  "contact": zod.string(),
-  "description": zod.string(),
-  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
-  "scheduledDate": zod.string().nullish(),
-  "responsibleMemberId": zod.number().nullish(),
-  "responsibleMemberName": zod.string().nullish(),
-  "realizado": zod.boolean(),
-  "realizadoAt": zod.string().nullish(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-
-/**
- * @summary Update a technical assistance request
- */
-export const UpdateAssistenciaTecnicaParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateAssistenciaTecnicaBody = zod.object({
-  "clientName": zod.string().min(1).optional(),
-  "contact": zod.string().min(1).optional(),
-  "description": zod.string().min(1).optional(),
-  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional(),
-  "scheduledDate": zod.string().nullish(),
-  "responsibleMemberId": zod.coerce.number().nullish(),
-  "realizado": zod.boolean().optional()
-})
-
-export const UpdateAssistenciaTecnicaResponse = zod.object({
-  "id": zod.number(),
-  "clientName": zod.string(),
-  "contact": zod.string(),
-  "description": zod.string(),
-  "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
-  "scheduledDate": zod.string().nullish(),
-  "responsibleMemberId": zod.number().nullish(),
-  "responsibleMemberName": zod.string().nullish(),
-  "realizado": zod.boolean(),
-  "realizadoAt": zod.string().nullish(),
-  "createdAt": zod.string(),
-  "updatedAt": zod.string()
-})
-
-/**
- * @summary Delete a technical assistance request
- */
-export const DeleteAssistenciaTecnicaParams = zod.object({
-  "id": zod.coerce.number()
-})

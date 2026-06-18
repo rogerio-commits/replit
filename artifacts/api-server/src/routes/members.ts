@@ -12,18 +12,21 @@ import {
 
 const router = Router();
 
+function formatMember(m: typeof membersTable.$inferSelect) {
+  return {
+    id: m.id,
+    name: m.name,
+    role: m.role,
+    email: m.email,
+    avatarUrl: m.avatarUrl ?? null,
+    team: m.team,
+    createdAt: m.createdAt.toISOString(),
+  };
+}
+
 router.get("/members", async (_req, res) => {
   const rows = await db.select().from(membersTable).orderBy(membersTable.name);
-  return res.json(
-    rows.map((m) => ({
-      id: m.id,
-      name: m.name,
-      role: m.role,
-      email: m.email,
-      avatarUrl: m.avatarUrl ?? null,
-      createdAt: m.createdAt.toISOString(),
-    }))
-  );
+  return res.json(rows.map(formatMember));
 });
 
 router.post("/members", requireGestor, async (req, res) => {
@@ -37,17 +40,11 @@ router.post("/members", requireGestor, async (req, res) => {
       role: body.data.role,
       email: body.data.email,
       avatarUrl: body.data.avatarUrl ?? null,
+      team: (body.data.team as "projetos" | "tecnica") ?? "projetos",
     })
     .returning();
 
-  return res.status(201).json({
-    id: member.id,
-    name: member.name,
-    role: member.role,
-    email: member.email,
-    avatarUrl: member.avatarUrl ?? null,
-    createdAt: member.createdAt.toISOString(),
-  });
+  return res.status(201).json(formatMember(member));
 });
 
 router.get("/members/:id", async (req, res) => {
@@ -61,14 +58,7 @@ router.get("/members/:id", async (req, res) => {
 
   if (!member) return res.status(404).json({ error: "Not found" });
 
-  return res.json({
-    id: member.id,
-    name: member.name,
-    role: member.role,
-    email: member.email,
-    avatarUrl: member.avatarUrl ?? null,
-    createdAt: member.createdAt.toISOString(),
-  });
+  return res.json(formatMember(member));
 });
 
 router.patch("/members/:id", requireGestor, async (req, res) => {
@@ -83,6 +73,7 @@ router.patch("/members/:id", requireGestor, async (req, res) => {
   if (body.data.role !== undefined) updateData.role = body.data.role;
   if (body.data.email !== undefined) updateData.email = body.data.email;
   if (body.data.avatarUrl !== undefined) updateData.avatarUrl = body.data.avatarUrl;
+  if (body.data.team !== undefined) updateData.team = body.data.team;
 
   const [member] = await db
     .update(membersTable)
@@ -92,14 +83,7 @@ router.patch("/members/:id", requireGestor, async (req, res) => {
 
   if (!member) return res.status(404).json({ error: "Not found" });
 
-  return res.json({
-    id: member.id,
-    name: member.name,
-    role: member.role,
-    email: member.email,
-    avatarUrl: member.avatarUrl ?? null,
-    createdAt: member.createdAt.toISOString(),
-  });
+  return res.json(formatMember(member));
 });
 
 router.delete("/members/:id", requireGestor, async (req, res) => {

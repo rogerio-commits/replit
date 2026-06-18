@@ -1215,9 +1215,13 @@ components:
         projectId:
           type: integer
 
+    MemberTeam:
+      type: string
+      enum: [projetos, tecnica]
+
     Member:
       type: object
-      required: [id, name, role, email, createdAt]
+      required: [id, name, role, email, team, createdAt]
       properties:
         id:
           type: integer
@@ -1229,6 +1233,8 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
+        team:
+          $ref: "#/components/schemas/MemberTeam"
         createdAt:
           type: string
 
@@ -1245,6 +1251,8 @@ components:
           type: string
         avatarUrl:
           type: string
+        team:
+          $ref: "#/components/schemas/MemberTeam"
 
     MemberUpdate:
       type: object
@@ -1257,6 +1265,8 @@ components:
           type: string
         avatarUrl:
           type: string
+        team:
+          $ref: "#/components/schemas/MemberTeam"
 
     DashboardSummary:
       type: object
