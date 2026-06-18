@@ -47,7 +47,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/kanban", label: "Kanban", icon: Columns3 },
     { href: "/checklist", label: "Instalações", icon: ClipboardList },
     { href: "/members", label: "Equipe", icon: Users },
-    { href: "/calendario", label: "Calendário", icon: CalendarDays },
+    { href: "/calendario", label: "Calendário Instalação", icon: CalendarDays },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
     { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
   ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
