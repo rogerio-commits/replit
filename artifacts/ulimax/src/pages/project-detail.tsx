@@ -276,6 +276,10 @@ export default function ProjectDetail() {
   });
 
   const onUpdateProject = (data: ProjectFormValues) => {
+    if (!data.materialType) {
+      projectForm.setError("materialType", { message: "Selecione o tipo de material" });
+      return;
+    }
     updateProject.mutate({ id: projectId, data }, {
       onSuccess: () => {
         toast({ title: "Projeto atualizado com sucesso" });
