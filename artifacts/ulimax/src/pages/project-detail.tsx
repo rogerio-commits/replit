@@ -709,6 +709,7 @@ export default function ProjectDetail() {
       </div>
 
       {/* Stats */}
+      <h2 className="text-lg font-semibold">Tarefas</h2>
       {isStatsLoading ? (
         <div className="grid gap-4 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
