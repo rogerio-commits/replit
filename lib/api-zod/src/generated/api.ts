@@ -752,6 +752,24 @@ export const DeleteInvitationParams = zod.object({
 
 
 /**
+ * @summary List all site visits across all projects
+ */
+export const ListAllSiteVisitsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectName": zod.string(),
+  "date": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "visitors": zod.string(),
+  "objective": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAllSiteVisitsResponse = zod.array(ListAllSiteVisitsResponseItem)
+
+
+/**
  * @summary List all technical assistance requests
  */
 export const ListAssistenciaTecnicaQueryParams = zod.object({

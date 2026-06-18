@@ -557,6 +557,22 @@ export interface SiteVisit {
   createdAt: string;
 }
 
+export interface SiteVisitWithProject {
+  id: number;
+  projectId: number;
+  projectName: string;
+  date: string;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  visitors: string;
+  objective: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
 export interface SiteVisitInput {
   /** @minLength 1 */
   date: string;

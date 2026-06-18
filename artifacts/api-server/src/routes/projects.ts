@@ -646,6 +646,34 @@ router.delete("/projects/:id/visits/:visitId", requireExecutorOrGestor, async (r
   return res.status(204).send();
 });
 
+// ── All site visits (dashboard) ───────────────────────────────────────────────
+
+router.get("/site-visits", async (_req, res) => {
+  const rows = await db
+    .select({
+      visit: siteVisitsTable,
+      projectName: projectsTable.name,
+      memberName: membersTable.name,
+    })
+    .from(siteVisitsTable)
+    .innerJoin(projectsTable, eq(siteVisitsTable.projectId, projectsTable.id))
+    .leftJoin(membersTable, eq(siteVisitsTable.responsibleId, membersTable.id))
+    .orderBy(siteVisitsTable.date);
+
+  return res.json(rows.map(({ visit, projectName, memberName }) => ({
+    id: visit.id,
+    projectId: visit.projectId,
+    projectName,
+    date: visit.date,
+    responsibleId: visit.responsibleId,
+    responsibleName: memberName ?? null,
+    visitors: visit.visitors,
+    objective: visit.objective,
+    notes: visit.notes,
+    createdAt: visit.createdAt.toISOString(),
+  })));
+});
+
 // ── Observations ──────────────────────────────────────────────────────────────
 
 router.get("/projects/:id/observations", async (req, res) => {

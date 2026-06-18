@@ -53,6 +53,7 @@ import type {
   ProjectUpdate,
   SiteVisit,
   SiteVisitInput,
+  SiteVisitWithProject,
   Task,
   TaskInput,
   TaskUpdate,
@@ -2978,6 +2979,83 @@ export const useDeleteInvitation = <TError = ErrorType<void>,
       > => {
       return useMutation(getDeleteInvitationMutationOptions(options));
     }
+
+export const getListAllSiteVisitsUrl = () => {
+
+
+
+
+  return `/api/site-visits`
+}
+
+/**
+ * @summary List all site visits across all projects
+ */
+export const listAllSiteVisits = async ( options?: RequestInit): Promise<SiteVisitWithProject[]> => {
+
+  return customFetch<SiteVisitWithProject[]>(getListAllSiteVisitsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAllSiteVisitsQueryKey = () => {
+    return [
+    `/api/site-visits`
+    ] as const;
+    }
+
+
+export const getListAllSiteVisitsQueryOptions = <TData = Awaited<ReturnType<typeof listAllSiteVisits>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllSiteVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAllSiteVisitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAllSiteVisits>>> = ({ signal }) => listAllSiteVisits({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAllSiteVisits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAllSiteVisitsQueryResult = NonNullable<Awaited<ReturnType<typeof listAllSiteVisits>>>
+export type ListAllSiteVisitsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all site visits across all projects
+ */
+
+export function useListAllSiteVisits<TData = Awaited<ReturnType<typeof listAllSiteVisits>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllSiteVisits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAllSiteVisitsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListAssistenciaTecnicaUrl = (params?: ListAssistenciaTecnicaParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -66,6 +66,7 @@ export * from './projectUpdatePriority';
 export * from './projectUpdateStatus';
 export * from './siteVisit';
 export * from './siteVisitInput';
+export * from './siteVisitWithProject';
 export * from './task';
 export * from './taskInput';
 export * from './taskInputPriority';

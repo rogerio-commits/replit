@@ -5,8 +5,9 @@ import { ptBR } from "date-fns/locale";
 import {
   useGetDashboardSummary,
   useListProjects,
+  useListAllSiteVisits,
 } from "@workspace/api-client-react";
-import type { ListProjectsQueryResult } from "@workspace/api-client-react";
+import type { ListProjectsQueryResult, ListAllSiteVisitsQueryResult } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,10 +18,14 @@ import {
   CheckSquare,
   Layers,
   ChevronRight,
+  MapPin,
+  Users,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Project = ListProjectsQueryResult[number];
+type SiteVisitRow = ListAllSiteVisitsQueryResult[number];
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -119,6 +124,7 @@ function KpiCard({ icon: Icon, label, value, sub, accent }: {
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: projects, isLoading: isProjectsLoading } = useListProjects({});
+  const { data: siteVisits, isLoading: isVisitsLoading } = useListAllSiteVisits();
 
   const loading = isSummaryLoading || isProjectsLoading;
 
@@ -197,6 +203,85 @@ export default function Dashboard() {
                   </Link>
                 );
               })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Visitas em Obras ── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-emerald-600" />
+              <CardTitle className="text-base">Visitas em Obras</CardTitle>
+              {!isVisitsLoading && siteVisits && siteVisits.length > 0 && (
+                <span className="ml-1 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">
+                  {siteVisits.length}
+                </span>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isVisitsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : !siteVisits || siteVisits.length === 0 ? (
+            <div className="py-8 text-center flex flex-col items-center gap-2">
+              <MapPin className="h-8 w-8 text-muted-foreground opacity-30" />
+              <p className="text-sm text-muted-foreground">Nenhuma visita registrada.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-xs text-muted-foreground">
+                    <th className="text-left py-2 pr-4 font-medium">Projeto</th>
+                    <th className="text-left py-2 pr-4 font-medium">Data</th>
+                    <th className="text-left py-2 pr-4 font-medium">Visitantes</th>
+                    <th className="text-left py-2 pr-4 font-medium hidden md:table-cell">Objetivo</th>
+                    <th className="text-left py-2 font-medium hidden lg:table-cell">Responsável</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...siteVisits]
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .map((v: SiteVisitRow) => (
+                      <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-2.5 pr-4">
+                          <Link href={`/projects/${v.projectId}`}>
+                            <span className="font-medium text-foreground hover:text-primary cursor-pointer truncate max-w-[160px] block">
+                              {v.projectName}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="py-2.5 pr-4 whitespace-nowrap">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <CalendarDays className="h-3 w-3 shrink-0" />
+                            {(() => {
+                              try { return format(parseISO(v.date), "dd/MM/yyyy", { locale: ptBR }); }
+                              catch { return v.date; }
+                            })()}
+                          </span>
+                        </td>
+                        <td className="py-2.5 pr-4">
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Users className="h-3 w-3 shrink-0" />
+                            <span className="truncate max-w-[140px]">{v.visitors}</span>
+                          </span>
+                        </td>
+                        <td className="py-2.5 pr-4 hidden md:table-cell">
+                          <span className="truncate max-w-[180px] block text-muted-foreground">{v.objective}</span>
+                        </td>
+                        <td className="py-2.5 hidden lg:table-cell text-muted-foreground">
+                          {v.responsibleName ?? <span className="italic opacity-50">—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
