@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { format } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   useGetProject,
@@ -1243,24 +1243,61 @@ export default function ProjectDetail() {
           )}
 
           {observations && observations.length > 0 ? (
-            <div className="space-y-3">
-              {[...observations].reverse().map((obs) => (
-                <div key={obs.id} className="flex gap-3 p-3 rounded-lg bg-muted/30 border">
-                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">{obs.text}</p>
-                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                      <span className="font-medium truncate max-w-[200px]">{obs.authorName}</span>
-                      <span>·</span>
-                      <span className="whitespace-nowrap">
-                        {format(new Date(obs.createdAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                      </span>
+            <div>
+              {(() => {
+                const sorted = [...observations].reverse();
+                const items: React.ReactNode[] = [];
+                let lastDateLabel = "";
+
+                sorted.forEach((obs) => {
+                  const d = new Date(obs.createdAt);
+                  const dateLabel = isToday(d)
+                    ? "Hoje"
+                    : isYesterday(d)
+                    ? "Ontem"
+                    : format(d, "d 'de' MMMM 'de' yyyy", { locale: ptBR });
+                  const isSystem = obs.authorName === "Sistema";
+
+                  if (dateLabel !== lastDateLabel) {
+                    lastDateLabel = dateLabel;
+                    items.push(
+                      <div key={`sep-${dateLabel}`} className="flex items-center gap-3 py-3">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[11px] font-medium text-muted-foreground px-1 whitespace-nowrap uppercase tracking-wide">
+                          {dateLabel}
+                        </span>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                    );
+                  }
+
+                  items.push(
+                    <div key={obs.id} className="flex gap-3 py-2.5">
+                      <div className={cn(
+                        "h-7 w-7 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                        isSystem
+                          ? "bg-emerald-100 dark:bg-emerald-900/30"
+                          : "bg-primary/10"
+                      )}>
+                        {isSystem
+                          ? <CheckSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                          : <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground whitespace-pre-wrap break-words">{obs.text}</p>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                          <span className="font-medium">{obs.authorName}</span>
+                          <span>·</span>
+                          <span>{format(d, "HH:mm")}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                });
+
+                return items;
+              })()}
             </div>
           ) : (
             <div className="py-8 text-center flex flex-col items-center gap-2">
