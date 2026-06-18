@@ -14,7 +14,7 @@ export const assistenciaTecnicaTable = pgTable("assistencia_tecnica", {
   description: text("description").notNull(),
   status: assistenciaTecnicaStatusEnum("status").notNull().default("aberto"),
   scheduledDate: text("scheduled_date"),
-  responsibleMemberIds: integer("responsible_member_ids").array().notNull().default([]),
+  responsibleMembers: text("responsible_members"),
   realizado: boolean("realizado").notNull().default(false),
   realizadoAt: timestamp("realizado_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

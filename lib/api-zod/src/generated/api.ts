@@ -765,8 +765,7 @@ export const ListAssistenciaTecnicaResponseItem = zod.object({
   "description": zod.string(),
   "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
   "scheduledDate": zod.string().nullish(),
-  "responsibleMemberIds": zod.array(zod.number()).optional(),
-  "responsibleMemberNames": zod.array(zod.string()).optional(),
+  "responsibleMembers": zod.string().nullish(),
   "realizado": zod.boolean(),
   "realizadoAt": zod.string().nullish(),
   "createdAt": zod.string(),
@@ -789,7 +788,7 @@ export const CreateAssistenciaTecnicaBody = zod.object({
   "description": zod.string().min(1),
   "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional(),
   "scheduledDate": zod.string().optional(),
-  "responsibleMemberIds": zod.array(zod.number()).optional(),
+  "responsibleMembers": zod.string().optional(),
   "realizado": zod.boolean().optional()
 })
 
@@ -808,8 +807,7 @@ export const GetAssistenciaTecnicaResponse = zod.object({
   "description": zod.string(),
   "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
   "scheduledDate": zod.string().nullish(),
-  "responsibleMemberIds": zod.array(zod.number()).optional(),
-  "responsibleMemberNames": zod.array(zod.string()).optional(),
+  "responsibleMembers": zod.string().nullish(),
   "realizado": zod.boolean(),
   "realizadoAt": zod.string().nullish(),
   "createdAt": zod.string(),
@@ -835,7 +833,7 @@ export const UpdateAssistenciaTecnicaBody = zod.object({
   "description": zod.string().min(1).optional(),
   "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']).optional(),
   "scheduledDate": zod.string().nullish(),
-  "responsibleMemberIds": zod.array(zod.number()).optional(),
+  "responsibleMembers": zod.string().nullish(),
   "realizado": zod.boolean().optional()
 })
 
@@ -846,8 +844,7 @@ export const UpdateAssistenciaTecnicaResponse = zod.object({
   "description": zod.string(),
   "status": zod.enum(['aberto', 'em_andamento', 'concluido', 'cancelado']),
   "scheduledDate": zod.string().nullish(),
-  "responsibleMemberIds": zod.array(zod.number()).optional(),
-  "responsibleMemberNames": zod.array(zod.string()).optional(),
+  "responsibleMembers": zod.string().nullish(),
   "realizado": zod.boolean(),
   "realizadoAt": zod.string().nullish(),
   "createdAt": zod.string(),

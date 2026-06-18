@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, assistenciaTecnicaTable, membersTable } from "@workspace/db";
+import { db, assistenciaTecnicaTable } from "@workspace/db";
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq } from "drizzle-orm";
 import {
@@ -13,10 +13,7 @@ import {
 
 const router = Router();
 
-function atRow(
-  row: typeof assistenciaTecnicaTable.$inferSelect,
-  memberName?: string | null
-) {
+function atRow(row: typeof assistenciaTecnicaTable.$inferSelect) {
   return {
     id: row.id,
     clientName: row.clientName,
@@ -24,8 +21,7 @@ function atRow(
     description: row.description,
     status: row.status,
     scheduledDate: row.scheduledDate ?? null,
-    responsibleMemberId: row.responsibleMemberId ?? null,
-    responsibleMemberName: memberName ?? null,
+    responsibleMembers: row.responsibleMembers ?? null,
     realizado: row.realizado,
     realizadoAt: row.realizadoAt ? row.realizadoAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
@@ -35,18 +31,16 @@ function atRow(
 
 router.get("/assistencia-tecnica", requireExecutorOrGestor, async (req, res) => {
   const { status } = ListAssistenciaTecnicaQueryParams.parse(req.query);
-
   const rows = await db
-    .select({ at: assistenciaTecnicaTable, memberName: membersTable.name })
+    .select()
     .from(assistenciaTecnicaTable)
-    .leftJoin(membersTable, eq(assistenciaTecnicaTable.responsibleMemberId, membersTable.id))
     .orderBy(assistenciaTecnicaTable.createdAt);
 
   const result = rows
-    .filter((r) => !status || r.at.status === status)
-    .map((r) => atRow(r.at, r.memberName));
+    .filter((r) => !status || r.status === status)
+    .map(atRow);
 
-  res.json(result);
+  return res.json(result);
 });
 
 router.post("/assistencia-tecnica", requireExecutorOrGestor, async (req, res) => {
@@ -60,36 +54,25 @@ router.post("/assistencia-tecnica", requireExecutorOrGestor, async (req, res) =>
       description: body.description,
       status: (body.status ?? "aberto") as "aberto" | "em_andamento" | "concluido" | "cancelado",
       scheduledDate: body.scheduledDate ?? null,
-      responsibleMemberId: body.responsibleMemberId ?? null,
+      responsibleMembers: body.responsibleMembers ?? null,
       realizado: body.realizado ?? false,
     })
     .returning();
 
-  let memberName: string | null = null;
-  if (inserted.responsibleMemberId) {
-    const [m] = await db
-      .select({ name: membersTable.name })
-      .from(membersTable)
-      .where(eq(membersTable.id, inserted.responsibleMemberId))
-      .limit(1);
-    memberName = m?.name ?? null;
-  }
-
-  res.status(201).json(atRow(inserted, memberName));
+  return res.status(201).json(atRow(inserted));
 });
 
 router.get("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res) => {
   const { id } = GetAssistenciaTecnicaParams.parse(req.params);
 
   const [row] = await db
-    .select({ at: assistenciaTecnicaTable, memberName: membersTable.name })
+    .select()
     .from(assistenciaTecnicaTable)
-    .leftJoin(membersTable, eq(assistenciaTecnicaTable.responsibleMemberId, membersTable.id))
     .where(eq(assistenciaTecnicaTable.id, id))
     .limit(1);
 
   if (!row) return res.status(404).json({ error: "Not found" });
-  return res.json(atRow(row.at, row.memberName));
+  return res.json(atRow(row));
 });
 
 router.patch("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res) => {
@@ -120,7 +103,7 @@ router.patch("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, re
   if (body.description !== undefined) updates.description = body.description;
   if (body.status !== undefined) updates.status = body.status as "aberto" | "em_andamento" | "concluido" | "cancelado";
   if ("scheduledDate" in body) updates.scheduledDate = body.scheduledDate ?? null;
-  if ("responsibleMemberId" in body) updates.responsibleMemberId = body.responsibleMemberId ?? null;
+  if ("responsibleMembers" in body) updates.responsibleMembers = body.responsibleMembers ?? null;
   if (body.realizado !== undefined) {
     updates.realizado = body.realizado;
     updates.realizadoAt = realizadoAt;
@@ -132,17 +115,8 @@ router.patch("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, re
     .where(eq(assistenciaTecnicaTable.id, id))
     .returning();
 
-  let memberName: string | null = null;
-  if (updated.responsibleMemberId) {
-    const [m] = await db
-      .select({ name: membersTable.name })
-      .from(membersTable)
-      .where(eq(membersTable.id, updated.responsibleMemberId))
-      .limit(1);
-    memberName = m?.name ?? null;
-  }
-
-  return res.json(atRow(updated, memberName));
+  if (!updated) return res.status(404).json({ error: "Not found" });
+  return res.json(atRow(updated));
 });
 
 router.delete("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res) => {

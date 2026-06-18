@@ -608,8 +608,8 @@ export interface AssistenciaTecnica {
   status: AssistenciaTecnicaStatus;
   /** @nullable */
   scheduledDate?: string | null;
-  responsibleMemberIds?: number[];
-  responsibleMemberNames?: string[];
+  /** @nullable */
+  responsibleMembers?: string | null;
   realizado: boolean;
   /** @nullable */
   realizadoAt?: string | null;
@@ -636,7 +636,7 @@ export interface AssistenciaTecnicaInput {
   description: string;
   status?: AssistenciaTecnicaInputStatus;
   scheduledDate?: string;
-  responsibleMemberIds?: number[];
+  responsibleMembers?: string;
   realizado?: boolean;
 }
 
@@ -660,7 +660,8 @@ export interface AssistenciaTecnicaUpdate {
   status?: AssistenciaTecnicaUpdateStatus;
   /** @nullable */
   scheduledDate?: string | null;
-  responsibleMemberIds?: number[];
+  /** @nullable */
+  responsibleMembers?: string | null;
   realizado?: boolean;
 }
 

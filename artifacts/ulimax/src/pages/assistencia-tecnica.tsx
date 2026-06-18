@@ -6,7 +6,6 @@ import {
   useCreateAssistenciaTecnica,
   useUpdateAssistenciaTecnica,
   useDeleteAssistenciaTecnica,
-  useListMembers,
   getListAssistenciaTecnicaQueryKey,
   type AssistenciaTecnica,
 } from "@workspace/api-client-react";
@@ -92,7 +91,7 @@ const formSchema = z.object({
   description: z.string().min(1, "Descrição obrigatória"),
   status: z.enum(["aberto", "em_andamento", "concluido", "cancelado"]).optional(),
   scheduledDate: z.string().optional(),
-  responsibleMemberId: z.string().optional(),
+  responsibleMembers: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -109,7 +108,6 @@ export default function AssistenciaTecnica() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const { data: items, isLoading } = useListAssistenciaTecnica();
-  const { data: members } = useListMembers();
 
   const createAT = useCreateAssistenciaTecnica();
   const updateAT = useUpdateAssistenciaTecnica();
@@ -123,7 +121,7 @@ export default function AssistenciaTecnica() {
       description: "",
       status: "aberto",
       scheduledDate: "",
-      responsibleMemberId: "none",
+      responsibleMembers: "",
     },
   });
 
@@ -145,7 +143,7 @@ export default function AssistenciaTecnica() {
       description: "",
       status: "aberto",
       scheduledDate: "",
-      responsibleMemberId: "none",
+      responsibleMembers: "",
     });
     setIsDialogOpen(true);
   };
@@ -158,7 +156,7 @@ export default function AssistenciaTecnica() {
       description: item.description,
       status: item.status as FormValues["status"],
       scheduledDate: item.scheduledDate ?? "",
-      responsibleMemberId: item.responsibleMemberId ? String(item.responsibleMemberId) : "none",
+      responsibleMembers: item.responsibleMembers ?? "",
     });
     setIsDialogOpen(true);
   };
@@ -173,10 +171,7 @@ export default function AssistenciaTecnica() {
       description: data.description,
       status: data.status ?? "aberto",
       scheduledDate: data.scheduledDate || undefined,
-      responsibleMemberId:
-        data.responsibleMemberId && data.responsibleMemberId !== "none"
-          ? parseInt(data.responsibleMemberId)
-          : undefined,
+      responsibleMembers: data.responsibleMembers || undefined,
     };
 
     if (editingId) {
@@ -394,10 +389,10 @@ export default function AssistenciaTecnica() {
                         <Phone className="h-3 w-3" />
                         {item.contact}
                       </span>
-                      {item.responsibleMemberName && (
+                      {item.responsibleMembers && (
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
-                          {item.responsibleMemberName}
+                          {item.responsibleMembers}
                         </span>
                       )}
                       {item.scheduledDate && (
@@ -517,25 +512,13 @@ export default function AssistenciaTecnica() {
               </div>
               <FormField
                 control={form.control}
-                name="responsibleMemberId"
+                name="responsibleMembers"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Equipe Técnica Responsável</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um membro..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">— Nenhum —</SelectItem>
-                        {(members ?? []).map((m) => (
-                          <SelectItem key={m.id} value={String(m.id)}>
-                            {m.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input placeholder="Ex: Carlos, Ana, Pedro" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

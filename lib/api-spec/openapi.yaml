@@ -1645,14 +1645,8 @@ components:
           enum: [aberto, em_andamento, concluido, cancelado]
         scheduledDate:
           type: ["string", "null"]
-        responsibleMemberIds:
-          type: array
-          items:
-            type: integer
-        responsibleMemberNames:
-          type: array
-          items:
-            type: string
+        responsibleMembers:
+          type: ["string", "null"]
         realizado:
           type: boolean
         realizadoAt:
@@ -1680,10 +1674,8 @@ components:
           enum: [aberto, em_andamento, concluido, cancelado]
         scheduledDate:
           type: string
-        responsibleMemberIds:
-          type: array
-          items:
-            type: integer
+        responsibleMembers:
+          type: string
         realizado:
           type: boolean
 
@@ -1704,9 +1696,7 @@ components:
           enum: [aberto, em_andamento, concluido, cancelado]
         scheduledDate:
           type: ["string", "null"]
-        responsibleMemberIds:
-          type: array
-          items:
-            type: integer
+        responsibleMembers:
+          type: ["string", "null"]
         realizado:
           type: boolean
