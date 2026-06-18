@@ -1,5 +1,4 @@
 import { pgTable, text, serial, integer, timestamp, boolean, pgEnum } from "drizzle-orm/pg-core";
-import { membersTable } from "./members";
 
 export const assistenciaTecnicaStatusEnum = pgEnum("assistencia_tecnica_status", [
   "aberto",
@@ -15,7 +14,7 @@ export const assistenciaTecnicaTable = pgTable("assistencia_tecnica", {
   description: text("description").notNull(),
   status: assistenciaTecnicaStatusEnum("status").notNull().default("aberto"),
   scheduledDate: text("scheduled_date"),
-  responsibleMemberId: integer("responsible_member_id").references(() => membersTable.id, { onDelete: "set null" }),
+  responsibleMemberIds: integer("responsible_member_ids").array().notNull().default([]),
   realizado: boolean("realizado").notNull().default(false),
   realizadoAt: timestamp("realizado_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

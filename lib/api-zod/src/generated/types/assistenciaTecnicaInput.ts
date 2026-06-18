@@ -16,6 +16,6 @@ export interface AssistenciaTecnicaInput {
   description: string;
   status?: AssistenciaTecnicaInputStatus;
   scheduledDate?: string;
-  responsibleMemberId?: number;
+  responsibleMemberIds?: number[];
   realizado?: boolean;
 }

@@ -15,10 +15,8 @@ export interface AssistenciaTecnica {
   status: AssistenciaTecnicaStatus;
   /** @nullable */
   scheduledDate?: string | null;
-  /** @nullable */
-  responsibleMemberId?: number | null;
-  /** @nullable */
-  responsibleMemberName?: string | null;
+  responsibleMemberIds?: number[];
+  responsibleMemberNames?: string[];
   realizado: boolean;
   /** @nullable */
   realizadoAt?: string | null;
