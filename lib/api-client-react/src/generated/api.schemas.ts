@@ -579,6 +579,83 @@ export interface ProjectObservationInput {
   text: string;
 }
 
+export type AssistenciaTecnicaStatus = typeof AssistenciaTecnicaStatus[keyof typeof AssistenciaTecnicaStatus];
+
+
+export const AssistenciaTecnicaStatus = {
+  aberto: 'aberto',
+  em_andamento: 'em_andamento',
+  concluido: 'concluido',
+  cancelado: 'cancelado',
+} as const;
+
+export interface AssistenciaTecnica {
+  id: number;
+  clientName: string;
+  contact: string;
+  description: string;
+  status: AssistenciaTecnicaStatus;
+  /** @nullable */
+  scheduledDate?: string | null;
+  /** @nullable */
+  responsibleMemberId?: number | null;
+  /** @nullable */
+  responsibleMemberName?: string | null;
+  realizado: boolean;
+  /** @nullable */
+  realizadoAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AssistenciaTecnicaInputStatus = typeof AssistenciaTecnicaInputStatus[keyof typeof AssistenciaTecnicaInputStatus];
+
+
+export const AssistenciaTecnicaInputStatus = {
+  aberto: 'aberto',
+  em_andamento: 'em_andamento',
+  concluido: 'concluido',
+  cancelado: 'cancelado',
+} as const;
+
+export interface AssistenciaTecnicaInput {
+  /** @minLength 1 */
+  clientName: string;
+  /** @minLength 1 */
+  contact: string;
+  /** @minLength 1 */
+  description: string;
+  status?: AssistenciaTecnicaInputStatus;
+  scheduledDate?: string;
+  responsibleMemberId?: number;
+  realizado?: boolean;
+}
+
+export type AssistenciaTecnicaUpdateStatus = typeof AssistenciaTecnicaUpdateStatus[keyof typeof AssistenciaTecnicaUpdateStatus];
+
+
+export const AssistenciaTecnicaUpdateStatus = {
+  aberto: 'aberto',
+  em_andamento: 'em_andamento',
+  concluido: 'concluido',
+  cancelado: 'cancelado',
+} as const;
+
+export interface AssistenciaTecnicaUpdate {
+  /** @minLength 1 */
+  clientName?: string;
+  /** @minLength 1 */
+  contact?: string;
+  /** @minLength 1 */
+  description?: string;
+  status?: AssistenciaTecnicaUpdateStatus;
+  /** @nullable */
+  scheduledDate?: string | null;
+  /** @nullable */
+  responsibleMemberId?: number | null;
+  realizado?: boolean;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;
@@ -629,6 +706,20 @@ export const ListTasksPriority = {
   low: 'low',
   medium: 'medium',
   high: 'high',
+} as const;
+
+export type ListAssistenciaTecnicaParams = {
+status?: ListAssistenciaTecnicaStatus;
+};
+
+export type ListAssistenciaTecnicaStatus = typeof ListAssistenciaTecnicaStatus[keyof typeof ListAssistenciaTecnicaStatus];
+
+
+export const ListAssistenciaTecnicaStatus = {
+  aberto: 'aberto',
+  em_andamento: 'em_andamento',
+  concluido: 'concluido',
+  cancelado: 'cancelado',
 } as const;
 
 export type ListInstallationEventsParams = {

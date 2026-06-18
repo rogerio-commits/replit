@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Bell,
   ClipboardList,
+  Wrench,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -48,6 +49,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/members", label: "Equipe", icon: Users },
     { href: "/calendario", label: "Calendário", icon: CalendarDays },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
+    { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
   ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
 
   const initials = user?.firstName && user?.lastName

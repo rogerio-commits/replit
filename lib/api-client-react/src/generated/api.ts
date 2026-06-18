@@ -23,6 +23,9 @@ import type {
   ActivityItem,
   AddProjectMemberInput,
   AppUser,
+  AssistenciaTecnica,
+  AssistenciaTecnicaInput,
+  AssistenciaTecnicaUpdate,
   ChecklistItem,
   ChecklistItemInput,
   ChecklistItemUpdate,
@@ -33,6 +36,7 @@ import type {
   InstallationEventInput,
   InstallationEventUpdate,
   Invite,
+  ListAssistenciaTecnicaParams,
   ListInstallationEventsParams,
   ListProjectsParams,
   ListTasksParams,
@@ -2973,6 +2977,380 @@ export const useDeleteInvitation = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteInvitationMutationOptions(options));
+    }
+
+export const getListAssistenciaTecnicaUrl = (params?: ListAssistenciaTecnicaParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/assistencia-tecnica?${stringifiedParams}` : `/api/assistencia-tecnica`
+}
+
+/**
+ * @summary List all technical assistance requests
+ */
+export const listAssistenciaTecnica = async (params?: ListAssistenciaTecnicaParams, options?: RequestInit): Promise<AssistenciaTecnica[]> => {
+
+  return customFetch<AssistenciaTecnica[]>(getListAssistenciaTecnicaUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssistenciaTecnicaQueryKey = (params?: ListAssistenciaTecnicaParams,) => {
+    return [
+    `/api/assistencia-tecnica`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAssistenciaTecnicaQueryOptions = <TData = Awaited<ReturnType<typeof listAssistenciaTecnica>>, TError = ErrorType<unknown>>(params?: ListAssistenciaTecnicaParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssistenciaTecnica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssistenciaTecnicaQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssistenciaTecnica>>> = ({ signal }) => listAssistenciaTecnica(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssistenciaTecnica>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAssistenciaTecnicaQueryResult = NonNullable<Awaited<ReturnType<typeof listAssistenciaTecnica>>>
+export type ListAssistenciaTecnicaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all technical assistance requests
+ */
+
+export function useListAssistenciaTecnica<TData = Awaited<ReturnType<typeof listAssistenciaTecnica>>, TError = ErrorType<unknown>>(
+ params?: ListAssistenciaTecnicaParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssistenciaTecnica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAssistenciaTecnicaQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateAssistenciaTecnicaUrl = () => {
+
+
+
+
+  return `/api/assistencia-tecnica`
+}
+
+/**
+ * @summary Create a technical assistance request
+ */
+export const createAssistenciaTecnica = async (assistenciaTecnicaInput: AssistenciaTecnicaInput, options?: RequestInit): Promise<AssistenciaTecnica> => {
+
+  return customFetch<AssistenciaTecnica>(getCreateAssistenciaTecnicaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      assistenciaTecnicaInput,)
+  }
+);}
+
+
+
+
+export const getCreateAssistenciaTecnicaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssistenciaTecnica>>, TError,{data: BodyType<AssistenciaTecnicaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssistenciaTecnica>>, TError,{data: BodyType<AssistenciaTecnicaInput>}, TContext> => {
+
+const mutationKey = ['createAssistenciaTecnica'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssistenciaTecnica>>, {data: BodyType<AssistenciaTecnicaInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAssistenciaTecnica(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssistenciaTecnicaMutationResult = NonNullable<Awaited<ReturnType<typeof createAssistenciaTecnica>>>
+    export type CreateAssistenciaTecnicaMutationBody = BodyType<AssistenciaTecnicaInput>
+    export type CreateAssistenciaTecnicaMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a technical assistance request
+ */
+export const useCreateAssistenciaTecnica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssistenciaTecnica>>, TError,{data: BodyType<AssistenciaTecnicaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAssistenciaTecnica>>,
+        TError,
+        {data: BodyType<AssistenciaTecnicaInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAssistenciaTecnicaMutationOptions(options));
+    }
+
+export const getGetAssistenciaTecnicaUrl = (id: number,) => {
+
+
+
+
+  return `/api/assistencia-tecnica/${id}`
+}
+
+/**
+ * @summary Get a single technical assistance request
+ */
+export const getAssistenciaTecnica = async (id: number, options?: RequestInit): Promise<AssistenciaTecnica> => {
+
+  return customFetch<AssistenciaTecnica>(getGetAssistenciaTecnicaUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssistenciaTecnicaQueryKey = (id: number,) => {
+    return [
+    `/api/assistencia-tecnica/${id}`
+    ] as const;
+    }
+
+
+export const getGetAssistenciaTecnicaQueryOptions = <TData = Awaited<ReturnType<typeof getAssistenciaTecnica>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssistenciaTecnica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssistenciaTecnicaQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssistenciaTecnica>>> = ({ signal }) => getAssistenciaTecnica(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssistenciaTecnica>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssistenciaTecnicaQueryResult = NonNullable<Awaited<ReturnType<typeof getAssistenciaTecnica>>>
+export type GetAssistenciaTecnicaQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a single technical assistance request
+ */
+
+export function useGetAssistenciaTecnica<TData = Awaited<ReturnType<typeof getAssistenciaTecnica>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssistenciaTecnica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssistenciaTecnicaQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateAssistenciaTecnicaUrl = (id: number,) => {
+
+
+
+
+  return `/api/assistencia-tecnica/${id}`
+}
+
+/**
+ * @summary Update a technical assistance request
+ */
+export const updateAssistenciaTecnica = async (id: number,
+    assistenciaTecnicaUpdate: AssistenciaTecnicaUpdate, options?: RequestInit): Promise<AssistenciaTecnica> => {
+
+  return customFetch<AssistenciaTecnica>(getUpdateAssistenciaTecnicaUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      assistenciaTecnicaUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateAssistenciaTecnicaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAssistenciaTecnica>>, TError,{id: number;data: BodyType<AssistenciaTecnicaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAssistenciaTecnica>>, TError,{id: number;data: BodyType<AssistenciaTecnicaUpdate>}, TContext> => {
+
+const mutationKey = ['updateAssistenciaTecnica'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAssistenciaTecnica>>, {id: number;data: BodyType<AssistenciaTecnicaUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAssistenciaTecnica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAssistenciaTecnicaMutationResult = NonNullable<Awaited<ReturnType<typeof updateAssistenciaTecnica>>>
+    export type UpdateAssistenciaTecnicaMutationBody = BodyType<AssistenciaTecnicaUpdate>
+    export type UpdateAssistenciaTecnicaMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a technical assistance request
+ */
+export const useUpdateAssistenciaTecnica = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAssistenciaTecnica>>, TError,{id: number;data: BodyType<AssistenciaTecnicaUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAssistenciaTecnica>>,
+        TError,
+        {id: number;data: BodyType<AssistenciaTecnicaUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAssistenciaTecnicaMutationOptions(options));
+    }
+
+export const getDeleteAssistenciaTecnicaUrl = (id: number,) => {
+
+
+
+
+  return `/api/assistencia-tecnica/${id}`
+}
+
+/**
+ * @summary Delete a technical assistance request
+ */
+export const deleteAssistenciaTecnica = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAssistenciaTecnicaUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAssistenciaTecnicaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAssistenciaTecnica>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAssistenciaTecnica>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAssistenciaTecnica'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAssistenciaTecnica>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAssistenciaTecnica(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAssistenciaTecnicaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAssistenciaTecnica>>>
+
+    export type DeleteAssistenciaTecnicaMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a technical assistance request
+ */
+export const useDeleteAssistenciaTecnica = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAssistenciaTecnica>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAssistenciaTecnica>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAssistenciaTecnicaMutationOptions(options));
     }
 
 export const getListInstallationEventsUrl = (params?: ListInstallationEventsParams,) => {

@@ -8,6 +8,7 @@ import dashboardRouter from "./dashboard";
 import usersRouter from "./users";
 import installationEventsRouter from "./installation-events";
 import invitationsRouter from "./invitations";
+import assistenciaTecnicaRouter from "./assistencia-tecnica";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(dashboardRouter);
 router.use(usersRouter);
 router.use(installationEventsRouter);
 router.use(invitationsRouter);
+router.use(assistenciaTecnicaRouter);
 
 export default router;

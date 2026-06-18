@@ -24,6 +24,8 @@ tags:
     description: Installation calendar events
   - name: invitations
     description: Team invite management
+  - name: assistencia-tecnica
+    description: Technical assistance requests
 paths:
   /healthz:
     get:
@@ -805,6 +807,105 @@ paths:
         "404":
           description: Not found
 
+  /assistencia-tecnica:
+    get:
+      operationId: listAssistenciaTecnica
+      tags: [assistencia-tecnica]
+      summary: List all technical assistance requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [aberto, em_andamento, concluido, cancelado]
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssistenciaTecnica"
+    post:
+      operationId: createAssistenciaTecnica
+      tags: [assistencia-tecnica]
+      summary: Create a technical assistance request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistenciaTecnicaInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistenciaTecnica"
+
+  /assistencia-tecnica/{id}:
+    get:
+      operationId: getAssistenciaTecnica
+      tags: [assistencia-tecnica]
+      summary: Get a single technical assistance request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistenciaTecnica"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAssistenciaTecnica
+      tags: [assistencia-tecnica]
+      summary: Update a technical assistance request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistenciaTecnicaUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistenciaTecnica"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteAssistenciaTecnica
+      tags: [assistencia-tecnica]
+      summary: Delete a technical assistance request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
   /installation-events:
     get:
       operationId: listInstallationEvents
@@ -1516,3 +1617,78 @@ components:
         text:
           type: string
           minLength: 1
+
+    AssistenciaTecnica:
+      type: object
+      required: [id, clientName, contact, description, status, realizado, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        clientName:
+          type: string
+        contact:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [aberto, em_andamento, concluido, cancelado]
+        scheduledDate:
+          type: ["string", "null"]
+        responsibleMemberId:
+          type: ["integer", "null"]
+        responsibleMemberName:
+          type: ["string", "null"]
+        realizado:
+          type: boolean
+        realizadoAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    AssistenciaTecnicaInput:
+      type: object
+      required: [clientName, contact, description]
+      properties:
+        clientName:
+          type: string
+          minLength: 1
+        contact:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum: [aberto, em_andamento, concluido, cancelado]
+        scheduledDate:
+          type: string
+        responsibleMemberId:
+          type: integer
+        realizado:
+          type: boolean
+
+    AssistenciaTecnicaUpdate:
+      type: object
+      properties:
+        clientName:
+          type: string
+          minLength: 1
+        contact:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum: [aberto, em_andamento, concluido, cancelado]
+        scheduledDate:
+          type: ["string", "null"]
+        responsibleMemberId:
+          type: ["integer", "null"]
+        realizado:
+          type: boolean
