@@ -48,8 +48,8 @@ export function Layout({ children }: LayoutProps) {
     { href: "/checklist", label: "Instalações", icon: ClipboardList },
     { href: "/members", label: "Equipe", icon: Users },
     { href: "/calendario", label: "Calendário Instalação", icon: CalendarDays },
-    { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
     { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
+    { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
   ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
 
   const initials = user?.firstName && user?.lastName
