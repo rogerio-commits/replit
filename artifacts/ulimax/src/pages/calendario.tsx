@@ -555,12 +555,12 @@ function GanttRow({
           const isSat     = day.getDay() === 6;
           const isSun     = day.getDay() === 0;
 
+          const isWeekendDay = isSat || isSun;
           let bgColor: string | undefined;
-          if (isToday(day))   bgColor = "rgba(59,130,246,0.07)";
-          else if (holiday)   bgColor = "rgba(168,85,247,0.09)";
-          else if (isSun)     bgColor = "rgba(239,68,68,0.07)";
-          else if (isSat)     bgColor = "rgba(251,146,60,0.07)";
-          else if (count > 0) bgColor = `rgba(59,130,246,${density * 0.07})`;
+          if (isToday(day))       bgColor = "rgba(59,130,246,0.07)";
+          else if (holiday)       bgColor = "rgba(168,85,247,0.09)";
+          else if (isWeekendDay)  bgColor = "rgba(113,113,122,0.10)";
+          else if (count > 0)     bgColor = `rgba(59,130,246,${density * 0.07})`;
 
           return (
             <div
@@ -1012,14 +1012,13 @@ export default function Calendario() {
                   let headerBg = "bg-card";
                   let numColor = "text-foreground";
                   let labelColor = "text-muted-foreground/80";
-                  if (isToday(day))    { headerBg = "bg-blue-50"; }
-                  else if (holiday)    { headerBg = "bg-purple-50"; }
-                  else if (isSun)      { headerBg = "bg-red-50"; }
-                  else if (isSat)      { headerBg = "bg-orange-50"; }
+                  const isWeekendDay = isSat || isSun;
+                  if (isToday(day))      { headerBg = "bg-blue-50"; }
+                  else if (holiday)      { headerBg = "bg-purple-50"; }
+                  else if (isWeekendDay) { headerBg = "bg-zinc-200/70"; }
 
-                  if (holiday)         { numColor = "text-purple-700"; labelColor = "text-purple-500/80"; }
-                  else if (isSun)      { numColor = "text-red-600/80"; labelColor = "text-red-400/70"; }
-                  else if (isSat)      { numColor = "text-orange-600/80"; labelColor = "text-orange-400/70"; }
+                  if (holiday)           { numColor = "text-purple-700"; labelColor = "text-purple-500/80"; }
+                  else if (isWeekendDay) { numColor = "text-zinc-500"; labelColor = "text-zinc-400/80"; }
 
                   return (
                     <div
@@ -1118,10 +1117,7 @@ export default function Calendario() {
                 Assistência
               </span>
               <span className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-sm bg-orange-100 border border-orange-200" /> Sábado
-              </span>
-              <span className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-sm bg-red-100 border border-red-200" /> Domingo
+                <div className="h-2.5 w-2.5 rounded-sm bg-zinc-300/80 border border-zinc-300" /> Fim de semana
               </span>
               <span className="flex items-center gap-1.5">
                 <div className="h-2.5 w-2.5 rounded-sm bg-purple-100 border border-purple-200" /> Feriado
