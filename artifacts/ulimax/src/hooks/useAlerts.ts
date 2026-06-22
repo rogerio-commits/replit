@@ -27,6 +27,7 @@ export interface Alert {
 }
 
 const APPROACHING_DAYS = 7;
+const SAMPLE_APPROACHING_DAYS = 5;
 const STALLED_DAYS = 30;
 
 function todayMidnight() {
@@ -165,7 +166,7 @@ export function computeAlerts(
         description: `Prazo ${fmtDate(s.deadline)} expirou · ${s.projectName} · Req: ${s.requester}`,
         href: "/controle-amostras",
       });
-    } else if (diff <= APPROACHING_DAYS) {
+    } else if (diff <= SAMPLE_APPROACHING_DAYS) {
       const label = diff === 0 ? "hoje" : `em ${diff} dia${diff > 1 ? "s" : ""}`;
       alerts.push({
         id: `approaching-sample-${s.id}`,

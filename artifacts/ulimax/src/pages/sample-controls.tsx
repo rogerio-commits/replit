@@ -72,7 +72,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const APPROACHING_DAYS = 7;
+const APPROACHING_DAYS = 5;
 
 function todayMidnight() {
   const d = new Date();
@@ -306,7 +306,7 @@ export default function SampleControls() {
               <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
               <div>
                 <span className="font-semibold text-amber-700">
-                  {soonItems.length} amostra{soonItems.length > 1 ? "s" : ""} vencem nos próximos 7 dias
+                  {soonItems.length} amostra{soonItems.length > 1 ? "s" : ""} vencem nos próximos 5 dias
                 </span>
                 <span className="text-amber-600"> — </span>
                 <span className="text-amber-600">{soonItems.map((i) => i.samples.slice(0, 30)).join(", ")}</span>
