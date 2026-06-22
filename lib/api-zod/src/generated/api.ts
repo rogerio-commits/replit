@@ -752,6 +752,94 @@ export const DeleteInvitationParams = zod.object({
 
 
 /**
+ * @summary List all sample controls
+ */
+export const ListSampleControlsQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "projectId": zod.coerce.number().optional()
+})
+
+export const ListSampleControlsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectName": zod.string(),
+  "samples": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "deadline": zod.string(),
+  "requester": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListSampleControlsResponse = zod.array(ListSampleControlsResponseItem)
+
+
+/**
+ * @summary Create a sample control
+ */
+
+
+
+
+
+export const CreateSampleControlBody = zod.object({
+  "projectId": zod.number(),
+  "samples": zod.string().min(1),
+  "responsibleId": zod.number().optional(),
+  "deadline": zod.string().min(1),
+  "requester": zod.string().min(1),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a sample control
+ */
+export const UpdateSampleControlParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+
+export const UpdateSampleControlBody = zod.object({
+  "projectId": zod.number(),
+  "samples": zod.string().min(1),
+  "responsibleId": zod.number().optional(),
+  "deadline": zod.string().min(1),
+  "requester": zod.string().min(1),
+  "status": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdateSampleControlResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectName": zod.string(),
+  "samples": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "deadline": zod.string(),
+  "requester": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a sample control
+ */
+export const DeleteSampleControlParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all site visits across all projects
  */
 export const ListAllSiteVisitsResponseItem = zod.object({

@@ -807,6 +807,87 @@ paths:
         "404":
           description: Not found
 
+  /sample-controls:
+    get:
+      operationId: listSampleControls
+      tags: [sample-controls]
+      summary: List all sample controls
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of sample controls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SampleControl"
+    post:
+      operationId: createSampleControl
+      tags: [sample-controls]
+      summary: Create a sample control
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SampleControlInput"
+      responses:
+        "201":
+          description: Created sample control
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleControl"
+
+  /sample-controls/{id}:
+    patch:
+      operationId: updateSampleControl
+      tags: [sample-controls]
+      summary: Update a sample control
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SampleControlInput"
+      responses:
+        "200":
+          description: Updated sample control
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleControl"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSampleControl
+      tags: [sample-controls]
+      summary: Delete a sample control
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /site-visits:
     get:
       operationId: listAllSiteVisits
@@ -1563,6 +1644,55 @@ components:
           type: ["integer", "null"]
         actionDueDate:
           type: ["string", "null"]
+
+    SampleControl:
+      type: object
+      required: [id, projectId, projectName, samples, deadline, requester, status, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        projectName:
+          type: string
+        samples:
+          type: string
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleName:
+          type: ["string", "null"]
+        deadline:
+          type: string
+        requester:
+          type: string
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SampleControlInput:
+      type: object
+      required: [projectId, samples, deadline, requester]
+      properties:
+        projectId:
+          type: integer
+        samples:
+          type: string
+          minLength: 1
+        responsibleId:
+          type: integer
+        deadline:
+          type: string
+          minLength: 1
+        requester:
+          type: string
+          minLength: 1
+        status:
+          type: string
+        notes:
+          type: string
 
     SiteVisit:
       type: object

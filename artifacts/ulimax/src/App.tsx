@@ -19,6 +19,7 @@ import Calendario from "@/pages/calendario";
 import Alertas from "@/pages/alertas";
 import Checklist from "@/pages/checklist";
 import AssistenciaTecnica from "@/pages/assistencia-tecnica";
+import SampleControls from "@/pages/sample-controls";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -185,6 +186,7 @@ function ProtectedRoutes() {
             <Route path="/alertas" component={Alertas} />
             <Route path="/checklist" component={Checklist} />
             <Route path="/assistencia-tecnica" component={AssistenciaTecnica} />
+            <Route path="/controle-amostras" component={SampleControls} />
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />
           </Switch>

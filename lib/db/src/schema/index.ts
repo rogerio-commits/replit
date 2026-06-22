@@ -10,3 +10,4 @@ export * from "./site-visits";
 export * from "./observations";
 export * from "./phase-history";
 export * from "./assistencia-tecnica";
+export * from "./sample-controls";

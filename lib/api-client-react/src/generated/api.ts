@@ -39,6 +39,7 @@ import type {
   ListAssistenciaTecnicaParams,
   ListInstallationEventsParams,
   ListProjectsParams,
+  ListSampleControlsParams,
   ListTasksParams,
   Member,
   MemberInput,
@@ -51,6 +52,8 @@ import type {
   ProjectPhaseHistory,
   ProjectStats,
   ProjectUpdate,
+  SampleControl,
+  SampleControlInput,
   SiteVisit,
   SiteVisitInput,
   SiteVisitWithProject,
@@ -2978,6 +2981,303 @@ export const useDeleteInvitation = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteInvitationMutationOptions(options));
+    }
+
+export const getListSampleControlsUrl = (params?: ListSampleControlsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/sample-controls?${stringifiedParams}` : `/api/sample-controls`
+}
+
+/**
+ * @summary List all sample controls
+ */
+export const listSampleControls = async (params?: ListSampleControlsParams, options?: RequestInit): Promise<SampleControl[]> => {
+
+  return customFetch<SampleControl[]>(getListSampleControlsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSampleControlsQueryKey = (params?: ListSampleControlsParams,) => {
+    return [
+    `/api/sample-controls`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSampleControlsQueryOptions = <TData = Awaited<ReturnType<typeof listSampleControls>>, TError = ErrorType<unknown>>(params?: ListSampleControlsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSampleControls>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSampleControlsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSampleControls>>> = ({ signal }) => listSampleControls(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSampleControls>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSampleControlsQueryResult = NonNullable<Awaited<ReturnType<typeof listSampleControls>>>
+export type ListSampleControlsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all sample controls
+ */
+
+export function useListSampleControls<TData = Awaited<ReturnType<typeof listSampleControls>>, TError = ErrorType<unknown>>(
+ params?: ListSampleControlsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSampleControls>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSampleControlsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSampleControlUrl = () => {
+
+
+
+
+  return `/api/sample-controls`
+}
+
+/**
+ * @summary Create a sample control
+ */
+export const createSampleControl = async (sampleControlInput: SampleControlInput, options?: RequestInit): Promise<SampleControl> => {
+
+  return customFetch<SampleControl>(getCreateSampleControlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      sampleControlInput,)
+  }
+);}
+
+
+
+
+export const getCreateSampleControlMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSampleControl>>, TError,{data: BodyType<SampleControlInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSampleControl>>, TError,{data: BodyType<SampleControlInput>}, TContext> => {
+
+const mutationKey = ['createSampleControl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSampleControl>>, {data: BodyType<SampleControlInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSampleControl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSampleControlMutationResult = NonNullable<Awaited<ReturnType<typeof createSampleControl>>>
+    export type CreateSampleControlMutationBody = BodyType<SampleControlInput>
+    export type CreateSampleControlMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a sample control
+ */
+export const useCreateSampleControl = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSampleControl>>, TError,{data: BodyType<SampleControlInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSampleControl>>,
+        TError,
+        {data: BodyType<SampleControlInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSampleControlMutationOptions(options));
+    }
+
+export const getUpdateSampleControlUrl = (id: number,) => {
+
+
+
+
+  return `/api/sample-controls/${id}`
+}
+
+/**
+ * @summary Update a sample control
+ */
+export const updateSampleControl = async (id: number,
+    sampleControlInput: SampleControlInput, options?: RequestInit): Promise<SampleControl> => {
+
+  return customFetch<SampleControl>(getUpdateSampleControlUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      sampleControlInput,)
+  }
+);}
+
+
+
+
+export const getUpdateSampleControlMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSampleControl>>, TError,{id: number;data: BodyType<SampleControlInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSampleControl>>, TError,{id: number;data: BodyType<SampleControlInput>}, TContext> => {
+
+const mutationKey = ['updateSampleControl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSampleControl>>, {id: number;data: BodyType<SampleControlInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSampleControl(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSampleControlMutationResult = NonNullable<Awaited<ReturnType<typeof updateSampleControl>>>
+    export type UpdateSampleControlMutationBody = BodyType<SampleControlInput>
+    export type UpdateSampleControlMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a sample control
+ */
+export const useUpdateSampleControl = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSampleControl>>, TError,{id: number;data: BodyType<SampleControlInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSampleControl>>,
+        TError,
+        {id: number;data: BodyType<SampleControlInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateSampleControlMutationOptions(options));
+    }
+
+export const getDeleteSampleControlUrl = (id: number,) => {
+
+
+
+
+  return `/api/sample-controls/${id}`
+}
+
+/**
+ * @summary Delete a sample control
+ */
+export const deleteSampleControl = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSampleControlUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSampleControlMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSampleControl>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSampleControl>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteSampleControl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSampleControl>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSampleControl(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSampleControlMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSampleControl>>>
+
+    export type DeleteSampleControlMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a sample control
+ */
+export const useDeleteSampleControl = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSampleControl>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSampleControl>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSampleControlMutationOptions(options));
     }
 
 export const getListAllSiteVisitsUrl = () => {

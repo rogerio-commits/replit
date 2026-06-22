@@ -542,6 +542,36 @@ export interface ChecklistItemUpdate {
   actionDueDate?: string | null;
 }
 
+export interface SampleControl {
+  id: number;
+  projectId: number;
+  projectName: string;
+  samples: string;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  deadline: string;
+  requester: string;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface SampleControlInput {
+  projectId: number;
+  /** @minLength 1 */
+  samples: string;
+  responsibleId?: number;
+  /** @minLength 1 */
+  deadline: string;
+  /** @minLength 1 */
+  requester: string;
+  status?: string;
+  notes?: string;
+}
+
 export interface SiteVisit {
   id: number;
   projectId: number;
@@ -732,6 +762,11 @@ export const ListTasksPriority = {
   medium: 'medium',
   high: 'high',
 } as const;
+
+export type ListSampleControlsParams = {
+status?: string;
+projectId?: number;
+};
 
 export type ListAssistenciaTecnicaParams = {
 status?: ListAssistenciaTecnicaStatus;
