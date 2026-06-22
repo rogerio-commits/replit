@@ -77,6 +77,59 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
+// ── Brazilian Holidays ────────────────────────────────────────────────────────
+
+/** Gaussian algorithm to compute Easter Sunday for a given year. */
+function easterDate(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day   = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+function ymd(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Returns a Map<"yyyy-MM-dd", holidayName> for all Brazilian national holidays in the given year. */
+function getBrazilianHolidays(year: number): Map<string, string> {
+  const easter = easterDate(year);
+  const holidays: [Date, string][] = [
+    [new Date(year, 0,  1),  "Ano Novo"],
+    [new Date(year, 3, 21),  "Tiradentes"],
+    [new Date(year, 4,  1),  "Dia do Trabalho"],
+    [new Date(year, 8,  7),  "Independência"],
+    [new Date(year, 9, 12),  "Ap.da"],
+    [new Date(year, 10, 2),  "Finados"],
+    [new Date(year, 10,15),  "Proclamação"],
+    [new Date(year, 10,20),  "Consciência Negra"],
+    [new Date(year, 11,25),  "Natal"],
+    // Moveable
+    [addDays(easter, -2), "Sexta Santa"],
+    [addDays(easter, 60), "Corpus Christi"],
+  ];
+  const map = new Map<string, string>();
+  for (const [d, name] of holidays) map.set(ymd(d), name);
+  return map;
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const DAY_W      = 44;   // px per day column
@@ -338,6 +391,7 @@ function GanttRow({
   onDeleteEvent,
   onRenameTeam,
   dayEventCount,
+  holidays,
 }: {
   team: string;
   events: InstallationEvent[];
@@ -350,6 +404,7 @@ function GanttRow({
   onDeleteEvent: (e: InstallationEvent) => void;
   onRenameTeam: (oldName: string, newName: string) => void;
   dayEventCount: Map<string, number>;
+  holidays: Map<string, string>;
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue]     = useState(team);
@@ -493,30 +548,31 @@ function GanttRow({
       <div className="relative flex-1" style={{ width: days.length * DAY_W, height: rowH }}>
         {/* Day background cells */}
         {days.map((day) => {
-          const dateStr = isoDate(day);
-          const count   = dayEventCount.get(dateStr) ?? 0;
-          const density = count / maxDayCount;
+          const dateStr   = isoDate(day);
+          const count     = dayEventCount.get(dateStr) ?? 0;
+          const density   = count / maxDayCount;
+          const holiday   = holidays.get(dateStr);
+          const isSat     = day.getDay() === 6;
+          const isSun     = day.getDay() === 0;
+
+          let bgColor: string | undefined;
+          if (isToday(day))   bgColor = "rgba(59,130,246,0.07)";
+          else if (holiday)   bgColor = "rgba(168,85,247,0.09)";
+          else if (isSun)     bgColor = "rgba(239,68,68,0.07)";
+          else if (isSat)     bgColor = "rgba(251,146,60,0.07)";
+          else if (count > 0) bgColor = `rgba(59,130,246,${density * 0.07})`;
+
           return (
             <div
               key={dateStr}
               onClick={() => onDayClick(team, dateStr)}
-              className={cn(
-                "absolute top-0 bottom-0 border-r cursor-pointer transition-colors",
-                isWeekend(day)
-                  ? "border-border/40 bg-muted/40"
-                  : "border-border/30 bg-transparent",
-                isToday(day) && "bg-blue-50/80",
-              )}
+              className="absolute top-0 bottom-0 border-r border-border/30 cursor-pointer transition-colors"
               style={{
                 left: differenceInDays(day, monthStart) * DAY_W,
                 width: DAY_W,
-                // Workload density tint (only on non-weekend, non-today cells)
-                ...(!isWeekend(day) && !isToday(day) && count > 0
-                  ? { backgroundColor: `rgba(59,130,246,${density * 0.07})` }
-                  : {}),
+                backgroundColor: bgColor,
               }}
             >
-              {/* Hover highlight */}
               <div className="absolute inset-0 hover:bg-primary/5 transition-colors" />
             </div>
           );
@@ -713,6 +769,16 @@ export default function Calendario() {
     }
     return map;
   }, [events, monthStart, monthEnd]);
+
+  // Brazilian national holidays — covers current year + adjacent for boundary months
+  const holidays = useMemo(() => {
+    const y = currentMonth.getFullYear();
+    const map = new Map<string, string>();
+    for (const [k, v] of getBrazilianHolidays(y - 1)) map.set(k, v);
+    for (const [k, v] of getBrazilianHolidays(y))     map.set(k, v);
+    for (const [k, v] of getBrazilianHolidays(y + 1)) map.set(k, v);
+    return map;
+  }, [currentMonth]);
 
   // Summary stats for this month
   const monthStats = useMemo(() => {
@@ -938,49 +1004,59 @@ export default function Calendario() {
                 {days.map((day) => {
                   const dateStr = isoDate(day);
                   const count   = dayEventCount.get(dateStr) ?? 0;
+                  const holiday = holidays.get(dateStr);
+                  const isSat   = day.getDay() === 6;
+                  const isSun   = day.getDay() === 0;
                   const isFirst = differenceInDays(day, startOfWeek(day, { weekStartsOn: 1 })) === 0;
+
+                  let headerBg = "bg-card";
+                  let numColor = "text-foreground";
+                  let labelColor = "text-muted-foreground/80";
+                  if (isToday(day))    { headerBg = "bg-blue-50"; }
+                  else if (holiday)    { headerBg = "bg-purple-50"; }
+                  else if (isSun)      { headerBg = "bg-red-50"; }
+                  else if (isSat)      { headerBg = "bg-orange-50"; }
+
+                  if (holiday)         { numColor = "text-purple-700"; labelColor = "text-purple-500/80"; }
+                  else if (isSun)      { numColor = "text-red-600/80"; labelColor = "text-red-400/70"; }
+                  else if (isSat)      { numColor = "text-orange-600/80"; labelColor = "text-orange-400/70"; }
+
                   return (
                     <div
                       key={dateStr}
                       className={cn(
-                        "flex flex-col items-center justify-center border-r shrink-0 relative",
-                        isWeekend(day) ? "bg-muted/40 border-border/40" : "bg-card border-border/30",
-                        isToday(day) && "bg-blue-50",
+                        "flex flex-col items-center justify-center border-r shrink-0 relative overflow-hidden",
+                        headerBg,
+                        isToday(day) ? "border-border/40" : "border-border/30",
                         isFirst && !isToday(day) && "border-l border-l-border/70"
                       )}
                       style={{ width: DAY_W }}
                     >
-                      <span className={cn(
-                        "text-[9px] font-semibold uppercase leading-none mb-1",
-                        isToday(day) ? "text-blue-600" : isWeekend(day) ? "text-muted-foreground/60" : "text-muted-foreground/80"
-                      )}>
+                      <span className={cn("text-[9px] font-semibold uppercase leading-none mb-1", isToday(day) ? "text-blue-600" : labelColor)}>
                         {format(day, "EEE", { locale: ptBR }).slice(0, 3)}
                       </span>
                       <span className={cn(
                         "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
-                        isToday(day)
-                          ? "bg-blue-500 text-white"
-                          : isWeekend(day)
-                            ? "text-muted-foreground/70"
-                            : "text-foreground"
+                        isToday(day) ? "bg-blue-500 text-white" : numColor
                       )}>
                         {format(day, "d")}
                       </span>
+                      {/* Holiday name — tiny label at bottom */}
+                      {holiday && (
+                        <span className="absolute bottom-0.5 left-0 right-0 text-center text-[7px] font-semibold text-purple-600/80 truncate px-0.5 leading-none">
+                          {holiday}
+                        </span>
+                      )}
                       {/* Workload dot */}
-                      {count > 0 && (
+                      {count > 0 && !holiday && (
                         <div
                           className="absolute bottom-1 w-1 h-1 rounded-full"
                           style={{
-                            backgroundColor: count >= 3
-                              ? "#ef4444"
-                              : count === 2
-                                ? "#f97316"
-                                : "#3b82f6",
+                            backgroundColor: count >= 3 ? "#ef4444" : count === 2 ? "#f97316" : "#3b82f6",
                             opacity: 0.7,
                           }}
                         />
                       )}
-                      {/* Today "Hoje" label */}
                       {isToday(day) && (
                         <span className="absolute -top-[14px] left-1/2 -translate-x-1/2 text-[8px] font-bold text-blue-500 uppercase tracking-wider whitespace-nowrap">
                           Hoje
@@ -1007,6 +1083,7 @@ export default function Calendario() {
                 onDeleteEvent={(e) => setDeleteTarget(e)}
                 onRenameTeam={handleRenameTeam}
                 dayEventCount={dayEventCount}
+                holidays={holidays}
               />
             ))}
 
@@ -1041,7 +1118,13 @@ export default function Calendario() {
                 Assistência
               </span>
               <span className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-sm bg-muted/60 border border-border/60" /> Fim de semana
+                <div className="h-2.5 w-2.5 rounded-sm bg-orange-100 border border-orange-200" /> Sábado
+              </span>
+              <span className="flex items-center gap-1.5">
+                <div className="h-2.5 w-2.5 rounded-sm bg-red-100 border border-red-200" /> Domingo
+              </span>
+              <span className="flex items-center gap-1.5">
+                <div className="h-2.5 w-2.5 rounded-sm bg-purple-100 border border-purple-200" /> Feriado
               </span>
               <span className="flex items-center gap-1.5">
                 <div className="h-0.5 w-6 bg-blue-500/50" /> Hoje
