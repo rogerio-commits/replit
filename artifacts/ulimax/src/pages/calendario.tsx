@@ -868,31 +868,19 @@ export default function Calendario() {
     return () => clearTimeout(timer);
   }, [currentMonth, monthStart, monthEnd]);
 
-  // Change month when the user scrolls past either edge
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      if (programmaticScroll.current) return;
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-
-      if (scrollLeft + clientWidth >= scrollWidth - 2) {
-        // Reached the right edge → advance month, start from the left
-        programmaticScroll.current = true;
-        pendingScrollTarget.current = "start";
-        setCurrentMonth((m) => addMonths(m, 1));
-      } else if (scrollLeft <= 0) {
-        // Reached the left edge → go back a month, start from the right
-        programmaticScroll.current = true;
-        pendingScrollTarget.current = "end";
-        setCurrentMonth((m) => subMonths(m, 1));
-      }
-    };
-
-    container.addEventListener("scroll", handleScroll, { passive: true });
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
+  function handleScrollEdge(e: React.UIEvent<HTMLDivElement>) {
+    if (programmaticScroll.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
+    if (scrollLeft + clientWidth >= scrollWidth - 2) {
+      programmaticScroll.current = true;
+      pendingScrollTarget.current = "start";
+      setCurrentMonth((m) => addMonths(m, 1));
+    } else if (scrollLeft <= 0) {
+      programmaticScroll.current = true;
+      pendingScrollTarget.current = "end";
+      setCurrentMonth((m) => subMonths(m, 1));
+    }
+  }
 
   return (
     <div className="flex flex-col h-full gap-0 overflow-hidden">
@@ -960,7 +948,7 @@ export default function Calendario() {
           <Loader2 className="h-5 w-5 animate-spin" /> Carregando...
         </div>
       ) : (
-        <div ref={scrollRef} className="flex-1 overflow-auto">
+        <div ref={scrollRef} className="flex-1 overflow-auto" onScroll={handleScrollEdge}>
           <div style={{ minWidth: LEFT_W + totalW }}>
 
             {/* Day header — two rows: week labels + day numbers */}
