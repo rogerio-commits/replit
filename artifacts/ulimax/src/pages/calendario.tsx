@@ -663,19 +663,28 @@ export default function Calendario() {
   const days       = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const totalW     = days.length * DAY_W;
 
-  // Group events by team
+  // All teams ever registered (persists across month navigation)
+  const allTeams = useMemo(() => {
+    const teams = new Set<string>();
+    for (const ev of events) {
+      teams.add(ev.teamDescription?.trim() || NO_TEAM);
+    }
+    if (teams.size === 0) teams.add(NO_TEAM);
+    return teams;
+  }, [events]);
+
+  // Group current-month events by team — all teams always present, even if empty
   const teamMap = useMemo(() => {
     const map = new Map<string, InstallationEvent[]>();
+    for (const team of allTeams) map.set(team, []);
     for (const ev of events) {
       const evEnd = ev.endDate ?? ev.startDate;
       if (ev.startDate > isoDate(monthEnd) || evEnd < isoDate(monthStart)) continue;
       const key = ev.teamDescription?.trim() || NO_TEAM;
-      if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(ev);
     }
-    if (map.size === 0) map.set(NO_TEAM, []);
     return map;
-  }, [events, monthStart, monthEnd]);
+  }, [events, allTeams, monthStart, monthEnd]);
 
   const teamEntries = useMemo(() => {
     const entries = [...teamMap.entries()];
