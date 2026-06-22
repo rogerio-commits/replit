@@ -67,15 +67,15 @@ export function Layout({ children }: LayoutProps) {
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <div className="flex h-screen w-full bg-muted/30">
         {/* Sidebar */}
-        <aside className="w-64 border-r bg-card flex flex-col hidden md:flex shrink-0">
-          <div className="h-16 flex items-center px-6 border-b border-border/50">
+        <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex shrink-0">
+          <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center">
               <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6 brightness-0 invert" />
             </Link>
           </div>
           
           <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4 px-2">
+            <div className="text-xs font-medium text-sidebar-foreground/40 uppercase tracking-wider mb-4 px-2">
               Menu
             </div>
             {navItems.map((item) => {
@@ -87,8 +87,8 @@ export function Layout({ children }: LayoutProps) {
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors cursor-pointer",
                       isActive 
-                        ? "bg-primary/10 text-primary" 
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-sidebar-primary/15 text-sidebar-primary" 
+                        : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -110,18 +110,18 @@ export function Layout({ children }: LayoutProps) {
           </nav>
           
           {/* User section at the bottom */}
-          <div className="p-3 border-t border-border/50">
+          <div className="p-3 border-t border-sidebar-border">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors hover:bg-muted cursor-pointer">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-semibold text-xs shrink-0">
+                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors hover:bg-sidebar-accent cursor-pointer">
+                  <div className="h-8 w-8 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 flex items-center justify-center text-sidebar-primary font-semibold text-xs shrink-0">
                     {initials}
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="font-medium text-foreground text-xs truncate">{displayName}</p>
-                    <p className="text-muted-foreground text-[11px] truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
+                    <p className="font-medium text-sidebar-foreground text-xs truncate">{displayName}</p>
+                    <p className="text-sidebar-foreground/50 text-[11px] truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
                   </div>
-                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <ChevronDown className="h-3.5 w-3.5 text-sidebar-foreground/40 shrink-0" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52">
