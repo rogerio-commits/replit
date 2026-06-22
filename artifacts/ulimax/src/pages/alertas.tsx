@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { AlertTriangle, AlertCircle, Info, Calendar, CheckSquare, Briefcase, Clock, UserX, ArrowRight, HardHat } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, Calendar, CheckSquare, Briefcase, Clock, UserX, ArrowRight, HardHat, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAlerts, useAlertCounts } from "@/hooks/useAlerts";
 import type { Alert, AlertSeverity, AlertType } from "@/hooks/useAlerts";
@@ -18,6 +18,8 @@ const TYPE_META: Record<AlertType, { label: string; icon: React.ElementType }> =
   stalled_project:         { label: "Projeto Parado",         icon: Clock },
   no_assignee:             { label: "Sem Responsável",        icon: UserX },
   task_assigned_to_me:     { label: "Minha Tarefa",           icon: HardHat },
+  overdue_sample:          { label: "Amostra Atrasada",        icon: FlaskConical },
+  approaching_sample:      { label: "Prazo de Amostra",        icon: FlaskConical },
 };
 
 function SeverityIcon({ severity, className }: { severity: AlertSeverity; className?: string }) {

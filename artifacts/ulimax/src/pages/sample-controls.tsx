@@ -66,9 +66,33 @@ import {
   Briefcase,
   PackageCheck,
   Truck,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+const APPROACHING_DAYS = 7;
+
+function todayMidnight() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function parseDateLocal(s: string) {
+  return new Date(s.split("T")[0] + "T00:00:00");
+}
+
+function deadlineStatus(deadline: string, delivered: boolean): "overdue" | "soon" | "ok" {
+  if (delivered) return "ok";
+  const today = todayMidnight();
+  const d = parseDateLocal(deadline);
+  const diff = Math.floor((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return "overdue";
+  if (diff <= APPROACHING_DAYS) return "soon";
+  return "ok";
+}
 
 const formSchema = z.object({
   projectId: z.number({ required_error: "Projeto obrigatório" }),
@@ -219,6 +243,8 @@ export default function SampleControls() {
 
   const readyCount = (items ?? []).filter((i) => i.ready).length;
   const deliveredCount = (items ?? []).filter((i) => i.delivered).length;
+  const overdueItems = (items ?? []).filter((i) => deadlineStatus(i.deadline, i.delivered ?? false) === "overdue");
+  const soonItems = (items ?? []).filter((i) => deadlineStatus(i.deadline, i.delivered ?? false) === "soon");
 
   return (
     <div className="space-y-6">
@@ -259,6 +285,36 @@ export default function SampleControls() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Alert banner */}
+      {(overdueItems.length > 0 || soonItems.length > 0) && (
+        <div className="space-y-2">
+          {overdueItems.length > 0 && (
+            <div className="flex items-start gap-2 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-sm">
+              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+              <div>
+                <span className="font-semibold text-red-700">
+                  {overdueItems.length} amostra{overdueItems.length > 1 ? "s" : ""} com prazo vencido
+                </span>
+                <span className="text-red-600"> — </span>
+                <span className="text-red-600">{overdueItems.map((i) => i.samples.slice(0, 30)).join(", ")}</span>
+              </div>
+            </div>
+          )}
+          {soonItems.length > 0 && (
+            <div className="flex items-start gap-2 px-4 py-3 rounded-lg border border-amber-200 bg-amber-50 text-sm">
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <span className="font-semibold text-amber-700">
+                  {soonItems.length} amostra{soonItems.length > 1 ? "s" : ""} vencem nos próximos 7 dias
+                </span>
+                <span className="text-amber-600"> — </span>
+                <span className="text-amber-600">{soonItems.map((i) => i.samples.slice(0, 30)).join(", ")}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
@@ -330,12 +386,17 @@ export default function SampleControls() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((item) => (
+                  {filtered.map((item) => {
+                    const dlStatus = deadlineStatus(item.deadline, item.delivered ?? false);
+                    return (
                     <tr
                       key={item.id}
                       className={cn(
-                        "border-b last:border-0 hover:bg-muted/20 transition-colors",
-                        item.delivered && "opacity-60"
+                        "border-b last:border-0 transition-colors",
+                        dlStatus === "overdue" && "bg-red-50/60 hover:bg-red-50",
+                        dlStatus === "soon"    && "bg-amber-50/60 hover:bg-amber-50",
+                        dlStatus === "ok"      && "hover:bg-muted/20",
+                        item.delivered && "opacity-50"
                       )}
                     >
                       <td className="px-4 py-3 font-medium max-w-[160px]">
@@ -399,7 +460,8 @@ export default function SampleControls() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>

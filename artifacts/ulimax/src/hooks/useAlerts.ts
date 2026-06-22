@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useListProjects, useListTasks, useListMembers, useGetMe } from "@workspace/api-client-react";
-import type { Project, Task } from "@workspace/api-client-react";
+import { useListProjects, useListTasks, useListMembers, useGetMe, useListSampleControls } from "@workspace/api-client-react";
+import type { Project, Task, SampleControl } from "@workspace/api-client-react";
 
 export type AlertSeverity = "danger" | "warning" | "info";
 
@@ -11,7 +11,9 @@ export type AlertType =
   | "no_installation_date"
   | "stalled_project"
   | "no_assignee"
-  | "task_assigned_to_me";
+  | "task_assigned_to_me"
+  | "overdue_sample"
+  | "approaching_sample";
 
 export interface Alert {
   id: string;
@@ -49,6 +51,7 @@ export function computeAlerts(
   projects: Project[],
   tasks: Task[],
   myMemberId?: number | null,
+  samples: SampleControl[] = [],
 ): Alert[] {
   const t = todayMidnight();
   const alerts: Alert[] = [];
@@ -149,6 +152,32 @@ export function computeAlerts(
     }
   }
 
+  for (const s of samples) {
+    if (s.delivered) continue;
+    const d = parseDate(s.deadline);
+    const diff = daysDiff(t, d);
+    if (diff < 0) {
+      alerts.push({
+        id: `overdue-sample-${s.id}`,
+        type: "overdue_sample",
+        severity: "danger",
+        title: `Amostra atrasada: ${s.samples.slice(0, 50)}`,
+        description: `Prazo ${fmtDate(s.deadline)} expirou · ${s.projectName} · Req: ${s.requester}`,
+        href: "/controle-amostras",
+      });
+    } else if (diff <= APPROACHING_DAYS) {
+      const label = diff === 0 ? "hoje" : `em ${diff} dia${diff > 1 ? "s" : ""}`;
+      alerts.push({
+        id: `approaching-sample-${s.id}`,
+        type: "approaching_sample",
+        severity: "warning",
+        title: `Prazo de amostra ${label}: ${s.samples.slice(0, 50)}`,
+        description: `Vence ${fmtDate(s.deadline)} · ${s.projectName} · Req: ${s.requester}`,
+        href: "/controle-amostras",
+      });
+    }
+  }
+
   const order: Record<AlertSeverity, number> = { danger: 0, warning: 1, info: 2 };
   return alerts.sort((a, b) => order[a.severity] - order[b.severity]);
 }
@@ -158,6 +187,7 @@ export function useAlerts() {
   const { data: tasks } = useListTasks();
   const { data: members } = useListMembers();
   const { data: me } = useGetMe({ query: { staleTime: 5 * 60 * 1000, queryKey: ["/api/me"] } });
+  const { data: samples } = useListSampleControls();
 
   const myMemberId = useMemo(() => {
     if (!me?.email || !members) return null;
@@ -166,8 +196,8 @@ export function useAlerts() {
   }, [me, members]);
 
   return useMemo(
-    () => computeAlerts(projects ?? [], tasks ?? [], myMemberId),
-    [projects, tasks, myMemberId],
+    () => computeAlerts(projects ?? [], tasks ?? [], myMemberId, samples ?? []),
+    [projects, tasks, myMemberId, samples],
   );
 }
 
