@@ -1208,8 +1208,8 @@ export default function ProjectDetail() {
 
       {/* Observations */}
       {(() => {
-        const userObs = (observations ?? []).filter((o) => o.authorName !== "Sistema");
-        const taskObs = (observations ?? []).filter((o) => o.authorName === "Sistema");
+        const taskObs = (observations ?? []).filter((o) => o.text.startsWith("✓ Tarefa concluída:"));
+        const userObs = (observations ?? []).filter((o) => !o.text.startsWith("✓ Tarefa concluída:"));
 
         function renderObsFeed(list: typeof userObs, isSystemFeed: boolean) {
           const sorted = [...list].reverse();
