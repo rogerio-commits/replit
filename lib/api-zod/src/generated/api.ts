@@ -768,7 +768,6 @@ export const ListSampleControlsResponseItem = zod.object({
   "responsibleName": zod.string().nullish(),
   "deadline": zod.string(),
   "requester": zod.string(),
-  "status": zod.string(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -789,7 +788,6 @@ export const CreateSampleControlBody = zod.object({
   "responsibleId": zod.number().optional(),
   "deadline": zod.string().min(1),
   "requester": zod.string().min(1),
-  "status": zod.string().optional(),
   "notes": zod.string().optional()
 })
 
@@ -812,7 +810,6 @@ export const UpdateSampleControlBody = zod.object({
   "responsibleId": zod.number().optional(),
   "deadline": zod.string().min(1),
   "requester": zod.string().min(1),
-  "status": zod.string().optional(),
   "notes": zod.string().optional()
 })
 
@@ -825,7 +822,6 @@ export const UpdateSampleControlResponse = zod.object({
   "responsibleName": zod.string().nullish(),
   "deadline": zod.string(),
   "requester": zod.string(),
-  "status": zod.string(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string()
 })

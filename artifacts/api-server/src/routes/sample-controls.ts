@@ -26,7 +26,6 @@ function scRow(
     responsibleName,
     deadline: row.deadline,
     requester: row.requester,
-    status: row.status,
     notes: row.notes ?? null,
     createdAt: row.createdAt.toISOString(),
   };
@@ -51,7 +50,6 @@ router.get("/sample-controls", requireExecutorOrGestor, async (req, res) => {
     scRow(sc, projectName, memberName ?? null)
   );
 
-  if (query.data.status) result = result.filter((r) => r.status === query.data.status);
   if (query.data.projectId) result = result.filter((r) => r.projectId === query.data.projectId);
 
   return res.json(result);
@@ -75,7 +73,6 @@ router.post("/sample-controls", requireExecutorOrGestor, async (req, res) => {
       responsibleId: body.data.responsibleId ?? null,
       deadline: body.data.deadline,
       requester: body.data.requester,
-      status: body.data.status ?? "pendente",
       notes: body.data.notes ?? null,
     })
     .returning();
@@ -110,7 +107,6 @@ router.patch("/sample-controls/:id", requireExecutorOrGestor, async (req, res) =
       ...(body.data.responsibleId !== undefined && { responsibleId: body.data.responsibleId }),
       ...(body.data.deadline !== undefined && { deadline: body.data.deadline }),
       ...(body.data.requester !== undefined && { requester: body.data.requester }),
-      ...(body.data.status !== undefined && { status: body.data.status }),
       ...(body.data.notes !== undefined && { notes: body.data.notes }),
     })
     .where(eq(sampleControlsTable.id, params.data.id))

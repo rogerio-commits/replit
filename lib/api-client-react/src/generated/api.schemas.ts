@@ -553,7 +553,6 @@ export interface SampleControl {
   responsibleName?: string | null;
   deadline: string;
   requester: string;
-  status: string;
   /** @nullable */
   notes?: string | null;
   createdAt: string;
@@ -568,7 +567,6 @@ export interface SampleControlInput {
   deadline: string;
   /** @minLength 1 */
   requester: string;
-  status?: string;
   notes?: string;
 }
 

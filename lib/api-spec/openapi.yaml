@@ -1647,7 +1647,7 @@ components:
 
     SampleControl:
       type: object
-      required: [id, projectId, projectName, samples, deadline, requester, status, createdAt]
+      required: [id, projectId, projectName, samples, deadline, requester, createdAt]
       properties:
         id:
           type: integer
@@ -1664,8 +1664,6 @@ components:
         deadline:
           type: string
         requester:
-          type: string
-        status:
           type: string
         notes:
           type: ["string", "null"]
@@ -1689,8 +1687,6 @@ components:
         requester:
           type: string
           minLength: 1
-        status:
-          type: string
         notes:
           type: string
 

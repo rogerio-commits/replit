@@ -13,7 +13,6 @@ export const sampleControlsTable = pgTable("sample_controls", {
   }),
   deadline: text("deadline").notNull(),
   requester: text("requester").notNull(),
-  status: text("status").notNull().default("pendente"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

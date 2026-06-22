@@ -15,6 +15,5 @@ export interface SampleControlInput {
   deadline: string;
   /** @minLength 1 */
   requester: string;
-  status?: string;
   notes?: string;
 }

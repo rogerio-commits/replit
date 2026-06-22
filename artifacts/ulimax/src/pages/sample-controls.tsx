@@ -19,7 +19,6 @@ import * as z from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -62,29 +61,11 @@ import {
   CalendarDays,
   Edit,
   Trash2,
-  Filter,
   User,
   Briefcase,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
-
-const STATUS_LABELS: Record<string, string> = {
-  pendente: "Pendente",
-  em_analise: "Em Análise",
-  aprovado: "Aprovado",
-  reprovado: "Reprovado",
-  concluido: "Concluído",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pendente: "bg-amber-100 text-amber-700 border-amber-200",
-  em_analise: "bg-blue-100 text-blue-700 border-blue-200",
-  aprovado: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  reprovado: "bg-red-100 text-red-700 border-red-200",
-  concluido: "bg-slate-100 text-slate-600 border-slate-200",
-};
 
 const formSchema = z.object({
   projectId: z.number({ required_error: "Projeto obrigatório" }),
@@ -92,7 +73,6 @@ const formSchema = z.object({
   responsibleId: z.number().optional(),
   deadline: z.string().min(1, "Prazo obrigatório"),
   requester: z.string().min(1, "Requisitante obrigatório"),
-  status: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -101,10 +81,8 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SampleControls() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const isGestor = useIsGestor();
 
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterProject, setFilterProject] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -124,7 +102,6 @@ export default function SampleControls() {
       samples: "",
       deadline: "",
       requester: "",
-      status: "pendente",
       notes: "",
     },
   });
@@ -135,14 +112,13 @@ export default function SampleControls() {
       item.samples.toLowerCase().includes(search.toLowerCase()) ||
       item.requester.toLowerCase().includes(search.toLowerCase()) ||
       item.projectName.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "all" || item.status === filterStatus;
     const matchProject = filterProject === "all" || String(item.projectId) === filterProject;
-    return matchSearch && matchStatus && matchProject;
+    return matchSearch && matchProject;
   });
 
   const openCreate = () => {
     setEditingId(null);
-    form.reset({ samples: "", deadline: "", requester: "", status: "pendente", notes: "" });
+    form.reset({ samples: "", deadline: "", requester: "", notes: "" });
     setIsDialogOpen(true);
   };
 
@@ -154,7 +130,6 @@ export default function SampleControls() {
       responsibleId: item.responsibleId ?? undefined,
       deadline: item.deadline,
       requester: item.requester,
-      status: item.status,
       notes: item.notes ?? "",
     });
     setIsDialogOpen(true);
@@ -171,7 +146,6 @@ export default function SampleControls() {
         responsibleId: values.responsibleId,
         deadline: values.deadline,
         requester: values.requester,
-        status: values.status ?? "pendente",
         notes: values.notes || undefined,
       };
 
@@ -236,20 +210,8 @@ export default function SampleControls() {
             className="pl-8"
           />
         </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[160px]">
-            <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            {Object.entries(STATUS_LABELS).map(([v, l]) => (
-              <SelectItem key={v} value={v}>{l}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={filterProject} onValueChange={setFilterProject}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[200px]">
             <Briefcase className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="Projeto" />
           </SelectTrigger>
@@ -260,26 +222,6 @@ export default function SampleControls() {
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {Object.entries(STATUS_LABELS).map(([status, label]) => {
-          const count = (items ?? []).filter((i) => i.status === status).length;
-          return (
-            <Card key={status} className="py-3">
-              <CardContent className="px-4 py-0">
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className={cn("text-2xl font-bold mt-0.5",
-                  status === "pendente" ? "text-amber-600" :
-                  status === "em_analise" ? "text-blue-600" :
-                  status === "aprovado" ? "text-emerald-600" :
-                  status === "reprovado" ? "text-red-600" : "text-slate-500"
-                )}>{count}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
       </div>
 
       {/* Table */}
@@ -311,7 +253,6 @@ export default function SampleControls() {
                     <th className="text-left px-4 py-3 font-medium">Requisitante</th>
                     <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Responsável</th>
                     <th className="text-left px-4 py-3 font-medium">Prazo</th>
-                    <th className="text-left px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -344,14 +285,6 @@ export default function SampleControls() {
                           <CalendarDays className="h-3 w-3 shrink-0" />
                           {formatDate(item.deadline)}
                         </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={cn("text-xs", STATUS_COLORS[item.status] ?? "")}
-                        >
-                          {STATUS_LABELS[item.status] ?? item.status}
-                        </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
@@ -466,57 +399,32 @@ export default function SampleControls() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="responsibleId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Responsável</FormLabel>
-                      <Select
-                        value={field.value ? String(field.value) : "none"}
-                        onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecionar" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">Nenhum</SelectItem>
-                          {(members ?? []).map((m) => (
-                            <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select value={field.value ?? "pendente"} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                            <SelectItem key={v} value={v}>{l}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="responsibleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Responsável</FormLabel>
+                    <Select
+                      value={field.value ? String(field.value) : "none"}
+                      onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecionar responsável" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum</SelectItem>
+                        {(members ?? []).map((m) => (
+                          <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -556,7 +464,10 @@ export default function SampleControls() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
