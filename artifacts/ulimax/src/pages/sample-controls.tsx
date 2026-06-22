@@ -19,6 +19,7 @@ import * as z from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -63,6 +64,8 @@ import {
   Trash2,
   User,
   Briefcase,
+  PackageCheck,
+  Truck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -74,6 +77,8 @@ const formSchema = z.object({
   deadline: z.string().min(1, "Prazo obrigatório"),
   requester: z.string().min(1, "Requisitante obrigatório"),
   notes: z.string().optional(),
+  ready: z.boolean().optional(),
+  delivered: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -87,6 +92,7 @@ export default function SampleControls() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const { data: items, isLoading } = useListSampleControls();
   const { data: projects } = useListProjects({});
@@ -103,6 +109,8 @@ export default function SampleControls() {
       deadline: "",
       requester: "",
       notes: "",
+      ready: false,
+      delivered: false,
     },
   });
 
@@ -116,9 +124,36 @@ export default function SampleControls() {
     return matchSearch && matchProject;
   });
 
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: getListSampleControlsQueryKey() });
+
+  const toggleField = async (item: SampleControl, field: "ready" | "delivered") => {
+    setTogglingId(item.id);
+    try {
+      await update.mutateAsync({
+        id: item.id,
+        data: {
+          projectId: item.projectId,
+          samples: item.samples,
+          deadline: item.deadline,
+          requester: item.requester,
+          responsibleId: item.responsibleId ?? undefined,
+          notes: item.notes ?? undefined,
+          ready: field === "ready" ? !item.ready : item.ready,
+          delivered: field === "delivered" ? !item.delivered : item.delivered,
+        },
+      });
+      invalidate();
+    } catch {
+      toast({ title: "Erro ao atualizar.", variant: "destructive" });
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const openCreate = () => {
     setEditingId(null);
-    form.reset({ samples: "", deadline: "", requester: "", notes: "" });
+    form.reset({ samples: "", deadline: "", requester: "", notes: "", ready: false, delivered: false });
     setIsDialogOpen(true);
   };
 
@@ -131,12 +166,11 @@ export default function SampleControls() {
       deadline: item.deadline,
       requester: item.requester,
       notes: item.notes ?? "",
+      ready: item.ready,
+      delivered: item.delivered,
     });
     setIsDialogOpen(true);
   };
-
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: getListSampleControlsQueryKey() });
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -147,6 +181,8 @@ export default function SampleControls() {
         deadline: values.deadline,
         requester: values.requester,
         notes: values.notes || undefined,
+        ready: values.ready ?? false,
+        delivered: values.delivered ?? false,
       };
 
       if (editingId) {
@@ -181,6 +217,9 @@ export default function SampleControls() {
     catch { return d; }
   };
 
+  const readyCount = (items ?? []).filter((i) => i.ready).length;
+  const deliveredCount = (items ?? []).filter((i) => i.delivered).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -197,6 +236,28 @@ export default function SampleControls() {
           <Plus className="h-4 w-4" />
           Nova Amostra
         </Button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="py-3">
+          <CardContent className="px-4 py-0 flex items-center gap-3">
+            <PackageCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Prontas</p>
+              <p className="text-2xl font-bold text-emerald-600">{readyCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="py-3">
+          <CardContent className="px-4 py-0 flex items-center gap-3">
+            <Truck className="h-5 w-5 text-blue-600 shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Entregues</p>
+              <p className="text-2xl font-bold text-blue-600">{deliveredCount}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -249,10 +310,22 @@ export default function SampleControls() {
                 <thead>
                   <tr className="border-b bg-muted/30 text-xs text-muted-foreground">
                     <th className="text-left px-4 py-3 font-medium">Amostras</th>
-                    <th className="text-left px-4 py-3 font-medium">Projeto</th>
-                    <th className="text-left px-4 py-3 font-medium">Requisitante</th>
+                    <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Projeto</th>
+                    <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Requisitante</th>
                     <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Responsável</th>
                     <th className="text-left px-4 py-3 font-medium">Prazo</th>
+                    <th className="text-center px-4 py-3 font-medium">
+                      <span className="flex items-center justify-center gap-1">
+                        <PackageCheck className="h-3.5 w-3.5 text-emerald-600" />
+                        Prontas
+                      </span>
+                    </th>
+                    <th className="text-center px-4 py-3 font-medium">
+                      <span className="flex items-center justify-center gap-1">
+                        <Truck className="h-3.5 w-3.5 text-blue-600" />
+                        Entregues
+                      </span>
+                    </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -260,18 +333,21 @@ export default function SampleControls() {
                   {filtered.map((item) => (
                     <tr
                       key={item.id}
-                      className="border-b last:border-0 hover:bg-muted/20 transition-colors"
+                      className={cn(
+                        "border-b last:border-0 hover:bg-muted/20 transition-colors",
+                        item.delivered && "opacity-60"
+                      )}
                     >
-                      <td className="px-4 py-3 font-medium max-w-[180px]">
+                      <td className="px-4 py-3 font-medium max-w-[160px]">
                         <span className="truncate block" title={item.samples}>{item.samples}</span>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                         <span className="flex items-center gap-1">
                           <Briefcase className="h-3 w-3 shrink-0" />
-                          <span className="truncate max-w-[140px]">{item.projectName}</span>
+                          <span className="truncate max-w-[120px]">{item.projectName}</span>
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3 shrink-0" />
                           {item.requester}
@@ -285,6 +361,22 @@ export default function SampleControls() {
                           <CalendarDays className="h-3 w-3 shrink-0" />
                           {formatDate(item.deadline)}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Checkbox
+                          checked={item.ready}
+                          disabled={togglingId === item.id}
+                          onCheckedChange={() => toggleField(item, "ready")}
+                          className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Checkbox
+                          checked={item.delivered}
+                          disabled={togglingId === item.id}
+                          onCheckedChange={() => toggleField(item, "delivered")}
+                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
@@ -439,6 +531,47 @@ export default function SampleControls() {
                   </FormItem>
                 )}
               />
+
+              <div className="flex gap-6">
+                <FormField
+                  control={form.control}
+                  name="ready"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer flex items-center gap-1">
+                        <PackageCheck className="h-4 w-4 text-emerald-600" />
+                        Prontas
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="delivered"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer flex items-center gap-1">
+                        <Truck className="h-4 w-4 text-blue-600" />
+                        Entregues
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <DialogFooter>
                 <DialogClose asChild>

@@ -769,6 +769,8 @@ export const ListSampleControlsResponseItem = zod.object({
   "deadline": zod.string(),
   "requester": zod.string(),
   "notes": zod.string().nullish(),
+  "ready": zod.boolean().optional(),
+  "delivered": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 export const ListSampleControlsResponse = zod.array(ListSampleControlsResponseItem)
@@ -788,7 +790,9 @@ export const CreateSampleControlBody = zod.object({
   "responsibleId": zod.number().optional(),
   "deadline": zod.string().min(1),
   "requester": zod.string().min(1),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "ready": zod.boolean().optional(),
+  "delivered": zod.boolean().optional()
 })
 
 
@@ -810,7 +814,9 @@ export const UpdateSampleControlBody = zod.object({
   "responsibleId": zod.number().optional(),
   "deadline": zod.string().min(1),
   "requester": zod.string().min(1),
-  "notes": zod.string().optional()
+  "notes": zod.string().optional(),
+  "ready": zod.boolean().optional(),
+  "delivered": zod.boolean().optional()
 })
 
 export const UpdateSampleControlResponse = zod.object({
@@ -823,6 +829,8 @@ export const UpdateSampleControlResponse = zod.object({
   "deadline": zod.string(),
   "requester": zod.string(),
   "notes": zod.string().nullish(),
+  "ready": zod.boolean().optional(),
+  "delivered": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 

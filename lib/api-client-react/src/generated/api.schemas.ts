@@ -555,6 +555,8 @@ export interface SampleControl {
   requester: string;
   /** @nullable */
   notes?: string | null;
+  ready?: boolean;
+  delivered?: boolean;
   createdAt: string;
 }
 
@@ -568,6 +570,8 @@ export interface SampleControlInput {
   /** @minLength 1 */
   requester: string;
   notes?: string;
+  ready?: boolean;
+  delivered?: boolean;
 }
 
 export interface SiteVisit {

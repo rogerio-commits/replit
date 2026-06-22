@@ -19,5 +19,7 @@ export interface SampleControl {
   requester: string;
   /** @nullable */
   notes?: string | null;
+  ready?: boolean;
+  delivered?: boolean;
   createdAt: string;
 }

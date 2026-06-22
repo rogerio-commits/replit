@@ -27,6 +27,8 @@ function scRow(
     deadline: row.deadline,
     requester: row.requester,
     notes: row.notes ?? null,
+    ready: row.ready,
+    delivered: row.delivered,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -74,6 +76,8 @@ router.post("/sample-controls", requireExecutorOrGestor, async (req, res) => {
       deadline: body.data.deadline,
       requester: body.data.requester,
       notes: body.data.notes ?? null,
+      ready: body.data.ready ?? false,
+      delivered: body.data.delivered ?? false,
     })
     .returning();
 
@@ -108,6 +112,8 @@ router.patch("/sample-controls/:id", requireExecutorOrGestor, async (req, res) =
       ...(body.data.deadline !== undefined && { deadline: body.data.deadline }),
       ...(body.data.requester !== undefined && { requester: body.data.requester }),
       ...(body.data.notes !== undefined && { notes: body.data.notes }),
+      ...(body.data.ready !== undefined && { ready: body.data.ready }),
+      ...(body.data.delivered !== undefined && { delivered: body.data.delivered }),
     })
     .where(eq(sampleControlsTable.id, params.data.id))
     .returning();

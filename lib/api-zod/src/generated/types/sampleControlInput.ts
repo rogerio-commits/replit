@@ -16,4 +16,6 @@ export interface SampleControlInput {
   /** @minLength 1 */
   requester: string;
   notes?: string;
+  ready?: boolean;
+  delivered?: boolean;
 }
