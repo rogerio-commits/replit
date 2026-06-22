@@ -25,6 +25,8 @@ import {
   max,
   min,
   isSameDay,
+  getISOWeek,
+  startOfWeek,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -77,19 +79,20 @@ import { useToast } from "@/hooks/use-toast";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const DAY_W      = 38;   // px per day column
-const BAR_H      = 26;   // px event bar height
-const BAR_GAP    = 3;    // px between stacked bars
-const ROW_PAD    = 6;    // px top/bottom padding per row
-const LEFT_W     = 192;  // px left column width (w-48)
+const DAY_W      = 44;   // px per day column
+const BAR_H      = 28;   // px event bar height
+const BAR_GAP    = 4;    // px between stacked bars
+const ROW_PAD    = 8;    // px top/bottom padding per row
+const LEFT_W     = 200;  // px left column width
+const HEADER_H   = 56;   // px day header height
 const NO_TEAM    = "Sem equipe";
 
 const COLORS = [
-  { id: "orange", label: "Laranja", bg: "bg-orange-500", hex: "#f97316", text: "text-orange-50" },
-  { id: "blue",   label: "Azul",    bg: "bg-blue-500",   hex: "#3b82f6", text: "text-blue-50" },
-  { id: "green",  label: "Verde",   bg: "bg-green-600",  hex: "#16a34a", text: "text-green-50" },
-  { id: "purple", label: "Roxo",    bg: "bg-purple-500", hex: "#a855f7", text: "text-purple-50" },
-  { id: "red",    label: "Vermelho",bg: "bg-red-500",    hex: "#ef4444", text: "text-red-50" },
+  { id: "orange", label: "Laranja", bg: "bg-orange-500", hex: "#f97316", text: "text-orange-50", light: "#fff7ed" },
+  { id: "blue",   label: "Azul",    bg: "bg-blue-500",   hex: "#3b82f6", text: "text-blue-50",   light: "#eff6ff" },
+  { id: "green",  label: "Verde",   bg: "bg-green-600",  hex: "#16a34a", text: "text-green-50",  light: "#f0fdf4" },
+  { id: "purple", label: "Roxo",    bg: "bg-purple-500", hex: "#a855f7", text: "text-purple-50", light: "#faf5ff" },
+  { id: "red",    label: "Vermelho",bg: "bg-red-500",    hex: "#ef4444", text: "text-red-50",    light: "#fef2f2" },
 ];
 
 function colorHex(id: string) {
@@ -103,10 +106,6 @@ function colorText(id: string) {
 
 function isoDate(d: Date) { return format(d, "yyyy-MM-dd"); }
 
-/**
- * Pack events into sub-rows so overlapping bars don't sit on top of each other.
- * Returns map of eventId → subRowIndex.
- */
 function packSubRows(events: InstallationEvent[]): Map<number, number> {
   const sorted = [...events].sort((a, b) => a.startDate.localeCompare(b.startDate));
   const result  = new Map<number, number>();
@@ -338,6 +337,7 @@ function GanttRow({
   onEditEvent,
   onDeleteEvent,
   onRenameTeam,
+  dayEventCount,
 }: {
   team: string;
   events: InstallationEvent[];
@@ -349,6 +349,7 @@ function GanttRow({
   onEditEvent: (e: InstallationEvent) => void;
   onDeleteEvent: (e: InstallationEvent) => void;
   onRenameTeam: (oldName: string, newName: string) => void;
+  dayEventCount: Map<string, number>;
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue]     = useState(team);
@@ -371,7 +372,22 @@ function GanttRow({
   const numSubRows = Math.max(1, new Set(subRows.values()).size);
   const rowH = numSubRows * (BAR_H + BAR_GAP) + ROW_PAD * 2;
 
-  // Compute bar position for an event within the visible month range
+  // Derive team accent color from the most common color in its events
+  const teamAccentHex = useMemo(() => {
+    if (events.length === 0) return "#d5d8d8";
+    const freq = new Map<string, number>();
+    for (const ev of events) {
+      const c = ev.color ?? "orange";
+      freq.set(c, (freq.get(c) ?? 0) + 1);
+    }
+    let best = "orange";
+    let max = 0;
+    freq.forEach((count, color) => { if (count > max) { max = count; best = color; } });
+    return colorHex(best);
+  }, [events]);
+
+  const today = new Date();
+
   function barStyle(event: InstallationEvent): React.CSSProperties | null {
     const evStart = parseISO(event.startDate);
     const evEnd   = event.endDate ? parseISO(event.endDate) : evStart;
@@ -386,33 +402,52 @@ function GanttRow({
     const isAssistencia = event.eventType === "assistencia";
     return {
       position: "absolute",
-      left:  startIdx * DAY_W + 2,
-      width: duration * DAY_W - 4,
+      left:  startIdx * DAY_W + 3,
+      width: duration * DAY_W - 6,
       top:   ROW_PAD + subRow * (BAR_H + BAR_GAP),
       height: BAR_H,
       backgroundColor: colorHex(event.color),
       backgroundImage: isAssistencia
-        ? "repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.22) 5px, rgba(255,255,255,0.22) 10px)"
+        ? "repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.18) 5px, rgba(255,255,255,0.18) 10px)"
         : undefined,
-      outline: isAssistencia ? "2px dashed rgba(255,255,255,0.5)" : undefined,
+      outline: isAssistencia ? "2px dashed rgba(255,255,255,0.45)" : undefined,
       outlineOffset: isAssistencia ? "-2px" : undefined,
-      borderRadius: 6,
-      // Visual hint for overflow
-      borderTopLeftRadius:    evStart < monthStart ? 0 : 6,
-      borderBottomLeftRadius: evStart < monthStart ? 0 : 6,
-      borderTopRightRadius:   evEnd > monthEnd ? 0 : 6,
-      borderBottomRightRadius:evEnd > monthEnd ? 0 : 6,
+      borderRadius: 7,
+      borderTopLeftRadius:    evStart < monthStart ? 0 : 7,
+      borderBottomLeftRadius: evStart < monthStart ? 0 : 7,
+      borderTopRightRadius:   evEnd > monthEnd ? 0 : 7,
+      borderBottomRightRadius:evEnd > monthEnd ? 0 : 7,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.18), 0 1px 2px rgba(0,0,0,0.12)",
     };
   }
 
+  // Progress overlay: how much of the bar period is "done" based on today
+  function progressWidth(event: InstallationEvent, style: React.CSSProperties): number | null {
+    const evStart = parseISO(event.startDate);
+    const evEnd   = event.endDate ? parseISO(event.endDate) : evStart;
+    if (today < evStart || today > evEnd) return null;
+    const total    = differenceInDays(evEnd, evStart) + 1;
+    const elapsed  = differenceInDays(today, evStart) + 1;
+    const pct      = Math.min(1, elapsed / total);
+    const w        = (style.width as number) ?? 0;
+    return w * pct;
+  }
+
+  const maxDayCount = Math.max(1, ...Array.from(dayEventCount.values()));
+
   return (
-    <div className={cn("flex", !isLast && "border-b")}>
-      {/* Left: team name (click to rename) */}
+    <div className={cn("flex", !isLast && "border-b border-border/60")}>
+      {/* Left: team name + color accent */}
       <div
-        className="sticky left-0 z-10 bg-card border-r flex items-center px-3 shrink-0 group/team"
+        className="sticky left-0 z-10 bg-card border-r flex items-stretch shrink-0"
         style={{ width: LEFT_W, minHeight: rowH }}
       >
-        <div className="flex items-center gap-1.5 min-w-0 w-full">
+        {/* Color accent stripe */}
+        <div
+          className="w-1 shrink-0 rounded-r-sm self-stretch my-1"
+          style={{ backgroundColor: teamAccentHex, opacity: 0.85 }}
+        />
+        <div className="flex items-center px-3 gap-1.5 min-w-0 w-full group/team">
           <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           {editingName ? (
             <input
@@ -456,20 +491,36 @@ function GanttRow({
 
       {/* Right: timeline cells + event bars */}
       <div className="relative flex-1" style={{ width: days.length * DAY_W, height: rowH }}>
-        {/* Day background cells (click to create) */}
-        {days.map((day) => (
-          <div
-            key={isoDate(day)}
-            onClick={() => onDayClick(team, isoDate(day))}
-            className={cn(
-              "absolute top-0 bottom-0 border-r border-border/50 cursor-pointer transition-colors",
-              "hover:bg-primary/5",
-              isWeekend(day) && "bg-muted/30",
-              isToday(day) && "bg-blue-50 dark:bg-blue-950/20"
-            )}
-            style={{ left: differenceInDays(day, monthStart) * DAY_W, width: DAY_W }}
-          />
-        ))}
+        {/* Day background cells */}
+        {days.map((day) => {
+          const dateStr = isoDate(day);
+          const count   = dayEventCount.get(dateStr) ?? 0;
+          const density = count / maxDayCount;
+          return (
+            <div
+              key={dateStr}
+              onClick={() => onDayClick(team, dateStr)}
+              className={cn(
+                "absolute top-0 bottom-0 border-r cursor-pointer transition-colors",
+                isWeekend(day)
+                  ? "border-border/40 bg-muted/40"
+                  : "border-border/30 bg-transparent",
+                isToday(day) && "bg-blue-50/80",
+              )}
+              style={{
+                left: differenceInDays(day, monthStart) * DAY_W,
+                width: DAY_W,
+                // Workload density tint (only on non-weekend, non-today cells)
+                ...(!isWeekend(day) && !isToday(day) && count > 0
+                  ? { backgroundColor: `rgba(59,130,246,${density * 0.07})` }
+                  : {}),
+              }}
+            >
+              {/* Hover highlight */}
+              <div className="absolute inset-0 hover:bg-primary/5 transition-colors" />
+            </div>
+          );
+        })}
 
         {/* Today marker line */}
         {(() => {
@@ -478,8 +529,8 @@ function GanttRow({
             const offset = differenceInDays(todayDate, monthStart) * DAY_W + DAY_W / 2;
             return (
               <div
-                className="absolute top-0 bottom-0 w-0.5 bg-blue-500/60 z-10 pointer-events-none"
-                style={{ left: offset }}
+                className="absolute top-0 bottom-0 w-0.5 z-10 pointer-events-none"
+                style={{ left: offset, backgroundColor: "rgba(59,130,246,0.5)" }}
               />
             );
           }
@@ -494,6 +545,7 @@ function GanttRow({
           const evEnd   = event.endDate ? parseISO(event.endDate) : evStart;
           const overflowLeft  = evStart < monthStart;
           const overflowRight = evEnd > monthEnd;
+          const progW    = progressWidth(event, style);
 
           return (
             <TooltipProvider key={event.id} delayDuration={300}>
@@ -504,18 +556,29 @@ function GanttRow({
                     onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
                     className={cn(
                       "group flex items-center px-2 cursor-pointer select-none overflow-hidden",
-                      "z-20 shadow-sm hover:brightness-110 transition-all",
+                      "z-20 hover:brightness-110 transition-all",
                       colorText(event.color)
                     )}
                   >
-                    {overflowLeft && <span className="mr-1 text-[10px] opacity-70">◂</span>}
+                    {/* Progress overlay (semi-transparent darker strip) */}
+                    {progW !== null && (
+                      <div
+                        className="absolute top-0 left-0 bottom-0 pointer-events-none rounded-l-[7px]"
+                        style={{
+                          width: progW,
+                          backgroundColor: "rgba(0,0,0,0.18)",
+                        }}
+                      />
+                    )}
+
+                    {overflowLeft && <span className="mr-1 text-[10px] opacity-70 relative z-10">◂</span>}
                     {event.eventType === "assistencia"
-                      ? <Wrench className="h-3 w-3 mr-1 shrink-0 opacity-90" />
-                      : <HardHat className="h-3 w-3 mr-1 shrink-0 opacity-90" />}
-                    <span className="text-[11px] font-semibold truncate flex-1">{event.title}</span>
-                    {overflowRight && <span className="ml-1 text-[10px] opacity-70">▸</span>}
+                      ? <Wrench className="h-3 w-3 mr-1 shrink-0 opacity-90 relative z-10" />
+                      : <HardHat className="h-3 w-3 mr-1 shrink-0 opacity-90 relative z-10" />}
+                    <span className="text-[11px] font-semibold truncate flex-1 relative z-10">{event.title}</span>
+                    {overflowRight && <span className="ml-1 text-[10px] opacity-70 relative z-10">▸</span>}
                     {/* Hover actions */}
-                    <span className="hidden group-hover:flex items-center gap-0.5 shrink-0 ml-1">
+                    <span className="hidden group-hover:flex items-center gap-0.5 shrink-0 ml-1 relative z-10">
                       <button
                         onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
                         className="p-0.5 rounded hover:bg-white/20"
@@ -536,12 +599,19 @@ function GanttRow({
                   <p className="text-xs text-muted-foreground">
                     {format(evStart, "d MMM", { locale: ptBR })}
                     {!isSameDay(evStart, evEnd) && <> — {format(evEnd, "d MMM", { locale: ptBR })}</>}
+                    {" · "}
+                    {differenceInDays(evEnd, evStart) + 1} dia(s)
                   </p>
                   <p className="text-xs mt-0.5">
                     {event.eventType === "assistencia" ? "🛠️ Assistência" : "🔧 Instalação"}
                   </p>
                   {event.teamDescription && <p className="text-xs mt-0.5">{event.teamDescription}</p>}
                   {event.notes && <p className="text-xs mt-1 opacity-80">{event.notes}</p>}
+                  {progW !== null && (
+                    <p className="text-xs mt-1 font-medium text-blue-400">
+                      Em andamento
+                    </p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -593,23 +663,20 @@ export default function Calendario() {
   const days       = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const totalW     = days.length * DAY_W;
 
-  // Group events by team — events that span into this month are included
+  // Group events by team
   const teamMap = useMemo(() => {
     const map = new Map<string, InstallationEvent[]>();
     for (const ev of events) {
       const evEnd = ev.endDate ?? ev.startDate;
-      // Include if event overlaps this month
       if (ev.startDate > isoDate(monthEnd) || evEnd < isoDate(monthStart)) continue;
       const key = ev.teamDescription?.trim() || NO_TEAM;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(ev);
     }
-    // If no teams at all, add placeholder row
     if (map.size === 0) map.set(NO_TEAM, []);
     return map;
   }, [events, monthStart, monthEnd]);
 
-  // Sort teams: named teams first, NO_TEAM last
   const teamEntries = useMemo(() => {
     const entries = [...teamMap.entries()];
     return entries.sort(([a], [b]) => {
@@ -618,6 +685,48 @@ export default function Calendario() {
       return a.localeCompare(b, "pt-BR");
     });
   }, [teamMap]);
+
+  // Per-day event count (all events overlapping that day, across all teams)
+  const dayEventCount = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const ev of events) {
+      const evStart = parseISO(ev.startDate);
+      const evEnd   = ev.endDate ? parseISO(ev.endDate) : evStart;
+      const start   = max([evStart, monthStart]);
+      const end     = min([evEnd, monthEnd]);
+      if (start > end) continue;
+      eachDayOfInterval({ start, end }).forEach((d) => {
+        const k = isoDate(d);
+        map.set(k, (map.get(k) ?? 0) + 1);
+      });
+    }
+    return map;
+  }, [events, monthStart, monthEnd]);
+
+  // Summary stats for this month
+  const monthStats = useMemo(() => {
+    const monthStr = format(currentMonth, "yyyy-MM");
+    const thisMonth = events.filter((ev) => ev.startDate.startsWith(monthStr) || (ev.endDate ?? ev.startDate).startsWith(monthStr));
+    return {
+      installs:    thisMonth.filter((e) => e.eventType !== "assistencia").length,
+      assistencias: thisMonth.filter((e) => e.eventType === "assistencia").length,
+      teams:        new Set(thisMonth.map((e) => e.teamDescription?.trim() || NO_TEAM)).size,
+    };
+  }, [events, currentMonth]);
+
+  // Week boundaries: first day of each ISO week visible in this month
+  const weekBoundaries = useMemo(() => {
+    const seenWeeks = new Set<number>();
+    const result: { day: Date; weekNum: number }[] = [];
+    for (const day of days) {
+      const wn = getISOWeek(day);
+      if (!seenWeeks.has(wn)) {
+        seenWeeks.add(wn);
+        result.push({ day, weekNum: wn });
+      }
+    }
+    return result;
+  }, [days]);
 
   function openCreate(team: string, date: string) {
     setEditingEvent(null);
@@ -653,29 +762,58 @@ export default function Calendario() {
   return (
     <div className="flex flex-col h-full gap-0 overflow-hidden">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
-        <div className="flex items-center gap-3">
-          <CalendarRange className="h-5 w-5 text-muted-foreground" />
-          <div>
-            <h1 className="text-xl font-bold tracking-tight leading-tight">Calendário de Instalações</h1>
-            <p className="text-xs text-muted-foreground">Visão de equipes e obras no tempo</p>
+      <div className="flex items-center justify-between px-6 py-4 border-b shrink-0 bg-card">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <CalendarRange className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight leading-tight">Calendário de Instalações</h1>
+              <p className="text-xs text-muted-foreground">Visão de equipes e obras no tempo</p>
+            </div>
           </div>
+
+          {/* Summary chips */}
+          {!isLoading && events.length > 0 && (
+            <div className="flex items-center gap-2 ml-2">
+              {monthStats.installs > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/8 text-primary text-xs font-medium">
+                  <HardHat className="h-3 w-3" />
+                  {monthStats.installs} instalação{monthStats.installs !== 1 ? "ões" : ""}
+                </span>
+              )}
+              {monthStats.assistencias > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-xs font-medium">
+                  <Wrench className="h-3 w-3" />
+                  {monthStats.assistencias} assistência{monthStats.assistencias !== 1 ? "s" : ""}
+                </span>
+              )}
+              {monthStats.teams > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+                  <Users className="h-3 w-3" />
+                  {monthStats.teams} equipe{monthStats.teams !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+          )}
         </div>
+
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+          <div className="flex items-center gap-1 bg-muted/60 rounded-lg px-1 py-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="min-w-[130px] text-center text-sm font-semibold capitalize">{monthLabel}</span>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="ghost" size="sm" className="h-8" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
-          <Button variant="outline" size="sm" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
             <Users className="mr-1.5 h-4 w-4" /> Nova Equipe
           </Button>
-          <Button size="sm" onClick={() => openCreate("", isoDate(new Date()))}>
+          <Button size="sm" className="h-8" onClick={() => openCreate("", isoDate(new Date()))}>
             <Plus className="mr-1.5 h-4 w-4" /> Novo Evento
           </Button>
         </div>
@@ -690,40 +828,99 @@ export default function Calendario() {
         <div ref={scrollRef} className="flex-1 overflow-auto">
           <div style={{ minWidth: LEFT_W + totalW }}>
 
-            {/* Day header */}
-            <div className="flex sticky top-0 z-30 bg-background border-b">
-              {/* Left spacer */}
-              <div
-                className="sticky left-0 z-30 bg-background border-r shrink-0 flex items-center px-3"
-                style={{ width: LEFT_W, height: 40 }}
-              >
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Equipe</span>
-              </div>
-              {/* Day columns */}
-              {days.map((day) => (
-                <div
-                  key={isoDate(day)}
-                  className={cn(
-                    "flex flex-col items-center justify-center border-r border-border/50 shrink-0",
-                    isWeekend(day) && "bg-muted/30",
-                    isToday(day) && "bg-blue-50 dark:bg-blue-950/20"
-                  )}
-                  style={{ width: DAY_W, height: 40 }}
-                >
-                  <span className={cn(
-                    "text-[10px] font-medium leading-none",
-                    isToday(day) ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"
-                  )}>
-                    {format(day, "EEE", { locale: ptBR }).slice(0, 3)}
-                  </span>
-                  <span className={cn(
-                    "text-xs font-semibold mt-0.5",
-                    isToday(day) ? "bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[11px]" : ""
-                  )}>
-                    {format(day, "d")}
-                  </span>
+            {/* Day header — two rows: week labels + day numbers */}
+            <div className="sticky top-0 z-30 bg-card border-b shadow-sm">
+              {/* Week row */}
+              <div className="flex" style={{ height: 20 }}>
+                <div className="sticky left-0 z-30 bg-card border-r shrink-0" style={{ width: LEFT_W }} />
+                <div className="relative flex-1" style={{ width: totalW }}>
+                  {weekBoundaries.map(({ day, weekNum }) => {
+                    const offset = differenceInDays(day, monthStart) * DAY_W;
+                    return (
+                      <div
+                        key={weekNum}
+                        className="absolute top-0 bottom-0 flex items-center"
+                        style={{ left: offset, paddingLeft: 4 }}
+                      >
+                        <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                          Sem {weekNum}
+                        </span>
+                        {/* week separator line */}
+                        <div
+                          className="absolute left-0 top-0 bottom-0 w-px bg-border/80"
+                          style={{ pointerEvents: "none" }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+
+              {/* Day row */}
+              <div className="flex" style={{ height: HEADER_H - 20 }}>
+                {/* Left spacer */}
+                <div
+                  className="sticky left-0 z-30 bg-card border-r shrink-0 flex items-center px-3"
+                  style={{ width: LEFT_W }}
+                >
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Equipe</span>
+                </div>
+                {/* Day columns */}
+                {days.map((day) => {
+                  const dateStr = isoDate(day);
+                  const count   = dayEventCount.get(dateStr) ?? 0;
+                  const isFirst = differenceInDays(day, startOfWeek(day, { weekStartsOn: 1 })) === 0;
+                  return (
+                    <div
+                      key={dateStr}
+                      className={cn(
+                        "flex flex-col items-center justify-center border-r shrink-0 relative",
+                        isWeekend(day) ? "bg-muted/40 border-border/40" : "bg-card border-border/30",
+                        isToday(day) && "bg-blue-50",
+                        isFirst && !isToday(day) && "border-l border-l-border/70"
+                      )}
+                      style={{ width: DAY_W }}
+                    >
+                      <span className={cn(
+                        "text-[9px] font-semibold uppercase leading-none mb-1",
+                        isToday(day) ? "text-blue-600" : isWeekend(day) ? "text-muted-foreground/60" : "text-muted-foreground/80"
+                      )}>
+                        {format(day, "EEE", { locale: ptBR }).slice(0, 3)}
+                      </span>
+                      <span className={cn(
+                        "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
+                        isToday(day)
+                          ? "bg-blue-500 text-white"
+                          : isWeekend(day)
+                            ? "text-muted-foreground/70"
+                            : "text-foreground"
+                      )}>
+                        {format(day, "d")}
+                      </span>
+                      {/* Workload dot */}
+                      {count > 0 && (
+                        <div
+                          className="absolute bottom-1 w-1 h-1 rounded-full"
+                          style={{
+                            backgroundColor: count >= 3
+                              ? "#ef4444"
+                              : count === 2
+                                ? "#f97316"
+                                : "#3b82f6",
+                            opacity: 0.7,
+                          }}
+                        />
+                      )}
+                      {/* Today "Hoje" label */}
+                      {isToday(day) && (
+                        <span className="absolute -top-[14px] left-1/2 -translate-x-1/2 text-[8px] font-bold text-blue-500 uppercase tracking-wider whitespace-nowrap">
+                          Hoje
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Team rows */}
@@ -740,17 +937,59 @@ export default function Calendario() {
                 onEditEvent={openEdit}
                 onDeleteEvent={(e) => setDeleteTarget(e)}
                 onRenameTeam={handleRenameTeam}
+                dayEventCount={dayEventCount}
               />
             ))}
 
             {/* Empty state */}
             {events.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-                <CalendarRange className="h-10 w-10 opacity-20" />
-                <p className="text-sm">Nenhum evento cadastrado</p>
-                <p className="text-xs">Clique em "+ Novo Evento" para começar</p>
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+                <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center">
+                  <CalendarRange className="h-8 w-8 opacity-30" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium">Nenhum evento cadastrado</p>
+                  <p className="text-xs text-muted-foreground mt-1">Clique em "+ Novo Evento" para começar</p>
+                </div>
               </div>
             )}
+
+            {/* Legend */}
+            <div className="sticky bottom-0 left-0 flex items-center gap-4 px-4 py-2 bg-card/95 backdrop-blur border-t text-[10px] text-muted-foreground">
+              <span className="font-semibold uppercase tracking-wider mr-1">Legenda:</span>
+              <span className="flex items-center gap-1.5">
+                <HardHat className="h-3 w-3" /> Instalação
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Wrench className="h-3 w-3" />
+                <span
+                  className="inline-block w-8 h-2.5 rounded"
+                  style={{
+                    backgroundImage: "repeating-linear-gradient(-45deg, #6b7280, #6b7280 2px, transparent 2px, transparent 5px)",
+                    border: "1px dashed #9ca3af",
+                  }}
+                />
+                Assistência
+              </span>
+              <span className="flex items-center gap-1.5">
+                <div className="h-2.5 w-2.5 rounded-sm bg-muted/60 border border-border/60" /> Fim de semana
+              </span>
+              <span className="flex items-center gap-1.5">
+                <div className="h-0.5 w-6 bg-blue-500/50" /> Hoje
+              </span>
+              <span className="flex items-center gap-2 ml-1">
+                Carga: 
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500/70" /> 1
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500/70" /> 2
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500/70" /> 3+
+                </span>
+              </span>
+            </div>
           </div>
         </div>
       )}
