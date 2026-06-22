@@ -633,7 +633,9 @@ export default function Calendario() {
   const [deleteTarget, setDeleteTarget] = useState<InstallationEvent | null>(null);
   const [newTeamOpen, setNewTeamOpen]   = useState(false);
   const [newTeamName, setNewTeamName]   = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef             = useRef<HTMLDivElement>(null);
+  const programmaticScroll    = useRef(false);   // true while we set scrollLeft ourselves
+  const pendingScrollTarget   = useRef<"today" | "start" | "end">("today");
 
   const { toast }      = useToast();
   const qc             = useQueryClient();
@@ -768,21 +770,63 @@ export default function Calendario() {
 
   const monthLabel = format(currentMonth, "MMMM yyyy", { locale: ptBR });
 
-  // Scroll to today on mount and whenever the month changes
+  // Scroll position after month changes
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
-    const today = new Date();
-    if (today >= monthStart && today <= monthEnd) {
-      const todayOffset = differenceInDays(today, monthStart) * DAY_W;
-      const containerW  = container.clientWidth;
-      // Center today in the visible area, accounting for the left column
-      const target = todayOffset - (containerW - LEFT_W) / 2 + DAY_W / 2;
-      container.scrollLeft = Math.max(0, target);
-    } else {
+
+    const target = pendingScrollTarget.current;
+    pendingScrollTarget.current = "today"; // reset for next navigation
+
+    programmaticScroll.current = true;
+
+    if (target === "end") {
+      container.scrollLeft = container.scrollWidth;
+    } else if (target === "start") {
       container.scrollLeft = 0;
+    } else {
+      // "today" — center the today column if visible in this month
+      const today = new Date();
+      if (today >= monthStart && today <= monthEnd) {
+        const todayOffset = differenceInDays(today, monthStart) * DAY_W;
+        const containerW  = container.clientWidth;
+        const scrollTo    = todayOffset - (containerW - LEFT_W) / 2 + DAY_W / 2;
+        container.scrollLeft = Math.max(0, scrollTo);
+      } else {
+        container.scrollLeft = 0;
+      }
     }
+
+    // Allow the scroll event listener to fire again after a short pause
+    const timer = setTimeout(() => { programmaticScroll.current = false; }, 150);
+    return () => clearTimeout(timer);
   }, [currentMonth, monthStart, monthEnd]);
+
+  // Change month when the user scrolls past either edge
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (programmaticScroll.current) return;
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+
+      if (scrollLeft + clientWidth >= scrollWidth - 2) {
+        // Reached the right edge → advance month, start from the left
+        programmaticScroll.current = true;
+        pendingScrollTarget.current = "start";
+        setCurrentMonth((m) => addMonths(m, 1));
+      } else if (scrollLeft <= 0) {
+        // Reached the left edge → go back a month, start from the right
+        programmaticScroll.current = true;
+        pendingScrollTarget.current = "end";
+        setCurrentMonth((m) => subMonths(m, 1));
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div className="flex flex-col h-full gap-0 overflow-hidden">
