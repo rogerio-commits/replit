@@ -1,14 +1,13 @@
 import { Link } from "wouter";
-import { HardHat, LayoutDashboard, Kanban, Users, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Kanban, Users, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Landing() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <header className="border-b border-border/50 bg-card px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary tracking-tight">
-          <HardHat className="h-6 w-6" />
-          <span>ULIMAX</span>
+        <div className="flex items-center">
+          <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-7" />
         </div>
         <div className="flex items-center gap-3">
           <Link href="/sign-in">
@@ -23,7 +22,6 @@ export default function Landing() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-            <HardHat className="h-4 w-4" />
             Sistema de Controle de Projetos
           </div>
 

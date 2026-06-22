@@ -5,7 +5,6 @@ import {
   Briefcase, 
   CheckSquare, 
   Users,
-  HardHat,
   Columns3,
   CalendarDays,
   LogOut,
@@ -70,9 +69,8 @@ export function Layout({ children }: LayoutProps) {
         {/* Sidebar */}
         <aside className="w-64 border-r bg-card flex flex-col hidden md:flex shrink-0">
           <div className="h-16 flex items-center px-6 border-b border-border/50">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary tracking-tight">
-              <HardHat className="h-6 w-6" />
-              <span>ULIMAX</span>
+            <Link href="/" className="flex items-center">
+              <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6 brightness-0 invert" />
             </Link>
           </div>
           
@@ -147,9 +145,8 @@ export function Layout({ children }: LayoutProps) {
         {/* Main Content */}
         <main className="flex-1 flex flex-col h-full overflow-hidden">
           <header className="h-16 border-b bg-card flex items-center justify-between px-6 shrink-0 md:hidden">
-            <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary tracking-tight">
-              <HardHat className="h-6 w-6" />
-              <span>ULIMAX</span>
+            <Link href="/" className="flex items-center">
+              <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6" />
             </Link>
             <button
               onClick={() => signOut({ redirectUrl: basePath || "/" })}
