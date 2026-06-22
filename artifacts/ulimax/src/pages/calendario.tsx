@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   useListInstallationEvents,
   useCreateInstallationEvent,
@@ -758,6 +758,22 @@ export default function Calendario() {
   }
 
   const monthLabel = format(currentMonth, "MMMM yyyy", { locale: ptBR });
+
+  // Scroll to today on mount and whenever the month changes
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const today = new Date();
+    if (today >= monthStart && today <= monthEnd) {
+      const todayOffset = differenceInDays(today, monthStart) * DAY_W;
+      const containerW  = container.clientWidth;
+      // Center today in the visible area, accounting for the left column
+      const target = todayOffset - (containerW - LEFT_W) / 2 + DAY_W / 2;
+      container.scrollLeft = Math.max(0, target);
+    } else {
+      container.scrollLeft = 0;
+    }
+  }, [currentMonth, monthStart, monthEnd]);
 
   return (
     <div className="flex flex-col h-full gap-0 overflow-hidden">
