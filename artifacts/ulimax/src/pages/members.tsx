@@ -60,6 +60,9 @@ import {
   Clock,
   X,
   FolderKanban,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -127,12 +130,13 @@ interface MemberCardProps {
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
+  onResetLink: (userId: number, memberName: string) => void;
   deleteInvitationPending: boolean;
 }
 
 function MemberCard({
   member, users, invitations, isGestor, pendingRoleId,
-  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, deleteInvitationPending,
+  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, onResetLink, deleteInvitationPending,
 }: MemberCardProps) {
   const linkedUser = users?.find(u => u.email.toLowerCase() === member.email.toLowerCase());
   const pendingInvite = invitations?.find(inv => inv.email.toLowerCase() === member.email.toLowerCase());
@@ -215,7 +219,18 @@ function MemberCard({
       </div>
 
       {isGestor && (
-        <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2">
+        <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2 flex-wrap">
+          {linkedUser && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-muted-foreground"
+              onClick={() => onResetLink(linkedUser.id, member.name)}
+            >
+              <KeyRound className="h-3.5 w-3.5 mr-1" />
+              Redefinir senha
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={() => onEdit(member)} className="h-8 text-muted-foreground">
             <Edit className="h-3.5 w-3.5 mr-1" />
             Editar
@@ -258,6 +273,7 @@ interface TeamSectionProps {
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
+  onResetLink: (userId: number, memberName: string) => void;
   deleteInvitationPending: boolean;
 }
 
@@ -306,6 +322,9 @@ export default function Members() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<number | null>(null);
   const [pendingRoleId, setPendingRoleId] = useState<number | null>(null);
+  const [resetLinkData, setResetLinkData] = useState<{ memberName: string; url: string } | null>(null);
+  const [resetLinkLoading, setResetLinkLoading] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -427,6 +446,27 @@ export default function Members() {
     setIsCreateOpen(true);
   };
 
+  const handleResetLink = async (userId: number, memberName: string) => {
+    setResetLinkLoading(true);
+    try {
+      const res = await fetch(`/api/users/${userId}/signin-link`, { method: "POST" });
+      const data = await res.json() as { url?: string; error?: string };
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Erro desconhecido");
+      setResetLinkData({ memberName, url: data.url });
+    } catch (err: unknown) {
+      toast({ title: "Erro ao gerar link", description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+    } finally {
+      setResetLinkLoading(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!resetLinkData) return;
+    navigator.clipboard.writeText(resetLinkData.url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   const filtered = (members ?? []).filter((m) =>
     !search ||
     m.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -445,6 +485,7 @@ export default function Members() {
     onRoleChange: handleRoleChange,
     onRevokeInvite: handleRevokeInvite,
     onSendInvite: handleSendInvite,
+    onResetLink: handleResetLink,
     deleteInvitationPending: deleteInvitation.isPending,
   };
 
@@ -630,6 +671,45 @@ export default function Members() {
           <TeamSection team="projetos" members={projetosMembers} isLoading={isLoading} {...cardProps} />
         </CardContent>
       </Card>
+
+      {/* Reset password link dialog */}
+      <Dialog open={!!resetLinkData} onOpenChange={(open) => { if (!open) { setResetLinkData(null); setCopiedLink(false); } }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-primary" />
+              Link de redefinição de senha
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Envie o link abaixo para <strong>{resetLinkData?.memberName}</strong>. Ao clicar, ele será conectado ao sistema e poderá redefinir sua senha nas configurações do perfil.
+            </p>
+            <div className="flex gap-2">
+              <div className="flex-1 rounded-md border bg-muted px-3 py-2 text-xs text-muted-foreground font-mono truncate select-all">
+                {resetLinkData?.url}
+              </div>
+              <Button size="sm" variant="outline" onClick={handleCopyLink} className="shrink-0">
+                {copiedLink ? <><Check className="h-3.5 w-3.5 mr-1 text-green-600" />Copiado</> : <><Copy className="h-3.5 w-3.5 mr-1" />Copiar</>}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Clock className="h-3 w-3 shrink-0" />
+              Este link expira em 24 horas e é de uso único.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Loading overlay while generating link */}
+      {resetLinkLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
+          <div className="bg-card rounded-lg shadow-lg px-6 py-4 flex items-center gap-3">
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-medium">Gerando link de acesso...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

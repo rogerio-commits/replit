@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { clerkClient } from "@clerk/express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireGestor } from "../middlewares/requireAuth";
@@ -60,6 +61,25 @@ router.patch("/users/:id", requireGestor, async (req, res) => {
     role: user.role,
     createdAt: user.createdAt.toISOString(),
   });
+});
+
+router.post("/users/:id/signin-link", requireGestor, async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "id inválido" });
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+  if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
+
+  try {
+    const signInToken = await clerkClient.signInTokens.createSignInToken({
+      userId: user.clerkUserId,
+      expiresInSeconds: 60 * 60 * 24,
+    });
+    return res.json({ url: signInToken.url });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ error: `Erro ao gerar link: ${msg}` });
+  }
 });
 
 export default router;
