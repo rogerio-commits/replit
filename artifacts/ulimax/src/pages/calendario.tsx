@@ -454,25 +454,36 @@ function GanttRow({
     const duration     = differenceInDays(clampedEnd, clampedStart) + 1;
     const subRow       = subRows.get(event.id) ?? 0;
 
+    return {
+      position: "absolute",
+      left:   startIdx * DAY_W + 3,
+      width:  duration * DAY_W - 6,
+      top:    ROW_PAD + subRow * (BAR_H + BAR_GAP),
+      height: BAR_H,
+      // border-radius per overflow
+      borderTopLeftRadius:     evStart < monthStart ? 0 : 7,
+      borderBottomLeftRadius:  evStart < monthStart ? 0 : 7,
+      borderTopRightRadius:    evEnd > monthEnd ? 0 : 7,
+      borderBottomRightRadius: evEnd > monthEnd ? 0 : 7,
+      borderRadius: 7,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.18), 0 1px 2px rgba(0,0,0,0.12)",
+    };
+  }
+
+  /** Styles for the background layer inside the bar (color, pattern). */
+  function barBgStyle(event: InstallationEvent, isPast: boolean): React.CSSProperties {
     const isAssistencia = event.eventType === "assistencia";
     return {
       position: "absolute",
-      left:  startIdx * DAY_W + 3,
-      width: duration * DAY_W - 6,
-      top:   ROW_PAD + subRow * (BAR_H + BAR_GAP),
-      height: BAR_H,
+      inset: 0,
+      borderRadius: "inherit",
       backgroundColor: colorHex(event.color),
       backgroundImage: isAssistencia
         ? "repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.18) 5px, rgba(255,255,255,0.18) 10px)"
         : undefined,
       outline: isAssistencia ? "2px dashed rgba(255,255,255,0.45)" : undefined,
       outlineOffset: isAssistencia ? "-2px" : undefined,
-      borderRadius: 7,
-      borderTopLeftRadius:    evStart < monthStart ? 0 : 7,
-      borderBottomLeftRadius: evStart < monthStart ? 0 : 7,
-      borderTopRightRadius:   evEnd > monthEnd ? 0 : 7,
-      borderBottomRightRadius:evEnd > monthEnd ? 0 : 7,
-      boxShadow: "0 1px 3px rgba(0,0,0,0.18), 0 1px 2px rgba(0,0,0,0.12)",
+      ...(isPast ? { filter: "grayscale(1) brightness(0.82)", opacity: 0.55 } : {}),
     };
   }
 
@@ -609,23 +620,17 @@ function GanttRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    style={{
-                      ...style,
-                      ...(isPast ? {
-                        filter: "grayscale(1) brightness(0.85)",
-                        opacity: 0.5,
-                      } : {}),
-                    }}
+                    style={style}
                     onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
                     className={cn(
                       "group flex items-center px-2 cursor-pointer select-none overflow-hidden",
-                      "z-20 transition-all",
-                      isPast
-                        ? "hover:filter-none hover:!opacity-80"
-                        : "hover:brightness-110",
+                      "z-20 transition-all hover:brightness-105",
                       colorText(event.color)
                     )}
                   >
+                    {/* Background layer — grayscale only here, not on text */}
+                    <div style={barBgStyle(event, isPast)} />
+
                     {/* Progress overlay (semi-transparent darker strip) */}
                     {progW !== null && (
                       <div
