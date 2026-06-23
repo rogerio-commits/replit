@@ -602,17 +602,18 @@ function GanttRow({
           const overflowLeft  = evStart < monthStart;
           const overflowRight = evEnd > monthEnd;
           const progW    = progressWidth(event, style);
+          const isPast   = evEnd < today;
 
           return (
             <TooltipProvider key={event.id} delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    style={style}
+                    style={{ ...style, opacity: isPast ? 0.38 : 1 }}
                     onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
                     className={cn(
                       "group flex items-center px-2 cursor-pointer select-none overflow-hidden",
-                      "z-20 hover:brightness-110 transition-all",
+                      "z-20 hover:brightness-110 hover:!opacity-70 transition-all",
                       colorText(event.color)
                     )}
                   >
