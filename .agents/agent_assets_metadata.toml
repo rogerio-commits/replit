@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "TBEVFa0Q3soNUHTvru_Lm"
+uri = "file://docs/instrucoes-de-uso.md"
+type = "text"
+title = "Manual de Uso — Ulimax & Co."
