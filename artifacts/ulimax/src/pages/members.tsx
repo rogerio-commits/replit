@@ -120,6 +120,14 @@ const memberSchema = z.object({
 
 type MemberFormValues = z.infer<typeof memberSchema>;
 
+const inviteSchema = z.object({
+  name:         z.string().min(1, "Nome obrigatório"),
+  email:        z.string().email("E-mail válido obrigatório"),
+  intendedRole: z.enum(["gestor", "executor", "observador"]),
+});
+
+type InviteFormValues = z.infer<typeof inviteSchema>;
+
 interface MemberCardProps {
   member: Member;
   users: { id: number; email: string; role: string }[] | undefined;
@@ -321,6 +329,7 @@ function TeamSection({ team, members, isLoading, ...cardProps }: TeamSectionProp
 export default function Members() {
   const [search, setSearch] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<number | null>(null);
   const [pendingRoleId, setPendingRoleId] = useState<number | null>(null);
   const [resetLinkData, setResetLinkData] = useState<{ memberName: string; url: string } | null>(null);
@@ -344,14 +353,19 @@ export default function Members() {
 
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
-    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: true },
+    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: false },
+  });
+
+  const inviteForm = useForm<InviteFormValues>({
+    resolver: zodResolver(inviteSchema),
+    defaultValues: { name: "", email: "", intendedRole: "executor" },
   });
 
   const sendInviteWatched = form.watch("sendInvite");
 
   const resetDialog = () => {
     setEditingMember(null);
-    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: true });
+    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: false });
   };
 
   const onSubmit = (data: MemberFormValues) => {
@@ -442,10 +456,27 @@ export default function Members() {
     });
   };
 
+  const onSubmitInvite = (data: InviteFormValues) => {
+    createInvitation.mutate(
+      { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
+      {
+        onSuccess: () => {
+          toast({ title: "Convite enviado!", description: `Um e-mail foi enviado para ${data.email}.` });
+          queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+          setIsInviteOpen(false);
+          inviteForm.reset({ name: "", email: "", intendedRole: "executor" });
+        },
+        onError: (err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+          toast({ title: "Erro ao enviar convite", description: msg ?? "Tente novamente.", variant: "destructive" });
+        },
+      }
+    );
+  };
+
   const handleSendInvite = (member: Member) => {
-    form.reset({ name: member.name, role: member.role, email: member.email, team: (member.team as MemberTeam) ?? "projetos", intendedRole: "executor", sendInvite: true });
-    setEditingMember(null);
-    setIsCreateOpen(true);
+    inviteForm.reset({ name: member.name, email: member.email, intendedRole: "executor" });
+    setIsInviteOpen(true);
   };
 
   const handleResetLink = async (memberId: number, memberName: string) => {
@@ -505,6 +536,85 @@ export default function Members() {
         </div>
 
         {isGestor && (
+          <div className="flex gap-2">
+          {/* Invite dialog */}
+          <Dialog open={isInviteOpen} onOpenChange={(open) => { setIsInviteOpen(open); if (!open) inviteForm.reset({ name: "", email: "", intendedRole: "executor" }); }}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Send className="mr-2 h-4 w-4" />
+                Convidar
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[440px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Send className="h-4 w-4 text-primary" />
+                  Convidar para o sistema
+                </DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground -mt-1">
+                Um e-mail será enviado com o link de acesso. Ao aceitar, o usuário cria sua conta automaticamente.
+              </p>
+              <Form {...inviteForm}>
+                <form onSubmit={inviteForm.handleSubmit(onSubmitInvite)} className="space-y-4">
+                  <FormField control={inviteForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl><Input placeholder="Ex.: Carlos Silva" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={inviteForm.control} name="email" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-mail</FormLabel>
+                      <FormControl><Input type="email" placeholder="carlos@ulimax.com.br" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={inviteForm.control} name="intendedRole" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Papel no sistema</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o papel" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="gestor">
+                            <span className="flex items-center gap-2">
+                              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                              <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="executor">
+                            <span className="flex items-center gap-2">
+                              <Wrench className="h-4 w-4 text-blue-600" />
+                              <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
+                            </span>
+                          </SelectItem>
+                          <SelectItem value="observador">
+                            <span className="flex items-center gap-2">
+                              <Eye className="h-4 w-4 text-slate-500" />
+                              <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
+                            </span>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <DialogFooter>
+                    <Button type="submit" disabled={createInvitation.isPending} className="w-full">
+                      {createInvitation.isPending ? "Enviando..." : <><Send className="mr-2 h-4 w-4" />Enviar Convite</>}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Add member dialog */}
           <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if (!open) resetDialog(); }}>
             <DialogTrigger asChild>
               <Button>
@@ -540,80 +650,16 @@ export default function Members() {
                     </FormItem>
                   )} />
 
-
-                  {!editingMember && (
-                    <div className="border-t pt-3">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="text-sm font-medium">Convidar para o sistema</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Envia um e-mail de convite para criar conta</p>
-                        </div>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={sendInviteWatched}
-                          onClick={() => form.setValue("sendInvite", !sendInviteWatched)}
-                          className={cn(
-                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                            sendInviteWatched ? "bg-primary" : "bg-input"
-                          )}
-                        >
-                          <span className={cn(
-                            "inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
-                            sendInviteWatched ? "translate-x-4" : "translate-x-0.5"
-                          )} />
-                        </button>
-                      </div>
-
-                      {sendInviteWatched && (
-                        <FormField control={form.control} name="intendedRole" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Papel no sistema</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o papel" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="gestor">
-                                  <span className="flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                                    <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
-                                  </span>
-                                </SelectItem>
-                                <SelectItem value="executor">
-                                  <span className="flex items-center gap-2">
-                                    <Wrench className="h-4 w-4 text-blue-600" />
-                                    <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
-                                  </span>
-                                </SelectItem>
-                                <SelectItem value="observador">
-                                  <span className="flex items-center gap-2">
-                                    <Eye className="h-4 w-4 text-slate-500" />
-                                    <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
-                                  </span>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      )}
-                    </div>
-                  )}
-
                   <DialogFooter>
                     <Button type="submit" disabled={isPending} className="w-full">
-                      {isPending ? "Salvando..." : editingMember ? "Atualizar" : sendInviteWatched ? (
-                        <><Send className="mr-2 h-4 w-4" />Adicionar e Convidar</>
-                      ) : "Adicionar"}
+                      {isPending ? "Salvando..." : editingMember ? "Atualizar" : "Adicionar"}
                     </Button>
                   </DialogFooter>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
+          </div>
         )}
       </div>
 

@@ -41,5 +41,3 @@ externalPort = 3000
 [userenv]
 
 [userenv.production]
-RESET_SECRET = "ulimax-reset-2024"
-RESET_ON_STARTUP = "true"
