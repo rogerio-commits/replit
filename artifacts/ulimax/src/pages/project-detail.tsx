@@ -375,16 +375,6 @@ export default function ProjectDetail() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({ projectId }) });
           queryClient.invalidateQueries({ queryKey: getGetProjectStatsQueryKey(projectId) });
-          if (markingDone) {
-            const now = format(new Date(), "d MMM yyyy 'às' HH:mm", { locale: ptBR });
-            createObservation.mutate(
-              { id: projectId, data: { text: `✓ Tarefa concluída: "${task.title}" — ${now}` } },
-              {
-                onSuccess: () =>
-                  queryClient.invalidateQueries({ queryKey: getListProjectObservationsQueryKey(projectId) }),
-              }
-            );
-          }
         },
         onSettled: () => setTogglingTaskId(null),
       }
@@ -1208,7 +1198,6 @@ export default function ProjectDetail() {
 
       {/* Observations */}
       {(() => {
-        const taskObs = (observations ?? []).filter((o) => o.text.startsWith("✓ Tarefa concluída:"));
         const userObs = (observations ?? []).filter((o) => !o.text.startsWith("✓ Tarefa concluída:"));
 
         function renderObsFeed(list: typeof userObs, isSystemFeed: boolean) {
@@ -1311,23 +1300,6 @@ export default function ProjectDetail() {
               </CardContent>
             </Card>
 
-            {/* Task completion log */}
-            {taskObs.length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <CheckSquare className="h-4 w-4 text-emerald-600" />
-                    <CardTitle className="text-base">Tarefas Concluídas</CardTitle>
-                    <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                      {taskObs.length}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div>{renderObsFeed(taskObs, true)}</div>
-                </CardContent>
-              </Card>
-            )}
           </>
         );
       })()}
