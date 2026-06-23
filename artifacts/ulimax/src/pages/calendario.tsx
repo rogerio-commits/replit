@@ -362,7 +362,7 @@ function EventDialog({
             <FormField control={form.control} name="color" render={({ field }) => (
               <FormItem>
                 <FormLabel>Cor da equipe</FormLabel>
-                <div className="flex gap-2 pt-1">
+                <div className="grid grid-cols-8 gap-2 pt-1">
                   {COLORS.map((c) => (
                     <button key={c.id} type="button" onClick={() => field.onChange(c.id)}
                       className={cn("w-7 h-7 rounded-full border-2 transition-all", c.bg,
