@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, assistenciaTecnicaTable } from "@workspace/db";
-import { requireExecutorOrGestor } from "../middlewares/requireAuth";
+import { requireExecutorOrGestor, requireGestor } from "../middlewares/requireAuth";
 import { eq } from "drizzle-orm";
 import {
   ListAssistenciaTecnicaQueryParams,
@@ -119,7 +119,7 @@ router.patch("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, re
   return res.json(atRow(updated));
 });
 
-router.delete("/assistencia-tecnica/:id", requireExecutorOrGestor, async (req, res) => {
+router.delete("/assistencia-tecnica/:id", requireGestor, async (req, res) => {
   const { id } = DeleteAssistenciaTecnicaParams.parse(req.params);
 
   const [existing] = await db

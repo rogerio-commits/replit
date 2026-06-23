@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, installationEventsTable } from "@workspace/db";
+import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq, and, gte, lte } from "drizzle-orm";
 import {
   CreateInstallationEventBody,
@@ -49,7 +50,7 @@ router.get("/installation-events", async (req, res) => {
   return res.json(rows.map(eventRow));
 });
 
-router.post("/installation-events", async (req, res) => {
+router.post("/installation-events", requireExecutorOrGestor, async (req, res) => {
   const body = CreateInstallationEventBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
 
@@ -70,7 +71,7 @@ router.post("/installation-events", async (req, res) => {
   return res.status(201).json(eventRow(event));
 });
 
-router.patch("/installation-events/:id", async (req, res) => {
+router.patch("/installation-events/:id", requireExecutorOrGestor, async (req, res) => {
   const params = UpdateInstallationEventParams.safeParse({ id: Number(req.params.id) });
   const body = UpdateInstallationEventBody.safeParse(req.body);
   if (!params.success || !body.success) {
@@ -97,7 +98,7 @@ router.patch("/installation-events/:id", async (req, res) => {
   return res.json(eventRow(event));
 });
 
-router.delete("/installation-events/:id", async (req, res) => {
+router.delete("/installation-events/:id", requireExecutorOrGestor, async (req, res) => {
   const params = DeleteInstallationEventParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
