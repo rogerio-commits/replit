@@ -141,11 +141,21 @@ const HEADER_H   = 56;   // px day header height
 const NO_TEAM    = "Sem equipe";
 
 const COLORS = [
-  { id: "orange", label: "Laranja", bg: "bg-orange-500", hex: "#f97316", text: "text-orange-50", light: "#fff7ed" },
-  { id: "blue",   label: "Azul",    bg: "bg-blue-500",   hex: "#3b82f6", text: "text-blue-50",   light: "#eff6ff" },
-  { id: "green",  label: "Verde",   bg: "bg-green-600",  hex: "#16a34a", text: "text-green-50",  light: "#f0fdf4" },
-  { id: "purple", label: "Roxo",    bg: "bg-purple-500", hex: "#a855f7", text: "text-purple-50", light: "#faf5ff" },
-  { id: "red",    label: "Vermelho",bg: "bg-red-500",    hex: "#ef4444", text: "text-red-50",    light: "#fef2f2" },
+  { id: "orange",  label: "Laranja",   bg: "bg-orange-500",  hex: "#f97316", text: "text-orange-50",  light: "#fff7ed" },
+  { id: "blue",    label: "Azul",      bg: "bg-blue-500",    hex: "#3b82f6", text: "text-blue-50",    light: "#eff6ff" },
+  { id: "green",   label: "Verde",     bg: "bg-green-600",   hex: "#16a34a", text: "text-green-50",   light: "#f0fdf4" },
+  { id: "purple",  label: "Roxo",      bg: "bg-purple-500",  hex: "#a855f7", text: "text-purple-50",  light: "#faf5ff" },
+  { id: "red",     label: "Vermelho",  bg: "bg-red-500",     hex: "#ef4444", text: "text-red-50",     light: "#fef2f2" },
+  { id: "pink",    label: "Rosa",      bg: "bg-pink-500",    hex: "#ec4899", text: "text-pink-50",    light: "#fdf2f8" },
+  { id: "cyan",    label: "Ciano",     bg: "bg-cyan-500",    hex: "#06b6d4", text: "text-cyan-50",    light: "#ecfeff" },
+  { id: "teal",    label: "Teal",      bg: "bg-teal-500",    hex: "#14b8a6", text: "text-teal-50",    light: "#f0fdfa" },
+  { id: "indigo",  label: "Índigo",    bg: "bg-indigo-500",  hex: "#6366f1", text: "text-indigo-50",  light: "#eef2ff" },
+  { id: "amber",   label: "Âmbar",     bg: "bg-amber-500",   hex: "#f59e0b", text: "text-amber-50",   light: "#fffbeb" },
+  { id: "lime",    label: "Lima",      bg: "bg-lime-500",    hex: "#84cc16", text: "text-lime-50",    light: "#f7fee7" },
+  { id: "rose",    label: "Rosê",      bg: "bg-rose-600",    hex: "#e11d48", text: "text-rose-50",    light: "#fff1f2" },
+  { id: "sky",     label: "Céu",       bg: "bg-sky-500",     hex: "#0ea5e9", text: "text-sky-50",     light: "#f0f9ff" },
+  { id: "slate",   label: "Ardósia",   bg: "bg-slate-500",   hex: "#64748b", text: "text-slate-50",   light: "#f8fafc" },
+  { id: "emerald", label: "Esmeralda", bg: "bg-emerald-500", hex: "#10b981", text: "text-emerald-50", light: "#ecfdf5" },
 ];
 
 function colorHex(id: string) {
