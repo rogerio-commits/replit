@@ -609,11 +609,20 @@ function GanttRow({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    style={{ ...style, opacity: isPast ? 0.38 : 1 }}
+                    style={{
+                      ...style,
+                      ...(isPast ? {
+                        filter: "grayscale(1) brightness(0.85)",
+                        opacity: 0.5,
+                      } : {}),
+                    }}
                     onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
                     className={cn(
                       "group flex items-center px-2 cursor-pointer select-none overflow-hidden",
-                      "z-20 hover:brightness-110 hover:!opacity-70 transition-all",
+                      "z-20 transition-all",
+                      isPast
+                        ? "hover:filter-none hover:!opacity-80"
+                        : "hover:brightness-110",
                       colorText(event.color)
                     )}
                   >
