@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Wrench,
   FlaskConical,
+  BookOpen,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -51,6 +52,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
     { href: "/controle-amostras", label: "Controle de Amostras", icon: FlaskConical },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
+    { href: "/ajuda", label: "Ajuda", icon: BookOpen },
   ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
 
   const initials = user?.firstName && user?.lastName

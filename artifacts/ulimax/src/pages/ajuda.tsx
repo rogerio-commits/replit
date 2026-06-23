@@ -1,0 +1,448 @@
+import { useState } from "react";
+import {
+  BookOpen,
+  LayoutDashboard,
+  Briefcase,
+  CheckSquare,
+  Columns3,
+  CalendarDays,
+  Bell,
+  Wrench,
+  ClipboardList,
+  Users,
+  ShieldCheck,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Section {
+  id: string;
+  title: string;
+  icon: React.ElementType;
+  content: React.ReactNode;
+}
+
+const sections: Section[] = [
+  {
+    id: "acesso",
+    title: "Acesso ao Sistema",
+    icon: ShieldCheck,
+    content: (
+      <div className="space-y-4">
+        <Subsection title="Criar conta">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Acesse a página inicial do sistema.</li>
+            <li>Clique em <Strong>Criar Conta</Strong>.</li>
+            <li>Preencha nome, e-mail e senha.</li>
+            <li>Confirme o e-mail pelo link enviado na sua caixa de entrada.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Entrar">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>Entrar</Strong>.</li>
+            <li>Use o e-mail e senha cadastrados ou entre com Google.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Recuperar senha">
+          <p className="text-sm text-muted-foreground">Na tela de login, clique em <Strong>Esqueci minha senha</Strong> e siga as instruções enviadas por e-mail.</p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">O Dashboard é a tela inicial após o login. Ele apresenta um resumo executivo do estado atual de todos os projetos e equipes.</p>
+        <Table
+          headers={["Componente", "Descrição"]}
+          rows={[
+            ["KPIs", "Total de projetos, projetos ativos, alertas de prazo e percentual de tarefas concluídas"],
+            ["Fases dos Projetos", "Quantidade de projetos em cada etapa (A Iniciar → Em Instalação)"],
+            ["Visitas em Obras", "Agenda de visitas: data, responsável e objetivo"],
+            ["Alertas de Prazo", "Projetos com datas vencidas ou próximas do vencimento"],
+            ["Material", "Proporção entre projetos em madeira e alumínio"],
+          ]}
+        />
+        <Tip>Clique em qualquer fase (ex: <em>Em Produção</em>) para acessar a lista de projetos filtrada. Os alertas de prazo são clicáveis e abrem diretamente o projeto correspondente.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "projetos",
+    title: "Projetos",
+    icon: Briefcase,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Gerenciamento completo do ciclo de vida dos projetos, da abertura à instalação.</p>
+        <Subsection title="Criar um projeto">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Acesse <Strong>Projetos</Strong> no menu lateral.</li>
+            <li>Clique em <Strong>+ Novo Projeto</Strong>.</li>
+            <li>Preencha: nome, descrição, material (Madeira/Alumínio), prioridade, status, datas e membros participantes.</li>
+            <li>Clique em <Strong>Salvar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Filtros disponíveis">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Busca por texto</Strong>: filtra por nome ou descrição</li>
+            <li><Strong>Status</Strong>: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação</li>
+            <li><Strong>Prioridade</Strong>: Normal ou Alta</li>
+          </ul>
+        </Subsection>
+        <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas e todas as tarefas vinculadas.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "tarefas",
+    title: "Tarefas",
+    icon: CheckSquare,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Lista global de todas as tarefas de todos os projetos, com visão consolidada.</p>
+        <Subsection title="Criar uma tarefa">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>+ Nova Tarefa</Strong>.</li>
+            <li>Preencha: título, descrição, projeto vinculado, status, prioridade, responsável e data de entrega.</li>
+            <li>Clique em <Strong>Salvar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Filtros disponíveis">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Status</Strong>: A Fazer · Em Andamento · Revisão · Concluída</li>
+            <li><Strong>Projeto</Strong>: exibe somente tarefas de um projeto específico</li>
+            <li><Strong>Responsável</Strong>: filtra pelo membro atribuído</li>
+          </ul>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "kanban",
+    title: "Kanban",
+    icon: Columns3,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Quadro visual para acompanhar projetos ou tarefas por fase.</p>
+        <Subsection title="Modos de visualização">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Tarefas</Strong>: A Fazer · Em Andamento · Revisão · Concluída</li>
+            <li><Strong>Projetos</Strong>: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Como usar">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Arraste e solte cards entre colunas para atualizar o status automaticamente.</li>
+            <li>Clique no <Strong>+</Strong> no cabeçalho de uma coluna para criar um item já naquela fase.</li>
+          </ul>
+        </Subsection>
+        <Tip>Cards com data vencida são destacados em vermelho automaticamente.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "calendario",
+    title: "Calendário de Instalações",
+    icon: CalendarDays,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Cronograma visual no estilo Gantt para controlar datas de instalação e assistência técnica por equipe.</p>
+        <Subsection title="Navegar pelo calendário">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Use as setas <Strong>‹</Strong> e <Strong>›</Strong> para navegar entre meses.</li>
+            <li>O botão <Strong>Hoje</Strong> centraliza na data atual.</li>
+            <li>Scroll horizontal percorre os dias; ao chegar na borda, o mês muda automaticamente.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Legenda das barras">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Barras coloridas sólidas → <Strong>Instalação</Strong></li>
+            <li>Barras com listras diagonais → <Strong>Assistência Técnica</Strong></li>
+            <li>Barras em cinza desbotado → evento <Strong>passado</Strong> (já encerrado)</li>
+            <li>Linha vertical laranja → dia de <Strong>hoje</Strong></li>
+            <li>Fundo colorido na célula → <Strong>feriado nacional</Strong> brasileiro</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Criar um evento">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em qualquer célula vazia na linha da equipe desejada.</li>
+            <li>Preencha: nome da obra, datas, tipo e cor.</li>
+            <li>Clique em <Strong>Salvar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Renomear uma equipe">
+          <p className="text-sm text-muted-foreground">Clique diretamente sobre o nome da equipe na coluna esquerda. Pressione <Strong>Enter</Strong> para confirmar ou <Strong>Esc</Strong> para cancelar.</p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "alertas",
+    title: "Alertas",
+    icon: Bell,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Central de notificações automáticas do sistema sobre situações críticas.</p>
+        <Table
+          headers={["Nível", "Quando aparece"]}
+          rows={[
+            ["🔴 Crítico", "Instalação atrasada, tarefa vencida"],
+            ["🟡 Atenção", "Prazo próximo, projeto sem data de instalação"],
+            ["🔵 Informativo", "Projetos parados, tarefas sem responsável"],
+          ]}
+        />
+        <Subsection title="Categorias">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Minhas Tarefas</Strong>: alertas relacionados ao seu usuário</li>
+            <li><Strong>Críticos</Strong>, <Strong>Atenção</Strong>, <Strong>Informativos</Strong></li>
+          </ul>
+        </Subsection>
+        <Tip>Clique em qualquer card de alerta para ser direcionado diretamente ao projeto ou tarefa relacionado.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "assistencia",
+    title: "Assistência Técnica",
+    icon: Wrench,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Abertura e acompanhamento de chamados de suporte pós-entrega.</p>
+        <Subsection title="Abrir um chamado">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>+ Novo Chamado</Strong>.</li>
+            <li>Preencha: cliente, contato, descrição do problema, data agendada e responsável técnico.</li>
+            <li>Clique em <Strong>Salvar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Ciclo de vida">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+            <Badge label="Aberto" color="blue" />
+            <ChevronRight className="h-3 w-3" />
+            <Badge label="Em Andamento" color="amber" />
+            <ChevronRight className="h-3 w-3" />
+            <Badge label="Concluído" color="green" />
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">Marque o checkbox <Strong>Realizado</Strong> para concluir rapidamente um chamado.</p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "checklist",
+    title: "Checklist de Obra",
+    icon: ClipboardList,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Controle item a item das peças (esquadrias) instaladas em cada projeto.</p>
+        <Subsection title="Adicionar um item">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Selecione o projeto.</li>
+            <li>Clique em <Strong>+ Adicionar Item</Strong>.</li>
+            <li>Informe a peça (ex: Porta Principal) e o local (ex: Hall de Entrada).</li>
+          </ol>
+        </Subsection>
+        <Table
+          headers={["Status", "Significado"]}
+          rows={[
+            ["Não Instalado", "Aguardando instalação"],
+            ["Instalado", "Peça instalada, aguardando vistoria final"],
+            ["Finalizado", "Peça aprovada e encerrada"],
+          ]}
+        />
+        <Subsection title="Plano de ação">
+          <p className="text-sm text-muted-foreground">Quando uma peça apresenta problema, clique em <Strong>Plano de Ação</Strong> ao lado do item. Descreva o problema, defina o responsável e a data limite.</p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "equipe",
+    title: "Equipe",
+    icon: Users,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Gestão dos membros que têm acesso ao sistema.</p>
+        <Subsection title="Adicionar um membro">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>+ Novo Membro</Strong>.</li>
+            <li>Preencha nome, cargo, e-mail e função no sistema.</li>
+            <li>Clique em <Strong>Convidar</Strong> — o membro recebe um e-mail de convite.</li>
+          </ol>
+        </Subsection>
+        <Table
+          headers={["Função", "O que pode fazer"]}
+          rows={[
+            ["Gestor", "Acesso total: criar, editar e excluir qualquer item"],
+            ["Executor", "Editar apenas projetos e tarefas em que é participante"],
+            ["Observador", "Somente visualização — não pode criar ou editar"],
+          ]}
+        />
+        <Tip>O status de acesso indica se o membro já aceitou o convite (✅ Ativo) ou ainda não (📧 Pendente).</Tip>
+      </div>
+    ),
+  },
+];
+
+function Strong({ children }: { children: React.ReactNode }) {
+  return <span className="font-semibold text-foreground">{children}</span>;
+}
+
+function Subsection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-sm font-semibold text-foreground">{title}</h4>
+      {children}
+    </div>
+  );
+}
+
+function Tip({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex gap-2 rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-3 py-2.5">
+      <span className="text-blue-500 mt-0.5 shrink-0">💡</span>
+      <p className="text-sm text-blue-800 dark:text-blue-200">{children}</p>
+    </div>
+  );
+}
+
+function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div className="rounded-md border overflow-hidden text-sm">
+      <table className="w-full">
+        <thead className="bg-muted/50">
+          <tr>
+            {headers.map((h) => (
+              <th key={h} className="text-left px-3 py-2 font-medium text-foreground text-xs uppercase tracking-wide">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {rows.map((row, i) => (
+            <tr key={i} className="bg-card hover:bg-muted/30 transition-colors">
+              {row.map((cell, j) => (
+                <td key={j} className={cn("px-3 py-2 text-muted-foreground", j === 0 && "font-medium text-foreground")}>
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Badge({ label, color }: { label: string; color: "blue" | "amber" | "green" | "red" }) {
+  const classes = {
+    blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200",
+    amber: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
+    green: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
+    red: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200",
+  };
+  return (
+    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", classes[color])}>
+      {label}
+    </span>
+  );
+}
+
+function SectionCard({ section, isOpen, onToggle }: { section: Section; isOpen: boolean; onToggle: () => void }) {
+  const Icon = section.icon;
+  return (
+    <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-muted/30 transition-colors"
+      >
+        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4 text-primary" />
+        </div>
+        <span className="flex-1 font-semibold text-foreground text-sm">{section.title}</span>
+        {isOpen
+          ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {isOpen && (
+        <div className="px-5 pb-5 pt-1 border-t bg-muted/10">
+          {section.content}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Ajuda() {
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set(["acesso"]));
+
+  function toggle(id: string) {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function expandAll() {
+    setOpenSections(new Set(sections.map((s) => s.id)));
+  }
+
+  function collapseAll() {
+    setOpenSections(new Set());
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <h1 className="text-2xl font-bold text-foreground">Ajuda</h1>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Manual de uso do sistema Ulimax &amp; Co. — clique em uma seção para expandir.
+          </p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={expandAll}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
+          >
+            Expandir tudo
+          </button>
+          <button
+            onClick={collapseAll}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
+          >
+            Recolher tudo
+          </button>
+        </div>
+      </div>
+
+      {/* Sections */}
+      <div className="space-y-3">
+        {sections.map((section) => (
+          <SectionCard
+            key={section.id}
+            section={section}
+            isOpen={openSections.has(section.id)}
+            onToggle={() => toggle(section.id)}
+          />
+        ))}
+      </div>
+
+      {/* Footer */}
+      <p className="text-center text-xs text-muted-foreground pt-2">
+        Ulimax &amp; Co. · Sistema de Controle de Projetos · Uso interno
+      </p>
+    </div>
+  );
+}
