@@ -65,6 +65,7 @@ import {
   Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -327,6 +328,7 @@ export default function Members() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const { toast } = useToast();
+  const { getToken } = useAuth();
   const queryClient = useQueryClient();
   const isGestor = useIsGestor();
 
@@ -449,7 +451,11 @@ export default function Members() {
   const handleResetLink = async (memberId: number, memberName: string) => {
     setResetLinkLoading(true);
     try {
-      const res = await fetch(`/api/members/${memberId}/signin-link`, { method: "POST" });
+      const token = await getToken();
+      const res = await fetch(`/api/members/${memberId}/signin-link`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json() as { url?: string; error?: string };
       if (!res.ok || !data.url) throw new Error(data.error ?? "Erro desconhecido");
       setResetLinkData({ memberName, url: data.url });
