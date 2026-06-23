@@ -37,3 +37,8 @@ externalPort = 3001
 [[ports]]
 localPort = 22537
 externalPort = 3000
+
+[userenv]
+
+[userenv.production]
+RESET_SECRET = "ulimax-reset-2024"
