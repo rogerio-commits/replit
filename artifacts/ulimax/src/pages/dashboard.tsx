@@ -144,11 +144,10 @@ export default function Dashboard() {
   );
 
   const materialCounts = useMemo(() => {
-    const m = { madeira: 0, aluminio: 0, indefinido: 0 };
+    const m = { madeira: 0, aluminio: 0 };
     for (const p of projects ?? []) {
       if (p.materialType === "madeira") m.madeira++;
       else if (p.materialType === "aluminio") m.aluminio++;
-      else m.indefinido++;
     }
     return m;
   }, [projects]);
@@ -364,9 +363,8 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-5">
                 {[
-                  { label: "Madeira", count: materialCounts.madeira,   color: "bg-amber-500",   textColor: "text-amber-700" },
-                  { label: "Alumínio", count: materialCounts.aluminio, color: "bg-blue-500",     textColor: "text-blue-700" },
-                  { label: "Indefinido", count: materialCounts.indefinido, color: "bg-slate-300", textColor: "text-slate-500" },
+                  { label: "Madeira", count: materialCounts.madeira,   color: "bg-amber-500", textColor: "text-amber-700" },
+                  { label: "Alumínio", count: materialCounts.aluminio, color: "bg-blue-500",   textColor: "text-blue-700" },
                 ].map(({ label, count, color, textColor }) => (
                   <div key={label} className="space-y-1.5">
                     <div className="flex items-center justify-between text-sm">
