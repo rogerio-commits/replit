@@ -60,7 +60,6 @@ import {
   Clock,
   X,
   FolderKanban,
-  Settings2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -86,11 +85,11 @@ const TEAM_META: Record<MemberTeam, { label: string; icon: React.ElementType; co
     border: "border-blue-200 dark:border-blue-800",
   },
   tecnica: {
-    label: "Equipe Técnica",
-    icon: Settings2,
-    color: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/30",
-    border: "border-orange-200 dark:border-orange-800",
+    label: "Equipe",
+    icon: FolderKanban,
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+    border: "border-blue-200 dark:border-blue-800",
   },
 };
 
@@ -435,8 +434,7 @@ export default function Members() {
     m.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const projetosMembers = filtered.filter((m) => m.team === "projetos");
-  const tecnicaMembers  = filtered.filter((m) => m.team === "tecnica");
+  const projetosMembers = filtered;
 
   const isPending = createMember.isPending || updateMember.isPending || createInvitation.isPending;
 
@@ -495,33 +493,6 @@ export default function Members() {
                     </FormItem>
                   )} />
 
-                  <FormField control={form.control} name="team" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Equipe</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a equipe" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="projetos">
-                            <span className="flex items-center gap-2">
-                              <FolderKanban className="h-4 w-4 text-blue-600" />
-                              <span className="font-medium">Equipe de Projetos</span>
-                            </span>
-                          </SelectItem>
-                          <SelectItem value="tecnica">
-                            <span className="flex items-center gap-2">
-                              <Settings2 className="h-4 w-4 text-orange-600" />
-                              <span className="font-medium">Equipe Técnica</span>
-                            </span>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
 
                   {!editingMember && (
                     <div className="border-t pt-3">
@@ -655,9 +626,8 @@ export default function Members() {
             />
           </div>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent>
           <TeamSection team="projetos" members={projetosMembers} isLoading={isLoading} {...cardProps} />
-          <TeamSection team="tecnica"  members={tecnicaMembers}  isLoading={isLoading} {...cardProps} />
         </CardContent>
       </Card>
     </div>
