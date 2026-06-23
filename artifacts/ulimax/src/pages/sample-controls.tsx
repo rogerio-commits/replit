@@ -252,7 +252,7 @@ export default function SampleControls() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <FlaskConical className="h-6 w-6 text-violet-600" />
-            Controle de Amostras
+            Amostras
           </h1>
           <p className="text-muted-foreground mt-1">
             Gerencie amostras, prazos e requisições por projeto.
