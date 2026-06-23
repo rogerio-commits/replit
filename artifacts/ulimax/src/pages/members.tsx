@@ -130,7 +130,7 @@ interface MemberCardProps {
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
-  onResetLink: (userId: number, memberName: string) => void;
+  onResetLink: (memberId: number, memberName: string) => void;
   deleteInvitationPending: boolean;
 }
 
@@ -220,12 +220,12 @@ function MemberCard({
 
       {isGestor && (
         <div className="bg-muted/50 px-4 py-2 border-t flex justify-end gap-2 flex-wrap">
-          {linkedUser && (
+          {member.email && (
             <Button
               variant="ghost"
               size="sm"
               className="h-8 text-muted-foreground"
-              onClick={() => onResetLink(linkedUser.id, member.name)}
+              onClick={() => onResetLink(member.id, member.name)}
             >
               <KeyRound className="h-3.5 w-3.5 mr-1" />
               Redefinir senha
@@ -273,7 +273,7 @@ interface TeamSectionProps {
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
-  onResetLink: (userId: number, memberName: string) => void;
+  onResetLink: (memberId: number, memberName: string) => void;
   deleteInvitationPending: boolean;
 }
 
@@ -446,10 +446,10 @@ export default function Members() {
     setIsCreateOpen(true);
   };
 
-  const handleResetLink = async (userId: number, memberName: string) => {
+  const handleResetLink = async (memberId: number, memberName: string) => {
     setResetLinkLoading(true);
     try {
-      const res = await fetch(`/api/users/${userId}/signin-link`, { method: "POST" });
+      const res = await fetch(`/api/members/${memberId}/signin-link`, { method: "POST" });
       const data = await res.json() as { url?: string; error?: string };
       if (!res.ok || !data.url) throw new Error(data.error ?? "Erro desconhecido");
       setResetLinkData({ memberName, url: data.url });

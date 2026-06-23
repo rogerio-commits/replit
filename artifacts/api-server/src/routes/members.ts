@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { clerkClient } from "@clerk/express";
 import { db, membersTable } from "@workspace/db";
 import { requireGestor } from "../middlewares/requireAuth";
 import { eq } from "drizzle-orm";
@@ -92,6 +93,30 @@ router.delete("/members/:id", requireGestor, async (req, res) => {
 
   await db.delete(membersTable).where(eq(membersTable.id, params.data.id));
   return res.status(204).send();
+});
+
+router.post("/members/:id/signin-link", requireGestor, async (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "id inválido" });
+
+  const [member] = await db.select().from(membersTable).where(eq(membersTable.id, id));
+  if (!member) return res.status(404).json({ error: "Membro não encontrado" });
+
+  const list = await clerkClient.users.getUserList({ emailAddress: [member.email] });
+  if (!list.data.length) {
+    return res.status(404).json({ error: "Este membro ainda não possui uma conta no sistema. Envie um convite primeiro." });
+  }
+
+  try {
+    const token = await clerkClient.signInTokens.createSignInToken({
+      userId: list.data[0].id,
+      expiresInSeconds: 60 * 60 * 24,
+    });
+    return res.json({ url: token.url });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return res.status(500).json({ error: `Erro ao gerar link: ${msg}` });
+  }
 });
 
 export default router;
