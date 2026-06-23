@@ -485,6 +485,11 @@ router.post("/projects/:id/checklist", requireExecutorOrGestor, async (req, res)
   const body = CreateChecklistItemBody.safeParse(req.body);
   if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
 
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
+
   const [item] = await db
     .insert(checklistItemsTable)
     .values({
@@ -517,6 +522,11 @@ router.patch("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async (
   });
   const body = UpdateChecklistItemBody.safeParse(req.body);
   if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
 
   const updateData: Record<string, unknown> = {};
   if (body.data.peca !== undefined) updateData.peca = body.data.peca;
@@ -557,6 +567,11 @@ router.delete("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async 
     itemId: Number(req.params.itemId),
   });
   if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
 
   await db
     .delete(checklistItemsTable)
@@ -606,6 +621,11 @@ router.post("/projects/:id/visits", requireExecutorOrGestor, async (req, res) =>
   const body = CreateSiteVisitBody.safeParse(req.body);
   if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
 
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
+
   const [visit] = await db
     .insert(siteVisitsTable)
     .values({
@@ -633,6 +653,11 @@ router.delete("/projects/:id/visits/:visitId", requireExecutorOrGestor, async (r
     visitId: Number(req.params.visitId),
   });
   if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
 
   await db
     .delete(siteVisitsTable)
@@ -701,6 +726,11 @@ router.post("/projects/:id/observations", requireExecutorOrGestor, async (req, r
 
   const body = CreateProjectObservationBody.safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: "Invalid body" });
+
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
 
   const authorName = req.appUser?.email ?? "Sistema";
 

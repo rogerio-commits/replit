@@ -165,6 +165,11 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
 
     const ok = await isExecutorParticipant(req.appUser!.email, existing.projectId);
     if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+
+    if (body.data.projectId !== undefined && body.data.projectId !== existing.projectId) {
+      const okDest = await isExecutorParticipant(req.appUser!.email, body.data.projectId);
+      if (!okDest) return res.status(403).json({ error: "Você não é participante do projeto de destino" });
+    }
   }
 
   const updateData: Record<string, unknown> = {};
