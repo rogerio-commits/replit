@@ -138,7 +138,7 @@ interface MemberCardProps {
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
-  onResendInvite: (inviteId: number, member: Member, intendedRole: string) => void;
+  onResendInvite: (inviteId: number, member: { email: string; name: string }, intendedRole: string) => void;
   onResetLink: (memberId: number, memberName: string) => void;
 }
 
@@ -294,7 +294,7 @@ interface TeamSectionProps {
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
-  onResendInvite: (inviteId: number, member: Member, intendedRole: string) => void;
+  onResendInvite: (inviteId: number, member: { email: string; name: string }, intendedRole: string) => void;
   onResetLink: (memberId: number, memberName: string) => void;
 }
 
@@ -510,7 +510,7 @@ export default function Members() {
     );
   };
 
-  const handleResendInvite = (inviteId: number, member: Member, intendedRole: string) => {
+  const handleResendInvite = (inviteId: number, member: { email: string; name: string }, intendedRole: string) => {
     setResendingInviteId(inviteId);
     deleteInvitation.mutate({ id: inviteId }, {
       onSuccess: () => {
@@ -686,16 +686,28 @@ export default function Members() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
-                  onClick={() => handleRevokeInvite(inv.id, inv.email)}
-                  disabled={deleteInvitation.isPending}
-                  title="Cancelar convite"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex flex-col gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    onClick={() => handleResendInvite(inv.id, { name: inv.name, email: inv.email }, inv.intendedRole)}
+                    disabled={resendingInviteId === inv.id || deleteInvitation.isPending}
+                    title="Reenviar convite"
+                  >
+                    <RefreshCw className={cn("h-3.5 w-3.5", resendingInviteId === inv.id && "animate-spin")} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleRevokeInvite(inv.id, inv.email)}
+                    disabled={deleteInvitation.isPending || resendingInviteId === inv.id}
+                    title="Cancelar convite"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
