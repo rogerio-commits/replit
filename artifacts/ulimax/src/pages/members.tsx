@@ -63,9 +63,8 @@ import {
   KeyRound,
   Copy,
   Check,
-  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -117,18 +116,15 @@ const memberSchema = z.object({
   email:        z.string().email("E-mail válido obrigatório"),
   team:         z.enum(["projetos", "tecnica"]),
   intendedRole: z.enum(["gestor", "executor", "observador"]),
-  sendInvite:   z.boolean(),
 });
 
 type MemberFormValues = z.infer<typeof memberSchema>;
 
-const inviteSchema = z.object({
-  name:         z.string().min(1, "Nome obrigatório"),
-  email:        z.string().email("E-mail válido obrigatório"),
+const inviteRoleSchema = z.object({
   intendedRole: z.enum(["gestor", "executor", "observador"]),
 });
 
-type InviteFormValues = z.infer<typeof inviteSchema>;
+type InviteRoleValues = z.infer<typeof inviteRoleSchema>;
 
 interface MemberCardProps {
   member: Member;
@@ -136,20 +132,21 @@ interface MemberCardProps {
   invitations: { id: number; email: string; name: string; intendedRole: string; invitedAt: string }[] | undefined;
   isGestor: boolean;
   pendingRoleId: number | null;
+  resendingInviteId: number | null;
   onEdit: (member: Member) => void;
   onDelete: (id: number) => void;
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
+  onResendInvite: (inviteId: number, member: Member, intendedRole: string) => void;
   onResetLink: (memberId: number, memberName: string) => void;
-  deleteInvitationPending: boolean;
 }
 
 function MemberCard({
-  member, users, invitations, isGestor, pendingRoleId,
-  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, onResetLink, deleteInvitationPending,
+  member, users, invitations, isGestor, pendingRoleId, resendingInviteId,
+  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, onResendInvite, onResetLink,
 }: MemberCardProps) {
-  const linkedUser = users?.find(u => u.email.toLowerCase() === member.email.toLowerCase());
+  const linkedUser   = users?.find(u => u.email.toLowerCase() === member.email.toLowerCase());
   const pendingInvite = invitations?.find(inv => inv.email.toLowerCase() === member.email.toLowerCase());
 
   return (
@@ -207,12 +204,24 @@ function MemberCard({
             <RoleBadge role={linkedUser.role} />
           )
         ) : pendingInvite ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-amber-300 text-amber-600 bg-amber-50 dark:bg-amber-900/20 text-[11px] gap-1">
               <Clock className="h-3 w-3" />
               Convite enviado
             </Badge>
             <RoleBadge role={pendingInvite.intendedRole} />
+            {isGestor && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[11px] px-2 gap-1 text-muted-foreground hover:text-foreground"
+                disabled={resendingInviteId === pendingInvite.id}
+                onClick={() => onResendInvite(pendingInvite.id, member, pendingInvite.intendedRole)}
+              >
+                <RefreshCw className={cn("h-3 w-3", resendingInviteId === pendingInvite.id && "animate-spin")} />
+                {resendingInviteId === pendingInvite.id ? "Reenviando…" : "Reenviar"}
+              </Button>
+            )}
           </div>
         ) : isGestor ? (
           <Button
@@ -279,13 +288,14 @@ interface TeamSectionProps {
   invitations: { id: number; email: string; name: string; intendedRole: string; invitedAt: string }[] | undefined;
   isGestor: boolean;
   pendingRoleId: number | null;
+  resendingInviteId: number | null;
   onEdit: (member: Member) => void;
   onDelete: (id: number) => void;
   onRoleChange: (userId: number, role: SystemRole) => void;
   onRevokeInvite: (id: number, email: string) => void;
   onSendInvite: (member: Member) => void;
+  onResendInvite: (inviteId: number, member: Member, intendedRole: string) => void;
   onResetLink: (memberId: number, memberName: string) => void;
-  deleteInvitationPending: boolean;
 }
 
 function TeamSection({ team, members, isLoading, ...cardProps }: TeamSectionProps) {
@@ -328,46 +338,70 @@ function TeamSection({ team, members, isLoading, ...cardProps }: TeamSectionProp
   );
 }
 
+function RoleSelectItems() {
+  return (
+    <>
+      <SelectItem value="gestor">
+        <span className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+          <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
+        </span>
+      </SelectItem>
+      <SelectItem value="executor">
+        <span className="flex items-center gap-2">
+          <Wrench className="h-4 w-4 text-blue-600" />
+          <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
+        </span>
+      </SelectItem>
+      <SelectItem value="observador">
+        <span className="flex items-center gap-2">
+          <Eye className="h-4 w-4 text-slate-500" />
+          <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
+        </span>
+      </SelectItem>
+    </>
+  );
+}
+
 export default function Members() {
-  const [search, setSearch] = useState("");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [search, setSearch]               = useState("");
+  const [isCreateOpen, setIsCreateOpen]   = useState(false);
   const [editingMember, setEditingMember] = useState<number | null>(null);
+  const [invitingMember, setInvitingMember] = useState<Member | null>(null);
   const [pendingRoleId, setPendingRoleId] = useState<number | null>(null);
+  const [resendingInviteId, setResendingInviteId] = useState<number | null>(null);
   const [resetLinkData, setResetLinkData] = useState<{ memberName: string; url: string } | null>(null);
   const [resetLinkLoading, setResetLinkLoading] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedLink, setCopiedLink]       = useState(false);
 
-  const { toast } = useToast();
-  const { getToken } = useAuth();
-  const queryClient = useQueryClient();
-  const isGestor = useIsGestor();
+  const { toast }      = useToast();
+  const { getToken }   = useAuth();
+  const queryClient    = useQueryClient();
+  const isGestor       = useIsGestor();
 
   const { data: members, isLoading } = useListMembers();
-  const { data: users }               = useListUsers();
-  const { data: invitations }         = useListInvitations();
-  const updateUserRole    = useUpdateUserRole();
-  const createInvitation  = useCreateInvitation();
-  const deleteInvitation  = useDeleteInvitation();
-  const createMember      = useCreateMember();
-  const updateMember      = useUpdateMember();
-  const deleteMember      = useDeleteMember();
+  const { data: users }              = useListUsers();
+  const { data: invitations }        = useListInvitations();
+  const updateUserRole   = useUpdateUserRole();
+  const createInvitation = useCreateInvitation();
+  const deleteInvitation = useDeleteInvitation();
+  const createMember     = useCreateMember();
+  const updateMember     = useUpdateMember();
+  const deleteMember     = useDeleteMember();
 
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
-    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: false },
+    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor" },
   });
 
-  const inviteForm = useForm<InviteFormValues>({
-    resolver: zodResolver(inviteSchema),
-    defaultValues: { name: "", email: "", intendedRole: "executor" },
+  const inviteRoleForm = useForm<InviteRoleValues>({
+    resolver: zodResolver(inviteRoleSchema),
+    defaultValues: { intendedRole: "executor" },
   });
-
-  const sendInviteWatched = form.watch("sendInvite");
 
   const resetDialog = () => {
     setEditingMember(null);
-    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor", sendInvite: false });
+    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor" });
   };
 
   const onSubmit = (data: MemberFormValues) => {
@@ -389,23 +423,19 @@ export default function Members() {
     createMember.mutate({ data: memberPayload }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
-        if (data.sendInvite) {
-          createInvitation.mutate(
-            { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
-            {
-              onSuccess: () => {
-                toast({ title: "Membro adicionado e convite enviado!", description: `Um e-mail foi enviado para ${data.email}.` });
-                queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
-              },
-              onError: (err: unknown) => {
-                const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-                toast({ title: "Membro adicionado, mas o convite falhou", description: msg ?? "Tente reenviar o convite manualmente.", variant: "destructive" });
-              },
-            }
-          );
-        } else {
-          toast({ title: "Membro adicionado com sucesso" });
-        }
+        createInvitation.mutate(
+          { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
+          {
+            onSuccess: () => {
+              toast({ title: "Membro adicionado e convite enviado!", description: `Um e-mail foi enviado para ${data.email}.` });
+              queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+            },
+            onError: (err: unknown) => {
+              const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+              toast({ title: "Membro adicionado, mas o convite falhou", description: msg ?? "Tente reenviar o convite no card do membro.", variant: "destructive" });
+            },
+          }
+        );
         setIsCreateOpen(false);
         resetDialog();
       },
@@ -420,7 +450,6 @@ export default function Members() {
       email: member.email,
       team: (member.team as MemberTeam) ?? "projetos",
       intendedRole: "executor",
-      sendInvite: false,
     });
     setEditingMember(member.id);
     setIsCreateOpen(true);
@@ -458,15 +487,20 @@ export default function Members() {
     });
   };
 
-  const onSubmitInvite = (data: InviteFormValues) => {
+  const handleSendInvite = (member: Member) => {
+    inviteRoleForm.reset({ intendedRole: "executor" });
+    setInvitingMember(member);
+  };
+
+  const handleSubmitInvite = (data: InviteRoleValues) => {
+    if (!invitingMember) return;
     createInvitation.mutate(
-      { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
+      { data: { email: invitingMember.email, name: invitingMember.name, intendedRole: data.intendedRole } },
       {
         onSuccess: () => {
-          toast({ title: "Convite enviado!", description: `Um e-mail foi enviado para ${data.email}.` });
+          toast({ title: "Convite enviado!", description: `Um e-mail foi enviado para ${invitingMember.email}.` });
           queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
-          setIsInviteOpen(false);
-          inviteForm.reset({ name: "", email: "", intendedRole: "executor" });
+          setInvitingMember(null);
         },
         onError: (err: unknown) => {
           const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -476,9 +510,27 @@ export default function Members() {
     );
   };
 
-  const handleSendInvite = (member: Member) => {
-    inviteForm.reset({ name: member.name, email: member.email, intendedRole: "executor" });
-    setIsInviteOpen(true);
+  const handleResendInvite = (inviteId: number, member: Member, intendedRole: string) => {
+    setResendingInviteId(inviteId);
+    deleteInvitation.mutate({ id: inviteId }, {
+      onSuccess: () => {
+        createInvitation.mutate(
+          { data: { email: member.email, name: member.name, intendedRole: intendedRole as SystemRole } },
+          {
+            onSuccess: () => {
+              toast({ title: "Convite reenviado!", description: `Um novo e-mail foi enviado para ${member.email}.` });
+              queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+            },
+            onError: () => toast({ title: "Erro ao reenviar convite", variant: "destructive" }),
+            onSettled: () => setResendingInviteId(null),
+          }
+        );
+      },
+      onError: () => {
+        toast({ title: "Erro ao reenviar convite", variant: "destructive" });
+        setResendingInviteId(null);
+      },
+    });
   };
 
   const handleResetLink = async (memberId: number, memberName: string) => {
@@ -513,19 +565,17 @@ export default function Members() {
     m.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const projetosMembers = filtered;
-
   const isPending = createMember.isPending || updateMember.isPending || createInvitation.isPending;
 
   const cardProps = {
-    users, invitations, isGestor, pendingRoleId,
+    users, invitations, isGestor, pendingRoleId, resendingInviteId,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onRoleChange: handleRoleChange,
     onRevokeInvite: handleRevokeInvite,
     onSendInvite: handleSendInvite,
+    onResendInvite: handleResendInvite,
     onResetLink: handleResetLink,
-    deleteInvitationPending: deleteInvitation.isPending,
   };
 
   return (
@@ -538,96 +588,22 @@ export default function Members() {
         </div>
 
         {isGestor && (
-          <div className="flex gap-2">
-          {/* Invite dialog */}
-          <Dialog open={isInviteOpen} onOpenChange={(open) => { setIsInviteOpen(open); if (!open) inviteForm.reset({ name: "", email: "", intendedRole: "executor" }); }}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Send className="mr-2 h-4 w-4" />
-                Convidar
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[440px]">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Send className="h-4 w-4 text-primary" />
-                  Convidar para o sistema
-                </DialogTitle>
-              </DialogHeader>
-              <p className="text-sm text-muted-foreground -mt-1">
-                Um e-mail será enviado com o link de acesso. Ao aceitar, o usuário cria sua conta automaticamente.
-              </p>
-              <Form {...inviteForm}>
-                <form onSubmit={inviteForm.handleSubmit(onSubmitInvite)} className="space-y-4">
-                  <FormField control={inviteForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome</FormLabel>
-                      <FormControl><Input placeholder="Ex.: Carlos Silva" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={inviteForm.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-mail</FormLabel>
-                      <FormControl><Input type="email" placeholder="carlos@ulimax.com.br" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={inviteForm.control} name="intendedRole" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Papel no sistema</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o papel" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="gestor">
-                            <span className="flex items-center gap-2">
-                              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                              <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
-                            </span>
-                          </SelectItem>
-                          <SelectItem value="executor">
-                            <span className="flex items-center gap-2">
-                              <Wrench className="h-4 w-4 text-blue-600" />
-                              <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
-                            </span>
-                          </SelectItem>
-                          <SelectItem value="observador">
-                            <span className="flex items-center gap-2">
-                              <Eye className="h-4 w-4 text-slate-500" />
-                              <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
-                            </span>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <DialogFooter>
-                    <Button type="submit" disabled={createInvitation.isPending} className="w-full">
-                      {createInvitation.isPending ? "Enviando..." : <><Send className="mr-2 h-4 w-4" />Enviar Convite</>}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-
-          {/* Add member dialog */}
           <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if (!open) resetDialog(); }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Adicionar Membro
+                Novo Membro
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[460px]">
               <DialogHeader>
                 <DialogTitle>{editingMember ? "Editar Membro" : "Adicionar Membro"}</DialogTitle>
               </DialogHeader>
+              {!editingMember && (
+                <p className="text-sm text-muted-foreground -mt-1">
+                  O membro será adicionado à equipe e receberá um e-mail de convite para criar sua senha.
+                </p>
+              )}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField control={form.control} name="name" render={({ field }) => (
@@ -653,66 +629,18 @@ export default function Members() {
                   )} />
 
                   {!editingMember && (
-                    <>
-                      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 px-3.5 py-3 flex gap-2.5 items-start">
-                        <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                          Adicionar um membro <strong>não cria uma conta de acesso</strong> ao sistema. Para que ele consiga entrar, envie um convite por e-mail abaixo.
-                        </p>
-                      </div>
-
-                      <FormField control={form.control} name="sendInvite" render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border px-4 py-3 gap-4">
-                          <div>
-                            <FormLabel className="text-sm font-medium cursor-pointer">
-                              Enviar convite de acesso ao sistema
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Um e-mail será enviado para o membro criar sua senha.
-                            </p>
-                          </div>
+                    <FormField control={form.control} name="intendedRole" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Papel no sistema</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            <SelectTrigger><SelectValue placeholder="Selecione o papel" /></SelectTrigger>
                           </FormControl>
-                        </FormItem>
-                      )} />
-
-                      {sendInviteWatched && (
-                        <FormField control={form.control} name="intendedRole" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Papel no sistema</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o papel" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="gestor">
-                                  <span className="flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                                    <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
-                                  </span>
-                                </SelectItem>
-                                <SelectItem value="executor">
-                                  <span className="flex items-center gap-2">
-                                    <Wrench className="h-4 w-4 text-blue-600" />
-                                    <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
-                                  </span>
-                                </SelectItem>
-                                <SelectItem value="observador">
-                                  <span className="flex items-center gap-2">
-                                    <Eye className="h-4 w-4 text-slate-500" />
-                                    <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
-                                  </span>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      )}
-                    </>
+                          <SelectContent><RoleSelectItems /></SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
                   )}
 
                   <DialogFooter>
@@ -721,16 +649,13 @@ export default function Members() {
                         ? "Salvando..."
                         : editingMember
                           ? "Atualizar"
-                          : sendInviteWatched
-                            ? <><Send className="mr-2 h-4 w-4" />Adicionar e Enviar Convite</>
-                            : "Adicionar Membro"}
+                          : <><Send className="mr-2 h-4 w-4" />Adicionar e Enviar Convite</>}
                     </Button>
                   </DialogFooter>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
-          </div>
         )}
       </div>
 
@@ -791,9 +716,45 @@ export default function Members() {
           </div>
         </CardHeader>
         <CardContent>
-          <TeamSection team="projetos" members={projetosMembers} isLoading={isLoading} {...cardProps} />
+          <TeamSection team="projetos" members={filtered} isLoading={isLoading} {...cardProps} />
         </CardContent>
       </Card>
+
+      {/* Send invite dialog (for existing members without account) */}
+      <Dialog open={!!invitingMember} onOpenChange={(open) => { if (!open) setInvitingMember(null); }}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-4 w-4 text-primary" />
+              Enviar convite para {invitingMember?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-1">
+            Selecione o papel que <strong>{invitingMember?.name}</strong> terá no sistema. Um e-mail com o link de acesso será enviado para <strong>{invitingMember?.email}</strong>.
+          </p>
+          <Form {...inviteRoleForm}>
+            <form onSubmit={inviteRoleForm.handleSubmit(handleSubmitInvite)} className="space-y-4">
+              <FormField control={inviteRoleForm.control} name="intendedRole" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Papel no sistema</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Selecione o papel" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent><RoleSelectItems /></SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <DialogFooter>
+                <Button type="submit" disabled={createInvitation.isPending} className="w-full">
+                  {createInvitation.isPending ? "Enviando..." : <><Send className="mr-2 h-4 w-4" />Enviar Convite</>}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       {/* Reset password link dialog */}
       <Dialog open={!!resetLinkData} onOpenChange={(open) => { if (!open) { setResetLinkData(null); setCopiedLink(false); } }}>
