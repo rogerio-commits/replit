@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, tasksTable, membersTable, projectsTable, projectMembersTable } from "@workspace/db";
+import { db, tasksTable, membersTable, projectsTable, projectMembersTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq, and } from "drizzle-orm";
 import {
@@ -12,6 +12,28 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
+
+async function notifyTaskAssigned(taskId: number, taskTitle: string, assignedTo: number, actorEmail: string, log: { warn: (obj: object, msg: string) => void }) {
+  try {
+    const [assigneeMember] = await db.select({ email: membersTable.email, name: membersTable.name })
+      .from(membersTable).where(eq(membersTable.id, assignedTo)).limit(1);
+    if (!assigneeMember || assigneeMember.email === actorEmail) return;
+    const [assigneeUser] = await db.select({ id: usersTable.id })
+      .from(usersTable).where(eq(usersTable.email, assigneeMember.email)).limit(1);
+    if (!assigneeUser) return;
+    await db.insert(notificationsTable).values({
+      userId: assigneeUser.id,
+      type: "task_assigned",
+      title: "Nova tarefa atribuída a você",
+      body: `Você foi atribuído à tarefa "${taskTitle}"`,
+      entityType: "task",
+      entityId: taskId,
+      read: false,
+    });
+  } catch (e) {
+    log.warn({ err: e }, "Failed to create task_assigned notification");
+  }
+}
 
 async function isExecutorParticipant(email: string, projectId: number): Promise<boolean> {
   const [member] = await db
@@ -125,6 +147,10 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
     .where(eq(tasksTable.id, task.id));
 
+  if (task.assignedTo) {
+    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, req.log);
+  }
+
   return res.status(201).json(taskRow(row));
 });
 
@@ -188,6 +214,10 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   if (body.data.dueDate !== undefined) updateData.dueDate = body.data.dueDate;
   if (body.data.projectId !== undefined) updateData.projectId = body.data.projectId;
 
+  const previousAssignee = body.data.assignedTo !== undefined ? (
+    await db.select({ assignedTo: tasksTable.assignedTo }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1)
+  ).at(0)?.assignedTo : undefined;
+
   const [task] = await db
     .update(tasksTable)
     .set(updateData)
@@ -206,6 +236,10 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     .leftJoin(membersTable, eq(tasksTable.assignedTo, membersTable.id))
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
     .where(eq(tasksTable.id, task.id));
+
+  if (task.assignedTo && task.assignedTo !== previousAssignee) {
+    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, req.log);
+  }
 
   return res.json(taskRow(row));
 });

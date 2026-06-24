@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { db, taskCommentsTable, usersTable } from "@workspace/db";
+import { db, taskCommentsTable, tasksTable, membersTable, notificationsTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+
 const router = Router();
 
 router.get("/tasks/:id/comments", async (req, res) => {
@@ -29,18 +30,62 @@ router.post("/tasks/:id/comments", async (req, res) => {
 
   const content = typeof req.body?.content === "string" ? req.body.content.trim() : "";
   if (!content) return res.status(400).json({ error: "Content is required" });
-  const parsed = { data: { content } };
 
   const appUser = req.appUser!;
   const [dbUser] = await db.select().from(usersTable).where(eq(usersTable.clerkUserId, appUser.clerkUserId)).limit(1);
   if (!dbUser) return res.status(401).json({ error: "User not found" });
 
+  const [member] = await db.select({ name: membersTable.name })
+    .from(membersTable)
+    .where(eq(membersTable.email, appUser.email))
+    .limit(1);
+  const authorName = member?.name ?? appUser.email.split("@")[0];
+
   const [comment] = await db.insert(taskCommentsTable).values({
     taskId,
     userId: dbUser.id,
-    authorName: appUser.email,
-    content: parsed.data.content,
+    authorName,
+    content,
   }).returning();
+
+  // notify task assignee (if different from commenter)
+  try {
+    const [task] = await db
+      .select({ assignedTo: tasksTable.assignedTo, title: tasksTable.title })
+      .from(tasksTable)
+      .where(eq(tasksTable.id, taskId))
+      .limit(1);
+
+    if (task?.assignedTo) {
+      const [assigneeMember] = await db
+        .select({ email: membersTable.email })
+        .from(membersTable)
+        .where(eq(membersTable.id, task.assignedTo))
+        .limit(1);
+
+      if (assigneeMember && assigneeMember.email !== appUser.email) {
+        const [assigneeUser] = await db
+          .select({ id: usersTable.id })
+          .from(usersTable)
+          .where(eq(usersTable.email, assigneeMember.email))
+          .limit(1);
+
+        if (assigneeUser) {
+          await db.insert(notificationsTable).values({
+            userId: assigneeUser.id,
+            type: "task_commented",
+            title: "Novo comentário na sua tarefa",
+            body: `${authorName} comentou em "${task.title}"`,
+            entityType: "task",
+            entityId: taskId,
+            read: false,
+          });
+        }
+      }
+    }
+  } catch (e) {
+    req.log.warn({ err: e }, "Failed to create comment notification");
+  }
 
   return res.status(201).json({
     id: comment.id,
