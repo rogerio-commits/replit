@@ -63,7 +63,9 @@ import {
   KeyRound,
   Copy,
   Check,
+  AlertCircle,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -650,9 +652,78 @@ export default function Members() {
                     </FormItem>
                   )} />
 
+                  {!editingMember && (
+                    <>
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 px-3.5 py-3 flex gap-2.5 items-start">
+                        <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                          Adicionar um membro <strong>não cria uma conta de acesso</strong> ao sistema. Para que ele consiga entrar, envie um convite por e-mail abaixo.
+                        </p>
+                      </div>
+
+                      <FormField control={form.control} name="sendInvite" render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border px-4 py-3 gap-4">
+                          <div>
+                            <FormLabel className="text-sm font-medium cursor-pointer">
+                              Enviar convite de acesso ao sistema
+                            </FormLabel>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Um e-mail será enviado para o membro criar sua senha.
+                            </p>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )} />
+
+                      {sendInviteWatched && (
+                        <FormField control={form.control} name="intendedRole" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Papel no sistema</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione o papel" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="gestor">
+                                  <span className="flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                                    <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="executor">
+                                  <span className="flex items-center gap-2">
+                                    <Wrench className="h-4 w-4 text-blue-600" />
+                                    <span><span className="font-medium">Executor</span><span className="text-muted-foreground ml-1 text-xs">— cria projetos e tarefas</span></span>
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="observador">
+                                  <span className="flex items-center gap-2">
+                                    <Eye className="h-4 w-4 text-slate-500" />
+                                    <span><span className="font-medium">Observador</span><span className="text-muted-foreground ml-1 text-xs">— somente visualiza</span></span>
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
+                    </>
+                  )}
+
                   <DialogFooter>
                     <Button type="submit" disabled={isPending} className="w-full">
-                      {isPending ? "Salvando..." : editingMember ? "Atualizar" : "Adicionar"}
+                      {isPending
+                        ? "Salvando..."
+                        : editingMember
+                          ? "Atualizar"
+                          : sendInviteWatched
+                            ? <><Send className="mr-2 h-4 w-4" />Adicionar e Enviar Convite</>
+                            : "Adicionar Membro"}
                     </Button>
                   </DialogFooter>
                 </form>
