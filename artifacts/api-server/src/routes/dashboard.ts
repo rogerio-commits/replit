@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db, projectsTable, tasksTable, membersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -84,6 +85,33 @@ router.get("/dashboard/recent-activity", async (_req, res) => {
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
 
   return res.json(activity);
+});
+
+router.get("/dashboard/member-productivity", async (_req, res) => {
+  const members = await db.select().from(membersTable);
+  const tasks = await db.select().from(tasksTable);
+  const now = new Date();
+
+  const stats = members.map((m) => {
+    const memberTasks = tasks.filter((t) => t.assignedTo === m.id);
+    const doneTasks = memberTasks.filter((t) => t.status === "done").length;
+    const openTasks = memberTasks.filter((t) => t.status !== "done").length;
+    const overdueTasks = memberTasks.filter(
+      (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== "done"
+    ).length;
+    return {
+      memberId: m.id,
+      memberName: m.name,
+      email: m.email,
+      role: m.role,
+      totalTasks: memberTasks.length,
+      doneTasks,
+      openTasks,
+      overdueTasks,
+    };
+  });
+
+  return res.json(stats);
 });
 
 export default router;

@@ -1,1 +1,2 @@
 - [Project participant authorization](project-participant-auth.md) — executors can only edit projects/tasks where they are listed as participants; gestors bypass the check.
+- [Uppy React duplicate instance fix](uppy-react-override.md) — installing Uppy brings duplicate React copies; fix with pnpm overrides in root package.json.

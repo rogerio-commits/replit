@@ -713,6 +713,100 @@ export interface AssistenciaTecnicaUpdate {
   realizado?: boolean;
 }
 
+export interface MemberProductivity {
+  memberId: number;
+  memberName: string;
+  email: string;
+  role: string;
+  totalTasks: number;
+  doneTasks: number;
+  openTasks: number;
+  overdueTasks: number;
+}
+
+export interface TaskComment {
+  id: number;
+  taskId: number;
+  userId: number;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface TaskCommentInput {
+  /** @minLength 1 */
+  content: string;
+}
+
+export interface AppNotification {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  /** @nullable */
+  entityType?: string | null;
+  /** @nullable */
+  entityId?: number | null;
+  createdAt: string;
+}
+
+export type AttachmentEntityType = typeof AttachmentEntityType[keyof typeof AttachmentEntityType];
+
+
+export const AttachmentEntityType = {
+  task: 'task',
+  project: 'project',
+} as const;
+
+export interface Attachment {
+  id: number;
+  entityType: AttachmentEntityType;
+  entityId: number;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedBy: number;
+  uploaderName: string;
+  createdAt: string;
+}
+
+export type AttachmentInputEntityType = typeof AttachmentInputEntityType[keyof typeof AttachmentInputEntityType];
+
+
+export const AttachmentInputEntityType = {
+  task: 'task',
+  project: 'project',
+} as const;
+
+export interface AttachmentInput {
+  entityType: AttachmentInputEntityType;
+  entityId: number;
+  /** @minLength 1 */
+  filename: string;
+  /** @minLength 1 */
+  originalName: string;
+  /** @minLength 1 */
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export interface UploadUrlRequest {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;
@@ -790,4 +884,17 @@ export type ListInstallationEventsParams = {
  */
 month?: string;
 };
+
+export type ListAttachmentsParams = {
+entityType: ListAttachmentsEntityType;
+entityId: number;
+};
+
+export type ListAttachmentsEntityType = typeof ListAttachmentsEntityType[keyof typeof ListAttachmentsEntityType];
+
+
+export const ListAttachmentsEntityType = {
+  task: 'task',
+  project: 'project',
+} as const;
 

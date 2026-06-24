@@ -44,9 +44,15 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Trash2, Edit } from "lucide-react";
+import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Trash2, Edit, MessageSquare, Paperclip } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
+import { TaskComments } from "@/components/task-comments";
+import { TaskAttachments } from "@/components/task-attachments";
+import { TaskDetailPanel } from "@/components/task-detail-panel";
 
 const TASK_STATUS_LABELS: Record<string, string> = {
   todo: "A Fazer",
@@ -98,6 +104,7 @@ export default function Tasks() {
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<number | null>(null);
+  const [selectedTask, setSelectedTask] = useState<{ id: number; title: string; description?: string | null; status: string; priority: string; dueDate?: string | null; projectName?: string | null; assigneeName?: string | null; createdAt: string } | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -460,7 +467,12 @@ export default function Tasks() {
                       </div>
                     </div>
                     
-                    {canEdit && <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                    <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                      <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={() => setSelectedTask(task)}>
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        Detalhes
+                      </Button>
+                    {canEdit && <>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -487,7 +499,8 @@ export default function Tasks() {
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
-                    </div>}
+                    </>}
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -505,6 +518,12 @@ export default function Tasks() {
           )}
         </CardContent>
       </Card>
+
+      <TaskDetailPanel
+        task={selectedTask}
+        open={selectedTask !== null}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   );
 }

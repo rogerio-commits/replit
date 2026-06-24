@@ -10,6 +10,10 @@ import installationEventsRouter from "./installation-events";
 import invitationsRouter from "./invitations";
 import assistenciaTecnicaRouter from "./assistencia-tecnica";
 import sampleControlsRouter from "./sample-controls";
+import commentsRouter from "./comments";
+import notificationsRouter from "./notifications";
+import attachmentsRouter from "./attachments";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
@@ -26,5 +30,9 @@ router.use(installationEventsRouter);
 router.use(invitationsRouter);
 router.use(assistenciaTecnicaRouter);
 router.use(sampleControlsRouter);
+router.use(commentsRouter);
+router.use(notificationsRouter);
+router.use(attachmentsRouter);
+router.use(storageRouter);
 
 export default router;

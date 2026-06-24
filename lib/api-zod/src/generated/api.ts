@@ -1047,3 +1047,175 @@ export const DeleteInstallationEventParams = zod.object({
 })
 
 
+/**
+ * @summary Get task statistics per member
+ */
+export const GetMemberProductivityResponseItem = zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "email": zod.string(),
+  "role": zod.string(),
+  "totalTasks": zod.number(),
+  "doneTasks": zod.number(),
+  "openTasks": zod.number(),
+  "overdueTasks": zod.number()
+})
+export const GetMemberProductivityResponse = zod.array(GetMemberProductivityResponseItem)
+
+
+/**
+ * @summary List comments for a task
+ */
+export const ListTaskCommentsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListTaskCommentsResponseItem = zod.object({
+  "id": zod.number(),
+  "taskId": zod.number(),
+  "userId": zod.number(),
+  "authorName": zod.string(),
+  "content": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListTaskCommentsResponse = zod.array(ListTaskCommentsResponseItem)
+
+
+/**
+ * @summary Add a comment to a task
+ */
+export const CreateTaskCommentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateTaskCommentBody = zod.object({
+  "content": zod.string().min(1)
+})
+
+
+/**
+ * @summary Delete a task comment
+ */
+export const DeleteTaskCommentParams = zod.object({
+  "id": zod.coerce.number(),
+  "commentId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List notifications for the current user
+ */
+export const ListNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "read": zod.boolean(),
+  "entityType": zod.string().nullish(),
+  "entityId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
+
+
+/**
+ * @summary Mark a notification as read
+ */
+export const MarkNotificationReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkNotificationReadResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "read": zod.boolean(),
+  "entityType": zod.string().nullish(),
+  "entityId": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary List attachments for an entity
+ */
+export const ListAttachmentsQueryParams = zod.object({
+  "entityType": zod.enum(['task', 'project']),
+  "entityId": zod.coerce.number()
+})
+
+export const ListAttachmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "entityType": zod.enum(['task', 'project']),
+  "entityId": zod.number(),
+  "filename": zod.string(),
+  "originalName": zod.string(),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "uploadedBy": zod.number(),
+  "uploaderName": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListAttachmentsResponse = zod.array(ListAttachmentsResponseItem)
+
+
+/**
+ * @summary Register a new attachment after upload
+ */
+
+
+
+
+
+export const CreateAttachmentBody = zod.object({
+  "entityType": zod.enum(['task', 'project']),
+  "entityId": zod.number(),
+  "filename": zod.string().min(1),
+  "originalName": zod.string().min(1),
+  "mimeType": zod.string().min(1),
+  "sizeBytes": zod.number()
+})
+
+
+/**
+ * @summary Delete an attachment
+ */
+export const DeleteAttachmentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Request a presigned URL for file upload
+ */
+
+
+
+
+
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string().min(1),
+  "size": zod.number().min(1),
+  "contentType": zod.string().min(1)
+})
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
+
+
+/**
+ * @summary Serve a stored object
+ */
+export const GetStorageObjectParams = zod.object({
+  "objectPath": zod.coerce.string()
+})
+
+

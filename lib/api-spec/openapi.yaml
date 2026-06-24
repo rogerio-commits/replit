@@ -26,6 +26,12 @@ tags:
     description: Team invite management
   - name: assistencia-tecnica
     description: Technical assistance requests
+  - name: notifications
+    description: In-app notifications
+  - name: attachments
+    description: File attachments for tasks and projects
+  - name: storage
+    description: Object storage upload and serving
 paths:
   /healthz:
     get:
@@ -1082,6 +1088,230 @@ paths:
         "404":
           description: Not found
 
+  /dashboard/member-productivity:
+    get:
+      operationId: getMemberProductivity
+      tags: [dashboard]
+      summary: Get task statistics per member
+      responses:
+        "200":
+          description: Productivity stats per member
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MemberProductivity"
+
+  /tasks/{id}/comments:
+    get:
+      operationId: listTaskComments
+      tags: [tasks]
+      summary: List comments for a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskComment"
+    post:
+      operationId: createTaskComment
+      tags: [tasks]
+      summary: Add a comment to a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCommentInput"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskComment"
+
+  /tasks/{id}/comments/{commentId}:
+    delete:
+      operationId: deleteTaskComment
+      tags: [tasks]
+      summary: Delete a task comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for the current user
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppNotification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "204":
+          description: All marked as read
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppNotification"
+
+  /attachments:
+    get:
+      operationId: listAttachments
+      tags: [attachments]
+      summary: List attachments for an entity
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [task, project]
+        - name: entityId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of attachments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Attachment"
+    post:
+      operationId: createAttachment
+      tags: [attachments]
+      summary: Register a new attachment after upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttachmentInput"
+      responses:
+        "201":
+          description: Created attachment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+
+  /attachments/{id}:
+    delete:
+      operationId: deleteAttachment
+      tags: [attachments]
+      summary: Delete an attachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /storage/uploads/request-url:
+    post:
+      tags: [storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+
+  /storage/objects/{objectPath}:
+    get:
+      tags: [storage]
+      operationId: getStorageObject
+      summary: Serve a stored object
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Object content
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+
 components:
   schemas:
     HealthStatus:
@@ -1874,3 +2104,142 @@ components:
           type: ["string", "null"]
         realizado:
           type: boolean
+
+    MemberProductivity:
+      type: object
+      required: [memberId, memberName, email, role, totalTasks, doneTasks, openTasks, overdueTasks]
+      properties:
+        memberId:
+          type: integer
+        memberName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        totalTasks:
+          type: integer
+        doneTasks:
+          type: integer
+        openTasks:
+          type: integer
+        overdueTasks:
+          type: integer
+
+    TaskComment:
+      type: object
+      required: [id, taskId, userId, authorName, content, createdAt]
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+        userId:
+          type: integer
+        authorName:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    TaskCommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    AppNotification:
+      type: object
+      required: [id, userId, type, title, body, read, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        read:
+          type: boolean
+        entityType:
+          type: ["string", "null"]
+        entityId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    Attachment:
+      type: object
+      required: [id, entityType, entityId, filename, originalName, mimeType, sizeBytes, uploadedBy, uploaderName, createdAt]
+      properties:
+        id:
+          type: integer
+        entityType:
+          type: string
+          enum: [task, project]
+        entityId:
+          type: integer
+        filename:
+          type: string
+        originalName:
+          type: string
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+        uploadedBy:
+          type: integer
+        uploaderName:
+          type: string
+        createdAt:
+          type: string
+
+    AttachmentInput:
+      type: object
+      required: [entityType, entityId, filename, originalName, mimeType, sizeBytes]
+      properties:
+        entityType:
+          type: string
+          enum: [task, project]
+        entityId:
+          type: integer
+        filename:
+          type: string
+          minLength: 1
+        originalName:
+          type: string
+          minLength: 1
+        mimeType:
+          type: string
+          minLength: 1
+        sizeBytes:
+          type: integer
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string

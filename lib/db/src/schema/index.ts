@@ -11,3 +11,6 @@ export * from "./observations";
 export * from "./phase-history";
 export * from "./assistencia-tecnica";
 export * from "./sample-controls";
+export * from "./task-comments";
+export * from "./notifications";
+export * from "./attachments";

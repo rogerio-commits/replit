@@ -21,6 +21,7 @@ import Checklist from "@/pages/checklist";
 import AssistenciaTecnica from "@/pages/assistencia-tecnica";
 import SampleControls from "@/pages/sample-controls";
 import Ajuda from "@/pages/ajuda";
+import Productivity from "@/pages/productivity";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -188,6 +189,7 @@ function ProtectedRoutes() {
             <Route path="/checklist" component={Checklist} />
             <Route path="/assistencia-tecnica" component={AssistenciaTecnica} />
             <Route path="/controle-amostras" component={SampleControls} />
+            <Route path="/produtividade" component={Productivity} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />
