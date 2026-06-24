@@ -13,6 +13,10 @@ import {
   ShieldCheck,
   ChevronRight,
   ChevronDown,
+  MessageSquare,
+  Paperclip,
+  FileDown,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +25,7 @@ interface Section {
   title: string;
   icon: React.ElementType;
   content: React.ReactNode;
+  isNew?: boolean;
 }
 
 const sections: Section[] = [
@@ -93,7 +98,10 @@ const sections: Section[] = [
             <li><Strong>Prioridade</Strong>: Normal ou Alta</li>
           </ul>
         </Subsection>
-        <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas e todas as tarefas vinculadas.</Tip>
+        <Subsection title="Exportar relatório em PDF">
+          <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Exportar PDF</Strong> no cabeçalho da página. O arquivo gerado contém nome, status, datas, descrição, lista completa de tarefas e membros da equipe.</p>
+        </Subsection>
+        <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas, tarefas vinculadas e o botão de exportação em PDF.</Tip>
       </div>
     ),
   },
@@ -118,6 +126,147 @@ const sections: Section[] = [
             <li><Strong>Responsável</Strong>: filtra pelo membro atribuído</li>
           </ul>
         </Subsection>
+        <Subsection title="Painel de detalhes (comentários e anexos)">
+          <p className="text-sm text-muted-foreground mb-2">Clique no botão <Strong>Detalhes</Strong> em qualquer tarefa para abrir um painel lateral com:</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Comentários</Strong>: histórico de mensagens e campo para adicionar novos comentários</li>
+            <li><Strong>Anexos</Strong>: upload de arquivos por arrastar e soltar ou clique, com listagem e download dos arquivos já enviados</li>
+          </ul>
+        </Subsection>
+        <Tip>Todos os membros da equipe com acesso ao projeto podem visualizar e adicionar comentários e anexos nas tarefas.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "comentarios",
+    title: "Comentários em Tarefas",
+    icon: MessageSquare,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Cada tarefa possui um histórico de comentários para comunicação contextualizada diretamente no item de trabalho.</p>
+        <Subsection title="Como comentar em uma tarefa">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Na página <Strong>Tarefas</Strong>, localize a tarefa desejada.</li>
+            <li>Clique no botão <Strong>Detalhes</Strong> à direita da tarefa.</li>
+            <li>No painel lateral que se abre, role até a seção <Strong>Comentários</Strong>.</li>
+            <li>Digite sua mensagem no campo de texto e pressione <Strong>Comentar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Histórico">
+          <p className="text-sm text-muted-foreground">Os comentários são exibidos em ordem cronológica, com o nome do autor e o horário de cada mensagem. O histórico completo é visível para todos os membros com acesso ao projeto.</p>
+        </Subsection>
+        <Tip>Use comentários para registrar decisões, solicitar aprovações ou comunicar bloqueios — tudo vinculado diretamente à tarefa, sem precisar de e-mails externos.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "anexos",
+    title: "Anexos em Tarefas",
+    icon: Paperclip,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Arquivos (imagens, PDFs, planilhas, etc.) podem ser anexados diretamente a qualquer tarefa para centralizar as evidências e documentos do trabalho.</p>
+        <Subsection title="Enviar um arquivo">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Abra o painel de detalhes de uma tarefa clicando em <Strong>Detalhes</Strong>.</li>
+            <li>Na seção <Strong>Anexos</Strong>, arraste e solte o arquivo ou clique na área de upload.</li>
+            <li>Aguarde o envio — o arquivo aparece na lista assim que concluído.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Baixar ou excluir">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique no nome do arquivo para fazer o <Strong>download</Strong>.</li>
+            <li>Clique no ícone de lixeira ao lado do arquivo para <Strong>excluí-lo</Strong> (somente Gestor ou quem fez o upload).</li>
+          </ul>
+        </Subsection>
+        <Tip>Formatos suportados: imagens (JPG, PNG, GIF), documentos (PDF, DOCX, XLSX) e qualquer outro tipo de arquivo. O limite por arquivo é definido pela configuração do servidor.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "pdf",
+    title: "Relatório PDF de Projeto",
+    icon: FileDown,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Gere um relatório completo de qualquer projeto em formato PDF, pronto para compartilhar com clientes ou para arquivo.</p>
+        <Subsection title="Gerar o PDF">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Acesse <Strong>Projetos</Strong> e clique no projeto desejado para abrir o detalhe.</li>
+            <li>No cabeçalho da página, clique em <Strong>Exportar PDF</Strong>.</li>
+            <li>O arquivo é gerado automaticamente e o download começa em instantes.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="O que está no relatório">
+          <Table
+            headers={["Seção", "Conteúdo"]}
+            rows={[
+              ["Cabeçalho", "Nome do projeto, status, prioridade e datas de início e entrega"],
+              ["Descrição", "Texto completo da descrição do projeto"],
+              ["Tarefas", "Lista de todas as tarefas com status, prioridade e responsável"],
+              ["Equipe", "Membros participantes com nome e função"],
+            ]}
+          />
+        </Subsection>
+        <Tip>O PDF é gerado diretamente no navegador, sem necessidade de servidor externo. O nome do arquivo inclui o nome do projeto para fácil identificação.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "notificacoes",
+    title: "Notificações",
+    icon: Bell,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">O sistema envia notificações em tempo real para mantê-lo informado sobre atualizações importantes nos projetos e tarefas.</p>
+        <Subsection title="Acessar as notificações">
+          <p className="text-sm text-muted-foreground">Clique no <Strong>ícone de sino</Strong> no canto superior direito da tela (ao lado do perfil). Um painel exibe todas as notificações recentes.</p>
+        </Subsection>
+        <Subsection title="Tipos de notificação">
+          <Table
+            headers={["Quando", "Notificação gerada"]}
+            rows={[
+              ["Nova tarefa atribuída a você", "Aviso de nova responsabilidade"],
+              ["Comentário em uma tarefa sua", "Aviso de nova mensagem"],
+              ["Prazo de tarefa próximo", "Lembrete de vencimento"],
+              ["Status de projeto atualizado", "Confirmação de mudança de fase"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Marcar como lida">
+          <p className="text-sm text-muted-foreground">No painel de notificações, clique em <Strong>Marcar como lida</Strong> em qualquer notificação individual, ou use <Strong>Marcar todas como lidas</Strong> para limpar o contador de uma vez.</p>
+        </Subsection>
+        <Tip>O número em vermelho sobre o sino indica quantas notificações ainda não foram lidas. Ele desaparece assim que todas forem marcadas como lidas.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "produtividade",
+    title: "Produtividade",
+    icon: BarChart2,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">O Dashboard de Produtividade oferece uma visão analítica do desempenho individual de cada membro da equipe, com base nas tarefas concluídas.</p>
+        <Subsection title="Acessar">
+          <p className="text-sm text-muted-foreground">Clique em <Strong>Produtividade</Strong> no menu lateral (visível para Gestores).</p>
+        </Subsection>
+        <Subsection title="O que você vê">
+          <Table
+            headers={["Gráfico / Seção", "O que mostra"]}
+            rows={[
+              ["Ranking de membros", "Quem concluiu mais tarefas no período"],
+              ["Tarefas por membro", "Gráfico de barras com o volume de tarefas de cada pessoa"],
+              ["Taxa de conclusão", "Percentual de tarefas concluídas em relação ao total atribuído"],
+              ["Breakdown por status", "Distribuição das tarefas em A Fazer · Em Andamento · Revisão · Concluída para cada membro"],
+            ]}
+          />
+        </Subsection>
+        <Tip>Use esta página para identificar membros sobrecarregados ou subutilizados e redistribuir tarefas de forma mais equilibrada.</Tip>
       </div>
     ),
   },
@@ -353,6 +502,14 @@ function Badge({ label, color }: { label: string; color: "blue" | "amber" | "gre
   );
 }
 
+function NewBadge() {
+  return (
+    <span className="ml-auto mr-2 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 uppercase tracking-wide">
+      Novo
+    </span>
+  );
+}
+
 function SectionCard({ section, isOpen, onToggle }: { section: Section; isOpen: boolean; onToggle: () => void }) {
   const Icon = section.icon;
   return (
@@ -365,6 +522,7 @@ function SectionCard({ section, isOpen, onToggle }: { section: Section; isOpen: 
           <Icon className="h-4 w-4 text-primary" />
         </div>
         <span className="flex-1 font-semibold text-foreground text-sm">{section.title}</span>
+        {section.isNew && <NewBadge />}
         {isOpen
           ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
           : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
@@ -398,14 +556,20 @@ export default function Ajuda() {
     setOpenSections(new Set());
   }
 
+  const newCount = sections.filter((s) => s.isNew).length;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <BookOpen className="h-5 w-5 text-primary" />
             <h1 className="text-2xl font-bold text-foreground">Ajuda</h1>
+            {newCount > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                {newCount} novidades
+              </span>
+            )}
           </div>
           <p className="text-muted-foreground text-sm">
             Manual de uso do sistema Ulimax &amp; Co. — clique em uma seção para expandir.
@@ -427,7 +591,6 @@ export default function Ajuda() {
         </div>
       </div>
 
-      {/* Sections */}
       <div className="space-y-3">
         {sections.map((section) => (
           <SectionCard
@@ -439,7 +602,6 @@ export default function Ajuda() {
         ))}
       </div>
 
-      {/* Footer */}
       <p className="text-center text-xs text-muted-foreground pt-2">
         Ulimax &amp; Co. · Sistema de Controle de Projetos · Uso interno
       </p>
