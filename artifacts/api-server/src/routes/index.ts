@@ -14,6 +14,7 @@ import commentsRouter from "./comments";
 import notificationsRouter from "./notifications";
 import attachmentsRouter from "./attachments";
 import storageRouter from "./storage";
+import projectActivityRouter from "./project-activity";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(commentsRouter);
 router.use(notificationsRouter);
 router.use(attachmentsRouter);
 router.use(storageRouter);
+router.use(projectActivityRouter);
 
 export default router;

@@ -44,7 +44,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Trash2, Edit, MessageSquare, Paperclip } from "lucide-react";
+import { Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase, Trash2, Edit, MessageSquare, Paperclip, Download } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -200,12 +200,50 @@ export default function Tasks() {
     return matchesSearch && matchesStatus && matchesProject;
   });
 
+  const TASK_STATUS_LABELS: Record<string, string> = {
+    todo: "A Fazer",
+    in_progress: "Em Andamento",
+    review: "Em Revisão",
+    done: "Concluída",
+  };
+  const PRIORITY_LABELS: Record<string, string> = { high: "Alta", medium: "Normal", low: "Baixa" };
+
+  function handleExportCSV() {
+    if (!filteredTasks || filteredTasks.length === 0) return;
+    const headers = ["ID", "Título", "Status", "Prioridade", "Projeto", "Responsável", "Prazo", "Criada Em"];
+    const rows = filteredTasks.map(t => [
+      t.id,
+      `"${t.title.replace(/"/g, '""')}"`,
+      TASK_STATUS_LABELS[t.status] ?? t.status,
+      PRIORITY_LABELS[t.priority] ?? t.priority,
+      t.projectName ? `"${t.projectName.replace(/"/g, '""')}"` : "",
+      t.assigneeName ? `"${t.assigneeName.replace(/"/g, '""')}"` : "",
+      t.dueDate ? t.dueDate.split("T")[0] : "",
+      t.createdAt ? t.createdAt.split("T")[0] : "",
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tarefas_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Tarefas</h1>
           <p className="text-muted-foreground mt-1">Gerencie entregas em todos os projetos.</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={!filteredTasks || filteredTasks.length === 0} title="Exportar tarefas filtradas como CSV">
+            <Download className="mr-2 h-4 w-4" />
+            Exportar CSV
+          </Button>
         </div>
 
         {canEdit && <Dialog open={isCreateOpen} onOpenChange={(open) => {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -216,6 +217,27 @@ export default function ProjectDetail() {
   });
   const { data: phaseHistory } = useListProjectPhaseHistory(projectId, {
     query: { enabled: !!projectId, queryKey: ["projectPhaseHistory", projectId] },
+  });
+
+  interface ProjectActivityItem {
+    id: string;
+    type: "task_created" | "task_completed" | "task_commented";
+    actorName: string;
+    description: string;
+    entityId: number;
+    entityTitle: string;
+    createdAt: string;
+  }
+
+  const { data: activityItems } = useQuery<ProjectActivityItem[]>({
+    queryKey: ["project-activity", projectId],
+    queryFn: async () => {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${base}/api/projects/${projectId}/activity`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch activity");
+      return res.json();
+    },
+    enabled: !!projectId,
   });
 
   const updateProject = useUpdateProject();
@@ -1345,6 +1367,64 @@ export default function ProjectDetail() {
                   </span>
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Activity Timeline */}
+      {activityItems && activityItems.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 border-b">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold">Histórico de Atividades</CardTitle>
+              <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                {activityItems.length}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="relative pl-8 pr-4 py-4">
+              <div className="absolute left-[27px] top-4 bottom-4 w-px bg-border" />
+              <div className="space-y-4">
+                {activityItems.map((item) => {
+                  const date = new Date(item.createdAt);
+                  const dateLabel = isToday(date)
+                    ? `Hoje às ${format(date, "HH:mm")}`
+                    : isYesterday(date)
+                    ? `Ontem às ${format(date, "HH:mm")}`
+                    : format(date, "d MMM yyyy 'às' HH:mm", { locale: ptBR });
+
+                  const dotColor =
+                    item.type === "task_completed"
+                      ? "bg-emerald-500"
+                      : item.type === "task_commented"
+                      ? "bg-blue-500"
+                      : "bg-slate-400";
+
+                  const Icon =
+                    item.type === "task_completed"
+                      ? CheckSquare
+                      : item.type === "task_commented"
+                      ? MessageSquare
+                      : Plus;
+
+                  return (
+                    <div key={item.id} className="relative flex gap-3 items-start">
+                      <div className={`absolute -left-5 mt-0.5 h-4 w-4 rounded-full border-2 border-background ${dotColor} flex items-center justify-center shrink-0`}>
+                        <Icon className="h-2 w-2 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-foreground leading-snug">{item.description}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {item.actorName} · {dateLabel}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>

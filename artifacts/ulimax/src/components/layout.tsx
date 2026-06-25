@@ -15,6 +15,7 @@ import {
   FlaskConical,
   BookOpen,
   TrendingUp,
+  Search,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -29,6 +30,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationBell } from "@/components/notification-bell";
+import { DarkModeToggle } from "@/components/dark-mode-toggle";
+import { CommandPalette } from "@/components/command-palette";
 
 interface LayoutProps {
   children: ReactNode;
@@ -115,9 +118,23 @@ export function Layout({ children }: LayoutProps) {
           </nav>
           
           {/* User section at the bottom */}
-          <div className="px-4 pb-2">
+          <div className="px-4 pb-2 flex items-center gap-1">
             <NotificationBell />
+            <DarkModeToggle />
+            <button
+              onClick={() => {
+                const ev = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true });
+                document.dispatchEvent(ev);
+              }}
+              className="flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors cursor-pointer border border-sidebar-border/40"
+              title="Busca global (⌘K)"
+            >
+              <Search className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 text-left hidden lg:block">Buscar...</span>
+              <kbd className="text-[10px] bg-sidebar-border/30 px-1 rounded hidden lg:block">⌘K</kbd>
+            </button>
           </div>
+          <CommandPalette />
           <div className="p-3 border-t border-sidebar-border">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
