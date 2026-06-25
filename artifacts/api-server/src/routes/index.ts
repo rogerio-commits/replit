@@ -15,6 +15,7 @@ import notificationsRouter from "./notifications";
 import attachmentsRouter from "./attachments";
 import storageRouter from "./storage";
 import projectActivityRouter from "./project-activity";
+import emailDeadlinesRouter from "./email-deadlines";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(notificationsRouter);
 router.use(attachmentsRouter);
 router.use(storageRouter);
 router.use(projectActivityRouter);
+router.use(emailDeadlinesRouter);
 
 export default router;

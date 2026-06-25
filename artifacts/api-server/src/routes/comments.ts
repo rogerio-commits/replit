@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, taskCommentsTable, tasksTable, membersTable, notificationsTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { sendTaskCommentedEmail } from "../lib/email";
 
 const router = Router();
 
@@ -58,7 +59,7 @@ router.post("/tasks/:id/comments", async (req, res) => {
 
     if (task?.assignedTo) {
       const [assigneeMember] = await db
-        .select({ email: membersTable.email })
+        .select({ email: membersTable.email, name: membersTable.name })
         .from(membersTable)
         .where(eq(membersTable.id, task.assignedTo))
         .limit(1);
@@ -81,6 +82,16 @@ router.post("/tasks/:id/comments", async (req, res) => {
             read: false,
           });
         }
+
+        // Send email (fire-and-forget)
+        sendTaskCommentedEmail({
+          toEmail: assigneeMember.email,
+          toName: assigneeMember.name,
+          taskTitle: task.title,
+          taskId,
+          authorName,
+          commentPreview: content.slice(0, 120),
+        }).catch((e) => req.log.warn({ err: e }, "Failed to send comment email"));
       }
     }
   } catch (e) {

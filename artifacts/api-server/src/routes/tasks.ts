@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, tasksTable, membersTable, projectsTable, projectMembersTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq, and } from "drizzle-orm";
+import { sendTaskAssignedEmail } from "../lib/email";
 import {
   ListTasksQueryParams,
   CreateTaskBody,
@@ -13,7 +14,15 @@ import {
 
 const router = Router();
 
-async function notifyTaskAssigned(taskId: number, taskTitle: string, assignedTo: number, actorEmail: string, log: { warn: (obj: object, msg: string) => void }) {
+async function notifyTaskAssigned(
+  taskId: number,
+  taskTitle: string,
+  assignedTo: number,
+  actorEmail: string,
+  projectName: string,
+  actorName: string,
+  log: { warn: (obj: object, msg: string) => void }
+) {
   try {
     const [assigneeMember] = await db.select({ email: membersTable.email, name: membersTable.name })
       .from(membersTable).where(eq(membersTable.id, assignedTo)).limit(1);
@@ -30,6 +39,15 @@ async function notifyTaskAssigned(taskId: number, taskTitle: string, assignedTo:
       entityId: taskId,
       read: false,
     });
+    // Send email (fire-and-forget — never block the response)
+    sendTaskAssignedEmail({
+      toEmail: assigneeMember.email,
+      toName: assigneeMember.name,
+      taskTitle,
+      taskId,
+      projectName,
+      assignedByName: actorName,
+    }).catch((e) => log.warn({ err: e }, "Failed to send task_assigned email"));
   } catch (e) {
     log.warn({ err: e }, "Failed to create task_assigned notification");
   }
@@ -148,7 +166,10 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
     .where(eq(tasksTable.id, task.id));
 
   if (task.assignedTo) {
-    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, req.log);
+    const projName = row?.projectName ?? "";
+    const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+    const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
+    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projName, actorName, req.log);
   }
 
   return res.status(201).json(taskRow(row));
@@ -238,7 +259,10 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     .where(eq(tasksTable.id, task.id));
 
   if (task.assignedTo && task.assignedTo !== previousAssignee) {
-    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, req.log);
+    const projName = row?.projectName ?? "";
+    const actorMember2 = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+    const actorName2 = actorMember2[0]?.name ?? req.appUser!.email.split("@")[0];
+    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projName, actorName2, req.log);
   }
 
   return res.json(taskRow(row));
