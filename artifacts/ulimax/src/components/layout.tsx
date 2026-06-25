@@ -16,6 +16,7 @@ import {
   BookOpen,
   TrendingUp,
   Search,
+  GanttChartSquare,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -57,6 +58,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
     { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
     { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
+    { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
     { href: "/produtividade", label: "Produtividade", icon: TrendingUp },
     { href: "/ajuda", label: "Ajuda", icon: BookOpen },
   ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
