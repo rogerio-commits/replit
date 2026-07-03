@@ -1106,6 +1106,35 @@ export const DeleteTaskCommentParams = zod.object({
 
 
 /**
+ * @summary List audit log entries
+ */
+export const listAuditLogsQueryLimitDefault = 100;
+
+export const ListAuditLogsQueryParams = zod.object({
+  "entityType": zod.enum(['task', 'project', 'member']).optional(),
+  "entityId": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().default(listAuditLogsQueryLimitDefault)
+})
+
+export const ListAuditLogsResponseItem = zod.object({
+  "id": zod.number(),
+  "entityType": zod.enum(['task', 'project', 'member']),
+  "entityId": zod.number(),
+  "entityName": zod.string(),
+  "action": zod.enum(['created', 'updated', 'deleted', 'status_changed', 'assigned', 'unassigned']),
+  "actorName": zod.string(),
+  "actorEmail": zod.string(),
+  "changes": zod.array(zod.object({
+  "field": zod.string(),
+  "from": zod.unknown(),
+  "to": zod.unknown()
+})).nullish(),
+  "createdAt": zod.string()
+})
+export const ListAuditLogsResponse = zod.array(ListAuditLogsResponseItem)
+
+
+/**
  * @summary List notifications for the current user
  */
 export const ListNotificationsResponseItem = zod.object({

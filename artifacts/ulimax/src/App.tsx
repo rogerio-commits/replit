@@ -23,6 +23,7 @@ import SampleControls from "@/pages/sample-controls";
 import Ajuda from "@/pages/ajuda";
 import Productivity from "@/pages/productivity";
 import Gantt from "@/pages/gantt";
+import Audit from "@/pages/audit";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -192,6 +193,7 @@ function ProtectedRoutes() {
             <Route path="/controle-amostras" component={SampleControls} />
             <Route path="/produtividade" component={Productivity} />
             <Route path="/gantt" component={Gantt} />
+            <Route path="/auditoria" component={Audit} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />

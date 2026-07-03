@@ -32,6 +32,8 @@ tags:
     description: File attachments for tasks and projects
   - name: storage
     description: Object storage upload and serving
+  - name: audit-logs
+    description: Audit trail of changes
 paths:
   /healthz:
     get:
@@ -1169,6 +1171,39 @@ paths:
         "404":
           description: Not found
 
+  /audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [audit-logs]
+      summary: List audit log entries
+      parameters:
+        - name: entityType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [task, project, member]
+        - name: entityId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: List of audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
   /notifications:
     get:
       operationId: listNotifications
@@ -2234,6 +2269,39 @@ components:
         contentType:
           type: string
           minLength: 1
+
+    AuditLog:
+      type: object
+      required: [id, entityType, entityId, entityName, action, actorName, actorEmail, createdAt]
+      properties:
+        id:
+          type: integer
+        entityType:
+          type: string
+          enum: [task, project, member]
+        entityId:
+          type: integer
+        entityName:
+          type: string
+        action:
+          type: string
+          enum: [created, updated, deleted, status_changed, assigned, unassigned]
+        actorName:
+          type: string
+        actorEmail:
+          type: string
+        changes:
+          type: ["array", "null"]
+          items:
+            type: object
+            required: [field, from, to]
+            properties:
+              field:
+                type: string
+              from: {}
+              to: {}
+        createdAt:
+          type: string
 
     UploadUrlResponse:
       type: object

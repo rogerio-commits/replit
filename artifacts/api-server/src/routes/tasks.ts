@@ -3,6 +3,7 @@ import { db, tasksTable, membersTable, projectsTable, projectMembersTable, notif
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq, and } from "drizzle-orm";
 import { sendTaskAssignedEmail } from "../lib/email";
+import { logAudit, diffObjects } from "../lib/audit";
 import {
   ListTasksQueryParams,
   CreateTaskBody,
@@ -165,12 +166,15 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
     .where(eq(tasksTable.id, task.id));
 
+  const projName = row?.projectName ?? "";
+  const actorMemberPost = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorNamePost = actorMemberPost[0]?.name ?? req.appUser!.email.split("@")[0];
+
   if (task.assignedTo) {
-    const projName = row?.projectName ?? "";
-    const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
-    const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
-    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projName, actorName, req.log);
+    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projName, actorNamePost, req.log);
   }
+
+  logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: "created", actorName: actorNamePost, actorEmail: req.appUser!.email }, req.log);
 
   return res.status(201).json(taskRow(row));
 });
@@ -258,12 +262,19 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
     .where(eq(tasksTable.id, task.id));
 
+  const actorMemberPatch = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorNamePatch = actorMemberPatch[0]?.name ?? req.appUser!.email.split("@")[0];
+
   if (task.assignedTo && task.assignedTo !== previousAssignee) {
-    const projName = row?.projectName ?? "";
-    const actorMember2 = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
-    const actorName2 = actorMember2[0]?.name ?? req.appUser!.email.split("@")[0];
-    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projName, actorName2, req.log);
+    const projNamePatch = row?.projectName ?? "";
+    await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projNamePatch, actorNamePatch, req.log);
   }
+
+  const patchAction = body.data.status !== undefined && body.data.status !== (await db.select({ status: tasksTable.status }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1)).at(0)?.status
+    ? "status_changed" as const
+    : "updated" as const;
+  const patchChanges = diffObjects(body.data as Record<string, unknown>, updateData, ["status", "priority", "assignedTo", "dueDate", "title"]);
+  logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: patchChanges.length === 1 && patchChanges[0].field === "status" ? "status_changed" : "updated", actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: patchChanges.length > 0 ? patchChanges : undefined }, req.log);
 
   return res.json(taskRow(row));
 });
@@ -284,7 +295,15 @@ router.delete("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
   }
 
+  const [taskToDelete] = await db.select({ title: tasksTable.title }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1);
+  const actorMemberDel = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorNameDel = actorMemberDel[0]?.name ?? req.appUser!.email.split("@")[0];
+
   await db.delete(tasksTable).where(eq(tasksTable.id, params.data.id));
+
+  if (taskToDelete) {
+    logAudit({ entityType: "task", entityId: params.data.id, entityName: taskToDelete.title, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
+  }
   return res.status(204).send();
 });
 

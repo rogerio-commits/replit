@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
+import { logAudit, diffObjects } from "../lib/audit";
 import { and, eq, inArray, count } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
@@ -176,6 +177,10 @@ router.post("/projects", requireExecutorOrGestor, async (req, res) => {
     })
     .returning();
 
+  const actorMemberPost = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorNamePost = actorMemberPost[0]?.name ?? req.appUser!.email.split("@")[0];
+  logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "created", actorName: actorNamePost, actorEmail: req.appUser!.email }, req.log);
+
   return res.status(201).json(projectRow(project, []));
 });
 
@@ -268,6 +273,12 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     }
   }
 
+  const actorMemberPatch = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorNamePatch = actorMemberPatch[0]?.name ?? req.appUser!.email.split("@")[0];
+  const projPatchChanges = diffObjects(existing as Record<string, unknown>, updateData, ["status", "priority", "name"]);
+  const projPatchAction = body.data.status !== undefined && body.data.status !== existing.status ? "status_changed" as const : "updated" as const;
+  logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: projPatchAction, actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: projPatchChanges.length > 0 ? projPatchChanges : undefined }, req.log);
+
   const participantsMap = await fetchParticipantsByProject([project.id]);
   const taskCounts = await fetchTaskCountsByProject([project.id]);
   return res.json(projectRow(
@@ -287,7 +298,15 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
   }
 
+  const [projToDelete] = await db.select({ name: projectsTable.name }).from(projectsTable).where(eq(projectsTable.id, params.data.id)).limit(1);
+  const actorMemberDel = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorNameDel = actorMemberDel[0]?.name ?? req.appUser!.email.split("@")[0];
+
   await db.delete(projectsTable).where(eq(projectsTable.id, params.data.id));
+
+  if (projToDelete) {
+    logAudit({ entityType: "project", entityId: params.data.id, entityName: projToDelete.name, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
+  }
   return res.status(204).send();
 });
 

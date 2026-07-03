@@ -802,6 +802,46 @@ export interface UploadUrlRequest {
   contentType: string;
 }
 
+export type AuditLogEntityType = typeof AuditLogEntityType[keyof typeof AuditLogEntityType];
+
+
+export const AuditLogEntityType = {
+  task: 'task',
+  project: 'project',
+  member: 'member',
+} as const;
+
+export type AuditLogAction = typeof AuditLogAction[keyof typeof AuditLogAction];
+
+
+export const AuditLogAction = {
+  created: 'created',
+  updated: 'updated',
+  deleted: 'deleted',
+  status_changed: 'status_changed',
+  assigned: 'assigned',
+  unassigned: 'unassigned',
+} as const;
+
+export type AuditLogChangesItem = {
+  field: string;
+  from: unknown;
+  to: unknown;
+};
+
+export interface AuditLog {
+  id: number;
+  entityType: AuditLogEntityType;
+  entityId: number;
+  entityName: string;
+  action: AuditLogAction;
+  actorName: string;
+  actorEmail: string;
+  /** @nullable */
+  changes?: AuditLogChangesItem[] | null;
+  createdAt: string;
+}
+
 export interface UploadUrlResponse {
   uploadURL: string;
   objectPath: string;
@@ -884,6 +924,21 @@ export type ListInstallationEventsParams = {
  */
 month?: string;
 };
+
+export type ListAuditLogsParams = {
+entityType?: ListAuditLogsEntityType;
+entityId?: number;
+limit?: number;
+};
+
+export type ListAuditLogsEntityType = typeof ListAuditLogsEntityType[keyof typeof ListAuditLogsEntityType];
+
+
+export const ListAuditLogsEntityType = {
+  task: 'task',
+  project: 'project',
+  member: 'member',
+} as const;
 
 export type ListAttachmentsParams = {
 entityType: ListAttachmentsEntityType;
