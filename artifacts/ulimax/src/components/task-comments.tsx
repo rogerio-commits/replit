@@ -4,10 +4,10 @@ import {
   useListTaskComments,
   useCreateTaskComment,
   useDeleteTaskComment,
+  useListMembers,
   getListTaskCommentsQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, MessageSquare } from "lucide-react";
@@ -16,6 +16,8 @@ import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
+import { MentionTextarea } from "@/components/mention-textarea";
+import { RenderMentions } from "@/components/render-mentions";
 
 interface TaskCommentsProps {
   taskId: number;
@@ -24,12 +26,16 @@ interface TaskCommentsProps {
 export function TaskComments({ taskId }: TaskCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const { data: comments, isLoading } = useListTaskComments(taskId);
+  const { data: members } = useListMembers();
   const createComment = useCreateTaskComment();
   const deleteComment = useDeleteTaskComment();
   const qc = useQueryClient();
   const { toast } = useToast();
   const { user } = useUser();
   const isGestor = useIsGestor();
+
+  const memberList = (members ?? []).map((m) => ({ id: m.id, name: m.name }));
+  const memberNames = memberList.map((m) => m.name);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: getListTaskCommentsQueryKey(taskId) });
 
@@ -89,7 +95,9 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
                       </button>
                     )}
                   </div>
-                  <p className="text-sm text-foreground/90 mt-0.5 whitespace-pre-wrap">{c.content}</p>
+                  <p className="text-sm text-foreground/90 mt-0.5">
+                    <RenderMentions text={c.content} memberNames={memberNames} />
+                  </p>
                 </div>
               </div>
             );
@@ -100,14 +108,14 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
       )}
 
       <div className="flex gap-2 pt-1">
-        <Textarea
-          placeholder="Adicionar comentário..."
+        <MentionTextarea
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="min-h-[72px] text-sm resize-none"
+          onChange={setNewComment}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleSubmit();
           }}
+          placeholder="Adicionar comentário… use @ para mencionar alguém"
+          members={memberList}
         />
       </div>
       <Button

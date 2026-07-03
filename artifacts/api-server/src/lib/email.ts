@@ -99,6 +99,35 @@ export async function sendTaskCommentedEmail(opts: {
   });
 }
 
+export async function sendMentionEmail(opts: {
+  toEmail: string;
+  toName: string;
+  taskTitle: string;
+  taskId: number;
+  authorName: string;
+  commentPreview: string;
+}): Promise<void> {
+  if (!client) return;
+  const { toEmail, toName, taskTitle, authorName, commentPreview } = opts;
+  const link = `${APP_URL}/tasks`;
+  const body = `
+    <h2 style="margin:0 0 8px;font-size:20px;color:#18181b;">Você foi mencionado em um comentário</h2>
+    <p style="margin:0 0 24px;font-size:14px;color:#71717a;">Olá, <strong>${toName}</strong>. <strong>${authorName}</strong> te mencionou na tarefa <strong>${taskTitle}</strong>.</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-left:3px solid #ff6600;padding:12px 16px;background:#fff7f0;border-radius:0 8px 8px 0;margin-bottom:24px;">
+      <tr><td>
+        <p style="margin:0;font-size:14px;color:#3f3f46;font-style:italic;">"${commentPreview}"</p>
+      </td></tr>
+    </table>
+    <a href="${link}" style="display:inline-block;background:#ff6600;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Ver Comentário</a>
+  `;
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: `[Ulimax] ${authorName} te mencionou em: ${taskTitle}`,
+    html: baseTemplate(`Menção em: ${taskTitle}`, body),
+  });
+}
+
 export async function sendDeadlineReminderEmail(opts: {
   toEmail: string;
   toName: string;

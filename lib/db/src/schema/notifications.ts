@@ -8,6 +8,7 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "task_status_changed",
   "task_commented",
   "project_status_changed",
+  "mention",
 ]);
 
 export const notificationsTable = pgTable("notifications", {
