@@ -17,6 +17,8 @@ import {
   Paperclip,
   FileDown,
   BarChart2,
+  ListTree,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -126,14 +128,73 @@ const sections: Section[] = [
             <li><Strong>Responsável</Strong>: filtra pelo membro atribuído</li>
           </ul>
         </Subsection>
-        <Subsection title="Painel de detalhes (comentários e anexos)">
-          <p className="text-sm text-muted-foreground mb-2">Clique no botão <Strong>Detalhes</Strong> em qualquer tarefa para abrir um painel lateral com:</p>
+        <Subsection title="Painel de detalhes">
+          <p className="text-sm text-muted-foreground mb-2">Clique no botão <Strong>Detalhes</Strong> em qualquer tarefa para abrir um painel com:</p>
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Comentários</Strong>: histórico de mensagens e campo para adicionar novos comentários</li>
-            <li><Strong>Anexos</Strong>: upload de arquivos por arrastar e soltar ou clique, com listagem e download dos arquivos já enviados</li>
+            <li><Strong>Subtarefas</Strong>: lista de etapas menores com progresso e checkbox</li>
+            <li><Strong>Comentários</Strong>: histórico de mensagens e campo para adicionar novos</li>
+            <li><Strong>Anexos</Strong>: upload por arrastar e soltar ou clique, com download</li>
           </ul>
         </Subsection>
-        <Tip>Todos os membros da equipe com acesso ao projeto podem visualizar e adicionar comentários e anexos nas tarefas.</Tip>
+        <Tip>Todos os membros com acesso ao projeto podem visualizar e interagir com comentários, anexos e subtarefas.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "subtarefas",
+    title: "Subtarefas",
+    icon: ListTree,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Divida qualquer tarefa em etapas menores para acompanhar o progresso passo a passo.</p>
+        <Subsection title="Criar uma subtarefa">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Abra o painel de detalhes de uma tarefa clicando em <Strong>Detalhes</Strong>.</li>
+            <li>Na seção <Strong>Subtarefas</Strong>, clique em <Strong>+ Adicionar</Strong>.</li>
+            <li>Digite o título da subtarefa e pressione <Strong>Enter</Strong> ou clique em <Strong>Salvar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Marcar como concluída">
+          <p className="text-sm text-muted-foreground">Clique no <Strong>círculo</Strong> à esquerda de qualquer subtarefa para alternar entre pendente e concluída. O texto é riscado e o progresso atualizado automaticamente.</p>
+        </Subsection>
+        <Subsection title="Progresso">
+          <p className="text-sm text-muted-foreground">Uma barra de progresso mostra o percentual de subtarefas concluídas (ex: <em>3/5 · 60%</em>). Na lista de tarefas, as contagens também aparecem visíveis no card.</p>
+        </Subsection>
+        <Tip>Use subtarefas para detalhar etapas de instalação, checklists de materiais ou sequências de aprovação dentro de uma mesma tarefa principal.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "busca",
+    title: "Busca Global",
+    icon: Search,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Encontre qualquer projeto, tarefa ou membro instantaneamente sem precisar navegar pelos menus.</p>
+        <Subsection title="Como abrir">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Pressione <Strong>Ctrl + K</Strong> (Windows / Linux) ou <Strong>⌘ K</Strong> (Mac) em qualquer tela.</li>
+            <li>Ou clique no ícone de busca na barra superior.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Como usar">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Digite qualquer parte do nome, descrição ou e-mail que deseja encontrar.</li>
+            <li>Os resultados aparecem em tempo real, agrupados por <Strong>Projetos</Strong>, <Strong>Tarefas</Strong> e <Strong>Membros</Strong>.</li>
+            <li>Use <Strong>↑ ↓</Strong> para navegar entre os resultados e <Strong>Enter</Strong> para abrir.</li>
+          </ol>
+        </Subsection>
+        <Table
+          headers={["Busca em", "Campos considerados"]}
+          rows={[
+            ["Projetos", "Nome e descrição"],
+            ["Tarefas", "Título e descrição"],
+            ["Membros", "Nome, e-mail e cargo"],
+          ]}
+        />
+        <Tip>Sem texto digitado, o painel exibe o menu de navegação rápida entre as páginas principais do sistema.</Tip>
       </div>
     ),
   },
