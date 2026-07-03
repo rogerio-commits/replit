@@ -10,6 +10,7 @@ import type { TaskInputStatus } from './taskInputStatus';
 
 export interface TaskInput {
   projectId: number;
+  parentId?: number;
   /** @minLength 1 */
   title: string;
   description?: string;

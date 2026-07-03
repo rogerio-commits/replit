@@ -34,6 +34,8 @@ tags:
     description: Object storage upload and serving
   - name: audit-logs
     description: Audit trail of changes
+  - name: search
+    description: Global search
 paths:
   /healthz:
     get:
@@ -579,6 +581,77 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /tasks/{id}/subtasks:
+    get:
+      operationId: listSubtasks
+      tags: [tasks]
+      summary: List subtasks of a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of subtasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createSubtask
+      tags: [tasks]
+      summary: Create a subtask under a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubtaskInput"
+      responses:
+        "201":
+          description: Created subtask
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      summary: Global search across projects, tasks and members
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchResult"
 
   /members:
     get:
@@ -1510,6 +1583,8 @@ components:
           type: integer
         projectId:
           type: integer
+        parentId:
+          type: ["integer", "null"]
         title:
           type: string
         description:
@@ -1532,12 +1607,18 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+        subtaskCount:
+          type: integer
+        subtaskDoneCount:
+          type: integer
 
     TaskInput:
       type: object
       required: [projectId, title, status, priority]
       properties:
         projectId:
+          type: integer
+        parentId:
           type: integer
         title:
           type: string
@@ -1575,6 +1656,30 @@ components:
           type: string
         projectId:
           type: integer
+
+    SubtaskInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+
+    SearchResult:
+      type: object
+      required: [kind, id, title]
+      properties:
+        kind:
+          type: string
+          enum: [project, task, member]
+        id:
+          type: integer
+        title:
+          type: string
+        subtitle:
+          type: ["string", "null"]
+        meta:
+          type: ["string", "null"]
 
     MemberTeam:
       type: string

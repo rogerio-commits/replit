@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, tasksTable, membersTable, projectsTable, projectMembersTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import { sendTaskAssignedEmail } from "../lib/email";
 import { logAudit, diffObjects } from "../lib/audit";
 import {
@@ -11,6 +11,9 @@ import {
   UpdateTaskBody,
   DeleteTaskParams,
   GetTaskParams,
+  ListSubtasksParams,
+  CreateSubtaskParams,
+  CreateSubtaskBody,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -76,10 +79,15 @@ async function isExecutorParticipant(email: string, projectId: number): Promise<
   return !!pm;
 }
 
-function taskRow(row: { task: typeof tasksTable.$inferSelect; memberName: string | null; projectName: string | null }) {
+function taskRow(
+  row: { task: typeof tasksTable.$inferSelect; memberName: string | null; projectName: string | null },
+  subtaskCount = 0,
+  subtaskDoneCount = 0
+) {
   return {
     id: row.task.id,
     projectId: row.task.projectId,
+    parentId: row.task.parentId ?? null,
     title: row.task.title,
     description: row.task.description ?? null,
     status: row.task.status,
@@ -90,7 +98,27 @@ function taskRow(row: { task: typeof tasksTable.$inferSelect; memberName: string
     dueDate: row.task.dueDate ?? null,
     completedAt: row.task.completedAt ? row.task.completedAt.toISOString() : null,
     createdAt: row.task.createdAt.toISOString(),
+    subtaskCount,
+    subtaskDoneCount,
   };
+}
+
+async function getSubtaskCounts(taskIds: number[]): Promise<Map<number, { total: number; done: number }>> {
+  if (taskIds.length === 0) return new Map();
+  const subtasks = await db
+    .select({ parentId: tasksTable.parentId, status: tasksTable.status })
+    .from(tasksTable)
+    .where(sql`${tasksTable.parentId} = ANY(ARRAY[${sql.join(taskIds.map((id) => sql`${id}`), sql`, `)}]::int[])`);
+
+  const map = new Map<number, { total: number; done: number }>();
+  for (const s of subtasks) {
+    if (s.parentId == null) continue;
+    const entry = map.get(s.parentId) ?? { total: 0, done: 0 };
+    entry.total += 1;
+    if (s.status === "done") entry.done += 1;
+    map.set(s.parentId, entry);
+  }
+  return map;
 }
 
 router.get("/tasks", async (req, res) => {
@@ -114,6 +142,7 @@ router.get("/tasks", async (req, res) => {
     .from(tasksTable)
     .leftJoin(membersTable, eq(tasksTable.assignedTo, membersTable.id))
     .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+    .where(isNull(tasksTable.parentId))
     .orderBy(tasksTable.createdAt);
 
   let filtered = rows;
@@ -130,7 +159,11 @@ router.get("/tasks", async (req, res) => {
     filtered = filtered.filter((r) => r.task.assignedTo === query.data.assignedTo);
   }
 
-  return res.json(filtered.map(taskRow));
+  const counts = await getSubtaskCounts(filtered.map((r) => r.task.id));
+  return res.json(filtered.map((r) => {
+    const c = counts.get(r.task.id);
+    return taskRow(r, c?.total ?? 0, c?.done ?? 0);
+  }));
 });
 
 router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
@@ -146,6 +179,7 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
     .insert(tasksTable)
     .values({
       projectId: body.data.projectId,
+      parentId: body.data.parentId ?? null,
       title: body.data.title,
       description: body.data.description ?? null,
       status: (body.data.status as "todo" | "in_progress" | "review" | "done") ?? "todo",
@@ -277,6 +311,72 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: patchChanges.length === 1 && patchChanges[0].field === "status" ? "status_changed" : "updated", actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: patchChanges.length > 0 ? patchChanges : undefined }, req.log);
 
   return res.json(taskRow(row));
+});
+
+router.get("/tasks/:id/subtasks", async (req, res) => {
+  const params = ListSubtasksParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  const rows = await db
+    .select({
+      task: tasksTable,
+      memberName: membersTable.name,
+      projectName: projectsTable.name,
+    })
+    .from(tasksTable)
+    .leftJoin(membersTable, eq(tasksTable.assignedTo, membersTable.id))
+    .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+    .where(eq(tasksTable.parentId, params.data.id))
+    .orderBy(tasksTable.createdAt);
+
+  return res.json(rows.map((r) => taskRow(r)));
+});
+
+router.post("/tasks/:id/subtasks", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateSubtaskParams.safeParse({ id: Number(req.params.id) });
+  const body = CreateSubtaskBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [parent] = await db
+    .select({ projectId: tasksTable.projectId })
+    .from(tasksTable)
+    .where(eq(tasksTable.id, params.data.id))
+    .limit(1);
+
+  if (!parent) return res.status(404).json({ error: "Parent task not found" });
+
+  if (req.appUser!.role === "executor") {
+    const ok = await isExecutorParticipant(req.appUser!.email, parent.projectId);
+    if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });
+  }
+
+  const [task] = await db
+    .insert(tasksTable)
+    .values({
+      projectId: parent.projectId,
+      parentId: params.data.id,
+      title: body.data.title,
+      status: "todo",
+      priority: "medium",
+    })
+    .returning();
+
+  const [row] = await db
+    .select({
+      task: tasksTable,
+      memberName: membersTable.name,
+      projectName: projectsTable.name,
+    })
+    .from(tasksTable)
+    .leftJoin(membersTable, eq(tasksTable.assignedTo, membersTable.id))
+    .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+    .where(eq(tasksTable.id, task.id));
+
+  const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
+  logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: "created", actorName, actorEmail: req.appUser!.email }, req.log);
+
+  return res.status(201).json(taskRow(row));
 });
 
 router.delete("/tasks/:id", requireExecutorOrGestor, async (req, res) => {

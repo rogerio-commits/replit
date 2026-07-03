@@ -11,6 +11,8 @@ import type { TaskStatus } from './taskStatus';
 export interface Task {
   id: number;
   projectId: number;
+  /** @nullable */
+  parentId?: number | null;
   title: string;
   /** @nullable */
   description?: string | null;
@@ -27,4 +29,6 @@ export interface Task {
   /** @nullable */
   completedAt?: string | null;
   createdAt: string;
+  subtaskCount?: number;
+  subtaskDoneCount?: number;
 }

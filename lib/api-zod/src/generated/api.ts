@@ -446,6 +446,7 @@ export const ListTasksQueryParams = zod.object({
 export const ListTasksResponseItem = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
+  "parentId": zod.number().nullish(),
   "title": zod.string(),
   "description": zod.string().nullish(),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
@@ -455,7 +456,9 @@ export const ListTasksResponseItem = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "subtaskCount": zod.number().optional(),
+  "subtaskDoneCount": zod.number().optional()
 })
 export const ListTasksResponse = zod.array(ListTasksResponseItem)
 
@@ -468,6 +471,7 @@ export const ListTasksResponse = zod.array(ListTasksResponseItem)
 
 export const CreateTaskBody = zod.object({
   "projectId": zod.number(),
+  "parentId": zod.number().optional(),
   "title": zod.string().min(1),
   "description": zod.string().optional(),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
@@ -487,6 +491,7 @@ export const GetTaskParams = zod.object({
 export const GetTaskResponse = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
+  "parentId": zod.number().nullish(),
   "title": zod.string(),
   "description": zod.string().nullish(),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
@@ -496,7 +501,9 @@ export const GetTaskResponse = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "subtaskCount": zod.number().optional(),
+  "subtaskDoneCount": zod.number().optional()
 })
 
 
@@ -523,6 +530,7 @@ export const UpdateTaskBody = zod.object({
 export const UpdateTaskResponse = zod.object({
   "id": zod.number(),
   "projectId": zod.number(),
+  "parentId": zod.number().nullish(),
   "title": zod.string(),
   "description": zod.string().nullish(),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
@@ -532,7 +540,9 @@ export const UpdateTaskResponse = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "subtaskCount": zod.number().optional(),
+  "subtaskDoneCount": zod.number().optional()
 })
 
 
@@ -542,6 +552,69 @@ export const UpdateTaskResponse = zod.object({
 export const DeleteTaskParams = zod.object({
   "id": zod.coerce.number()
 })
+
+
+/**
+ * @summary List subtasks of a task
+ */
+export const ListSubtasksParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListSubtasksResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "parentId": zod.number().nullish(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "assignedTo": zod.number().nullish(),
+  "assigneeName": zod.string().nullish(),
+  "projectName": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "subtaskCount": zod.number().optional(),
+  "subtaskDoneCount": zod.number().optional()
+})
+export const ListSubtasksResponse = zod.array(ListSubtasksResponseItem)
+
+
+/**
+ * @summary Create a subtask under a task
+ */
+export const CreateSubtaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateSubtaskBody = zod.object({
+  "title": zod.string().min(1)
+})
+
+
+/**
+ * @summary Global search across projects, tasks and members
+ */
+
+export const searchQueryLimitDefault = 20;
+
+export const SearchQueryParams = zod.object({
+  "q": zod.coerce.string().min(1),
+  "limit": zod.coerce.number().default(searchQueryLimitDefault)
+})
+
+export const SearchResponseItem = zod.object({
+  "kind": zod.enum(['project', 'task', 'member']),
+  "id": zod.number(),
+  "title": zod.string(),
+  "subtitle": zod.string().nullish(),
+  "meta": zod.string().nullish()
+})
+export const SearchResponse = zod.array(SearchResponseItem)
 
 
 /**

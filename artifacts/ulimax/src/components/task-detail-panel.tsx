@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TaskComments } from "@/components/task-comments";
 import { TaskAttachments } from "@/components/task-attachments";
+import { TaskSubtasks } from "@/components/task-subtasks";
 import { CheckSquare, Clock, AlertCircle, HardHat, Briefcase } from "lucide-react";
 
 const TASK_STATUS_LABELS: Record<string, string> = {
@@ -109,6 +110,10 @@ export function TaskDetailPanel({ task, open, onClose }: TaskDetailPanelProps) {
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{task.description}</p>
               </div>
             )}
+
+            <Separator />
+
+            <TaskSubtasks taskId={task.id} />
 
             <Separator />
 

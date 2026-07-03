@@ -61,9 +61,12 @@ import type {
   ProjectUpdate,
   SampleControl,
   SampleControlInput,
+  SearchParams,
+  SearchResult,
   SiteVisit,
   SiteVisitInput,
   SiteVisitWithProject,
+  SubtaskInput,
   Task,
   TaskComment,
   TaskCommentInput,
@@ -2028,6 +2031,239 @@ export const useDeleteTask = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteTaskMutationOptions(options));
     }
+
+export const getListSubtasksUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/subtasks`
+}
+
+/**
+ * @summary List subtasks of a task
+ */
+export const listSubtasks = async (id: number, options?: RequestInit): Promise<Task[]> => {
+
+  return customFetch<Task[]>(getListSubtasksUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSubtasksQueryKey = (id: number,) => {
+    return [
+    `/api/tasks/${id}/subtasks`
+    ] as const;
+    }
+
+
+export const getListSubtasksQueryOptions = <TData = Awaited<ReturnType<typeof listSubtasks>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSubtasks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSubtasksQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSubtasks>>> = ({ signal }) => listSubtasks(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSubtasks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSubtasksQueryResult = NonNullable<Awaited<ReturnType<typeof listSubtasks>>>
+export type ListSubtasksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List subtasks of a task
+ */
+
+export function useListSubtasks<TData = Awaited<ReturnType<typeof listSubtasks>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSubtasks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSubtasksQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSubtaskUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/subtasks`
+}
+
+/**
+ * @summary Create a subtask under a task
+ */
+export const createSubtask = async (id: number,
+    subtaskInput: SubtaskInput, options?: RequestInit): Promise<Task> => {
+
+  return customFetch<Task>(getCreateSubtaskUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      subtaskInput,)
+  }
+);}
+
+
+
+
+export const getCreateSubtaskMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSubtask>>, TError,{id: number;data: BodyType<SubtaskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSubtask>>, TError,{id: number;data: BodyType<SubtaskInput>}, TContext> => {
+
+const mutationKey = ['createSubtask'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSubtask>>, {id: number;data: BodyType<SubtaskInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createSubtask(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSubtaskMutationResult = NonNullable<Awaited<ReturnType<typeof createSubtask>>>
+    export type CreateSubtaskMutationBody = BodyType<SubtaskInput>
+    export type CreateSubtaskMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a subtask under a task
+ */
+export const useCreateSubtask = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSubtask>>, TError,{id: number;data: BodyType<SubtaskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSubtask>>,
+        TError,
+        {id: number;data: BodyType<SubtaskInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSubtaskMutationOptions(options));
+    }
+
+export const getSearchUrl = (params: SearchParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/search?${stringifiedParams}` : `/api/search`
+}
+
+/**
+ * @summary Global search across projects, tasks and members
+ */
+export const search = async (params: SearchParams, options?: RequestInit): Promise<SearchResult[]> => {
+
+  return customFetch<SearchResult[]>(getSearchUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchQueryKey = (params?: SearchParams,) => {
+    return [
+    `/api/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchQueryOptions = <TData = Awaited<ReturnType<typeof search>>, TError = ErrorType<unknown>>(params: SearchParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof search>>> = ({ signal }) => search(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchQueryResult = NonNullable<Awaited<ReturnType<typeof search>>>
+export type SearchQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Global search across projects, tasks and members
+ */
+
+export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = ErrorType<unknown>>(
+ params: SearchParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof search>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListMembersUrl = () => {
 

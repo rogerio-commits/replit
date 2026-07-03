@@ -17,6 +17,7 @@ import storageRouter from "./storage";
 import projectActivityRouter from "./project-activity";
 import emailDeadlinesRouter from "./email-deadlines";
 import auditLogsRouter from "./audit-logs";
+import searchRouter from "./search";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use(storageRouter);
 router.use(projectActivityRouter);
 router.use(emailDeadlinesRouter);
 router.use(auditLogsRouter);
+router.use(searchRouter);
 
 export default router;

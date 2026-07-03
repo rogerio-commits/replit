@@ -203,6 +203,8 @@ export const TaskPriority = {
 export interface Task {
   id: number;
   projectId: number;
+  /** @nullable */
+  parentId?: number | null;
   title: string;
   /** @nullable */
   description?: string | null;
@@ -219,6 +221,8 @@ export interface Task {
   /** @nullable */
   completedAt?: string | null;
   createdAt: string;
+  subtaskCount?: number;
+  subtaskDoneCount?: number;
 }
 
 export type TaskInputStatus = typeof TaskInputStatus[keyof typeof TaskInputStatus];
@@ -242,6 +246,7 @@ export const TaskInputPriority = {
 
 export interface TaskInput {
   projectId: number;
+  parentId?: number;
   /** @minLength 1 */
   title: string;
   description?: string;
@@ -279,6 +284,30 @@ export interface TaskUpdate {
   assignedTo?: number;
   dueDate?: string;
   projectId?: number;
+}
+
+export interface SubtaskInput {
+  /** @minLength 1 */
+  title: string;
+}
+
+export type SearchResultKind = typeof SearchResultKind[keyof typeof SearchResultKind];
+
+
+export const SearchResultKind = {
+  project: 'project',
+  task: 'task',
+  member: 'member',
+} as const;
+
+export interface SearchResult {
+  kind: SearchResultKind;
+  id: number;
+  title: string;
+  /** @nullable */
+  subtitle?: string | null;
+  /** @nullable */
+  meta?: string | null;
 }
 
 export type MemberTeam = typeof MemberTeam[keyof typeof MemberTeam];
@@ -898,6 +927,14 @@ export const ListTasksPriority = {
   medium: 'medium',
   high: 'high',
 } as const;
+
+export type SearchParams = {
+/**
+ * @minLength 1
+ */
+q: string;
+limit?: number;
+};
 
 export type ListSampleControlsParams = {
 status?: string;
