@@ -19,6 +19,10 @@ import {
   BarChart2,
   ListTree,
   Search,
+  Tag,
+  Link2,
+  CheckCheck,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -117,26 +121,29 @@ const sections: Section[] = [
         <Subsection title="Criar uma tarefa">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Clique em <Strong>+ Nova Tarefa</Strong>.</li>
-            <li>Preencha: título, descrição, projeto vinculado, status, prioridade, responsável e data de entrega.</li>
-            <li>Clique em <Strong>Salvar</Strong>.</li>
+            <li>Preencha: título, descrição (suporta Markdown), projeto vinculado, status, prioridade, responsável e data de entrega.</li>
+            <li>Clique em <Strong>Criar Tarefa</Strong>.</li>
           </ol>
         </Subsection>
         <Subsection title="Filtros disponíveis">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li><Strong>Status</Strong>: A Fazer · Em Andamento · Revisão · Concluída</li>
+            <li><Strong>Prioridade</Strong>: Alta · Normal · Baixa</li>
             <li><Strong>Projeto</Strong>: exibe somente tarefas de um projeto específico</li>
-            <li><Strong>Responsável</Strong>: filtra pelo membro atribuído</li>
           </ul>
         </Subsection>
         <Subsection title="Painel de detalhes">
           <p className="text-sm text-muted-foreground mb-2">Clique no botão <Strong>Detalhes</Strong> em qualquer tarefa para abrir um painel com:</p>
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Subtarefas</Strong>: lista de etapas menores com progresso e checkbox</li>
-            <li><Strong>Comentários</Strong>: histórico de mensagens e campo para adicionar novos</li>
-            <li><Strong>Anexos</Strong>: upload por arrastar e soltar ou clique, com download</li>
+            <li><Strong>Etiquetas</Strong>: tags coloridas para categorizar a tarefa</li>
+            <li><Strong>Dependências</Strong>: tarefas que precisam ser concluídas antes</li>
+            <li><Strong>Descrição</Strong>: renderizada em Markdown formatado</li>
+            <li><Strong>Subtarefas</Strong>: etapas menores com barra de progresso</li>
+            <li><Strong>Comentários</Strong>: histórico de mensagens contextualizadas</li>
+            <li><Strong>Anexos</Strong>: upload de arquivos por arrastar e soltar</li>
           </ul>
         </Subsection>
-        <Tip>Todos os membros com acesso ao projeto podem visualizar e interagir com comentários, anexos e subtarefas.</Tip>
+        <Tip>Marque múltiplas tarefas com os checkboxes e use a barra de ações em massa para atualizar status ou prioridade de todas de uma vez.</Tip>
       </div>
     ),
   },
@@ -162,6 +169,131 @@ const sections: Section[] = [
           <p className="text-sm text-muted-foreground">Uma barra de progresso mostra o percentual de subtarefas concluídas (ex: <em>3/5 · 60%</em>). Na lista de tarefas, as contagens também aparecem visíveis no card.</p>
         </Subsection>
         <Tip>Use subtarefas para detalhar etapas de instalação, checklists de materiais ou sequências de aprovação dentro de uma mesma tarefa principal.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "operacoes-massa",
+    title: "Operações em Massa",
+    icon: CheckCheck,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Atualize o status ou a prioridade de várias tarefas ao mesmo tempo, sem precisar editar uma a uma.</p>
+        <Subsection title="Como selecionar tarefas">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Na página <Strong>Tarefas</Strong>, marque o <Strong>checkbox</Strong> à esquerda de cada tarefa que deseja incluir.</li>
+            <li>Use <Strong>Selecionar todos</Strong> no topo da lista para marcar todas as tarefas visíveis de uma vez.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Barra de ações em massa">
+          <p className="text-sm text-muted-foreground mb-2">Ao selecionar pelo menos uma tarefa, uma barra aparece no topo da página com as ações disponíveis:</p>
+          <Table
+            headers={["Ação", "Resultado"]}
+            rows={[
+              ["Alterar Status", "Define o mesmo status para todas as tarefas selecionadas"],
+              ["Alterar Prioridade", "Define a mesma prioridade para todas as tarefas selecionadas"],
+              ["Limpar", "Desmarca todas as tarefas sem fazer alterações"],
+            ]}
+          />
+        </Subsection>
+        <Tip>Os filtros funcionam em conjunto com a seleção em massa — aplique um filtro de status ou projeto primeiro e use "Selecionar todos" para operar somente sobre o subconjunto filtrado.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "etiquetas",
+    title: "Etiquetas (Tags)",
+    icon: Tag,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Classifique tarefas com etiquetas coloridas para facilitar a identificação visual e a organização por categoria.</p>
+        <Subsection title="Criar uma etiqueta nova">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Abra o painel de detalhes de uma tarefa clicando em <Strong>Detalhes</Strong>.</li>
+            <li>Na seção <Strong>Etiquetas</Strong>, clique em <Strong>Adicionar</Strong>.</li>
+            <li>Clique em <Strong>Criar nova etiqueta</Strong>, digite o nome e escolha uma cor.</li>
+            <li>Pressione <Strong>Criar</Strong> — a etiqueta é criada e já vinculada à tarefa.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Reutilizar etiquetas existentes">
+          <p className="text-sm text-muted-foreground">No popover de etiquetas, as já criadas aparecem na lista. Clique em qualquer uma para vinculá-la imediatamente à tarefa atual.</p>
+        </Subsection>
+        <Subsection title="Remover uma etiqueta de uma tarefa">
+          <p className="text-sm text-muted-foreground">No badge da etiqueta, dentro do painel de detalhes, clique no <Strong>×</Strong> para desvinculá-la daquela tarefa. A etiqueta continua existindo para ser usada em outras tarefas.</p>
+        </Subsection>
+        <Tip>As etiquetas aparecem tanto no painel de detalhes quanto nos cards da lista de tarefas, facilitando a identificação sem precisar abrir cada item.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "dependencias",
+    title: "Dependências entre Tarefas",
+    icon: Link2,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Indique quais tarefas precisam ser concluídas antes que outra possa ser iniciada, tornando as sequências de trabalho explícitas e visíveis.</p>
+        <Subsection title="Adicionar uma dependência">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Abra o painel de detalhes da tarefa que será <Strong>bloqueada</Strong>.</li>
+            <li>Na seção <Strong>Bloqueada por</Strong>, clique em <Strong>Adicionar</Strong>.</li>
+            <li>Busque pelo nome da tarefa que precisa ser concluída primeiro.</li>
+            <li>Clique nela para confirmar a dependência.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Leitura visual">
+          <Table
+            headers={["Indicador", "Significado"]}
+            rows={[
+              ["Fundo âmbar", "Dependência ainda pendente (bloqueio ativo)"],
+              ["Texto riscado", "Tarefa dependente já concluída (bloqueio liberado)"],
+              ["Contador 'N pendentes'", "Quantas dependências ainda estão em aberto"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Remover uma dependência">
+          <p className="text-sm text-muted-foreground">Passe o mouse sobre a dependência na lista e clique no <Strong>×</Strong> que aparece à direita.</p>
+        </Subsection>
+        <Tip>Uma tarefa não pode depender de si mesma, e o sistema impede dependências duplicadas automaticamente.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "markdown",
+    title: "Descrições em Markdown",
+    icon: FileText,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">A descrição das tarefas suporta formatação Markdown — escreva com marcações simples e o sistema renderiza o resultado com visual limpo e legível.</p>
+        <Subsection title="Editor com pré-visualização">
+          <p className="text-sm text-muted-foreground mb-2">Ao criar ou editar uma tarefa, o campo de descrição tem duas abas:</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Editar</Strong>: campo de texto puro onde você digita com marcações Markdown.</li>
+            <li><Strong>Pré-visualizar</Strong>: mostra o resultado renderizado antes de salvar.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Formatações suportadas">
+          <Table
+            headers={["Você digita", "Resultado"]}
+            rows={[
+              ["**texto**", "negrito"],
+              ["*texto*", "itálico"],
+              ["`código`", "trecho de código inline"],
+              ["- item", "lista com marcadores"],
+              ["1. item", "lista numerada"],
+              ["[link](url)", "link clicável"],
+              ["> texto", "citação (blockquote)"],
+              ["## Título", "cabeçalho"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Como a descrição aparece">
+          <p className="text-sm text-muted-foreground">No painel de detalhes da tarefa, a descrição é sempre exibida já renderizada — negrito, listas e links funcionam sem precisar de nenhuma ação extra.</p>
+        </Subsection>
+        <Tip>Use listas para detalhar etapas de execução, negrito para destacar pontos críticos e links para referenciar documentos externos ou projetos relacionados.</Tip>
       </div>
     ),
   },
