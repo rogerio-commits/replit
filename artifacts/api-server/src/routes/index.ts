@@ -18,6 +18,8 @@ import projectActivityRouter from "./project-activity";
 import emailDeadlinesRouter from "./email-deadlines";
 import auditLogsRouter from "./audit-logs";
 import searchRouter from "./search";
+import tagsRouter from "./tags";
+import taskDependenciesRouter from "./task-dependencies";
 
 const router: IRouter = Router();
 
@@ -42,5 +44,7 @@ router.use(projectActivityRouter);
 router.use(emailDeadlinesRouter);
 router.use(auditLogsRouter);
 router.use(searchRouter);
+router.use(tagsRouter);
+router.use(taskDependenciesRouter);
 
 export default router;

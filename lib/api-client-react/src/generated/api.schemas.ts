@@ -181,6 +181,62 @@ export interface ProjectStats {
   overdue: number;
 }
 
+export interface Tag {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
+export interface TagInput {
+  /** @minLength 1 */
+  name: string;
+  color: string;
+}
+
+export interface AddTagToTaskInput {
+  tagId: number;
+}
+
+export interface TaskDependency {
+  id: number;
+  taskId: number;
+  dependsOnTaskId: number;
+  dependsOnTitle: string;
+  dependsOnStatus?: string;
+  createdAt: string;
+}
+
+export interface TaskDependencyInput {
+  dependsOnTaskId: number;
+}
+
+export type BulkTaskUpdateStatus = typeof BulkTaskUpdateStatus[keyof typeof BulkTaskUpdateStatus];
+
+
+export const BulkTaskUpdateStatus = {
+  todo: 'todo',
+  in_progress: 'in_progress',
+  review: 'review',
+  done: 'done',
+} as const;
+
+export type BulkTaskUpdatePriority = typeof BulkTaskUpdatePriority[keyof typeof BulkTaskUpdatePriority];
+
+
+export const BulkTaskUpdatePriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface BulkTaskUpdate {
+  ids: number[];
+  status?: BulkTaskUpdateStatus;
+  priority?: BulkTaskUpdatePriority;
+  assignedTo?: number;
+}
+
 export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
 
 
@@ -223,6 +279,7 @@ export interface Task {
   createdAt: string;
   subtaskCount?: number;
   subtaskDoneCount?: number;
+  tags?: Tag[];
 }
 
 export type TaskInputStatus = typeof TaskInputStatus[keyof typeof TaskInputStatus];
@@ -927,6 +984,10 @@ export const ListTasksPriority = {
   medium: 'medium',
   high: 'high',
 } as const;
+
+export type BulkUpdateTasks200 = {
+  updated: number;
+};
 
 export type SearchParams = {
 /**

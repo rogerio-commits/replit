@@ -36,6 +36,10 @@ tags:
     description: Audit trail of changes
   - name: search
     description: Global search
+  - name: tags
+    description: Task labels and tags
+  - name: task-dependencies
+    description: Task blocking dependencies
 paths:
   /healthz:
     get:
@@ -582,6 +586,29 @@ paths:
         "204":
           description: Deleted
 
+  /tasks/bulk-update:
+    post:
+      operationId: bulkUpdateTasks
+      tags: [tasks]
+      summary: Bulk update multiple tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkTaskUpdate"
+      responses:
+        "200":
+          description: Number of updated tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated:
+                    type: integer
+
   /tasks/{id}/subtasks:
     get:
       operationId: listSubtasks
@@ -625,6 +652,158 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Task"
+
+  /tasks/{id}/dependencies:
+    get:
+      operationId: listTaskDependencies
+      tags: [task-dependencies]
+      summary: List tasks that this task depends on
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of dependency tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskDependency"
+    post:
+      operationId: addTaskDependency
+      tags: [task-dependencies]
+      summary: Add a dependency (this task blocks on another)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskDependencyInput"
+      responses:
+        "201":
+          description: Created dependency
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskDependency"
+
+  /tasks/{id}/dependencies/{depId}:
+    delete:
+      operationId: removeTaskDependency
+      tags: [task-dependencies]
+      summary: Remove a task dependency
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: depId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tasks/{id}/tags:
+    post:
+      operationId: addTagToTask
+      tags: [tags]
+      summary: Add a tag to a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddTagToTaskInput"
+      responses:
+        "201":
+          description: Tag added
+
+  /tasks/{id}/tags/{tagId}:
+    delete:
+      operationId: removeTagFromTask
+      tags: [tags]
+      summary: Remove a tag from a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  /tags:
+    get:
+      operationId: listTags
+      tags: [tags]
+      summary: List all tags
+      responses:
+        "200":
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+    post:
+      operationId: createTag
+      tags: [tags]
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagInput"
+      responses:
+        "201":
+          description: Created tag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+
+  /tags/{id}:
+    delete:
+      operationId: deleteTag
+      tags: [tags]
+      summary: Delete a tag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /search:
     get:
@@ -1575,6 +1754,77 @@ components:
         overdue:
           type: integer
 
+    Tag:
+      type: object
+      required: [id, name, color, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        createdAt:
+          type: string
+
+    TagInput:
+      type: object
+      required: [name, color]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+
+    AddTagToTaskInput:
+      type: object
+      required: [tagId]
+      properties:
+        tagId:
+          type: integer
+
+    TaskDependency:
+      type: object
+      required: [id, taskId, dependsOnTaskId, dependsOnTitle, createdAt]
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+        dependsOnTaskId:
+          type: integer
+        dependsOnTitle:
+          type: string
+        dependsOnStatus:
+          type: string
+        createdAt:
+          type: string
+
+    TaskDependencyInput:
+      type: object
+      required: [dependsOnTaskId]
+      properties:
+        dependsOnTaskId:
+          type: integer
+
+    BulkTaskUpdate:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+        status:
+          type: string
+          enum: [todo, in_progress, review, done]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        assignedTo:
+          type: integer
+
     Task:
       type: object
       required: [id, projectId, title, status, priority, createdAt]
@@ -1611,6 +1861,10 @@ components:
           type: integer
         subtaskDoneCount:
           type: integer
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
 
     TaskInput:
       type: object

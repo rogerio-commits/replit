@@ -458,7 +458,13 @@ export const ListTasksResponseItem = zod.object({
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
-  "subtaskDoneCount": zod.number().optional()
+  "subtaskDoneCount": zod.number().optional(),
+  "tags": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })
 export const ListTasksResponse = zod.array(ListTasksResponseItem)
 
@@ -503,7 +509,13 @@ export const GetTaskResponse = zod.object({
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
-  "subtaskDoneCount": zod.number().optional()
+  "subtaskDoneCount": zod.number().optional(),
+  "tags": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })
 
 
@@ -542,7 +554,13 @@ export const UpdateTaskResponse = zod.object({
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
-  "subtaskDoneCount": zod.number().optional()
+  "subtaskDoneCount": zod.number().optional(),
+  "tags": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })
 
 
@@ -551,6 +569,21 @@ export const UpdateTaskResponse = zod.object({
  */
 export const DeleteTaskParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Bulk update multiple tasks
+ */
+export const BulkUpdateTasksBody = zod.object({
+  "ids": zod.array(zod.number()),
+  "status": zod.enum(['todo', 'in_progress', 'review', 'done']).optional(),
+  "priority": zod.enum(['low', 'medium', 'high']).optional(),
+  "assignedTo": zod.number().optional()
+})
+
+export const BulkUpdateTasksResponse = zod.object({
+  "updated": zod.number()
 })
 
 
@@ -576,7 +609,13 @@ export const ListSubtasksResponseItem = zod.object({
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
-  "subtaskDoneCount": zod.number().optional()
+  "subtaskDoneCount": zod.number().optional(),
+  "tags": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })
 export const ListSubtasksResponse = zod.array(ListSubtasksResponseItem)
 
@@ -593,6 +632,98 @@ export const CreateSubtaskParams = zod.object({
 
 export const CreateSubtaskBody = zod.object({
   "title": zod.string().min(1)
+})
+
+
+/**
+ * @summary List tasks that this task depends on
+ */
+export const ListTaskDependenciesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListTaskDependenciesResponseItem = zod.object({
+  "id": zod.number(),
+  "taskId": zod.number(),
+  "dependsOnTaskId": zod.number(),
+  "dependsOnTitle": zod.string(),
+  "dependsOnStatus": zod.string().optional(),
+  "createdAt": zod.string()
+})
+export const ListTaskDependenciesResponse = zod.array(ListTaskDependenciesResponseItem)
+
+
+/**
+ * @summary Add a dependency (this task blocks on another)
+ */
+export const AddTaskDependencyParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AddTaskDependencyBody = zod.object({
+  "dependsOnTaskId": zod.number()
+})
+
+
+/**
+ * @summary Remove a task dependency
+ */
+export const RemoveTaskDependencyParams = zod.object({
+  "id": zod.coerce.number(),
+  "depId": zod.coerce.number()
+})
+
+
+/**
+ * @summary Add a tag to a task
+ */
+export const AddTagToTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AddTagToTaskBody = zod.object({
+  "tagId": zod.number()
+})
+
+
+/**
+ * @summary Remove a tag from a task
+ */
+export const RemoveTagFromTaskParams = zod.object({
+  "id": zod.coerce.number(),
+  "tagId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all tags
+ */
+export const ListTagsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListTagsResponse = zod.array(ListTagsResponseItem)
+
+
+/**
+ * @summary Create a tag
+ */
+
+
+
+export const CreateTagBody = zod.object({
+  "name": zod.string().min(1),
+  "color": zod.string()
+})
+
+
+/**
+ * @summary Delete a tag
+ */
+export const DeleteTagParams = zod.object({
+  "id": zod.coerce.number()
 })
 
 

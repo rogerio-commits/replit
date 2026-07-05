@@ -15,3 +15,5 @@ export * from "./task-comments";
 export * from "./notifications";
 export * from "./attachments";
 export * from "./audit-logs";
+export * from "./tags";
+export * from "./task-dependencies";

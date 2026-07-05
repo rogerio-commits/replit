@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { db, tasksTable, membersTable, projectsTable, projectMembersTable, notificationsTable, usersTable } from "@workspace/db";
+import { db, tasksTable, membersTable, projectsTable, projectMembersTable, notificationsTable, usersTable, taskTagsTable, tagsTable } from "@workspace/db";
 import { requireExecutorOrGestor } from "../middlewares/requireAuth";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { eq, and, isNull, sql, inArray } from "drizzle-orm";
 import { sendTaskAssignedEmail } from "../lib/email";
 import { logAudit, diffObjects } from "../lib/audit";
 import {
@@ -14,6 +14,7 @@ import {
   ListSubtasksParams,
   CreateSubtaskParams,
   CreateSubtaskBody,
+  BulkUpdateTasksBody,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -79,10 +80,13 @@ async function isExecutorParticipant(email: string, projectId: number): Promise<
   return !!pm;
 }
 
+type TagRow = { id: number; name: string; color: string; createdAt: string };
+
 function taskRow(
   row: { task: typeof tasksTable.$inferSelect; memberName: string | null; projectName: string | null },
   subtaskCount = 0,
-  subtaskDoneCount = 0
+  subtaskDoneCount = 0,
+  tags: TagRow[] = []
 ) {
   return {
     id: row.task.id,
@@ -100,7 +104,25 @@ function taskRow(
     createdAt: row.task.createdAt.toISOString(),
     subtaskCount,
     subtaskDoneCount,
+    tags,
   };
+}
+
+async function getTaskTags(taskIds: number[]): Promise<Map<number, TagRow[]>> {
+  if (taskIds.length === 0) return new Map();
+  const rows = await db
+    .select({ taskId: taskTagsTable.taskId, tag: tagsTable })
+    .from(taskTagsTable)
+    .innerJoin(tagsTable, eq(taskTagsTable.tagId, tagsTable.id))
+    .where(inArray(taskTagsTable.taskId, taskIds));
+
+  const map = new Map<number, TagRow[]>();
+  for (const r of rows) {
+    const list = map.get(r.taskId) ?? [];
+    list.push({ ...r.tag, createdAt: r.tag.createdAt.toISOString() });
+    map.set(r.taskId, list);
+  }
+  return map;
 }
 
 async function getSubtaskCounts(taskIds: number[]): Promise<Map<number, { total: number; done: number }>> {
@@ -159,10 +181,11 @@ router.get("/tasks", async (req, res) => {
     filtered = filtered.filter((r) => r.task.assignedTo === query.data.assignedTo);
   }
 
-  const counts = await getSubtaskCounts(filtered.map((r) => r.task.id));
+  const ids = filtered.map((r) => r.task.id);
+  const [counts, tags] = await Promise.all([getSubtaskCounts(ids), getTaskTags(ids)]);
   return res.json(filtered.map((r) => {
     const c = counts.get(r.task.id);
-    return taskRow(r, c?.total ?? 0, c?.done ?? 0);
+    return taskRow(r, c?.total ?? 0, c?.done ?? 0, tags.get(r.task.id) ?? []);
   }));
 });
 
@@ -213,6 +236,28 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
   return res.status(201).json(taskRow(row));
 });
 
+router.post("/tasks/bulk-update", requireExecutorOrGestor, async (req, res) => {
+  const body = BulkUpdateTasksBody.safeParse(req.body);
+  if (!body.success) return res.status(400).json({ error: "Invalid body" });
+
+  const { ids, status, priority, assignedTo } = body.data;
+  if (!ids || ids.length === 0) return res.status(400).json({ error: "ids is required" });
+
+  const updateData: Record<string, unknown> = {};
+  if (status !== undefined) {
+    updateData.status = status;
+    if (status === "done") updateData.completedAt = new Date();
+    else updateData.completedAt = null;
+  }
+  if (priority !== undefined) updateData.priority = priority;
+  if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
+
+  if (Object.keys(updateData).length === 0) return res.json({ updated: 0 });
+
+  await db.update(tasksTable).set(updateData).where(inArray(tasksTable.id, ids));
+  return res.json({ updated: ids.length });
+});
+
 router.get("/tasks/:id", async (req, res) => {
   const params = GetTaskParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
@@ -230,7 +275,8 @@ router.get("/tasks/:id", async (req, res) => {
 
   if (!row) return res.status(404).json({ error: "Not found" });
 
-  return res.json(taskRow(row));
+  const taskTags = await getTaskTags([params.data.id]);
+  return res.json(taskRow(row, 0, 0, taskTags.get(params.data.id) ?? []));
 });
 
 router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {

@@ -5,6 +5,7 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
+import type { Tag } from './tag';
 import type { TaskPriority } from './taskPriority';
 import type { TaskStatus } from './taskStatus';
 
@@ -31,4 +32,5 @@ export interface Task {
   createdAt: string;
   subtaskCount?: number;
   subtaskDoneCount?: number;
+  tags?: Tag[];
 }

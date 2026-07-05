@@ -22,6 +22,7 @@ import type {
 import type {
   ActivityItem,
   AddProjectMemberInput,
+  AddTagToTaskInput,
   AppNotification,
   AppUser,
   AssistenciaTecnica,
@@ -30,6 +31,8 @@ import type {
   Attachment,
   AttachmentInput,
   AuditLog,
+  BulkTaskUpdate,
+  BulkUpdateTasks200,
   ChecklistItem,
   ChecklistItemInput,
   ChecklistItemUpdate,
@@ -67,9 +70,13 @@ import type {
   SiteVisitInput,
   SiteVisitWithProject,
   SubtaskInput,
+  Tag,
+  TagInput,
   Task,
   TaskComment,
   TaskCommentInput,
+  TaskDependency,
+  TaskDependencyInput,
   TaskInput,
   TaskUpdate,
   UploadUrlRequest,
@@ -2032,6 +2039,77 @@ export const useDeleteTask = <TError = ErrorType<unknown>,
       return useMutation(getDeleteTaskMutationOptions(options));
     }
 
+export const getBulkUpdateTasksUrl = () => {
+
+
+
+
+  return `/api/tasks/bulk-update`
+}
+
+/**
+ * @summary Bulk update multiple tasks
+ */
+export const bulkUpdateTasks = async (bulkTaskUpdate: BulkTaskUpdate, options?: RequestInit): Promise<BulkUpdateTasks200> => {
+
+  return customFetch<BulkUpdateTasks200>(getBulkUpdateTasksUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bulkTaskUpdate,)
+  }
+);}
+
+
+
+
+export const getBulkUpdateTasksMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateTasks>>, TError,{data: BodyType<BulkTaskUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateTasks>>, TError,{data: BodyType<BulkTaskUpdate>}, TContext> => {
+
+const mutationKey = ['bulkUpdateTasks'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkUpdateTasks>>, {data: BodyType<BulkTaskUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkUpdateTasks(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkUpdateTasksMutationResult = NonNullable<Awaited<ReturnType<typeof bulkUpdateTasks>>>
+    export type BulkUpdateTasksMutationBody = BodyType<BulkTaskUpdate>
+    export type BulkUpdateTasksMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk update multiple tasks
+ */
+export const useBulkUpdateTasks = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateTasks>>, TError,{data: BodyType<BulkTaskUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkUpdateTasks>>,
+        TError,
+        {data: BodyType<BulkTaskUpdate>},
+        TContext
+      > => {
+      return useMutation(getBulkUpdateTasksMutationOptions(options));
+    }
+
 export const getListSubtasksUrl = (id: number,) => {
 
 
@@ -2179,6 +2257,589 @@ export const useCreateSubtask = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateSubtaskMutationOptions(options));
+    }
+
+export const getListTaskDependenciesUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/dependencies`
+}
+
+/**
+ * @summary List tasks that this task depends on
+ */
+export const listTaskDependencies = async (id: number, options?: RequestInit): Promise<TaskDependency[]> => {
+
+  return customFetch<TaskDependency[]>(getListTaskDependenciesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTaskDependenciesQueryKey = (id: number,) => {
+    return [
+    `/api/tasks/${id}/dependencies`
+    ] as const;
+    }
+
+
+export const getListTaskDependenciesQueryOptions = <TData = Awaited<ReturnType<typeof listTaskDependencies>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTaskDependencies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTaskDependenciesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTaskDependencies>>> = ({ signal }) => listTaskDependencies(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTaskDependencies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTaskDependenciesQueryResult = NonNullable<Awaited<ReturnType<typeof listTaskDependencies>>>
+export type ListTaskDependenciesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List tasks that this task depends on
+ */
+
+export function useListTaskDependencies<TData = Awaited<ReturnType<typeof listTaskDependencies>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTaskDependencies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTaskDependenciesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddTaskDependencyUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/dependencies`
+}
+
+/**
+ * @summary Add a dependency (this task blocks on another)
+ */
+export const addTaskDependency = async (id: number,
+    taskDependencyInput: TaskDependencyInput, options?: RequestInit): Promise<TaskDependency> => {
+
+  return customFetch<TaskDependency>(getAddTaskDependencyUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      taskDependencyInput,)
+  }
+);}
+
+
+
+
+export const getAddTaskDependencyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addTaskDependency>>, TError,{id: number;data: BodyType<TaskDependencyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addTaskDependency>>, TError,{id: number;data: BodyType<TaskDependencyInput>}, TContext> => {
+
+const mutationKey = ['addTaskDependency'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addTaskDependency>>, {id: number;data: BodyType<TaskDependencyInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addTaskDependency(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddTaskDependencyMutationResult = NonNullable<Awaited<ReturnType<typeof addTaskDependency>>>
+    export type AddTaskDependencyMutationBody = BodyType<TaskDependencyInput>
+    export type AddTaskDependencyMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a dependency (this task blocks on another)
+ */
+export const useAddTaskDependency = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addTaskDependency>>, TError,{id: number;data: BodyType<TaskDependencyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addTaskDependency>>,
+        TError,
+        {id: number;data: BodyType<TaskDependencyInput>},
+        TContext
+      > => {
+      return useMutation(getAddTaskDependencyMutationOptions(options));
+    }
+
+export const getRemoveTaskDependencyUrl = (id: number,
+    depId: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/dependencies/${depId}`
+}
+
+/**
+ * @summary Remove a task dependency
+ */
+export const removeTaskDependency = async (id: number,
+    depId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveTaskDependencyUrl(id,depId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveTaskDependencyMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeTaskDependency>>, TError,{id: number;depId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeTaskDependency>>, TError,{id: number;depId: number}, TContext> => {
+
+const mutationKey = ['removeTaskDependency'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeTaskDependency>>, {id: number;depId: number}> = (props) => {
+          const {id,depId} = props ?? {};
+
+          return  removeTaskDependency(id,depId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveTaskDependencyMutationResult = NonNullable<Awaited<ReturnType<typeof removeTaskDependency>>>
+
+    export type RemoveTaskDependencyMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a task dependency
+ */
+export const useRemoveTaskDependency = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeTaskDependency>>, TError,{id: number;depId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeTaskDependency>>,
+        TError,
+        {id: number;depId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveTaskDependencyMutationOptions(options));
+    }
+
+export const getAddTagToTaskUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/tags`
+}
+
+/**
+ * @summary Add a tag to a task
+ */
+export const addTagToTask = async (id: number,
+    addTagToTaskInput: AddTagToTaskInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getAddTagToTaskUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      addTagToTaskInput,)
+  }
+);}
+
+
+
+
+export const getAddTagToTaskMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addTagToTask>>, TError,{id: number;data: BodyType<AddTagToTaskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addTagToTask>>, TError,{id: number;data: BodyType<AddTagToTaskInput>}, TContext> => {
+
+const mutationKey = ['addTagToTask'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addTagToTask>>, {id: number;data: BodyType<AddTagToTaskInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addTagToTask(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddTagToTaskMutationResult = NonNullable<Awaited<ReturnType<typeof addTagToTask>>>
+    export type AddTagToTaskMutationBody = BodyType<AddTagToTaskInput>
+    export type AddTagToTaskMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a tag to a task
+ */
+export const useAddTagToTask = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addTagToTask>>, TError,{id: number;data: BodyType<AddTagToTaskInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addTagToTask>>,
+        TError,
+        {id: number;data: BodyType<AddTagToTaskInput>},
+        TContext
+      > => {
+      return useMutation(getAddTagToTaskMutationOptions(options));
+    }
+
+export const getRemoveTagFromTaskUrl = (id: number,
+    tagId: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/tags/${tagId}`
+}
+
+/**
+ * @summary Remove a tag from a task
+ */
+export const removeTagFromTask = async (id: number,
+    tagId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveTagFromTaskUrl(id,tagId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveTagFromTaskMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeTagFromTask>>, TError,{id: number;tagId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeTagFromTask>>, TError,{id: number;tagId: number}, TContext> => {
+
+const mutationKey = ['removeTagFromTask'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeTagFromTask>>, {id: number;tagId: number}> = (props) => {
+          const {id,tagId} = props ?? {};
+
+          return  removeTagFromTask(id,tagId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveTagFromTaskMutationResult = NonNullable<Awaited<ReturnType<typeof removeTagFromTask>>>
+
+    export type RemoveTagFromTaskMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a tag from a task
+ */
+export const useRemoveTagFromTask = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeTagFromTask>>, TError,{id: number;tagId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeTagFromTask>>,
+        TError,
+        {id: number;tagId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveTagFromTaskMutationOptions(options));
+    }
+
+export const getListTagsUrl = () => {
+
+
+
+
+  return `/api/tags`
+}
+
+/**
+ * @summary List all tags
+ */
+export const listTags = async ( options?: RequestInit): Promise<Tag[]> => {
+
+  return customFetch<Tag[]>(getListTagsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTagsQueryKey = () => {
+    return [
+    `/api/tags`
+    ] as const;
+    }
+
+
+export const getListTagsQueryOptions = <TData = Awaited<ReturnType<typeof listTags>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTagsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTags>>> = ({ signal }) => listTags({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTags>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTagsQueryResult = NonNullable<Awaited<ReturnType<typeof listTags>>>
+export type ListTagsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all tags
+ */
+
+export function useListTags<TData = Awaited<ReturnType<typeof listTags>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTagsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateTagUrl = () => {
+
+
+
+
+  return `/api/tags`
+}
+
+/**
+ * @summary Create a tag
+ */
+export const createTag = async (tagInput: TagInput, options?: RequestInit): Promise<Tag> => {
+
+  return customFetch<Tag>(getCreateTagUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      tagInput,)
+  }
+);}
+
+
+
+
+export const getCreateTagMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTag>>, TError,{data: BodyType<TagInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTag>>, TError,{data: BodyType<TagInput>}, TContext> => {
+
+const mutationKey = ['createTag'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTag>>, {data: BodyType<TagInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTag(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTagMutationResult = NonNullable<Awaited<ReturnType<typeof createTag>>>
+    export type CreateTagMutationBody = BodyType<TagInput>
+    export type CreateTagMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a tag
+ */
+export const useCreateTag = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTag>>, TError,{data: BodyType<TagInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTag>>,
+        TError,
+        {data: BodyType<TagInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTagMutationOptions(options));
+    }
+
+export const getDeleteTagUrl = (id: number,) => {
+
+
+
+
+  return `/api/tags/${id}`
+}
+
+/**
+ * @summary Delete a tag
+ */
+export const deleteTag = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteTagUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteTagMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTag>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTag>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteTag'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTag>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTag(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTagMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTag>>>
+
+    export type DeleteTagMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a tag
+ */
+export const useDeleteTag = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTag>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTag>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTagMutationOptions(options));
     }
 
 export const getSearchUrl = (params: SearchParams,) => {

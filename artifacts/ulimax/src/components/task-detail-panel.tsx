@@ -12,6 +12,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { TaskComments } from "@/components/task-comments";
 import { TaskAttachments } from "@/components/task-attachments";
 import { TaskSubtasks } from "@/components/task-subtasks";
+import { TaskTags } from "@/components/task-tags";
+import { TaskDependencies } from "@/components/task-dependencies";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { CheckSquare, Clock, AlertCircle, HardHat, Briefcase } from "lucide-react";
 
 const TASK_STATUS_LABELS: Record<string, string> = {
@@ -44,6 +47,7 @@ interface Task {
   projectName?: string | null;
   assigneeName?: string | null;
   createdAt: string;
+  tags?: Array<{ id: number; name: string; color: string }>;
 }
 
 interface TaskDetailPanelProps {
@@ -82,7 +86,6 @@ export function TaskDetailPanel({ task, open, onClose }: TaskDetailPanelProps) {
 
         <ScrollArea className="flex-1 px-6">
           <div className="space-y-5 pb-6">
-            {/* Meta info */}
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
               {task.projectName && (
                 <span className="flex items-center gap-1">
@@ -104,14 +107,22 @@ export function TaskDetailPanel({ task, open, onClose }: TaskDetailPanelProps) {
               )}
             </div>
 
-            {task.description && (
-              <div>
-                <p className="text-sm font-medium text-foreground mb-1">Descrição</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{task.description}</p>
-              </div>
-            )}
+            <TaskTags taskId={task.id} taskTags={task.tags ?? []} />
 
             <Separator />
+
+            <TaskDependencies taskId={task.id} />
+
+            <Separator />
+
+            {task.description ? (
+              <div>
+                <p className="text-sm font-medium text-foreground mb-2">Descrição</p>
+                <MarkdownRenderer content={task.description} />
+              </div>
+            ) : null}
+
+            {task.description && <Separator />}
 
             <TaskSubtasks taskId={task.id} />
 
