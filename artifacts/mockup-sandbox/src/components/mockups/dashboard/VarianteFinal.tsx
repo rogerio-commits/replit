@@ -1,15 +1,15 @@
 import { cn } from "@/lib/utils";
 
 const PHASE_CONFIG = [
-  { id: "a_iniciar",             label: "A Iniciar",      color: "text-slate-600",   bg: "bg-slate-100",   bar: "bg-slate-400",   count: 3 },
-  { id: "em_projeto",            label: "Em Projeto",     color: "text-violet-700",  bg: "bg-violet-100",  bar: "bg-violet-500",  count: 5 },
-  { id: "em_aprovacao",          label: "Em Aprovação",   color: "text-purple-700",  bg: "bg-purple-100",  bar: "bg-purple-500",  count: 2 },
-  { id: "em_producao",           label: "Em Produção",    color: "text-blue-700",    bg: "bg-blue-100",    bar: "bg-blue-500",    count: 7 },
-  { id: "ag_instalacao",         label: "Ag. Instalação", color: "text-amber-700",   bg: "bg-amber-100",   bar: "bg-amber-500",   count: 4 },
-  { id: "em_instalacao",         label: "Em Instalação",  color: "text-emerald-700", bg: "bg-emerald-100", bar: "bg-emerald-500", count: 6 },
+  { id: "a_iniciar",    label: "A Iniciar",      color: "text-slate-600",   bar: "bg-slate-400",   madeira: 2, aluminio: 1 },
+  { id: "em_projeto",   label: "Em Projeto",     color: "text-violet-700",  bar: "bg-violet-500",  madeira: 3, aluminio: 2 },
+  { id: "em_aprovacao", label: "Em Aprovação",   color: "text-purple-700",  bar: "bg-purple-500",  madeira: 1, aluminio: 1 },
+  { id: "em_producao",  label: "Em Produção",    color: "text-blue-700",    bar: "bg-blue-500",    madeira: 4, aluminio: 3 },
+  { id: "ag_instalacao",label: "Ag. Instalação", color: "text-amber-700",   bar: "bg-amber-500",   madeira: 2, aluminio: 2 },
+  { id: "em_instalacao",label: "Em Instalação",  color: "text-emerald-700", bar: "bg-emerald-500", madeira: 3, aluminio: 3 },
 ];
 
-const maxCount = Math.max(...PHASE_CONFIG.map(p => p.count));
+const maxCount = Math.max(...PHASE_CONFIG.map(p => p.madeira + p.aluminio));
 
 const PROJECTS = [
   { name: "Residência Silva",      status: "em_producao",   priority: "high",   tasks: 8,  done: 5, dueDate: "03/07", overdue: true  },
@@ -117,20 +117,40 @@ export function VarianteFinal() {
 
       {/* Pipeline de Fases */}
       <div className="bg-white rounded-xl border border-border p-5">
-        <h2 className="text-sm font-semibold text-foreground mb-4">Pipeline de Projetos</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-foreground">Pipeline de Projetos</h2>
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-amber-400 shrink-0" /> Madeira
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-sm bg-blue-400 shrink-0" /> Alumínio
+            </span>
+          </div>
+        </div>
         <div className="flex gap-3 items-end" style={{ height: 96 }}>
-          {PHASE_CONFIG.map((phase) => (
-            <div key={phase.id} className="flex-1 flex flex-col items-center gap-1.5">
-              <div className="w-full flex flex-col-reverse rounded-lg overflow-hidden" style={{ height: 72 }}>
-                <div
-                  className={cn("w-full transition-all", phase.bar)}
-                  style={{ height: `${Math.round((phase.count / maxCount) * 72)}px` }}
-                />
+          {PHASE_CONFIG.map((phase) => {
+            const total = phase.madeira + phase.aluminio;
+            const barH = Math.round((total / maxCount) * 72);
+            const mH = Math.round((phase.madeira / total) * barH);
+            const aH = barH - mH;
+            return (
+              <div key={phase.id} className="flex-1 flex flex-col items-center gap-1.5">
+                {/* stacked bar: alumínio on top, madeira on bottom */}
+                <div className="w-full flex flex-col-reverse rounded-lg overflow-hidden" style={{ height: 72 }}>
+                  <div className="w-full bg-amber-400 shrink-0" style={{ height: mH }} title={`Madeira: ${phase.madeira}`} />
+                  <div className="w-full bg-blue-400 shrink-0" style={{ height: aH }} title={`Alumínio: ${phase.aluminio}`} />
+                </div>
+                {/* count chips */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-amber-600">{phase.madeira}</span>
+                  <span className="text-[9px] text-muted-foreground">/</span>
+                  <span className="text-[10px] font-bold text-blue-600">{phase.aluminio}</span>
+                </div>
+                <div className="text-[10px] text-center leading-tight text-muted-foreground font-medium px-0.5">{phase.label}</div>
               </div>
-              <div className={cn("text-base font-bold leading-none", phase.color)}>{phase.count}</div>
-              <div className="text-[10px] text-center leading-tight text-muted-foreground font-medium px-0.5">{phase.label}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="mt-3 flex items-center gap-0.5">
           {PHASE_CONFIG.map((phase, i) => (
