@@ -138,6 +138,25 @@ function buildAlerts(projects: Project[]): DateAlert[] {
   return alerts.sort((a, b) => a.daysLeft - b.daysLeft);
 }
 
+interface UpcomingDeadline { project: Project; fieldLabel: string; date: string; daysLeft: number; }
+
+/** All deadlines in the next 1–15 days across all projects, sorted ascending */
+function buildUpcoming15(projects: Project[]): UpcomingDeadline[] {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const items: UpcomingDeadline[] = [];
+  for (const p of projects) {
+    for (const { key, label } of DEADLINE_FIELDS) {
+      const val = p[key] as string | null | undefined;
+      if (!val) continue;
+      try {
+        const diff = Math.floor((parseISO(val).getTime() - today.getTime()) / 86_400_000);
+        if (diff >= 0 && diff <= 15) items.push({ project: p, fieldLabel: label, date: val, daysLeft: diff });
+      } catch { /* skip */ }
+    }
+  }
+  return items.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
 /** Nearest upcoming deadline across all DEADLINE_FIELDS */
 function nearestDeadline(p: Project): { label: string; date: string; overdue: boolean } | null {
   const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -243,6 +262,7 @@ export default function Dashboard() {
   const aluminioPipeline = pipelineData.map(p => ({ ...p, count: p.aluminio }));
 
   const alerts = useMemo(() => buildAlerts(projects ?? []), [projects]);
+  const upcoming15 = useMemo(() => buildUpcoming15(projects ?? []), [projects]);
   const activeProjects = useMemo(
     () => (projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).slice(0, 6),
     [projects],
@@ -370,6 +390,76 @@ export default function Dashboard() {
           />
         </div>
       )}
+
+      {/* ── Próximos Vencimentos — 15 dias ── */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <CalendarDays className="h-4 w-4 text-blue-500" />
+          <h2 className="text-sm font-semibold text-foreground">Próximos Vencimentos</h2>
+          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">próximos 15 dias</span>
+          {!isProjectsLoading && upcoming15.length > 0 && (
+            <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+              {upcoming15.length}
+            </span>
+          )}
+        </div>
+        {isProjectsLoading ? (
+          <div className="flex gap-3 overflow-hidden">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-48 shrink-0 rounded-lg" />)}
+          </div>
+        ) : upcoming15.length === 0 ? (
+          <div className="py-6 text-center">
+            <p className="text-sm text-muted-foreground">Nenhum vencimento nos próximos 15 dias.</p>
+          </div>
+        ) : (
+          <div className="flex gap-3 overflow-x-auto pb-1 -mb-1">
+            {upcoming15.map((item, i) => {
+              const urgency =
+                item.daysLeft === 0 ? "today" :
+                item.daysLeft <= 3  ? "urgent" :
+                item.daysLeft <= 7  ? "soon" : "normal";
+              return (
+                <Link key={i} href={`/projects/${item.project.id}`} className="shrink-0">
+                  <div className={cn(
+                    "w-52 rounded-lg border p-3 cursor-pointer hover:opacity-80 transition-opacity space-y-2",
+                    urgency === "today"  ? "bg-red-50 border-red-200" :
+                    urgency === "urgent" ? "bg-orange-50 border-orange-200" :
+                    urgency === "soon"   ? "bg-amber-50 border-amber-200" :
+                                          "bg-muted/40 border-border",
+                  )}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn(
+                        "text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0",
+                        urgency === "today"  ? "bg-red-100 text-red-700" :
+                        urgency === "urgent" ? "bg-orange-100 text-orange-700" :
+                        urgency === "soon"   ? "bg-amber-100 text-amber-700" :
+                                              "bg-blue-100 text-blue-700",
+                      )}>
+                        {urgency === "today" ? "Hoje" : `${item.daysLeft}d`}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {fmtDate(item.date)}
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-foreground leading-tight line-clamp-2">
+                      {item.project.name}
+                    </p>
+                    <p className={cn(
+                      "text-[10px] font-medium",
+                      urgency === "today"  ? "text-red-600" :
+                      urgency === "urgent" ? "text-orange-600" :
+                      urgency === "soon"   ? "text-amber-600" :
+                                            "text-muted-foreground",
+                    )}>
+                      {item.fieldLabel}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ── Projetos em Andamento + Sidebar ── */}
       <div className="grid grid-cols-5 gap-4">
