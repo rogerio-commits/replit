@@ -1,65 +1,77 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday, isTomorrow, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   useGetDashboardSummary,
   useListProjects,
   useListAllSiteVisits,
+  useGetRecentActivity,
+  useGetMemberProductivity,
 } from "@workspace/api-client-react";
-import type { ListProjectsQueryResult, ListAllSiteVisitsQueryResult } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import type {
+  ListProjectsQueryResult,
+  GetRecentActivityQueryResult,
+  GetMemberProductivityQueryResult,
+} from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
   AlertCircle,
   Clock,
   CheckSquare,
-  Layers,
   ChevronRight,
   MapPin,
   Users,
   CalendarDays,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Project = ListProjectsQueryResult[number];
-type SiteVisitRow = ListAllSiteVisitsQueryResult[number];
+type ActivityItem = GetRecentActivityQueryResult[number];
+type MemberRow = GetMemberProductivityQueryResult[number];
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const PHASE_CONFIG: { id: string; label: string; color: string; bg: string; border: string }[] = [
-  { id: "a_iniciar",             label: "A Iniciar",             color: "text-slate-700",   bg: "bg-slate-100",   border: "border-slate-300" },
-  { id: "em_projeto",            label: "Em Projeto",            color: "text-violet-700",  bg: "bg-violet-100",  border: "border-violet-300" },
-  { id: "em_aprovacao",          label: "Em Aprovação",          color: "text-purple-700",  bg: "bg-purple-100",  border: "border-purple-300" },
-  { id: "em_producao",           label: "Em Produção",           color: "text-blue-700",    bg: "bg-blue-100",    border: "border-blue-300" },
-  { id: "aguardando_instalacao", label: "Ag. Instalação",        color: "text-amber-700",   bg: "bg-amber-100",   border: "border-amber-300" },
-  { id: "em_instalacao",         label: "Em Instalação",         color: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-300" },
+const PHASE_CONFIG = [
+  { id: "a_iniciar",             label: "A Iniciar",      labelShort: "A Iniciar",      color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",   bar: "bg-slate-400",   flow: "bg-slate-200" },
+  { id: "em_projeto",            label: "Em Projeto",     labelShort: "Em Proj.",       color: "text-violet-700",  bg: "bg-violet-100",  border: "border-violet-300",  bar: "bg-violet-500",  flow: "bg-violet-200" },
+  { id: "em_aprovacao",          label: "Em Aprovação",   labelShort: "Em Aprov.",      color: "text-purple-700",  bg: "bg-purple-100",  border: "border-purple-300",  bar: "bg-purple-500",  flow: "bg-purple-200" },
+  { id: "em_producao",           label: "Em Produção",    labelShort: "Em Prod.",       color: "text-blue-700",    bg: "bg-blue-100",    border: "border-blue-300",    bar: "bg-blue-500",    flow: "bg-blue-200" },
+  { id: "aguardando_instalacao", label: "Ag. Instalação", labelShort: "Ag. Inst.",      color: "text-amber-700",   bg: "bg-amber-100",   border: "border-amber-300",   bar: "bg-amber-500",   flow: "bg-amber-200" },
+  { id: "em_instalacao",         label: "Em Instalação",  labelShort: "Em Inst.",       color: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-300", bar: "bg-emerald-500", flow: "bg-emerald-200" },
 ];
 
 const DEADLINE_FIELDS: { key: keyof Project; label: string }[] = [
-  { key: "endDate",          label: "Fim Est. Proj." },
-  { key: "finalDate",        label: "Final Proj." },
-  { key: "producaoEndDate",  label: "Fim Est. Prod." },
-  { key: "producaoFinalDate",label: "Final Prod." },
-  { key: "medicaoDate",      label: "Medição" },
+  { key: "endDate",           label: "Fim Est. Proj." },
+  { key: "finalDate",         label: "Final Proj." },
+  { key: "producaoEndDate",   label: "Fim Est. Prod." },
+  { key: "producaoFinalDate", label: "Final Prod." },
+  { key: "medicaoDate",       label: "Medição" },
 ];
 
-const ACTIVE_STATUSES = new Set(["em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"]);
+const ACTIVE_STATUSES = new Set([
+  "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao",
+]);
+
+const STATUS_PILL: Record<string, string> = {
+  a_iniciar:             "bg-slate-100 text-slate-700 border-slate-200",
+  em_projeto:            "bg-violet-100 text-violet-700 border-violet-200",
+  em_aprovacao:          "bg-purple-100 text-purple-700 border-purple-200",
+  em_producao:           "bg-blue-100 text-blue-700 border-blue-200",
+  aguardando_instalacao: "bg-amber-100 text-amber-700 border-amber-200",
+  em_instalacao:         "bg-emerald-100 text-emerald-700 border-emerald-200",
+};
 
 const STATUS_LABEL: Record<string, string> = {
   a_iniciar: "A Iniciar", em_projeto: "Em Projeto", em_aprovacao: "Em Aprovação",
   em_producao: "Em Produção", aguardando_instalacao: "Ag. Instalação", em_instalacao: "Em Instalação",
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  a_iniciar: "bg-slate-100 text-slate-700 border-slate-300",
-  em_projeto: "bg-violet-100 text-violet-700 border-violet-300",
-  em_aprovacao: "bg-purple-100 text-purple-700 border-purple-300",
-  em_producao: "bg-blue-100 text-blue-700 border-blue-300",
-  aguardando_instalacao: "bg-amber-100 text-amber-700 border-amber-300",
-  em_instalacao: "bg-emerald-100 text-emerald-700 border-emerald-300",
+const STATUS_BAR: Record<string, string> = {
+  a_iniciar: "bg-slate-400", em_projeto: "bg-violet-500", em_aprovacao: "bg-purple-500",
+  em_producao: "bg-blue-500", aguardando_instalacao: "bg-amber-500", em_instalacao: "bg-emerald-500",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -70,52 +82,129 @@ function fmtDate(val?: string | null) {
   catch { return null; }
 }
 
-type AlertLevel = "overdue" | "soon";
-interface DateAlert {
-  project: Project;
-  fieldLabel: string;
-  date: string;
-  level: AlertLevel;
-  daysLeft: number;
+function visitDateLabel(dateStr: string): { label: string; today: boolean } {
+  try {
+    const d = parseISO(dateStr);
+    if (isToday(d)) return { label: "Hoje", today: true };
+    if (isTomorrow(d)) return { label: "Amanhã", today: false };
+    return { label: format(d, "dd/MM", { locale: ptBR }), today: false };
+  } catch { return { label: dateStr, today: false }; }
 }
 
-function buildAlerts(projects: Project[]): DateAlert[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const alerts: DateAlert[] = [];
+function activityIcon(item: ActivityItem): string {
+  if (item.type === "project") return "🔵";
+  if (item.status === "done") return "✅";
+  if (item.status === "in_progress") return "⚙️";
+  if (item.status === "review") return "🔍";
+  return "➕";
+}
 
+function activityText(item: ActivityItem): string {
+  if (item.type === "project") return `Projeto "${item.title}" atualizado`;
+  if (item.status === "done") return `Tarefa concluída: ${item.title}`;
+  if (item.status === "in_progress") return `Em andamento: ${item.title}`;
+  return `Nova tarefa: ${item.title}`;
+}
+
+function timeAgo(dateStr: string): string {
+  try {
+    const d = parseISO(dateStr);
+    const mins = Math.floor((Date.now() - d.getTime()) / 60_000);
+    if (mins < 1) return "agora";
+    if (mins < 60) return `${mins}min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    return `${Math.floor(hrs / 24)}d`;
+  } catch { return "—"; }
+}
+
+type AlertLevel = "overdue" | "soon";
+interface DateAlert { project: Project; fieldLabel: string; date: string; level: AlertLevel; daysLeft: number; }
+
+function buildAlerts(projects: Project[]): DateAlert[] {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const alerts: DateAlert[] = [];
   for (const p of projects) {
     for (const { key, label } of DEADLINE_FIELDS) {
       const val = p[key] as string | null | undefined;
       if (!val) continue;
       try {
-        const d = parseISO(val);
-        const diff = Math.floor((d.getTime() - today.getTime()) / 86_400_000);
-        if (diff < 0)      alerts.push({ project: p, fieldLabel: label, date: val, level: "overdue", daysLeft: diff });
+        const diff = Math.floor((parseISO(val).getTime() - today.getTime()) / 86_400_000);
+        if (diff < 0)       alerts.push({ project: p, fieldLabel: label, date: val, level: "overdue", daysLeft: diff });
         else if (diff <= 7) alerts.push({ project: p, fieldLabel: label, date: val, level: "soon",    daysLeft: diff });
       } catch { /* skip */ }
     }
   }
-
   return alerts.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+/** Nearest upcoming deadline across all DEADLINE_FIELDS */
+function nearestDeadline(p: Project): { label: string; date: string; overdue: boolean } | null {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let best: { label: string; date: string; diff: number } | null = null;
+  for (const { key, label } of DEADLINE_FIELDS) {
+    const val = p[key] as string | null | undefined;
+    if (!val) continue;
+    try {
+      const diff = Math.floor((parseISO(val).getTime() - today.getTime()) / 86_400_000);
+      if (!best || Math.abs(diff) < Math.abs(best.diff)) best = { label, date: val, diff };
+    } catch { /* skip */ }
+  }
+  if (!best) return null;
+  return { label: best.label, date: best.date, overdue: best.diff < 0 };
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function KpiCard({ icon: Icon, label, value, sub, accent }: {
-  icon: React.ElementType; label: string; value: number | string; sub: string; accent?: string;
+function PipelineChart({
+  title,
+  accent,
+  flowColor,
+  barColor,
+  textColor,
+  data,
+}: {
+  title: string;
+  accent: string;
+  flowColor: string;
+  barColor: string;
+  textColor: string;
+  data: { id: string; label: string; labelShort: string; count: number }[];
 }) {
+  const maxCount = Math.max(...data.map(d => d.count), 1);
+  const total = data.reduce((s, d) => s + d.count, 0);
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className={cn("text-sm font-medium", accent)}>{label}</CardTitle>
-        <Icon className={cn("h-4 w-4", accent ?? "text-muted-foreground")} />
-      </CardHeader>
-      <CardContent>
-        <div className={cn("text-2xl font-bold", accent)}>{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-      </CardContent>
-    </Card>
+    <div className="bg-card rounded-xl border border-border p-5 flex flex-col">
+      <div className="flex items-center gap-2 mb-4">
+        <span className={cn("w-3 h-3 rounded-sm shrink-0", barColor)} />
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <span className={cn("ml-auto text-xs font-bold", textColor)}>{total} projetos</span>
+      </div>
+      <div className="flex gap-2 items-end" style={{ height: 88 }}>
+        {data.map((phase) => {
+          const barH = maxCount > 0 ? Math.round((phase.count / maxCount) * 64) : 0;
+          return (
+            <Link key={phase.id} href={`/projects?status=${phase.id}`} className="flex-1">
+              <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+                <div className="w-full flex flex-col-reverse rounded overflow-hidden" style={{ height: 64 }}>
+                  <div className={cn("w-full shrink-0", barColor)} style={{ height: barH }} />
+                </div>
+                <div className={cn("text-[11px] font-bold", textColor)}>{phase.count}</div>
+                <div className="text-[9px] text-center leading-tight text-muted-foreground font-medium">{phase.labelShort}</div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      <div className="mt-2 flex items-center gap-0.5">
+        {data.map((phase, i) => (
+          <div key={phase.id} className="flex-1 flex items-center">
+            <div className={cn("h-1 flex-1 rounded-sm", flowColor)} />
+            {i < data.length - 1 && <span className="text-muted-foreground text-[9px] px-0.5">▶</span>}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -125,22 +214,38 @@ export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: projects, isLoading: isProjectsLoading } = useListProjects({});
   const { data: siteVisits, isLoading: isVisitsLoading } = useListAllSiteVisits();
+  const { data: activity, isLoading: isActivityLoading } = useGetRecentActivity();
+  const { data: productivity, isLoading: isProductivityLoading } = useGetMemberProductivity();
 
   const loading = isSummaryLoading || isProjectsLoading;
 
-  const phaseCounts = useMemo(() => {
-    if (!projects) return {} as Record<string, number>;
-    return projects.reduce<Record<string, number>>((acc, p) => {
-      acc[p.status] = (acc[p.status] ?? 0) + 1;
-      return acc;
-    }, {});
+  // Pipeline counts broken out by material
+  const pipelineData = useMemo(() => {
+    const byStatusMaterial = new Map<string, { madeira: number; aluminio: number }>();
+    for (const p of PHASE_CONFIG) byStatusMaterial.set(p.id, { madeira: 0, aluminio: 0 });
+    for (const p of projects ?? []) {
+      const entry = byStatusMaterial.get(p.status);
+      if (!entry) continue;
+      if (p.materialType === "madeira") entry.madeira++;
+      else if (p.materialType === "aluminio") entry.aluminio++;
+    }
+    return PHASE_CONFIG.map(ph => {
+      const counts = byStatusMaterial.get(ph.id) ?? { madeira: 0, aluminio: 0 };
+      return {
+        ...ph,
+        madeira: counts.madeira,
+        aluminio: counts.aluminio,
+      };
+    });
   }, [projects]);
 
-  const alerts = useMemo(() => buildAlerts(projects ?? []), [projects]);
+  const madeiraPipeline = pipelineData.map(p => ({ ...p, count: p.madeira }));
+  const aluminioPipeline = pipelineData.map(p => ({ ...p, count: p.aluminio }));
 
+  const alerts = useMemo(() => buildAlerts(projects ?? []), [projects]);
   const activeProjects = useMemo(
-    () => (projects ?? []).filter((p) => ACTIVE_STATUSES.has(p.status)),
-    [projects]
+    () => (projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).slice(0, 6),
+    [projects],
   );
 
   const materialCounts = useMemo(() => {
@@ -152,241 +257,356 @@ export default function Dashboard() {
     return m;
   }, [projects]);
 
+  // Upcoming site visits — sort by date ascending, show future ones first
+  const upcomingVisits = useMemo(() => {
+    if (!siteVisits) return [];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return [...siteVisits]
+      .filter(v => { try { return !isPast(parseISO(v.date)) || isToday(parseISO(v.date)); } catch { return false; } })
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 4);
+  }, [siteVisits]);
+
   const total = projects?.length ?? 0;
-  const pct = (n: number) => total ? Math.round((n / total) * 100) : 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-5 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Visão geral dos projetos e alertas.</p>
+        <p className="text-muted-foreground mt-1">Visão geral dos projetos, equipe e alertas.</p>
       </div>
 
       {/* ── KPI Strip ── */}
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        <div className="grid gap-4 grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[88px] rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <KpiCard icon={Briefcase}    label="Total de Projetos"   value={total}                       sub={`${phaseCounts["a_iniciar"] ?? 0} a iniciar · ${phaseCounts["em_instalacao"] ?? 0} em instalação`} />
-          <KpiCard icon={Layers}       label="Projetos Ativos"     value={activeProjects.length}          sub="em projeto, produção ou instalação" />
-          <KpiCard icon={AlertCircle}  label="Alertas de Prazo"    value={alerts.length}               sub={`${alerts.filter(a => a.level === "overdue").length} vencidos · ${alerts.filter(a => a.level === "soon").length} próximos`} accent={alerts.length > 0 ? "text-red-600" : undefined} />
-          <KpiCard icon={CheckSquare}  label="Tarefas Concluídas"  value={summary ? `${summary.doneTasks}/${summary.totalTasks}` : "—"} sub={summary?.overdueTasks ? `${summary.overdueTasks} tarefa(s) atrasada(s)` : "nenhuma tarefa atrasada"} />
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {/* Total de Projetos — com breakdown de material */}
+          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Total de Projetos</span>
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div className="text-2xl font-bold text-foreground">{total}</div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="flex items-center gap-1 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-md px-2 py-0.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                Madeira <strong>{materialCounts.madeira}</strong>
+              </span>
+              <span className="flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-2 py-0.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                Alumínio <strong>{materialCounts.aluminio}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Projetos Ativos */}
+          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Projetos Ativos</span>
+              <Layers className="h-4 w-4 text-blue-500" />
+            </div>
+            <div className="text-2xl font-bold text-blue-600">
+              {(projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).length}
+            </div>
+            <p className="text-xs text-muted-foreground">em projeto, produção ou instalação</p>
+          </div>
+
+          {/* Alertas de Prazo */}
+          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Alertas de Prazo</span>
+              <AlertCircle className={cn("h-4 w-4", alerts.length > 0 ? "text-red-500" : "text-muted-foreground")} />
+            </div>
+            <div className={cn("text-2xl font-bold", alerts.length > 0 ? "text-red-600" : "text-foreground")}>
+              {alerts.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {alerts.filter(a => a.level === "overdue").length} vencidos · {alerts.filter(a => a.level === "soon").length} próximos
+            </p>
+          </div>
+
+          {/* Tarefas Concluídas */}
+          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Tarefas Concluídas</span>
+              <CheckSquare className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="text-2xl font-bold text-emerald-600">
+              {summary ? `${summary.doneTasks}/${summary.totalTasks}` : "—"}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {summary?.overdueTasks ? `${summary.overdueTasks} tarefa(s) atrasada(s)` : "nenhuma tarefa atrasada"}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* ── Projetos por fase ── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Projetos por Fase</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex gap-3">
-              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 flex-1 rounded-lg" />)}
+      {/* ── Pipelines Madeira | Alumínio ── */}
+      {loading ? (
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-44 rounded-xl" />
+          <Skeleton className="h-44 rounded-xl" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          <PipelineChart
+            title="Pipeline — Madeira"
+            accent="text-amber-600"
+            barColor="bg-amber-400"
+            flowColor="bg-amber-200"
+            textColor="text-amber-600"
+            data={madeiraPipeline}
+          />
+          <PipelineChart
+            title="Pipeline — Alumínio"
+            accent="text-blue-600"
+            barColor="bg-blue-400"
+            flowColor="bg-blue-200"
+            textColor="text-blue-600"
+            data={aluminioPipeline}
+          />
+        </div>
+      )}
+
+      {/* ── Projetos em Andamento + Sidebar ── */}
+      <div className="grid grid-cols-5 gap-4">
+        {/* Tabela de projetos ativos */}
+        <div className="col-span-3 bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground">Projetos em Andamento</h2>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              {activeProjects.length} projetos
+            </span>
+          </div>
+          {isProjectsLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+            </div>
+          ) : activeProjects.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground">Nenhum projeto em andamento.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-              {PHASE_CONFIG.map((phase) => {
-                const count = phaseCounts[phase.id] ?? 0;
+            <div className="space-y-2.5">
+              {activeProjects.map((p) => {
+                const deadline = nearestDeadline(p);
                 return (
-                  <Link key={phase.id} href={`/projects?status=${phase.id}`}>
-                    <div className={cn(
-                      "rounded-lg border p-3 text-center cursor-pointer hover:opacity-80 transition-opacity",
-                      phase.bg, phase.border
-                    )}>
-                      <div className={cn("text-2xl font-bold", phase.color)}>{count}</div>
-                      <div className={cn("text-[11px] font-medium mt-1 leading-tight", phase.color)}>{phase.label}</div>
+                  <Link key={p.id} href={`/projects/${p.id}`}>
+                    <div className="flex items-center gap-2 py-1.5 border-b last:border-0 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
+                      <span className={cn(
+                        "text-[10px] font-medium px-1.5 py-0.5 rounded border shrink-0",
+                        STATUS_PILL[p.status],
+                      )}>
+                        {STATUS_LABEL[p.status]}
+                      </span>
+                      <span className="text-sm font-medium text-foreground flex-1 truncate">{p.name}</span>
+                      {p.materialType && (
+                        <span className={cn(
+                          "text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0",
+                          p.materialType === "madeira"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-blue-50 text-blue-700",
+                        )}>
+                          {p.materialType === "madeira" ? "Mad." : "Alum."}
+                        </span>
+                      )}
+                      {deadline && (
+                        <span className={cn(
+                          "text-[10px] border rounded px-1 py-0.5 shrink-0",
+                          deadline.overdue
+                            ? "border-red-200 text-red-600 bg-red-50"
+                            : "text-muted-foreground border-border",
+                        )}>
+                          {fmtDate(deadline.date)}
+                        </span>
+                      )}
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     </div>
                   </Link>
                 );
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* ── Visitas em Obras ── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-emerald-600" />
-              <CardTitle className="text-base">Visitas em Obras</CardTitle>
-              {!isVisitsLoading && siteVisits && siteVisits.length > 0 && (
-                <span className="ml-1 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">
-                  {siteVisits.length}
-                </span>
-              )}
+        {/* Sidebar: equipe + visitas */}
+        <div className="col-span-2 space-y-4">
+          {/* Carga da Equipe */}
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-4 w-4 text-violet-500" />
+              <h2 className="text-sm font-semibold text-foreground">Carga da Equipe</h2>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isVisitsLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-            </div>
-          ) : !siteVisits || siteVisits.length === 0 ? (
-            <div className="py-8 text-center flex flex-col items-center gap-2">
-              <MapPin className="h-8 w-8 text-muted-foreground opacity-30" />
-              <p className="text-sm text-muted-foreground">Nenhuma visita registrada.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-xs text-muted-foreground">
-                    <th className="text-left py-2 pr-4 font-medium">Projeto</th>
-                    <th className="text-left py-2 pr-4 font-medium">Data</th>
-                    <th className="text-left py-2 pr-4 font-medium">Visitantes</th>
-                    <th className="text-left py-2 pr-4 font-medium hidden md:table-cell">Objetivo</th>
-                    <th className="text-left py-2 font-medium hidden lg:table-cell">Responsável</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...siteVisits]
-                    .sort((a, b) => b.date.localeCompare(a.date))
-                    .map((v: SiteVisitRow) => (
-                      <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="py-2.5 pr-4">
-                          <Link href={`/projects/${v.projectId}`}>
-                            <span className="font-medium text-foreground hover:text-primary cursor-pointer truncate max-w-[160px] block">
-                              {v.projectName}
-                            </span>
-                          </Link>
-                        </td>
-                        <td className="py-2.5 pr-4 whitespace-nowrap">
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <CalendarDays className="h-3 w-3 shrink-0" />
-                            {(() => {
-                              try { return format(parseISO(v.date), "dd/MM/yyyy", { locale: ptBR }); }
-                              catch { return v.date; }
-                            })()}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-4">
-                          <span className="flex items-center gap-1 text-muted-foreground">
-                            <Users className="h-3 w-3 shrink-0" />
-                            <span className="truncate max-w-[140px]">{v.visitors}</span>
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-4 hidden md:table-cell">
-                          <span className="truncate max-w-[180px] block text-muted-foreground">{v.objective}</span>
-                        </td>
-                        <td className="py-2.5 hidden lg:table-cell text-muted-foreground">
-                          {v.responsibleName ?? <span className="italic opacity-50">—</span>}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Alertas + Material ── */}
-      <div className="grid gap-4 lg:grid-cols-7">
-
-        {/* Alertas de prazo */}
-        <Card className="lg:col-span-4">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-500" />
-              <CardTitle className="text-base">Alertas de Prazo</CardTitle>
-              {alerts.length > 0 && (
-                <span className="ml-1 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
-                  {alerts.length}
-                </span>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            {isProductivityLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-7 w-full" />)}
               </div>
-            ) : alerts.length === 0 ? (
-              <div className="py-10 text-center flex flex-col items-center gap-2">
-                <CheckSquare className="h-8 w-8 text-emerald-500 opacity-60" />
-                <p className="text-sm text-muted-foreground">Nenhum prazo vencido ou próximo.</p>
-              </div>
+            ) : !productivity || productivity.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-4 text-center">Nenhum membro com tarefas.</p>
             ) : (
-              <div className="space-y-1.5">
-                {alerts.map((a, idx) => (
-                  <Link key={idx} href={`/projects/${a.project.id}`}>
-                    <div className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg border text-sm cursor-pointer hover:opacity-80 transition-opacity",
-                      a.level === "overdue"
-                        ? "bg-red-50 border-red-200"
-                        : "bg-amber-50 border-amber-200"
-                    )}>
-                      {a.level === "overdue"
-                        ? <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                        : <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                      }
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium truncate block">{a.project.name}</span>
+              <div className="space-y-2.5">
+                {(productivity as MemberRow[]).slice(0, 5).map((m) => {
+                  const pct = m.totalTasks > 0 ? Math.round((m.doneTasks / m.totalTasks) * 100) : 0;
+                  const initials = m.memberName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+                  return (
+                    <div key={m.memberId} className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                        {initials}
                       </div>
-                      <span className={cn(
-                        "text-[11px] font-medium whitespace-nowrap shrink-0",
-                        a.level === "overdue" ? "text-red-600" : "text-amber-600"
-                      )}>
-                        {a.fieldLabel} · {fmtDate(a.date)}
-                      </span>
-                      {a.level === "overdue"
-                        ? <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                            {Math.abs(a.daysLeft)}d atraso
-                          </span>
-                        : <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap">
-                            {a.daysLeft === 0 ? "hoje" : `${a.daysLeft}d`}
-                          </span>
-                      }
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-xs font-medium truncate">{m.memberName.split(" ")[0]}</span>
+                          <span className="text-[10px] text-muted-foreground shrink-0">{m.doneTasks}/{m.totalTasks}</span>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={cn("h-full rounded-full", pct === 100 ? "bg-emerald-500" : "bg-violet-400")}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Material breakdown */}
-        <Card className="lg:col-span-3">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Material</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-[160px] w-full" />
+          {/* Próximas Visitas */}
+          <div className="bg-card rounded-xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin className="h-4 w-4 text-emerald-600" />
+              <h2 className="text-sm font-semibold text-foreground">Próximas Visitas</h2>
+            </div>
+            {isVisitsLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+              </div>
+            ) : upcomingVisits.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma visita programada.</p>
             ) : (
-              <div className="space-y-5">
-                {[
-                  { label: "Madeira", count: materialCounts.madeira,   color: "bg-amber-500", textColor: "text-amber-700" },
-                  { label: "Alumínio", count: materialCounts.aluminio, color: "bg-blue-500",   textColor: "text-blue-700" },
-                ].map(({ label, count, color, textColor }) => (
-                  <div key={label} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground font-medium">{label}</span>
-                      <span className={cn("font-semibold", textColor)}>{count} ({pct(count)}%)</span>
+              <div className="space-y-2">
+                {upcomingVisits.map((v) => {
+                  const { label, today } = visitDateLabel(v.date);
+                  return (
+                    <div key={v.id} className="flex gap-2.5 pb-2 border-b last:border-0 last:pb-0">
+                      <div className="text-center min-w-[44px]">
+                        <div className={cn(
+                          "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                          today ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground",
+                        )}>{label}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5 justify-center">
+                          <CalendarDays className="w-2.5 h-2.5" />
+                          {(() => { try { return format(parseISO(v.date), "dd/MM", { locale: ptBR }); } catch { return ""; } })()}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/projects/${v.projectId}`}>
+                          <p className="text-xs font-medium truncate hover:text-primary cursor-pointer">{v.projectName}</p>
+                        </Link>
+                        <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
+                          <Users className="w-2.5 h-2.5 shrink-0" />{v.visitors}
+                        </p>
+                      </div>
                     </div>
-                    <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                      <div className={cn("h-full rounded-full transition-all", color)}
-                        style={{ width: `${pct(count)}%` }} />
-                    </div>
-                  </div>
-                ))}
-                <div className="pt-2 border-t flex justify-between text-xs text-muted-foreground">
-                  <span>Total de projetos</span>
-                  <span className="font-semibold text-foreground">{total}</span>
-                </div>
+                  );
+                })}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
+      {/* ── Alertas + Atividade Recente ── */}
+      <div className="grid grid-cols-5 gap-4">
+        {/* Alertas de Prazo */}
+        <div className="col-span-2 bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1.5 h-4 rounded-full bg-red-500" />
+            <h2 className="text-sm font-semibold text-foreground">Alertas de Prazo</h2>
+            {alerts.length > 0 && (
+              <span className="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
+                {alerts.length}
+              </span>
+            )}
+          </div>
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : alerts.length === 0 ? (
+            <div className="py-8 text-center flex flex-col items-center gap-2">
+              <CheckSquare className="h-7 w-7 text-emerald-500 opacity-60" />
+              <p className="text-sm text-muted-foreground">Nenhum prazo vencido ou próximo.</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              {alerts.map((a, idx) => (
+                <Link key={idx} href={`/projects/${a.project.id}`}>
+                  <div className={cn(
+                    "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
+                    a.level === "overdue" ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100",
+                  )}>
+                    {a.level === "overdue"
+                      ? <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                      : <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{a.project.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{a.fieldLabel}</p>
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap",
+                      a.level === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
+                    )}>
+                      {a.level === "overdue" ? `${Math.abs(a.daysLeft)}d atraso` : a.daysLeft === 0 ? "hoje" : `${a.daysLeft}d`}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Atividade Recente */}
+        <div className="col-span-3 bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1.5 h-4 rounded-full bg-blue-500" />
+            <h2 className="text-sm font-semibold text-foreground">Atividade Recente</h2>
+          </div>
+          {isActivityLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+            </div>
+          ) : !activity || activity.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground">Nenhuma atividade recente.</p>
+            </div>
+          ) : (
+            <div className="space-y-0">
+              {(activity as ActivityItem[]).slice(0, 8).map((item, i, arr) => (
+                <div key={`${item.type}-${item.id}`} className="flex gap-3 pb-3 relative">
+                  {i < arr.length - 1 && (
+                    <div className="absolute left-[9px] top-5 bottom-0 w-px bg-border" />
+                  )}
+                  <div className="w-[18px] h-[18px] rounded-full bg-muted border border-border flex items-center justify-center text-[10px] shrink-0 z-10 mt-0.5">
+                    {activityIcon(item)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-foreground leading-snug">{activityText(item)}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {item.projectName && <span>{item.projectName} · </span>}
+                      há {timeAgo(item.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
