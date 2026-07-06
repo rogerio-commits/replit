@@ -115,50 +115,74 @@ export function VarianteFinal() {
         <KpiCard icon="✅" label="Tarefas Concluídas" value="53%" sub="18 de 34 tarefas" accent="text-emerald-600" />
       </div>
 
-      {/* Pipeline de Fases */}
-      <div className="bg-white rounded-xl border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-foreground">Pipeline de Projetos</h2>
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-amber-400 shrink-0" /> Madeira
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-blue-400 shrink-0" /> Alumínio
+      {/* Pipeline de Fases — dois gráficos separados */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Madeira */}
+        <div className="bg-white rounded-xl border border-border p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-3 h-3 rounded-sm bg-amber-400 shrink-0" />
+            <h2 className="text-sm font-semibold text-foreground">Pipeline — Madeira</h2>
+            <span className="ml-auto text-xs font-bold text-amber-600">
+              {PHASE_CONFIG.reduce((s, p) => s + p.madeira, 0)} projetos
             </span>
           </div>
-        </div>
-        <div className="flex gap-3 items-end" style={{ height: 96 }}>
-          {PHASE_CONFIG.map((phase) => {
-            const total = phase.madeira + phase.aluminio;
-            const barH = Math.round((total / maxCount) * 72);
-            const mH = Math.round((phase.madeira / total) * barH);
-            const aH = barH - mH;
-            return (
-              <div key={phase.id} className="flex-1 flex flex-col items-center gap-1.5">
-                {/* stacked bar: alumínio on top, madeira on bottom */}
-                <div className="w-full flex flex-col-reverse rounded-lg overflow-hidden" style={{ height: 72 }}>
-                  <div className="w-full bg-amber-400 shrink-0" style={{ height: mH }} title={`Madeira: ${phase.madeira}`} />
-                  <div className="w-full bg-blue-400 shrink-0" style={{ height: aH }} title={`Alumínio: ${phase.aluminio}`} />
+          <div className="flex gap-2 items-end" style={{ height: 88 }}>
+            {PHASE_CONFIG.map((phase) => {
+              const maxM = Math.max(...PHASE_CONFIG.map(p => p.madeira));
+              const barH = Math.round((phase.madeira / maxM) * 64);
+              return (
+                <div key={phase.id} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className="w-full flex flex-col-reverse rounded overflow-hidden" style={{ height: 64 }}>
+                    <div className="w-full bg-amber-400 shrink-0 rounded" style={{ height: barH }} />
+                  </div>
+                  <div className="text-[11px] font-bold text-amber-600">{phase.madeira}</div>
+                  <div className="text-[9px] text-center leading-tight text-muted-foreground font-medium">{phase.label}</div>
                 </div>
-                {/* count chips */}
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-bold text-amber-600">{phase.madeira}</span>
-                  <span className="text-[9px] text-muted-foreground">/</span>
-                  <span className="text-[10px] font-bold text-blue-600">{phase.aluminio}</span>
-                </div>
-                <div className="text-[10px] text-center leading-tight text-muted-foreground font-medium px-0.5">{phase.label}</div>
+              );
+            })}
+          </div>
+          <div className="mt-2 flex items-center gap-0.5">
+            {PHASE_CONFIG.map((phase, i) => (
+              <div key={phase.id} className="flex-1 flex items-center">
+                <div className="h-1 flex-1 rounded-sm bg-amber-200" />
+                {i < PHASE_CONFIG.length - 1 && <span className="text-muted-foreground text-[9px] px-0.5">▶</span>}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
-        <div className="mt-3 flex items-center gap-0.5">
-          {PHASE_CONFIG.map((phase, i) => (
-            <div key={phase.id} className="flex-1 flex items-center">
-              <div className={cn("h-1.5 flex-1 rounded-sm opacity-30", phase.bar)} />
-              {i < PHASE_CONFIG.length - 1 && <span className="text-muted-foreground text-[10px] px-0.5">▶</span>}
-            </div>
-          ))}
+
+        {/* Alumínio */}
+        <div className="bg-white rounded-xl border border-border p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-3 h-3 rounded-sm bg-blue-400 shrink-0" />
+            <h2 className="text-sm font-semibold text-foreground">Pipeline — Alumínio</h2>
+            <span className="ml-auto text-xs font-bold text-blue-600">
+              {PHASE_CONFIG.reduce((s, p) => s + p.aluminio, 0)} projetos
+            </span>
+          </div>
+          <div className="flex gap-2 items-end" style={{ height: 88 }}>
+            {PHASE_CONFIG.map((phase) => {
+              const maxA = Math.max(...PHASE_CONFIG.map(p => p.aluminio));
+              const barH = Math.round((phase.aluminio / maxA) * 64);
+              return (
+                <div key={phase.id} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className="w-full flex flex-col-reverse rounded overflow-hidden" style={{ height: 64 }}>
+                    <div className="w-full bg-blue-400 shrink-0 rounded" style={{ height: barH }} />
+                  </div>
+                  <div className="text-[11px] font-bold text-blue-600">{phase.aluminio}</div>
+                  <div className="text-[9px] text-center leading-tight text-muted-foreground font-medium">{phase.label}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-2 flex items-center gap-0.5">
+            {PHASE_CONFIG.map((phase, i) => (
+              <div key={phase.id} className="flex-1 flex items-center">
+                <div className="h-1 flex-1 rounded-sm bg-blue-200" />
+                {i < PHASE_CONFIG.length - 1 && <span className="text-muted-foreground text-[9px] px-0.5">▶</span>}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
