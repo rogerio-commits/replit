@@ -92,7 +92,24 @@ export function VarianteFinal() {
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
-        <KpiCard icon="📁" label="Total de Projetos" value={27} sub="3 a iniciar · 6 em instalação" />
+        {/* Total de Projetos — com breakdown de material */}
+        <div className="bg-white rounded-xl border border-border p-4 flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Total de Projetos</span>
+            <span className="text-lg">📁</span>
+          </div>
+          <div className="text-2xl font-bold text-foreground">27</div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="flex items-center gap-1 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-md px-2 py-0.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              Madeira <strong>15</strong>
+            </span>
+            <span className="flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-2 py-0.5">
+              <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+              Alumínio <strong>12</strong>
+            </span>
+          </div>
+        </div>
         <KpiCard icon="⚡" label="Projetos Ativos"   value={24} sub="em projeto, produção ou instalação" accent="text-blue-600" />
         <KpiCard icon="🚨" label="Alertas de Prazo"  value={4}  sub="2 vencidos · 2 próximos" accent="text-red-600" />
         <KpiCard icon="✅" label="Tarefas Concluídas" value="53%" sub="18 de 34 tarefas" accent="text-emerald-600" />
