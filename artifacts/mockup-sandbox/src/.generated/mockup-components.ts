@@ -6,5 +6,8 @@ export const modules: ModuleMap = {
   "./components/mockups/dashboard/VarianteA.tsx": () => import("../components/mockups/dashboard/VarianteA.tsx"),
   "./components/mockups/dashboard/VarianteB.tsx": () => import("../components/mockups/dashboard/VarianteB.tsx"),
   "./components/mockups/dashboard/VarianteC.tsx": () => import("../components/mockups/dashboard/VarianteC.tsx"),
-  "./components/mockups/dashboard/VarianteFinal.tsx": () => import("../components/mockups/dashboard/VarianteFinal.tsx")
+  "./components/mockups/dashboard/VarianteFinal.tsx": () => import("../components/mockups/dashboard/VarianteFinal.tsx"),
+  "./components/mockups/ux-ulimax/Dashboard.tsx": () => import("../components/mockups/ux-ulimax/Dashboard.tsx"),
+  "./components/mockups/ux-ulimax/Onboarding.tsx": () => import("../components/mockups/ux-ulimax/Onboarding.tsx"),
+  "./components/mockups/ux-ulimax/Sidebar.tsx": () => import("../components/mockups/ux-ulimax/Sidebar.tsx")
 };
