@@ -55,6 +55,7 @@ import type {
   MemberProductivity,
   MemberUpdate,
   Project,
+  ProjectApprovalInput,
   ProjectInput,
   ProjectMember,
   ProjectObservation,
@@ -546,6 +547,78 @@ export const useDeleteProject = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteProjectMutationOptions(options));
+    }
+
+export const getApproveProjectUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/approve`
+}
+
+/**
+ * @summary Approve or reject a project (gestor only)
+ */
+export const approveProject = async (id: number,
+    projectApprovalInput: ProjectApprovalInput, options?: RequestInit): Promise<Project> => {
+
+  return customFetch<Project>(getApproveProjectUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectApprovalInput,)
+  }
+);}
+
+
+
+
+export const getApproveProjectMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveProject>>, TError,{id: number;data: BodyType<ProjectApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveProject>>, TError,{id: number;data: BodyType<ProjectApprovalInput>}, TContext> => {
+
+const mutationKey = ['approveProject'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveProject>>, {id: number;data: BodyType<ProjectApprovalInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  approveProject(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveProjectMutationResult = NonNullable<Awaited<ReturnType<typeof approveProject>>>
+    export type ApproveProjectMutationBody = BodyType<ProjectApprovalInput>
+    export type ApproveProjectMutationError = ErrorType<void>
+
+    /**
+ * @summary Approve or reject a project (gestor only)
+ */
+export const useApproveProject = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveProject>>, TError,{id: number;data: BodyType<ProjectApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveProject>>,
+        TError,
+        {id: number;data: BodyType<ProjectApprovalInput>},
+        TContext
+      > => {
+      return useMutation(getApproveProjectMutationOptions(options));
     }
 
 export const getGetProjectStatsUrl = (id: number,) => {

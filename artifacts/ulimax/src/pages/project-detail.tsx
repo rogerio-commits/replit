@@ -21,6 +21,7 @@ import {
   useListProjectObservations,
   useCreateProjectObservation,
   useListProjectPhaseHistory,
+  useApproveProject,
   getGetProjectQueryKey,
   getListTasksQueryKey,
   getGetProjectStatsQueryKey,
@@ -29,6 +30,7 @@ import {
   getListSiteVisitsQueryKey,
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
+import { ProjectFiles } from "@/components/project-files";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -85,6 +87,13 @@ import {
   Send,
   History,
   ArrowRight,
+  Camera,
+  FolderOpen,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -249,8 +258,27 @@ export default function ProjectDetail() {
   const createSiteVisit = useCreateSiteVisit();
   const deleteSiteVisit = useDeleteSiteVisit();
   const createObservation = useCreateProjectObservation();
+  const approveProjectMutation = useApproveProject();
 
   const [obsText, setObsText] = useState("");
+  const [approvalNote, setApprovalNote] = useState("");
+  const [isApproveOpen, setIsApproveOpen] = useState(false);
+
+  const handleApprove = (action: "approved" | "rejected") => {
+    approveProjectMutation.mutate(
+      { id: projectId, data: { action, note: approvalNote || undefined } },
+      {
+        onSuccess: () => {
+          toast({ title: action === "approved" ? "Projeto aprovado!" : "Projeto rejeitado" });
+          setIsApproveOpen(false);
+          setApprovalNote("");
+          queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+          queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+        },
+        onError: () => toast({ title: "Erro ao processar aprovação", variant: "destructive" }),
+      }
+    );
+  };
 
   // Participation check for executors
   const myMember = allMembers?.find(
@@ -725,6 +753,118 @@ export default function ProjectDetail() {
           </div>
         </div>
       </div>
+
+      {/* Approval Panel */}
+      {project.status === "em_aprovacao" && (
+        <Card className={cn(
+          "border-2",
+          project.approvalStatus === "approved" ? "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/10" :
+          project.approvalStatus === "rejected" ? "border-red-300 bg-red-50/50 dark:bg-red-900/10" :
+          "border-amber-300 bg-amber-50/50 dark:bg-amber-900/10"
+        )}>
+          <CardHeader className="py-3 px-4 border-b">
+            <div className="flex items-center gap-2">
+              {project.approvalStatus === "approved" ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> :
+               project.approvalStatus === "rejected" ? <XCircle className="h-4 w-4 text-red-600" /> :
+               <Clock className="h-4 w-4 text-amber-600" />}
+              <CardTitle className="text-sm font-semibold">
+                {project.approvalStatus === "approved" ? "Projeto Aprovado" :
+                 project.approvalStatus === "rejected" ? "Projeto Rejeitado" :
+                 "Aguardando Aprovação"}
+              </CardTitle>
+              {project.approvalAt && (
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {format(new Date(project.approvalAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                </span>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="px-4 py-3">
+            {project.approvalNote && (
+              <p className="text-sm text-foreground mb-3 bg-white/60 dark:bg-black/10 rounded p-2 border border-border/50">
+                <span className="font-medium">Nota: </span>{project.approvalNote}
+              </p>
+            )}
+            {!project.approvalStatus && isGestor && (
+              <>
+                {!isApproveOpen ? (
+                  <Button size="sm" variant="outline" onClick={() => setIsApproveOpen(true)} className="gap-1.5">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Revisar e Decidir
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <Textarea
+                      placeholder="Nota de revisão (opcional)..."
+                      value={approvalNote}
+                      onChange={(e) => setApprovalNote(e.target.value)}
+                      rows={2}
+                      className="text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        onClick={() => handleApprove("approved")}
+                        disabled={approveProjectMutation.isPending}
+                      >
+                        {approveProjectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
+                        Aprovar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 border-red-300 text-red-600 hover:bg-red-50"
+                        onClick={() => handleApprove("rejected")}
+                        disabled={approveProjectMutation.isPending}
+                      >
+                        <ThumbsDown className="h-4 w-4" />
+                        Rejeitar
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setIsApproveOpen(false); setApprovalNote(""); }}>
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {!project.approvalStatus && !isGestor && (
+              <p className="text-sm text-muted-foreground">Aguardando revisão de um gestor.</p>
+            )}
+            {project.approvalStatus && isGestor && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs text-muted-foreground"
+                onClick={() => setIsApproveOpen(!isApproveOpen)}
+              >
+                Rever decisão
+              </Button>
+            )}
+            {project.approvalStatus && isGestor && isApproveOpen && (
+              <div className="space-y-3 mt-2">
+                <Textarea
+                  placeholder="Nova nota (opcional)..."
+                  value={approvalNote}
+                  onChange={(e) => setApprovalNote(e.target.value)}
+                  rows={2}
+                  className="text-sm"
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleApprove("approved")} disabled={approveProjectMutation.isPending}>
+                    <ThumbsUp className="h-4 w-4" /> Aprovar
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5 border-red-300 text-red-600 hover:bg-red-50" onClick={() => handleApprove("rejected")} disabled={approveProjectMutation.isPending}>
+                    <ThumbsDown className="h-4 w-4" /> Rejeitar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setIsApproveOpen(false); setApprovalNote(""); }}>Cancelar</Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <h2 className="text-lg font-semibold">Tarefas</h2>
@@ -1221,6 +1361,32 @@ export default function ProjectDetail() {
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Fotos */}
+      <Card>
+        <CardHeader className="py-3 px-4 border-b">
+          <div className="flex items-center gap-2">
+            <Camera className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Fotos</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <ProjectFiles projectId={projectId} mode="photos" />
+        </CardContent>
+      </Card>
+
+      {/* Arquivos */}
+      <Card>
+        <CardHeader className="py-3 px-4 border-b">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-base">Arquivos</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
+          <ProjectFiles projectId={projectId} mode="files" />
         </CardContent>
       </Card>
 

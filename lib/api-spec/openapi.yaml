@@ -155,6 +155,35 @@ paths:
         "204":
           description: Deleted
 
+  /projects/{id}/approve:
+    post:
+      operationId: approveProject
+      tags: [projects]
+      summary: Approve or reject a project (gestor only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectApprovalInput"
+      responses:
+        "200":
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
   /projects/{id}/stats:
     get:
       operationId: getProjectStats
@@ -1659,12 +1688,31 @@ components:
         materialType:
           type: ["string", "null"]
           enum: [madeira, aluminio]
+        approvalStatus:
+          type: ["string", "null"]
+          enum: [pending, approved, rejected]
+        approvalNote:
+          type: ["string", "null"]
+        approvalAt:
+          type: ["string", "null"]
+        approvalBy:
+          type: ["integer", "null"]
         createdAt:
           type: string
         participants:
           type: array
           items:
             $ref: "#/components/schemas/ProjectParticipantSummary"
+
+    ProjectApprovalInput:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [approved, rejected]
+        note:
+          type: string
 
     ProjectInput:
       type: object

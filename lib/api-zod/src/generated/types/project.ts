@@ -5,6 +5,7 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
+import type { ProjectApprovalStatus } from './projectApprovalStatus';
 import type { ProjectMaterialType } from './projectMaterialType';
 import type { ProjectParticipantSummary } from './projectParticipantSummary';
 import type { ProjectPriority } from './projectPriority';
@@ -37,6 +38,14 @@ export interface Project {
   instalacaoStartDate?: string | null;
   /** @nullable */
   materialType?: ProjectMaterialType;
+  /** @nullable */
+  approvalStatus?: ProjectApprovalStatus;
+  /** @nullable */
+  approvalNote?: string | null;
+  /** @nullable */
+  approvalAt?: string | null;
+  /** @nullable */
+  approvalBy?: number | null;
   createdAt: string;
   participants: ProjectParticipantSummary[];
 }

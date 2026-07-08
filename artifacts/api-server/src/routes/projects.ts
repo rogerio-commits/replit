@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { logAudit, diffObjects } from "../lib/audit";
 import { and, eq, inArray, count } from "drizzle-orm";
@@ -30,6 +30,8 @@ import {
   CreateProjectObservationParams,
   CreateProjectObservationBody,
   ListProjectPhaseHistoryParams,
+  ApproveProjectParams,
+  ApproveProjectBody,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -55,11 +57,81 @@ function projectRow(
     medicaoDate: p.medicaoDate ?? null,
     instalacaoStartDate: p.instalacaoStartDate ?? null,
     materialType: p.materialType ?? null,
+    approvalStatus: p.approvalStatus ?? null,
+    approvalNote: p.approvalNote ?? null,
+    approvalAt: p.approvalAt ? p.approvalAt.toISOString() : null,
+    approvalBy: p.approvalBy ?? null,
     createdAt: p.createdAt.toISOString(),
     participants,
     taskTotal,
     taskDone,
   };
+}
+
+const PROJECT_STATUS_LABELS: Record<string, string> = {
+  a_iniciar: "A Iniciar",
+  em_projeto: "Em Projeto",
+  em_aprovacao: "Em Aprovação",
+  em_producao: "Em Produção",
+  aguardando_instalacao: "Aguardando Instalação",
+  em_instalacao: "Em Instalação",
+};
+
+async function notifyProjectMembers(
+  projectId: number,
+  projectName: string,
+  newStatus: string,
+  actorEmail: string,
+  log: { warn: (obj: object, msg: string) => void }
+) {
+  try {
+    const rows = await db
+      .select({ email: membersTable.email })
+      .from(projectMembersTable)
+      .innerJoin(membersTable, eq(projectMembersTable.memberId, membersTable.id))
+      .where(eq(projectMembersTable.projectId, projectId));
+
+    const statusLabel = PROJECT_STATUS_LABELS[newStatus] ?? newStatus;
+    for (const row of rows) {
+      if (row.email === actorEmail) continue;
+      const [user] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.email, row.email))
+        .limit(1);
+      if (!user) continue;
+      await db.insert(notificationsTable).values({
+        userId: user.id,
+        type: "project_status_changed",
+        title: `Projeto "${projectName}" atualizado`,
+        body: `Status alterado para: ${statusLabel}`,
+        entityType: "project",
+        entityId: projectId,
+        read: false,
+      });
+    }
+
+    if (newStatus === "em_aprovacao") {
+      const gestors = await db
+        .select({ id: usersTable.id, email: usersTable.email })
+        .from(usersTable)
+        .where(eq(usersTable.role, "gestor"));
+      for (const g of gestors) {
+        if (g.email === actorEmail) continue;
+        await db.insert(notificationsTable).values({
+          userId: g.id,
+          type: "project_status_changed",
+          title: `Aprovação necessária: "${projectName}"`,
+          body: `O projeto entrou em aprovação e aguarda sua revisão.`,
+          entityType: "project",
+          entityId: projectId,
+          read: false,
+        });
+      }
+    }
+  } catch (e) {
+    log.warn({ err: e }, "Failed to send project status notifications");
+  }
 }
 
 async function fetchTaskCountsByProject(projectIds: number[]) {
@@ -254,6 +326,13 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
       fromStatus: existing.status,
       toStatus: body.data.status,
     });
+    if (body.data.status === "em_aprovacao") {
+      updateData.approvalStatus = "pending";
+      updateData.approvalNote = null;
+      updateData.approvalAt = null;
+      updateData.approvalBy = null;
+    }
+    notifyProjectMembers(params.data.id, project.name, body.data.status, req.appUser!.email, req.log);
   }
 
   if (body.data.status === "em_instalacao" && existing.status !== "em_instalacao") {
@@ -308,6 +387,68 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     logAudit({ entityType: "project", entityId: params.data.id, entityName: projToDelete.name, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
   }
   return res.status(204).send();
+});
+
+router.post("/projects/:id/approve", requireGestor, async (req, res) => {
+  const params = ApproveProjectParams.safeParse({ id: Number(req.params.id) });
+  const body = ApproveProjectBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [existing] = await db
+    .select({ name: projectsTable.name, status: projectsTable.status })
+    .from(projectsTable)
+    .where(eq(projectsTable.id, params.data.id))
+    .limit(1);
+  if (!existing) return res.status(404).json({ error: "Not found" });
+
+  const [dbUser] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.email, req.appUser!.email))
+    .limit(1);
+
+  const [project] = await db
+    .update(projectsTable)
+    .set({
+      approvalStatus: body.data.action,
+      approvalNote: body.data.note ?? null,
+      approvalAt: new Date(),
+      approvalBy: dbUser?.id ?? null,
+    })
+    .where(eq(projectsTable.id, params.data.id))
+    .returning();
+
+  if (!project) return res.status(404).json({ error: "Not found" });
+
+  const actionLabel = body.data.action === "approved" ? "Aprovado ✓" : "Rejeitado ✗";
+  const actorName = (await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1))[0]?.name ?? req.appUser!.email.split("@")[0];
+
+  const memberRows = await db
+    .select({ email: membersTable.email })
+    .from(projectMembersTable)
+    .innerJoin(membersTable, eq(projectMembersTable.memberId, membersTable.id))
+    .where(eq(projectMembersTable.projectId, params.data.id));
+
+  for (const row of memberRows) {
+    if (row.email === req.appUser!.email) continue;
+    const [u] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, row.email)).limit(1);
+    if (!u) continue;
+    await db.insert(notificationsTable).values({
+      userId: u.id,
+      type: "project_status_changed",
+      title: `Projeto "${existing.name}" — ${actionLabel}`,
+      body: body.data.note ? `Nota: ${body.data.note}` : `Revisado por ${actorName}`,
+      entityType: "project",
+      entityId: params.data.id,
+      read: false,
+    });
+  }
+
+  logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email, changes: [{ field: "approvalStatus", from: null, to: body.data.action }] }, req.log);
+
+  const participantsMap = await fetchParticipantsByProject([project.id]);
+  const taskCounts = await fetchTaskCountsByProject([project.id]);
+  return res.json(projectRow(project, participantsMap.get(project.id) ?? [], taskCounts.total.get(project.id) ?? 0, taskCounts.done.get(project.id) ?? 0));
 });
 
 router.get("/projects/:id/phase-history", async (req, res) => {

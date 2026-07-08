@@ -48,6 +48,18 @@ export const ProjectMaterialType = {
   aluminio: 'aluminio',
 } as const;
 
+/**
+ * @nullable
+ */
+export type ProjectApprovalStatus = typeof ProjectApprovalStatus[keyof typeof ProjectApprovalStatus] | null;
+
+
+export const ProjectApprovalStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
 export interface Project {
   id: number;
   name: string;
@@ -75,8 +87,29 @@ export interface Project {
   instalacaoStartDate?: string | null;
   /** @nullable */
   materialType?: ProjectMaterialType;
+  /** @nullable */
+  approvalStatus?: ProjectApprovalStatus;
+  /** @nullable */
+  approvalNote?: string | null;
+  /** @nullable */
+  approvalAt?: string | null;
+  /** @nullable */
+  approvalBy?: number | null;
   createdAt: string;
   participants: ProjectParticipantSummary[];
+}
+
+export type ProjectApprovalInputAction = typeof ProjectApprovalInputAction[keyof typeof ProjectApprovalInputAction];
+
+
+export const ProjectApprovalInputAction = {
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface ProjectApprovalInput {
+  action: ProjectApprovalInputAction;
+  note?: string;
 }
 
 export type ProjectInputStatus = typeof ProjectInputStatus[keyof typeof ProjectInputStatus];

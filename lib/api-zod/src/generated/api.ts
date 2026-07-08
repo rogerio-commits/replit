@@ -42,6 +42,10 @@ export const ListProjectsResponseItem = zod.object({
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
   "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
+  "approvalStatus": zod.enum(['pending', 'approved', 'rejected']).nullish(),
+  "approvalNote": zod.string().nullish(),
+  "approvalAt": zod.string().nullish(),
+  "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
@@ -99,6 +103,10 @@ export const GetProjectResponse = zod.object({
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
   "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
+  "approvalStatus": zod.enum(['pending', 'approved', 'rejected']).nullish(),
+  "approvalNote": zod.string().nullish(),
+  "approvalAt": zod.string().nullish(),
+  "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
@@ -151,6 +159,10 @@ export const UpdateProjectResponse = zod.object({
   "medicaoDate": zod.string().nullish(),
   "instalacaoStartDate": zod.string().nullish(),
   "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
+  "approvalStatus": zod.enum(['pending', 'approved', 'rejected']).nullish(),
+  "approvalNote": zod.string().nullish(),
+  "approvalAt": zod.string().nullish(),
+  "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
@@ -165,6 +177,48 @@ export const UpdateProjectResponse = zod.object({
  */
 export const DeleteProjectParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Approve or reject a project (gestor only)
+ */
+export const ApproveProjectParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ApproveProjectBody = zod.object({
+  "action": zod.enum(['approved', 'rejected']),
+  "note": zod.string().optional()
+})
+
+export const ApproveProjectResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "taskTotal": zod.number(),
+  "taskDone": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "finalDate": zod.string().nullish(),
+  "producaoStartDate": zod.string().nullish(),
+  "producaoEndDate": zod.string().nullish(),
+  "producaoFinalDate": zod.string().nullish(),
+  "medicaoDate": zod.string().nullish(),
+  "instalacaoStartDate": zod.string().nullish(),
+  "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
+  "approvalStatus": zod.enum(['pending', 'approved', 'rejected']).nullish(),
+  "approvalNote": zod.string().nullish(),
+  "approvalAt": zod.string().nullish(),
+  "approvalBy": zod.number().nullish(),
+  "createdAt": zod.string(),
+  "participants": zod.array(zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberAvatarUrl": zod.string().nullish()
+}))
 })
 
 
