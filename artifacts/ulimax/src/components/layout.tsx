@@ -53,8 +53,8 @@ export function Layout({ children }: LayoutProps) {
     {
       label: "Principal",
       items: [
+        { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/meu-dia", label: "Meu Dia", icon: Sun },
         { href: "/projects", label: "Projetos", icon: Briefcase },
         { href: "/tasks", label: "Tarefas", icon: CheckSquare },
         { href: "/kanban", label: "Kanban", icon: Columns3 },
@@ -80,7 +80,7 @@ export function Layout({ children }: LayoutProps) {
         { href: "/ajuda", label: "Ajuda", icon: BookOpen },
       ],
     },
-  ] as { label: string; items: { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[] }[];
+  ] as { label: string; items: { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean; highlight?: boolean }[] }[];
 
   const initials = user?.firstName && user?.lastName
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
@@ -118,11 +118,15 @@ export function Layout({ children }: LayoutProps) {
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                           isActive
-                            ? "bg-sidebar-primary/15 text-sidebar-primary"
-                            : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                            ? item.highlight
+                              ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
+                              : "bg-sidebar-primary/15 text-sidebar-primary"
+                            : item.highlight
+                              ? "bg-amber-50 text-amber-700 border border-amber-200/70 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40 dark:hover:bg-amber-900/40"
+                              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         )}
                       >
-                        <Icon className="h-4 w-4" />
+                        <Icon className={cn("h-4 w-4", item.highlight && !isActive && "text-amber-500")} />
                         <span className="flex-1">{item.label}</span>
                         {item.badge !== undefined && (
                           <span className={cn(
