@@ -18,6 +18,7 @@ import {
   Search,
   GanttChartSquare,
   History,
+  Sun,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -53,6 +54,7 @@ export function Layout({ children }: LayoutProps) {
       label: "Principal",
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/meu-dia", label: "Meu Dia", icon: Sun },
         { href: "/projects", label: "Projetos", icon: Briefcase },
         { href: "/tasks", label: "Tarefas", icon: CheckSquare },
         { href: "/kanban", label: "Kanban", icon: Columns3 },
