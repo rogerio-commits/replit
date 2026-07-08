@@ -8,12 +8,17 @@ import {
   useListAllSiteVisits,
   useGetRecentActivity,
   useGetMemberProductivity,
+  useListTasks,
+  useListMembers,
 } from "@workspace/api-client-react";
 import type {
   ListProjectsQueryResult,
   GetRecentActivityQueryResult,
   GetMemberProductivityQueryResult,
+  ListTasksQueryResult,
 } from "@workspace/api-client-react";
+import { useAppUser } from "@/hooks/useAppUser";
+import { OnboardingBanner } from "@/components/onboarding-banner";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
@@ -25,6 +30,9 @@ import {
   Users,
   CalendarDays,
   Layers,
+  Circle,
+  CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -229,14 +237,52 @@ function PipelineChart({
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
+type TaskItem2 = ListTasksQueryResult[number];
+
+function taskDueLabel(t: TaskItem2): { label: string; urgent: boolean; done: boolean } {
+  const done = t.status === "done";
+  if (done) return { label: "Concluída", urgent: false, done: true };
+  if (!t.dueDate) return { label: "Sem prazo", urgent: false, done: false };
+  try {
+    const d = parseISO(t.dueDate);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const diff = Math.floor((d.getTime() - today.getTime()) / 86_400_000);
+    if (diff < 0) return { label: `${Math.abs(diff)}d atraso`, urgent: true, done: false };
+    if (diff === 0) return { label: "Hoje", urgent: true, done: false };
+    if (diff === 1) return { label: "Amanhã", urgent: false, done: false };
+    return { label: format(d, "dd/MM", { locale: ptBR }), urgent: false, done: false };
+  } catch { return { label: "—", urgent: false, done: false }; }
+}
+
 export default function Dashboard() {
+  const { data: me } = useAppUser();
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: projects, isLoading: isProjectsLoading } = useListProjects({});
   const { data: siteVisits, isLoading: isVisitsLoading } = useListAllSiteVisits();
   const { data: activity, isLoading: isActivityLoading } = useGetRecentActivity();
   const { data: productivity, isLoading: isProductivityLoading } = useGetMemberProductivity();
+  const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
+  const { data: members } = useListMembers();
 
   const loading = isSummaryLoading || isProjectsLoading;
+
+  const myMemberId = useMemo(() => {
+    if (!members || !me) return null;
+    const m = members.find(mb => mb.email === me.email);
+    return m?.id ?? null;
+  }, [members, me]);
+
+  const myTasks = useMemo(() => {
+    if (!allTasks || myMemberId === null) return [];
+    return (allTasks as TaskItem2[])
+      .filter(t => t.assignedTo === myMemberId && t.status !== "done")
+      .sort((a, b) => {
+        const dateA = a.dueDate ? parseISO(a.dueDate).getTime() : Infinity;
+        const dateB = b.dueDate ? parseISO(b.dueDate).getTime() : Infinity;
+        return dateA - dateB;
+      })
+      .slice(0, 5);
+  }, [allTasks, myMemberId]);
 
   // Pipeline counts broken out by material
   const pipelineData = useMemo(() => {
@@ -291,6 +337,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
+      <OnboardingBanner />
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Visão geral dos projetos, equipe e alertas.</p>
@@ -363,6 +411,61 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ── Minhas Tarefas ── */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-4 rounded-full bg-violet-500" />
+            <h2 className="text-sm font-semibold text-foreground">Minhas Tarefas</h2>
+          </div>
+          <Link href="/tasks">
+            <span className="text-xs text-primary hover:underline flex items-center gap-0.5 cursor-pointer">
+              Ver todas <ArrowRight className="h-3 w-3" />
+            </span>
+          </Link>
+        </div>
+        {isTasksLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
+          </div>
+        ) : myTasks.length === 0 ? (
+          <div className="py-6 text-center flex flex-col items-center gap-2">
+            <CheckCircle2 className="h-7 w-7 text-emerald-500 opacity-60" />
+            <p className="text-sm text-muted-foreground">Nenhuma tarefa atribuída a você.</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {myTasks.map((t) => {
+              const due = taskDueLabel(t);
+              return (
+                <Link key={t.id} href={`/tasks`}>
+                  <div className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
+                    due.urgent ? "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30" : "bg-muted/30 border-border",
+                  )}>
+                    <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+                      {t.projectName && (
+                        <p className="text-[10px] text-muted-foreground truncate">{t.projectName}</p>
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap",
+                      due.urgent
+                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-muted text-muted-foreground",
+                    )}>
+                      {due.label}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ── Pipelines Madeira | Alumínio ── */}
       {loading ? (

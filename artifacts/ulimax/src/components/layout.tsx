@@ -48,22 +48,37 @@ export function Layout({ children }: LayoutProps) {
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/projects", label: "Projetos", icon: Briefcase },
-    { href: "/tasks", label: "Tarefas", icon: CheckSquare },
-    { href: "/kanban", label: "Kanban", icon: Columns3 },
-    { href: "/checklist", label: "Instalações", icon: ClipboardList },
-    { href: "/members", label: "Equipe", icon: Users },
-    { href: "/calendario", label: "Calendário Instalação", icon: CalendarDays },
-    { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
-    { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
-    { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
-    { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
-    { href: "/auditoria", label: "Auditoria", icon: History },
-    { href: "/produtividade", label: "Produtividade", icon: TrendingUp },
-    { href: "/ajuda", label: "Ajuda", icon: BookOpen },
-  ] as { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[];
+  const navGroups = [
+    {
+      label: "Principal",
+      items: [
+        { href: "/", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/projects", label: "Projetos", icon: Briefcase },
+        { href: "/tasks", label: "Tarefas", icon: CheckSquare },
+        { href: "/kanban", label: "Kanban", icon: Columns3 },
+        { href: "/members", label: "Equipe", icon: Users },
+      ],
+    },
+    {
+      label: "Obra",
+      items: [
+        { href: "/checklist", label: "Instalações", icon: ClipboardList },
+        { href: "/calendario", label: "Calendário", icon: CalendarDays },
+        { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
+        { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
+        { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
+      ],
+    },
+    {
+      label: "Sistema",
+      items: [
+        { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
+        { href: "/auditoria", label: "Auditoria", icon: History },
+        { href: "/produtividade", label: "Produtividade", icon: TrendingUp },
+        { href: "/ajuda", label: "Ajuda", icon: BookOpen },
+      ],
+    },
+  ] as { label: string; items: { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean }[] }[];
 
   const initials = user?.firstName && user?.lastName
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
@@ -86,39 +101,43 @@ export function Layout({ children }: LayoutProps) {
             </Link>
           </div>
           
-          <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-            <div className="text-xs font-medium text-sidebar-foreground/40 uppercase tracking-wider mb-4 px-2">
-              Menu
-            </div>
-            {navItems.map((item) => {
-              const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
-              const Icon = item.icon;
-              return (
-                <Link key={item.href} href={item.href}>
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors cursor-pointer",
-                      isActive 
-                        ? "bg-sidebar-primary/15 text-sidebar-primary" 
-                        : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge !== undefined && (
-                      <span className={cn(
-                        "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none",
-                        item.badgeDanger
-                          ? "bg-red-500 text-white"
-                          : "bg-amber-400 text-amber-900"
-                      )}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+          <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+            {navGroups.map((group) => (
+              <div key={group.label} className="mb-2">
+                <div className="text-[10px] font-semibold text-sidebar-foreground/35 uppercase tracking-widest px-2 py-1.5">
+                  {group.label}
+                </div>
+                {group.items.map((item) => {
+                  const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+                  const Icon = item.icon;
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                          isActive
+                            ? "bg-sidebar-primary/15 text-sidebar-primary"
+                            : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="flex-1">{item.label}</span>
+                        {item.badge !== undefined && (
+                          <span className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none",
+                            item.badgeDanger
+                              ? "bg-red-500 text-white"
+                              : "bg-amber-400 text-amber-900"
+                          )}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
           
           {/* User section at the bottom */}
