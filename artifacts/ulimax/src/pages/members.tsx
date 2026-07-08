@@ -423,6 +423,8 @@ export default function Members() {
     createMember.mutate({ data: memberPayload }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        setIsCreateOpen(false);
+        resetDialog();
         createInvitation.mutate(
           { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
           {
@@ -431,13 +433,18 @@ export default function Members() {
               queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
             },
             onError: (err: unknown) => {
-              const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-              toast({ title: "Membro adicionado, mas o convite falhou", description: msg ?? "Tente reenviar o convite no card do membro.", variant: "destructive" });
+              const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "";
+              if (msg.includes("convite já foi enviado")) {
+                toast({ title: "Membro adicionado!", description: "Este colaborador já tem um convite pendente — ele receberá acesso ao aceitar." });
+                queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+              } else if (msg.includes("já possui uma conta")) {
+                toast({ title: "Membro adicionado!", description: "Este colaborador já tem conta no sistema e pode acessar normalmente." });
+              } else {
+                toast({ title: "Membro adicionado", description: "Não foi possível enviar o convite. Use o botão 'Enviar convite' no card do membro.", variant: "destructive" });
+              }
             },
           }
         );
-        setIsCreateOpen(false);
-        resetDialog();
       },
       onError: () => toast({ title: "Erro ao adicionar membro", variant: "destructive" }),
     });
@@ -531,6 +538,18 @@ export default function Members() {
         setResendingInviteId(null);
       },
     });
+  };
+
+  const handleAddMemberFromInvite = (inv: { email: string; name: string; intendedRole: string }) => {
+    form.reset({
+      name: inv.name,
+      role: "",
+      email: inv.email,
+      team: "projetos",
+      intendedRole: inv.intendedRole as SystemRole,
+    });
+    setEditingMember(null);
+    setIsCreateOpen(true);
   };
 
   const handleResetLink = async (memberId: number, memberName: string) => {
@@ -659,60 +678,77 @@ export default function Members() {
         )}
       </div>
 
-      {/* Pending invitations */}
-      {isGestor && invitations && invitations.length > 0 && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-amber-600">
-            <Clock className="h-4 w-4" />
-            Convites Pendentes
-            <span className="text-xs font-normal text-muted-foreground">({invitations.length})</span>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {invitations.map((inv) => (
-              <div
-                key={inv.id}
-                className="flex items-center gap-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-4 py-3"
-              >
-                <div className="h-9 w-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                  <Mail className="h-4 w-4 text-amber-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{inv.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{inv.email}</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <RoleBadge role={inv.intendedRole} />
-                    <span className="text-[10px] text-muted-foreground">
-                      · {format(new Date(inv.invitedAt), "d MMM", { locale: ptBR })}
-                    </span>
+      {/* Pending invitations — only orphans (no matching member record) */}
+      {isGestor && (() => {
+        const orphanInvites = (invitations ?? []).filter(
+          inv => !(members ?? []).some(m => m.email.toLowerCase() === inv.email.toLowerCase())
+        );
+        if (orphanInvites.length === 0) return null;
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-amber-600">
+              <Clock className="h-4 w-4" />
+              Convites sem cadastro na equipe
+              <span className="text-xs font-normal text-muted-foreground">({orphanInvites.length})</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Estes colaboradores receberam convite mas ainda não foram adicionados à equipe. Clique em <strong>Adicionar à equipe</strong> para completar o cadastro.
+            </p>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {orphanInvites.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-start gap-3 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-4 py-3"
+                >
+                  <div className="h-9 w-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 mt-0.5">
+                    <Mail className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{inv.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{inv.email}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <RoleBadge role={inv.intendedRole} />
+                      <span className="text-[10px] text-muted-foreground">
+                        · {format(new Date(inv.invitedAt), "d MMM", { locale: ptBR })}
+                      </span>
+                    </div>
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      <Button
+                        size="sm"
+                        className="h-7 text-[11px] px-2.5 gap-1"
+                        onClick={() => handleAddMemberFromInvite(inv)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar à equipe
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[11px] px-2 gap-1 text-muted-foreground hover:text-foreground"
+                        disabled={resendingInviteId === inv.id || deleteInvitation.isPending}
+                        onClick={() => handleResendInvite(inv.id, { name: inv.name, email: inv.email }, inv.intendedRole)}
+                      >
+                        <RefreshCw className={cn("h-3 w-3", resendingInviteId === inv.id && "animate-spin")} />
+                        {resendingInviteId === inv.id ? "Reenviando…" : "Reenviar"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[11px] px-2 gap-1 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRevokeInvite(inv.id, inv.email)}
+                        disabled={deleteInvitation.isPending || resendingInviteId === inv.id}
+                      >
+                        <X className="h-3 w-3" />
+                        Cancelar
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                    onClick={() => handleResendInvite(inv.id, { name: inv.name, email: inv.email }, inv.intendedRole)}
-                    disabled={resendingInviteId === inv.id || deleteInvitation.isPending}
-                    title="Reenviar convite"
-                  >
-                    <RefreshCw className={cn("h-3.5 w-3.5", resendingInviteId === inv.id && "animate-spin")} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleRevokeInvite(inv.id, inv.email)}
-                    disabled={deleteInvitation.isPending || resendingInviteId === inv.id}
-                    title="Cancelar convite"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Search */}
       <Card>
