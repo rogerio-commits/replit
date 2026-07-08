@@ -23,6 +23,10 @@ import {
   Link2,
   CheckCheck,
   FileText,
+  GanttChart,
+  Camera,
+  FolderOpen,
+  BadgeCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -415,25 +419,130 @@ const sections: Section[] = [
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">O sistema envia notificações em tempo real para mantê-lo informado sobre atualizações importantes nos projetos e tarefas.</p>
+        <p className="text-sm text-muted-foreground">O sistema gera notificações automáticas para manter toda a equipe informada sobre mudanças importantes em projetos e tarefas.</p>
         <Subsection title="Acessar as notificações">
-          <p className="text-sm text-muted-foreground">Clique no <Strong>ícone de sino</Strong> no canto superior direito da tela (ao lado do perfil). Um painel exibe todas as notificações recentes.</p>
+          <p className="text-sm text-muted-foreground">Clique no <Strong>ícone de sino</Strong> no canto superior direito da tela. Um painel exibe todas as notificações recentes, da mais nova para a mais antiga.</p>
         </Subsection>
-        <Subsection title="Tipos de notificação">
+        <Subsection title="Quando uma notificação é gerada">
           <Table
-            headers={["Quando", "Notificação gerada"]}
+            headers={["Evento", "Quem recebe"]}
             rows={[
-              ["Nova tarefa atribuída a você", "Aviso de nova responsabilidade"],
-              ["Comentário em uma tarefa sua", "Aviso de nova mensagem"],
-              ["Prazo de tarefa próximo", "Lembrete de vencimento"],
-              ["Status de projeto atualizado", "Confirmação de mudança de fase"],
+              ["Tarefa atribuída a você", "O responsável pela tarefa"],
+              ["Status do projeto mudou de fase", "Todos os membros do projeto"],
+              ["Projeto entrou em Em Aprovação", "Todos os membros + gestores"],
+              ["Projeto aprovado ou rejeitado", "Todos os membros do projeto"],
             ]}
           />
         </Subsection>
         <Subsection title="Marcar como lida">
-          <p className="text-sm text-muted-foreground">No painel de notificações, clique em <Strong>Marcar como lida</Strong> em qualquer notificação individual, ou use <Strong>Marcar todas como lidas</Strong> para limpar o contador de uma vez.</p>
+          <p className="text-sm text-muted-foreground">No painel, clique em <Strong>Marcar como lida</Strong> em uma notificação individual ou use <Strong>Marcar todas como lidas</Strong> para limpar o contador de uma vez.</p>
         </Subsection>
-        <Tip>O número em vermelho sobre o sino indica quantas notificações ainda não foram lidas. Ele desaparece assim que todas forem marcadas como lidas.</Tip>
+        <Tip>O número em vermelho sobre o sino indica notificações não lidas. Ele some assim que todas forem marcadas como lidas.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "gantt",
+    title: "Linha do Tempo (Gantt)",
+    icon: GanttChart,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Cada projeto possui uma aba de <Strong>Linha do Tempo</Strong> que exibe as tarefas em formato Gantt, com barras coloridas representando início, duração e prazo de cada item.</p>
+        <Subsection title="Como acessar">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Abra o detalhe de um projeto clicando no seu nome.</li>
+            <li>Na área de tarefas, clique na aba <Strong>Linha do Tempo</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Leitura do gráfico">
+          <Table
+            headers={["Elemento", "Significado"]}
+            rows={[
+              ["Barra azul", "Tarefa em aberto — a largura representa a duração planejada"],
+              ["Barra verde", "Tarefa concluída"],
+              ["Barra vermelha", "Tarefa com prazo vencido"],
+              ["Linha vertical pontilhada", "Dia de hoje"],
+              ["Número ao lado da barra", "Dias restantes (ou dias de atraso se negativo)"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Filtrar por status">
+          <p className="text-sm text-muted-foreground">Use os botões de filtro acima do gráfico (Todas · A Fazer · Em Andamento · Revisão · Concluídas) para focar nas tarefas desejadas sem sair da visualização Gantt.</p>
+        </Subsection>
+        <Tip>Tarefas sem data de início ou prazo não aparecem na linha do tempo — cadastre as datas na tarefa para que ela seja exibida no gráfico.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "fotos-arquivos",
+    title: "Fotos e Arquivos do Projeto",
+    icon: Camera,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Cada projeto possui duas seções dedicadas a mídia: <Strong>Fotos</Strong> (galeria de imagens da obra) e <Strong>Arquivos</Strong> (documentos, planilhas, PDFs e demais tipos).</p>
+        <Subsection title="Enviar fotos">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Abra o detalhe do projeto e role até a seção <Strong>Fotos</Strong>.</li>
+            <li>Clique na área de upload ou arraste as imagens (JPG, PNG, WebP, GIF).</li>
+            <li>As fotos aparecem na galeria assim que o upload conclui.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Galeria e lightbox">
+          <p className="text-sm text-muted-foreground">Clique em qualquer miniatura da galeria para abrir o <Strong>lightbox</Strong> em tela cheia. No lightbox, use as setas para navegar entre as fotos sem fechar o painel.</p>
+        </Subsection>
+        <Subsection title="Enviar arquivos">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Role até a seção <Strong>Arquivos</Strong> do projeto.</li>
+            <li>Clique na área de upload ou arraste o arquivo desejado (PDF, DOCX, XLSX, etc.).</li>
+            <li>O arquivo aparece na lista com nome, tamanho e data de envio.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Baixar ou excluir">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique no ícone de <Strong>download</Strong> para salvar o arquivo localmente.</li>
+            <li>Clique no ícone de <Strong>lixeira</Strong> para excluir — esta ação é permanente.</li>
+          </ul>
+        </Subsection>
+        <Tip>Fotos e arquivos ficam separados para facilitar a navegação: imagens ficam na galeria visual e documentos ficam na lista de arquivos, cada um com seu próprio espaço de upload.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "aprovacao",
+    title: "Fluxo de Aprovação",
+    icon: BadgeCheck,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Quando um projeto avança para a fase <Strong>Em Aprovação</Strong>, um painel de revisão é exibido no topo da página de detalhe para que gestores tomem a decisão de aprovar ou rejeitar.</p>
+        <Subsection title="Como funciona o fluxo">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Altere o status do projeto para <Strong>Em Aprovação</Strong> (via edição ou Kanban).</li>
+            <li>Todos os membros do projeto e os gestores recebem uma notificação automática.</li>
+            <li>O painel âmbar <em>Aguardando Aprovação</em> aparece no detalhe do projeto.</li>
+            <li>Um gestor clica em <Strong>Revisar e Decidir</Strong>, adiciona uma nota opcional e escolhe <Strong>Aprovar</Strong> ou <Strong>Rejeitar</Strong>.</li>
+            <li>Todos os membros são notificados da decisão.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Estados do painel">
+          <Table
+            headers={["Cor do painel", "Estado"]}
+            rows={[
+              ["Âmbar", "Pendente — aguardando decisão do gestor"],
+              ["Verde", "Aprovado — projeto liberado para avançar"],
+              ["Vermelho", "Rejeitado — projeto necessita de ajustes"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Rever uma decisão">
+          <p className="text-sm text-muted-foreground">Mesmo após aprovação ou rejeição, gestores podem clicar em <Strong>Rever decisão</Strong> no painel para registrar uma nova nota e mudar o resultado.</p>
+        </Subsection>
+        <Subsection title="Quem pode aprovar">
+          <p className="text-sm text-muted-foreground">Somente usuários com função <Strong>Gestor</Strong> veem os botões de decisão. Executores e Observadores veem o painel em modo leitura, com o status atual e a nota registrada.</p>
+        </Subsection>
+        <Tip>A nota de aprovação fica visível para toda a equipe no painel do projeto — use-a para registrar condições, ressalvas ou instruções para a próxima etapa.</Tip>
       </div>
     ),
   },
