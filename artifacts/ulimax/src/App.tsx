@@ -165,9 +165,7 @@ function HomeRedirect() {
   return (
     <>
       <Show when="signed-in">
-        <Layout>
-          <Dashboard />
-        </Layout>
+        <Redirect to="/meu-dia" />
       </Show>
       <Show when="signed-out">
         <Landing />
@@ -182,6 +180,7 @@ function ProtectedRoutes() {
       <Show when="signed-in">
         <Layout>
           <Switch>
+            <Route path="/dashboard" component={Dashboard} />
             <Route path="/projects" component={Projects} />
             <Route path="/projects/:id" component={ProjectDetail} />
             <Route path="/tasks" component={Tasks} />

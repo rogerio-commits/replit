@@ -35,6 +35,7 @@ import {
 import { NotificationBell } from "@/components/notification-bell";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { CommandPalette } from "@/components/command-palette";
+import { TourGuide } from "@/components/tour-guide";
 
 interface LayoutProps {
   children: ReactNode;
@@ -54,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
       label: "Principal",
       items: [
         { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
-        { href: "/", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/projects", label: "Projetos", icon: Briefcase },
         { href: "/tasks", label: "Tarefas", icon: CheckSquare },
         { href: "/kanban", label: "Kanban", icon: Columns3 },
@@ -110,7 +111,7 @@ export function Layout({ children }: LayoutProps) {
                   {group.label}
                 </div>
                 {group.items.map((item) => {
-                  const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
+                  const isActive = location === item.href || (item.href.length > 1 && location.startsWith(item.href));
                   const Icon = item.icon;
                   return (
                     <Link key={item.href} href={item.href}>
@@ -163,6 +164,7 @@ export function Layout({ children }: LayoutProps) {
               <kbd className="text-[10px] bg-sidebar-border/30 px-1 rounded hidden lg:block">⌘K</kbd>
             </button>
           </div>
+          <TourGuide />
           <CommandPalette />
           <div className="p-3 border-t border-sidebar-border">
             <DropdownMenu>
@@ -198,6 +200,20 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col h-full overflow-hidden">
+          {/* Desktop topbar — prominent search */}
+          <header className="h-12 border-b bg-card/80 backdrop-blur-sm items-center px-6 shrink-0 hidden md:flex gap-3">
+            <button
+              onClick={() => {
+                document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
+              }}
+              className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted/60 border border-border/50 hover:bg-muted text-muted-foreground transition-colors cursor-pointer w-96 max-w-full text-sm"
+            >
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+              <span className="flex-1 text-left text-sm text-muted-foreground/70">Buscar projetos, tarefas, membros...</span>
+              <kbd className="text-[10px] bg-background border border-border rounded px-1.5 py-0.5 font-mono shrink-0">⌘K</kbd>
+            </button>
+          </header>
+          {/* Mobile header */}
           <header className="h-16 border-b bg-card flex items-center justify-between px-6 shrink-0 md:hidden">
             <Link href="/" className="flex items-center">
               <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6" />

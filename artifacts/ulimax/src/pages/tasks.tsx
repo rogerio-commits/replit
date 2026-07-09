@@ -71,6 +71,17 @@ const PRIORITY_LABELS: Record<string, string> = {
   low: "Baixa",
 };
 
+function getTaskDueInfo(dueDate?: string | null): { label: string; cls: string; iconCls: string } | null {
+  if (!dueDate) return null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const d = new Date(dueDate); d.setHours(0, 0, 0, 0);
+  const diff = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+  if (diff < 0)  return { label: `${Math.abs(diff)}d atraso`,   cls: "text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 font-semibold", iconCls: "text-red-500" };
+  if (diff === 0) return { label: "Vence hoje",                  cls: "text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 font-semibold", iconCls: "text-red-500" };
+  if (diff <= 2)  return { label: `${diff}d restante${diff > 1 ? "s" : ""}`, cls: "text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-semibold", iconCls: "text-amber-500" };
+  return { label: format(d, "d MMM yyyy", { locale: ptBR }), cls: "text-muted-foreground", iconCls: "text-muted-foreground" };
+}
+
 const taskSchema = z.object({
   projectId: z.coerce.number().min(1, "Projeto obrigatório"),
   title: z.string().min(1, "Título obrigatório"),
@@ -579,12 +590,15 @@ export default function Tasks() {
                               {task.assigneeName}
                             </span>
                           )}
-                          {task.dueDate && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5" />
-                              {format(new Date(task.dueDate), "d MMM yyyy", { locale: ptBR })}
-                            </span>
-                          )}
+                          {task.dueDate && (() => {
+                            const due = getTaskDueInfo(task.dueDate);
+                            return due ? (
+                              <span className={cn("flex items-center gap-1 text-xs", due.cls)}>
+                                <Clock className={cn("h-3.5 w-3.5 shrink-0", due.iconCls)} />
+                                {due.label}
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
                     </div>
