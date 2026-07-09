@@ -554,9 +554,27 @@ export default function Projects() {
               {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center flex flex-col items-center gap-3">
-              <Briefcase className="h-10 w-10 text-muted-foreground opacity-20" />
-              <p className="text-muted-foreground">Nenhum projeto encontrado.</p>
+            <div className="py-20 text-center flex flex-col items-center gap-3">
+              <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-1">
+                <Briefcase className="h-8 w-8 text-muted-foreground opacity-30" />
+              </div>
+              {search || statusFilter !== "all" || priorityFilter !== "all" ? (
+                <>
+                  <p className="font-medium text-foreground">Nenhum projeto corresponde aos filtros</p>
+                  <p className="text-sm text-muted-foreground">Tente remover ou alterar os filtros aplicados.</p>
+                  <button
+                    className="mt-1 text-sm text-primary hover:underline"
+                    onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); }}
+                  >
+                    Limpar filtros
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium text-foreground">Nenhum projeto ainda</p>
+                  <p className="text-sm text-muted-foreground">Crie o primeiro projeto para começar a acompanhar o trabalho da equipe.</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">

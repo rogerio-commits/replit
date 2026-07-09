@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
+import { recordProjectVisit } from "@/hooks/useRecentProjects";
 import { useQuery } from "@tanstack/react-query";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -208,6 +209,12 @@ export default function ProjectDetail() {
   const { data: project, isLoading: isProjectLoading } = useGetProject(projectId, {
     query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) },
   });
+
+  useEffect(() => {
+    if (project?.id && project?.name) {
+      recordProjectVisit(project.id, project.name);
+    }
+  }, [project?.id, project?.name]);
   const { data: stats, isLoading: isStatsLoading } = useGetProjectStats(projectId, {
     query: { enabled: !!projectId, queryKey: getGetProjectStatsQueryKey(projectId) },
   });

@@ -642,14 +642,21 @@ export default function Tasks() {
               ))}
             </div>
           ) : (
-            <div className="py-16 text-center flex flex-col items-center border border-dashed rounded-md bg-muted/20">
-              <CheckSquare className="h-10 w-10 text-muted-foreground mb-3 opacity-20" />
-              <h3 className="text-lg font-medium text-foreground">Nenhuma tarefa encontrada</h3>
-              <p className="text-muted-foreground mt-1">
-                {search || statusFilter !== "all" || projectFilter !== "all" || priorityFilter !== "all"
-                  ? "Tente ajustar os filtros"
-                  : "Comece criando uma nova tarefa"}
-              </p>
+            <div className="py-20 text-center flex flex-col items-center gap-3 border border-dashed rounded-lg bg-muted/20">
+              <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-1">
+                <CheckSquare className="h-8 w-8 text-muted-foreground opacity-30" />
+              </div>
+              {search || statusFilter !== "all" || projectFilter !== "all" || priorityFilter !== "all" ? (
+                <>
+                  <p className="font-medium text-foreground">Nenhuma tarefa corresponde aos filtros</p>
+                  <p className="text-sm text-muted-foreground">Tente remover ou alterar os filtros para ver mais resultados.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium text-foreground">Nenhuma tarefa criada ainda</p>
+                  <p className="text-sm text-muted-foreground">Use o botão <strong>+ Criar</strong> no topo ou o botão acima para criar a primeira tarefa.</p>
+                </>
+              )}
             </div>
           )}
         </CardContent>

@@ -19,6 +19,7 @@ import {
   GanttChartSquare,
   History,
   Sun,
+  Clock,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -36,6 +37,9 @@ import { NotificationBell } from "@/components/notification-bell";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { CommandPalette } from "@/components/command-palette";
 import { TourGuide } from "@/components/tour-guide";
+import { QuickCreate } from "@/components/quick-create";
+import { BreadcrumbNav } from "@/components/breadcrumb-nav";
+import { useRecentProjects } from "@/hooks/useRecentProjects";
 
 interface LayoutProps {
   children: ReactNode;
@@ -47,6 +51,7 @@ export function Layout({ children }: LayoutProps) {
   const { user } = useUser();
   const isGestor = useIsGestor();
   const alertCounts = useAlertCounts();
+  const recentProjects = useRecentProjects();
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -146,6 +151,28 @@ export function Layout({ children }: LayoutProps) {
               </div>
             ))}
           </nav>
+
+          {/* Recent projects */}
+          {recentProjects.length > 0 && (
+            <div className="px-3 pb-2 border-t border-sidebar-border/50 pt-2">
+              <div className="text-[10px] font-semibold text-sidebar-foreground/35 uppercase tracking-widest px-2 py-1.5 flex items-center gap-1.5">
+                <Clock className="h-3 w-3" /> Recentes
+              </div>
+              {recentProjects.slice(0, 3).map((p) => (
+                <Link key={p.id} href={`/projects/${p.id}`}>
+                  <div className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs transition-colors cursor-pointer",
+                    location === `/projects/${p.id}`
+                      ? "bg-sidebar-primary/15 text-sidebar-primary font-medium"
+                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  )}>
+                    <Briefcase className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{p.name}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
           
           {/* User section at the bottom */}
           <div className="px-4 pb-2 flex items-center gap-1">
@@ -200,18 +227,22 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col h-full overflow-hidden">
-          {/* Desktop topbar — prominent search */}
-          <header className="h-12 border-b bg-card/80 backdrop-blur-sm items-center px-6 shrink-0 hidden md:flex gap-3">
+          {/* Desktop topbar — breadcrumb + search + quick create */}
+          <header className="h-12 border-b bg-card/80 backdrop-blur-sm items-center px-6 shrink-0 hidden md:flex gap-4">
+            <div className="flex-1 min-w-0">
+              <BreadcrumbNav />
+            </div>
             <button
               onClick={() => {
                 document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
               }}
-              className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted/60 border border-border/50 hover:bg-muted text-muted-foreground transition-colors cursor-pointer w-96 max-w-full text-sm"
+              className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted/60 border border-border/50 hover:bg-muted text-muted-foreground transition-colors cursor-pointer w-72 shrink-0 text-sm"
             >
               <Search className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-              <span className="flex-1 text-left text-sm text-muted-foreground/70">Buscar projetos, tarefas, membros...</span>
+              <span className="flex-1 text-left text-sm text-muted-foreground/70">Buscar...</span>
               <kbd className="text-[10px] bg-background border border-border rounded px-1.5 py-0.5 font-mono shrink-0">⌘K</kbd>
             </button>
+            <QuickCreate />
           </header>
           {/* Mobile header */}
           <header className="h-16 border-b bg-card flex items-center justify-between px-6 shrink-0 md:hidden">
