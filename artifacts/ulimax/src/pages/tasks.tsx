@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -57,6 +57,7 @@ import {
   Bookmark, BookmarkCheck,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useSearch } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 import { TaskDetailPanel } from "@/components/task-detail-panel";
@@ -125,6 +126,7 @@ export default function Tasks() {
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const autoOpenedRef = useRef(false);
   const [editingTask, setEditingTask] = useState<number | null>(null);
   const [selectedTask, setSelectedTask] = useState<{
     id: number; title: string; description?: string | null; status: string;
@@ -143,9 +145,19 @@ export default function Tasks() {
   const [saveFilterName, setSaveFilterName] = useState("");
   const [isSavePopoverOpen, setIsSavePopoverOpen] = useState(false);
 
+  const searchStr = useSearch();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canEdit = useCanEdit();
+
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    const p = new URLSearchParams(searchStr);
+    if (p.get("create") === "1" && canEdit) {
+      setIsCreateOpen(true);
+      autoOpenedRef.current = true;
+    }
+  }, [searchStr, canEdit]);
 
   const { data: tasks, isLoading: isTasksLoading } = useListTasks();
   const { data: projects } = useListProjects();

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useSearch } from "wouter";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -211,9 +211,19 @@ export default function Projects() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
+  const autoOpenedRef = useRef(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canEdit = useCanEdit();
+
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    const p = new URLSearchParams(searchStr);
+    if (p.get("create") === "1" && canEdit) {
+      setIsCreateOpen(true);
+      autoOpenedRef.current = true;
+    }
+  }, [searchStr, canEdit]);
 
   const { data: projects, isLoading } = useListProjects();
   const { data: allMembers } = useListMembers();
