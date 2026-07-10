@@ -139,6 +139,8 @@ export default function Tasks() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [inlineEditId, setInlineEditId] = useState<number | null>(null);
   const [inlineTitle, setInlineTitle] = useState("");
+  const [inlineDateId, setInlineDateId] = useState<number | null>(null);
+  const [activeFilterId, setActiveFilterId] = useState<string | null>(null);
 
   const SAVED_FILTERS_KEY = "ulimax-saved-filters-v1";
   interface SavedFilter { id: string; name: string; status: string; project: string; priority: string; }
@@ -387,12 +389,21 @@ export default function Tasks() {
     const updated = savedFilters.filter((f) => f.id !== id);
     setSavedFilters(updated);
     localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated));
+    if (activeFilterId === id) setActiveFilterId(null);
   }
 
   function handleApplySavedFilter(f: SavedFilter) {
     setStatusFilter(f.status);
     setProjectFilter(f.project);
     setPriorityFilter(f.priority);
+    setActiveFilterId(f.id);
+  }
+
+  function handleClearFilters() {
+    setStatusFilter("all");
+    setProjectFilter("all");
+    setPriorityFilter("all");
+    setActiveFilterId(null);
   }
 
   const allFiltered = filteredTasks?.map((t) => t.id) ?? [];
@@ -660,26 +671,45 @@ export default function Tasks() {
       )}
 
       {savedFilters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-            <BookmarkCheck className="h-3.5 w-3.5" /> Filtros salvos:
-          </span>
+        <div className="flex items-center gap-1.5 border-b border-border pb-3 -mx-1 px-1 overflow-x-auto">
+          <BookmarkCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />
+          <button
+            onClick={handleClearFilters}
+            className={cn(
+              "text-xs px-3 py-1.5 rounded-md border font-medium transition-all whitespace-nowrap shrink-0",
+              activeFilterId === null
+                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                : "text-muted-foreground border-border hover:border-primary/30 hover:text-foreground bg-card"
+            )}
+          >
+            Todas
+          </button>
           {savedFilters.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => handleApplySavedFilter(f)}
-              className="inline-flex items-center gap-1 text-xs bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-1 transition-colors"
-            >
-              {f.name}
-              <span
-                role="button"
-                onClick={(e) => { e.stopPropagation(); handleDeleteSavedFilter(f.id); }}
-                className="text-primary/40 hover:text-destructive transition-colors ml-0.5 leading-none"
-                title="Remover filtro"
+            <div key={f.id} className="flex items-center shrink-0">
+              <button
+                onClick={() => handleApplySavedFilter(f)}
+                className={cn(
+                  "text-xs px-3 py-1.5 rounded-l-md border-y border-l font-medium transition-all whitespace-nowrap",
+                  activeFilterId === f.id
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "text-muted-foreground border-border hover:border-primary/30 hover:text-foreground bg-card"
+                )}
+              >
+                {f.name}
+              </button>
+              <button
+                onClick={() => handleDeleteSavedFilter(f.id)}
+                title="Remover visão"
+                className={cn(
+                  "text-xs px-1.5 py-1.5 rounded-r-md border-y border-r transition-all leading-none",
+                  activeFilterId === f.id
+                    ? "bg-primary/80 text-primary-foreground border-primary hover:bg-destructive hover:border-destructive"
+                    : "text-muted-foreground/50 border-border hover:text-destructive hover:border-destructive/30 bg-card"
+                )}
               >
                 ×
-              </span>
-            </button>
+              </button>
+            </div>
           ))}
         </div>
       )}
@@ -847,15 +877,47 @@ export default function Tasks() {
                               {task.assigneeName}
                             </span>
                           )}
-                          {task.dueDate && (() => {
+                          {inlineDateId === task.id && canEdit ? (
+                            <input
+                              type="date"
+                              autoFocus
+                              defaultValue={task.dueDate?.split("T")[0] ?? ""}
+                              className="text-xs border border-primary/40 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary bg-background w-32"
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  updateTask.mutate({ id: task.id, data: { dueDate: e.target.value } as any }, {
+                                    onSuccess: () => {
+                                      queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+                                      setInlineDateId(null);
+                                    },
+                                  });
+                                }
+                              }}
+                              onBlur={() => setInlineDateId(null)}
+                              onKeyDown={(e) => { if (e.key === "Escape") setInlineDateId(null); }}
+                            />
+                          ) : task.dueDate ? (() => {
                             const due = getTaskDueInfo(task.dueDate);
                             return due ? (
-                              <span className={cn("flex items-center gap-1 text-xs", due.cls)}>
+                              <span
+                                className={cn("flex items-center gap-1 text-xs", due.cls, canEdit && "cursor-pointer hover:opacity-70 transition-opacity")}
+                                onClick={() => canEdit && setInlineDateId(task.id)}
+                                title={canEdit ? "Clique para editar a data" : undefined}
+                              >
                                 <Clock className={cn("h-3.5 w-3.5 shrink-0", due.iconCls)} />
                                 {due.label}
                               </span>
                             ) : null;
-                          })()}
+                          })() : canEdit ? (
+                            <button
+                              className="text-xs text-muted-foreground/40 hover:text-muted-foreground flex items-center gap-0.5 transition-colors"
+                              onClick={() => setInlineDateId(task.id)}
+                              title="Adicionar prazo"
+                            >
+                              <Clock className="h-3 w-3" />
+                              <span>+prazo</span>
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     </div>

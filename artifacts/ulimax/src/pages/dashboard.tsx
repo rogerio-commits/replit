@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
-import { format, parseISO, isToday, isTomorrow, isPast } from "date-fns";
+import { format, parseISO, isToday, isTomorrow, isPast, addDays, startOfDay } from "date-fns";
+import {
+  PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, Tooltip, ResponsiveContainer,
+} from "recharts";
 import { ptBR } from "date-fns/locale";
 import {
   useGetDashboardSummary,
@@ -335,6 +339,41 @@ export default function Dashboard() {
 
   const total = projects?.length ?? 0;
 
+  const weekDays = useMemo(() => {
+    const today = startOfDay(new Date());
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = addDays(today, i);
+      const dayTasks = (allTasks ?? []).filter(t => {
+        if (!t.dueDate || t.status === "done") return false;
+        try {
+          return startOfDay(parseISO(t.dueDate)).getTime() === date.getTime();
+        } catch { return false; }
+      });
+      return { date, tasks: dayTasks, isToday: i === 0 };
+    });
+  }, [allTasks]);
+
+  const taskStatusCounts = useMemo(() => {
+    const c = { todo: 0, in_progress: 0, review: 0, done: 0 };
+    for (const t of allTasks ?? []) {
+      if (t.status in c) c[t.status as keyof typeof c]++;
+    }
+    return [
+      { name: "A Fazer",      value: c.todo,        fill: "#94a3b8" },
+      { name: "Em Andamento", value: c.in_progress,  fill: "#3b82f6" },
+      { name: "Em Revisão",   value: c.review,       fill: "#f59e0b" },
+      { name: "Concluída",    value: c.done,          fill: "#10b981" },
+    ];
+  }, [allTasks]);
+
+  const memberBarData = useMemo(() => {
+    return (productivity as MemberRow[] ?? []).slice(0, 7).map(m => ({
+      name: m.memberName.split(" ")[0],
+      Concluídas: m.doneTasks,
+      Pendentes: m.totalTasks - m.doneTasks,
+    }));
+  }, [productivity]);
+
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       <OnboardingBanner />
@@ -467,6 +506,66 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* ── Mini Calendário 7 dias ── */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold text-foreground">Próximos 7 Dias</h2>
+          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">tarefas com prazo</span>
+        </div>
+        {isTasksLoading ? (
+          <div className="flex gap-2">
+            {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-20 flex-1 rounded-lg" />)}
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            {weekDays.map(({ date, tasks, isToday: dayIsToday }) => (
+              <Link key={date.toISOString()} href="/tasks" className="flex-1 min-w-0">
+                <div className={cn(
+                  "flex flex-col items-center gap-1 p-2 rounded-lg border cursor-pointer transition-all hover:border-primary/40 hover:shadow-sm min-h-[84px]",
+                  dayIsToday
+                    ? "bg-primary/5 border-primary/30"
+                    : tasks.length > 0
+                      ? "bg-muted/30 border-border"
+                      : "border-border/40",
+                )}>
+                  <span className={cn(
+                    "text-[10px] font-semibold uppercase tracking-wide",
+                    dayIsToday ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {format(date, "EEE", { locale: ptBR })}
+                  </span>
+                  <span className={cn(
+                    "text-lg font-bold leading-none",
+                    dayIsToday ? "text-primary" : "text-foreground"
+                  )}>
+                    {format(date, "d")}
+                  </span>
+                  {tasks.length > 0 ? (
+                    <span className={cn(
+                      "text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5",
+                      dayIsToday ? "bg-primary text-primary-foreground" : "bg-amber-100 text-amber-700"
+                    )}>
+                      {tasks.length}
+                    </span>
+                  ) : (
+                    <span className="h-[18px]" />
+                  )}
+                  <div className="w-full space-y-0.5 mt-0.5">
+                    {tasks.slice(0, 2).map(t => (
+                      <p key={t.id} className="text-[9px] leading-tight text-muted-foreground truncate text-center">{t.title}</p>
+                    ))}
+                    {tasks.length > 2 && (
+                      <p className="text-[9px] text-muted-foreground/60 text-center">+{tasks.length - 2}</p>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* ── Pipelines Madeira | Alumínio ── */}
       {loading ? (
         <div className="grid grid-cols-2 gap-4">
@@ -493,6 +592,78 @@ export default function Dashboard() {
           />
         </div>
       )}
+
+      {/* ── Analytics: Status + Membros ── */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Task status donut */}
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckSquare className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Status das Tarefas</h2>
+            {!isTasksLoading && (
+              <span className="ml-auto text-xs font-bold text-muted-foreground">
+                {taskStatusCounts.reduce((s, c) => s + c.value, 0)} total
+              </span>
+            )}
+          </div>
+          {isTasksLoading ? (
+            <Skeleton className="h-28 w-full rounded-lg" />
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="shrink-0">
+                <PieChart width={100} height={100}>
+                  <Pie
+                    data={taskStatusCounts}
+                    cx={50} cy={50}
+                    innerRadius={28} outerRadius={44}
+                    dataKey="value"
+                    paddingAngle={2}
+                    strokeWidth={0}
+                  >
+                    {taskStatusCounts.map((entry, i) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </div>
+              <div className="flex-1 space-y-2 min-w-0">
+                {taskStatusCounts.map(s => (
+                  <div key={s.name} className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.fill }} />
+                    <span className="text-xs text-muted-foreground flex-1 truncate">{s.name}</span>
+                    <span className="text-xs font-bold text-foreground shrink-0">{s.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Member bar chart */}
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="h-4 w-4 text-violet-500" />
+            <h2 className="text-sm font-semibold text-foreground">Tarefas por Membro</h2>
+          </div>
+          {isProductivityLoading ? (
+            <Skeleton className="h-28 w-full rounded-lg" />
+          ) : memberBarData.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Sem dados disponíveis.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={110}>
+              <BarChart data={memberBarData} barSize={10} barCategoryGap="35%" margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid #e2e8f0" }}
+                  cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                />
+                <Bar dataKey="Concluídas" fill="#10b981" radius={[2, 2, 0, 0]} stackId="a" />
+                <Bar dataKey="Pendentes" fill="#94a3b8" radius={[2, 2, 0, 0]} stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
 
       {/* ── Próximos Vencimentos — 15 dias ── */}
       <div className="bg-card rounded-xl border border-border p-4">

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
@@ -29,7 +30,16 @@ import Templates from "@/pages/templates";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: true,
+      refetchInterval: 60_000,
+      refetchIntervalInBackground: false,
+    },
+  },
+});
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -176,6 +186,8 @@ function HomeRedirect() {
 }
 
 function ProtectedRoutes() {
+  const [, navigate] = useLocation();
+  useKeyboardShortcuts(navigate);
   return (
     <>
       <Show when="signed-in">
