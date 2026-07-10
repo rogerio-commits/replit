@@ -8,8 +8,10 @@
 
 export interface SampleControl {
   id: number;
-  projectId: number;
-  projectName: string;
+  /** @nullable */
+  projectId?: number | null;
+  /** @nullable */
+  projectName?: string | null;
   samples: string;
   /** @nullable */
   responsibleId?: number | null;

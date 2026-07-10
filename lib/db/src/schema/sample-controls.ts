@@ -5,8 +5,7 @@ import { membersTable } from "./members";
 export const sampleControlsTable = pgTable("sample_controls", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id")
-    .notNull()
-    .references(() => projectsTable.id, { onDelete: "cascade" }),
+    .references(() => projectsTable.id, { onDelete: "set null" }),
   samples: text("samples").notNull(),
   responsibleId: integer("responsible_id").references(() => membersTable.id, {
     onDelete: "set null",

@@ -95,7 +95,7 @@ function deadlineStatus(deadline: string, delivered: boolean): "overdue" | "soon
 }
 
 const formSchema = z.object({
-  projectId: z.number({ required_error: "Projeto obrigatório" }),
+  projectId: z.number().optional(),
   samples: z.string().min(1, "Amostras obrigatórias"),
   responsibleId: z.number().optional(),
   deadline: z.string().min(1, "Prazo obrigatório"),
@@ -143,7 +143,7 @@ export default function SampleControls() {
       !search ||
       item.samples.toLowerCase().includes(search.toLowerCase()) ||
       item.requester.toLowerCase().includes(search.toLowerCase()) ||
-      item.projectName.toLowerCase().includes(search.toLowerCase());
+      (item.projectName ?? "").toLowerCase().includes(search.toLowerCase());
     const matchProject = filterProject === "all" || String(item.projectId) === filterProject;
     return matchSearch && matchProject;
   });
@@ -157,7 +157,7 @@ export default function SampleControls() {
       await update.mutateAsync({
         id: item.id,
         data: {
-          projectId: item.projectId,
+          ...(item.projectId != null && { projectId: item.projectId }),
           samples: item.samples,
           deadline: item.deadline,
           requester: item.requester,
@@ -184,7 +184,7 @@ export default function SampleControls() {
   const openEdit = (item: SampleControl) => {
     setEditingId(item.id);
     form.reset({
-      projectId: item.projectId,
+      projectId: item.projectId ?? undefined,
       samples: item.samples,
       responsibleId: item.responsibleId ?? undefined,
       deadline: item.deadline,
@@ -199,7 +199,7 @@ export default function SampleControls() {
   const onSubmit = async (values: FormValues) => {
     try {
       const payload = {
-        projectId: values.projectId,
+        ...(values.projectId != null && { projectId: values.projectId }),
         samples: values.samples,
         responsibleId: values.responsibleId,
         deadline: values.deadline,
@@ -405,7 +405,7 @@ export default function SampleControls() {
                       <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                         <span className="flex items-center gap-1">
                           <Briefcase className="h-3 w-3 shrink-0" />
-                          <span className="truncate max-w-[120px]">{item.projectName}</span>
+                          <span className="truncate max-w-[120px] text-muted-foreground italic">{item.projectName ?? "Pré-venda"}</span>
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
@@ -484,17 +484,18 @@ export default function SampleControls() {
                 name="projectId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Projeto *</FormLabel>
+                    <FormLabel>Projeto</FormLabel>
                     <Select
-                      value={field.value ? String(field.value) : ""}
-                      onValueChange={(v) => field.onChange(Number(v))}
+                      value={field.value ? String(field.value) : "none"}
+                      onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione o projeto" />
+                          <SelectValue placeholder="Sem projeto (pré-venda)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="none">— Sem projeto (pré-venda) —</SelectItem>
                         {(projects ?? []).map((p) => (
                           <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                         ))}

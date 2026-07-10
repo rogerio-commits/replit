@@ -7,7 +7,7 @@
  */
 
 export interface SampleControlInput {
-  projectId: number;
+  projectId?: number | null;
   /** @minLength 1 */
   samples: string;
   responsibleId?: number;

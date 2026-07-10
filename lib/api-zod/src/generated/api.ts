@@ -1019,8 +1019,8 @@ export const ListSampleControlsQueryParams = zod.object({
 
 export const ListSampleControlsResponseItem = zod.object({
   "id": zod.number(),
-  "projectId": zod.number(),
-  "projectName": zod.string(),
+  "projectId": zod.number().nullish(),
+  "projectName": zod.string().nullish(),
   "samples": zod.string(),
   "responsibleId": zod.number().nullish(),
   "responsibleName": zod.string().nullish(),
@@ -1043,7 +1043,7 @@ export const ListSampleControlsResponse = zod.array(ListSampleControlsResponseIt
 
 
 export const CreateSampleControlBody = zod.object({
-  "projectId": zod.number(),
+  "projectId": zod.number().nullish(),
   "samples": zod.string().min(1),
   "responsibleId": zod.number().optional(),
   "deadline": zod.string().min(1),
@@ -1067,7 +1067,7 @@ export const UpdateSampleControlParams = zod.object({
 
 
 export const UpdateSampleControlBody = zod.object({
-  "projectId": zod.number(),
+  "projectId": zod.number().nullish(),
   "samples": zod.string().min(1),
   "responsibleId": zod.number().optional(),
   "deadline": zod.string().min(1),
@@ -1079,8 +1079,8 @@ export const UpdateSampleControlBody = zod.object({
 
 export const UpdateSampleControlResponse = zod.object({
   "id": zod.number(),
-  "projectId": zod.number(),
-  "projectName": zod.string(),
+  "projectId": zod.number().nullish(),
+  "projectName": zod.string().nullish(),
   "samples": zod.string(),
   "responsibleId": zod.number().nullish(),
   "responsibleName": zod.string().nullish(),

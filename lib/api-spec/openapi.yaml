@@ -2319,14 +2319,14 @@ components:
 
     SampleControl:
       type: object
-      required: [id, projectId, projectName, samples, deadline, requester, createdAt]
+      required: [id, samples, deadline, requester, createdAt]
       properties:
         id:
           type: integer
         projectId:
-          type: integer
+          type: ["integer", "null"]
         projectName:
-          type: string
+          type: ["string", "null"]
         samples:
           type: string
         responsibleId:
@@ -2348,10 +2348,11 @@ components:
 
     SampleControlInput:
       type: object
-      required: [projectId, samples, deadline, requester]
+      required: [samples, deadline, requester]
       properties:
         projectId:
           type: integer
+          nullable: true
         samples:
           type: string
           minLength: 1

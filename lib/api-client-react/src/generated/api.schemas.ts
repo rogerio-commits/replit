@@ -663,8 +663,10 @@ export interface ChecklistItemUpdate {
 
 export interface SampleControl {
   id: number;
-  projectId: number;
-  projectName: string;
+  /** @nullable */
+  projectId?: number | null;
+  /** @nullable */
+  projectName?: string | null;
   samples: string;
   /** @nullable */
   responsibleId?: number | null;
@@ -680,7 +682,7 @@ export interface SampleControl {
 }
 
 export interface SampleControlInput {
-  projectId: number;
+  projectId?: number | null;
   /** @minLength 1 */
   samples: string;
   responsibleId?: number;
