@@ -1,9 +1,9 @@
 import { HelpCircle } from "lucide-react";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface HelpEntry {
   description: string;
@@ -98,7 +98,7 @@ export const NAV_HELP: Record<string, HelpEntry> = {
     tips: [
       "Visualize prazo e duração de cada projeto em linha do tempo",
       "Identifique sobreposições e gargalos de prazo",
-      "Use em conjunto com o Calendário para planejamento detalhado",
+      "Use junto com o Calendário para planejamento detalhado",
     ],
   },
   "/alertas": {
@@ -145,28 +145,27 @@ export function NavHelpPopover({ href, label }: NavHelpPopoverProps) {
   if (!help) return null;
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
+    <Tooltip delayDuration={300}>
+      <TooltipTrigger asChild>
         <button
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
           }}
-          className="opacity-20 hover:opacity-100 transition-opacity p-0.5 rounded text-sidebar-foreground/60 hover:text-sidebar-foreground focus:opacity-100 focus:outline-none shrink-0"
-          title={`Ajuda: ${label}`}
+          className="opacity-20 hover:opacity-100 transition-opacity p-0.5 rounded shrink-0 focus:outline-none"
           tabIndex={-1}
         >
           <HelpCircle className="h-3.5 w-3.5" />
         </button>
-      </PopoverTrigger>
-      <PopoverContent
+      </TooltipTrigger>
+      <TooltipContent
         side="right"
         align="start"
-        className="w-64 p-3 text-sm"
-        onClick={(e) => e.stopPropagation()}
+        sideOffset={12}
+        className="max-w-64 p-3 bg-popover text-popover-foreground border shadow-md rounded-lg"
       >
-        <p className="font-semibold text-foreground mb-1">{label}</p>
-        <p className="text-muted-foreground text-xs mb-2 leading-relaxed">{help.description}</p>
+        <p className="font-semibold text-sm mb-1">{label}</p>
+        <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{help.description}</p>
         <ul className="space-y-1">
           {help.tips.map((tip, i) => (
             <li key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
@@ -175,7 +174,7 @@ export function NavHelpPopover({ href, label }: NavHelpPopoverProps) {
             </li>
           ))}
         </ul>
-      </PopoverContent>
-    </Popover>
+      </TooltipContent>
+    </Tooltip>
   );
 }
