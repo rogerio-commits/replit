@@ -20,6 +20,7 @@ import auditLogsRouter from "./audit-logs";
 import searchRouter from "./search";
 import tagsRouter from "./tags";
 import taskDependenciesRouter from "./task-dependencies";
+import templatesRouter from "./templates";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(auditLogsRouter);
 router.use(searchRouter);
 router.use(tagsRouter);
 router.use(taskDependenciesRouter);
+router.use(templatesRouter);
 
 export default router;

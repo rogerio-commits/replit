@@ -54,7 +54,7 @@ import * as z from "zod";
 import {
   Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase,
   Trash2, Edit, MessageSquare, Download, X, CheckCheck, TrendingUp, User,
-  Bookmark, BookmarkCheck,
+  Bookmark, BookmarkCheck, Copy, Pencil,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useSearch } from "wouter";
@@ -97,6 +97,8 @@ const taskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   assignedTo: z.coerce.number().optional().nullable(),
   dueDate: z.string().optional(),
+  recurrence: z.enum(["none", "daily", "weekly", "monthly", "yearly"]).optional(),
+  recurrenceEndDate: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -135,6 +137,8 @@ export default function Tasks() {
     tags?: Array<{ id: number; name: string; color: string }>;
   } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [inlineEditId, setInlineEditId] = useState<number | null>(null);
+  const [inlineTitle, setInlineTitle] = useState("");
 
   const SAVED_FILTERS_KEY = "ulimax-saved-filters-v1";
   interface SavedFilter { id: string; name: string; status: string; project: string; priority: string; }
@@ -178,6 +182,8 @@ export default function Tasks() {
       priority: "medium",
       assignedTo: null,
       dueDate: "",
+      recurrence: "none",
+      recurrenceEndDate: "",
     },
   });
 
@@ -215,6 +221,8 @@ export default function Tasks() {
       priority: task.priority,
       assignedTo: task.assignedTo || null,
       dueDate: task.dueDate ? task.dueDate.split("T")[0] : "",
+      recurrence: (task as any).recurrence ?? "none",
+      recurrenceEndDate: (task as any).recurrenceEndDate ?? "",
     });
     setEditingTask(task.id);
     setIsCreateOpen(true);
@@ -228,6 +236,55 @@ export default function Tasks() {
         setSelectedIds((prev) => { const s = new Set(prev); s.delete(id); return s; });
       },
       onError: () => toast({ title: "Erro ao remover tarefa", variant: "destructive" }),
+    });
+  };
+
+  const handleDuplicate = (task: any) => {
+    createTask.mutate({
+      data: {
+        projectId: task.projectId,
+        title: `Cópia de ${task.title}`,
+        description: task.description || undefined,
+        status: "todo",
+        priority: task.priority,
+        assignedTo: task.assignedTo || undefined,
+        dueDate: task.dueDate ? task.dueDate.split("T")[0] : undefined,
+      }
+    }, {
+      onSuccess: () => {
+        toast({ title: "Tarefa duplicada" });
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+      },
+      onError: () => toast({ title: "Erro ao duplicar tarefa", variant: "destructive" }),
+    });
+  };
+
+  const handleBulkAssign = (memberId: number) => {
+    bulkUpdate.mutate({ data: { ids: Array.from(selectedIds), assignedTo: memberId } }, {
+      onSuccess: (res) => {
+        toast({ title: `${res.updated} tarefa(s) atribuída(s)` });
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+      },
+      onError: () => toast({ title: "Erro ao atribuir tarefas", variant: "destructive" }),
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    await Promise.all(ids.map(id => fetch(`/api/tasks/${id}`, { method: "DELETE" })));
+    toast({ title: `${ids.length} tarefa(s) excluída(s)` });
+    queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+    setSelectedIds(new Set());
+  };
+
+  const handleInlineSave = (taskId: number) => {
+    if (!inlineTitle.trim()) { setInlineEditId(null); return; }
+    updateTask.mutate({ id: taskId, data: { title: inlineTitle.trim() } as any }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        setInlineEditId(null);
+      },
+      onError: () => toast({ title: "Erro ao renomear tarefa", variant: "destructive" }),
     });
   };
 
@@ -496,6 +553,41 @@ export default function Tasks() {
                         )}
                       />
                     </div>
+                    <FormField
+                      control={form.control}
+                      name="recurrence"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Recorrência</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value ?? "none"}>
+                            <FormControl>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">Sem recorrência</SelectItem>
+                              <SelectItem value="daily">Diária</SelectItem>
+                              <SelectItem value="weekly">Semanal</SelectItem>
+                              <SelectItem value="monthly">Mensal</SelectItem>
+                              <SelectItem value="yearly">Anual</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch("recurrence") && form.watch("recurrence") !== "none" && (
+                      <FormField
+                        control={form.control}
+                        name="recurrenceEndDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Fim da recorrência (opcional)</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     <DialogFooter>
                       <Button type="submit" disabled={createTask.isPending || updateTask.isPending}>
                         {createTask.isPending || updateTask.isPending ? "Salvando..." : (editingTask ? "Atualizar" : "Criar Tarefa")}
@@ -511,7 +603,7 @@ export default function Tasks() {
 
       {/* Bulk action bar */}
       {someSelected && canEdit && (
-        <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2.5 animate-in slide-in-from-top-2 duration-200">
+        <div className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-lg px-4 py-2.5 animate-in slide-in-from-top-2 duration-200 flex-wrap">
           <CheckCheck className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">{selectedIds.size} selecionada(s)</span>
           <Separator orientation="vertical" className="h-5 mx-1" />
@@ -526,7 +618,7 @@ export default function Tasks() {
             ))}
           </div>
           <Separator orientation="vertical" className="h-5 mx-1" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <AlertCircle className="h-3.5 w-3.5" /> Prioridade:
             </span>
@@ -536,6 +628,31 @@ export default function Tasks() {
               </Button>
             ))}
           </div>
+          <Separator orientation="vertical" className="h-5 mx-1" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <User className="h-3.5 w-3.5" /> Responsável:
+            </span>
+            <Select onValueChange={(v) => handleBulkAssign(Number(v))}>
+              <SelectTrigger className="h-7 text-xs w-36">
+                <SelectValue placeholder="Atribuir a..." />
+              </SelectTrigger>
+              <SelectContent>
+                {members?.map((m) => (
+                  <SelectItem key={m.id} value={String(m.id)} className="text-xs">{m.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Separator orientation="vertical" className="h-5 mx-1" />
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={handleBulkDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
+          </Button>
           <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
             <X className="h-3.5 w-3.5 mr-1" /> Limpar
           </Button>
@@ -668,7 +785,27 @@ export default function Tasks() {
                       <CheckSquare className={`h-5 w-5 mt-0.5 shrink-0 ${task.status === "done" ? "text-emerald-500" : "text-muted-foreground"}`} />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium">{task.title}</span>
+                          {canEdit && inlineEditId === task.id ? (
+                            <input
+                              autoFocus
+                              className="font-medium bg-background border border-primary/40 rounded px-1.5 py-0.5 text-sm outline-none focus:ring-1 focus:ring-primary min-w-[160px] max-w-full"
+                              value={inlineTitle}
+                              onChange={(e) => setInlineTitle(e.target.value)}
+                              onBlur={() => handleInlineSave(task.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") { e.preventDefault(); handleInlineSave(task.id); }
+                                if (e.key === "Escape") { setInlineEditId(null); }
+                              }}
+                            />
+                          ) : (
+                            <span
+                              className={cn("font-medium", canEdit && "cursor-text hover:underline decoration-dotted decoration-muted-foreground/50")}
+                              onDoubleClick={() => { if (canEdit) { setInlineEditId(task.id); setInlineTitle(task.title); } }}
+                              title={canEdit ? "Duplo clique para renomear" : undefined}
+                            >
+                              {task.title}
+                            </span>
+                          )}
                           {canEdit ? (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleCycleStatus(task.id, task.status); }}
@@ -730,8 +867,14 @@ export default function Tasks() {
                       </Button>
                       {canEdit && (
                         <>
+                          <Button variant="ghost" size="icon" title="Renomear" onClick={() => { setInlineEditId(task.id); setInlineTitle(task.title); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(task)}>
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title="Duplicar tarefa" onClick={() => handleDuplicate(task)} disabled={createTask.isPending}>
+                            <Copy className="h-4 w-4" />
                           </Button>
                           <Dialog>
                             <DialogTrigger asChild>

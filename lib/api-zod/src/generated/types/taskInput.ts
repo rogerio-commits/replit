@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { TaskInputPriority } from './taskInputPriority';
+import type { TaskInputRecurrence } from './taskInputRecurrence';
 import type { TaskInputStatus } from './taskInputStatus';
 
 export interface TaskInput {
@@ -18,4 +19,6 @@ export interface TaskInput {
   priority: TaskInputPriority;
   assignedTo?: number;
   dueDate?: string;
+  recurrence?: TaskInputRecurrence;
+  recurrenceEndDate?: string;
 }

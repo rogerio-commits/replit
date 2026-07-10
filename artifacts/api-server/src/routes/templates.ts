@@ -1,0 +1,171 @@
+import { Router } from "express";
+import { db, projectTemplatesTable, projectTemplateTasksTable, projectsTable, tasksTable } from "@workspace/db";
+import { requireGestor } from "../middlewares/requireAuth";
+import { eq, count } from "drizzle-orm";
+import {
+  CreateTemplateBody,
+  AddTemplateTaskBody,
+  ApplyTemplateBody,
+  GetTemplateParams,
+  DeleteTemplateParams,
+  AddTemplateTaskParams,
+  DeleteTemplateTaskParams,
+  ApplyTemplateParams,
+} from "@workspace/api-zod";
+
+const router = Router();
+
+router.get("/templates", async (_req, res) => {
+  const templates = await db.select().from(projectTemplatesTable).orderBy(projectTemplatesTable.createdAt);
+
+  const taskCounts = await db
+    .select({ templateId: projectTemplateTasksTable.templateId, total: count() })
+    .from(projectTemplateTasksTable)
+    .groupBy(projectTemplateTasksTable.templateId);
+
+  const countMap = new Map(taskCounts.map((r) => [r.templateId, r.total]));
+
+  return res.json(templates.map((t) => ({
+    id: t.id,
+    name: t.name,
+    description: t.description ?? null,
+    priority: t.priority,
+    taskCount: countMap.get(t.id) ?? 0,
+    createdAt: t.createdAt.toISOString(),
+  })));
+});
+
+router.post("/templates", requireGestor, async (req, res) => {
+  const body = CreateTemplateBody.safeParse(req.body);
+  if (!body.success) return res.status(400).json({ error: "Invalid body" });
+
+  const [template] = await db
+    .insert(projectTemplatesTable)
+    .values({ name: body.data.name, description: body.data.description, priority: body.data.priority ?? "medium" })
+    .returning();
+
+  return res.status(201).json({ ...template, taskCount: 0, createdAt: template.createdAt.toISOString() });
+});
+
+router.get("/templates/:id", async (req, res) => {
+  const params = GetTemplateParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  const [template] = await db.select().from(projectTemplatesTable).where(eq(projectTemplatesTable.id, params.data.id));
+  if (!template) return res.status(404).json({ error: "Not found" });
+
+  const tasks = await db
+    .select()
+    .from(projectTemplateTasksTable)
+    .where(eq(projectTemplateTasksTable.templateId, params.data.id))
+    .orderBy(projectTemplateTasksTable.offsetDays);
+
+  return res.json({
+    ...template,
+    createdAt: template.createdAt.toISOString(),
+    tasks: tasks.map((t) => ({
+      id: t.id,
+      templateId: t.templateId,
+      title: t.title,
+      description: t.description ?? null,
+      priority: t.priority,
+      offsetDays: t.offsetDays,
+    })),
+  });
+});
+
+router.delete("/templates/:id", requireGestor, async (req, res) => {
+  const params = DeleteTemplateParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  await db.delete(projectTemplateTasksTable).where(eq(projectTemplateTasksTable.templateId, params.data.id));
+  await db.delete(projectTemplatesTable).where(eq(projectTemplatesTable.id, params.data.id));
+  return res.status(204).send();
+});
+
+router.post("/templates/:id/tasks", requireGestor, async (req, res) => {
+  const params = AddTemplateTaskParams.safeParse({ id: Number(req.params.id) });
+  const body = AddTemplateTaskBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [template] = await db.select({ id: projectTemplatesTable.id }).from(projectTemplatesTable).where(eq(projectTemplatesTable.id, params.data.id));
+  if (!template) return res.status(404).json({ error: "Template not found" });
+
+  const [task] = await db
+    .insert(projectTemplateTasksTable)
+    .values({
+      templateId: params.data.id,
+      title: body.data.title,
+      description: body.data.description,
+      priority: body.data.priority ?? "medium",
+      offsetDays: body.data.offsetDays ?? 0,
+    })
+    .returning();
+
+  return res.status(201).json({
+    id: task.id,
+    templateId: task.templateId,
+    title: task.title,
+    description: task.description ?? null,
+    priority: task.priority,
+    offsetDays: task.offsetDays,
+  });
+});
+
+router.delete("/templates/:id/tasks/:taskId", requireGestor, async (req, res) => {
+  const params = DeleteTemplateTaskParams.safeParse({ id: Number(req.params.id), taskId: Number(req.params.taskId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  await db.delete(projectTemplateTasksTable).where(eq(projectTemplateTasksTable.id, params.data.taskId));
+  return res.status(204).send();
+});
+
+router.post("/templates/:id/apply", requireGestor, async (req, res) => {
+  const params = ApplyTemplateParams.safeParse({ id: Number(req.params.id) });
+  const body = ApplyTemplateBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [template] = await db.select().from(projectTemplatesTable).where(eq(projectTemplatesTable.id, params.data.id));
+  if (!template) return res.status(404).json({ error: "Not found" });
+
+  const templateTasks = await db
+    .select()
+    .from(projectTemplateTasksTable)
+    .where(eq(projectTemplateTasksTable.templateId, params.data.id));
+
+  const [project] = await db
+    .insert(projectsTable)
+    .values({
+      name: body.data.name,
+      description: body.data.description,
+      status: "a_iniciar",
+      priority: template.priority,
+      startDate: body.data.startDate,
+    })
+    .returning();
+
+  if (templateTasks.length > 0) {
+    const startDate = new Date(body.data.startDate);
+    await db.insert(tasksTable).values(
+      templateTasks.map((t) => {
+        const due = new Date(startDate);
+        due.setDate(due.getDate() + t.offsetDays);
+        return {
+          projectId: project.id,
+          title: t.title,
+          description: t.description ?? undefined,
+          status: "todo" as const,
+          priority: t.priority,
+          dueDate: due.toISOString().slice(0, 10),
+        };
+      })
+    );
+  }
+
+  return res.status(201).json({
+    ...project,
+    createdAt: project.createdAt.toISOString(),
+  });
+});
+
+export default router;

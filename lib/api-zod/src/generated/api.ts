@@ -510,6 +510,8 @@ export const ListTasksResponseItem = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
+  "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
+  "recurrenceEndDate": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
   "subtaskDoneCount": zod.number().optional(),
@@ -537,7 +539,9 @@ export const CreateTaskBody = zod.object({
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
   "assignedTo": zod.number().optional(),
-  "dueDate": zod.string().optional()
+  "dueDate": zod.string().optional(),
+  "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
+  "recurrenceEndDate": zod.string().optional()
 })
 
 
@@ -561,6 +565,8 @@ export const GetTaskResponse = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
+  "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
+  "recurrenceEndDate": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
   "subtaskDoneCount": zod.number().optional(),
@@ -590,7 +596,9 @@ export const UpdateTaskBody = zod.object({
   "priority": zod.enum(['low', 'medium', 'high']).optional(),
   "assignedTo": zod.number().optional(),
   "dueDate": zod.string().optional(),
-  "projectId": zod.number().optional()
+  "projectId": zod.number().optional(),
+  "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
+  "recurrenceEndDate": zod.string().optional()
 })
 
 export const UpdateTaskResponse = zod.object({
@@ -606,6 +614,8 @@ export const UpdateTaskResponse = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
+  "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
+  "recurrenceEndDate": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
   "subtaskDoneCount": zod.number().optional(),
@@ -661,6 +671,8 @@ export const ListSubtasksResponseItem = zod.object({
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
+  "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
+  "recurrenceEndDate": zod.string().nullish(),
   "createdAt": zod.string(),
   "subtaskCount": zod.number().optional(),
   "subtaskDoneCount": zod.number().optional(),
@@ -1360,6 +1372,109 @@ export const CreateTaskCommentBody = zod.object({
 export const DeleteTaskCommentParams = zod.object({
   "id": zod.coerce.number(),
   "commentId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List project templates
+ */
+export const ListTemplatesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "taskCount": zod.number().optional(),
+  "createdAt": zod.string()
+})
+export const ListTemplatesResponse = zod.array(ListTemplatesResponseItem)
+
+
+/**
+ * @summary Create a project template
+ */
+
+
+
+export const CreateTemplateBody = zod.object({
+  "name": zod.string().min(1),
+  "description": zod.string().optional(),
+  "priority": zod.enum(['low', 'medium', 'high']).optional()
+})
+
+
+/**
+ * @summary Get a template with its tasks
+ */
+export const GetTemplateParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetTemplateResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "createdAt": zod.string(),
+  "tasks": zod.array(zod.object({
+  "id": zod.number(),
+  "templateId": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "offsetDays": zod.number()
+}))
+})
+
+
+/**
+ * @summary Delete a template
+ */
+export const DeleteTemplateParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Add a task to a template
+ */
+export const AddTemplateTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const AddTemplateTaskBody = zod.object({
+  "title": zod.string().min(1),
+  "description": zod.string().optional(),
+  "priority": zod.enum(['low', 'medium', 'high']).optional(),
+  "offsetDays": zod.number().optional()
+})
+
+
+/**
+ * @summary Remove a task from a template
+ */
+export const DeleteTemplateTaskParams = zod.object({
+  "id": zod.coerce.number(),
+  "taskId": zod.coerce.number()
+})
+
+
+/**
+ * @summary Create a project from a template
+ */
+export const ApplyTemplateParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const ApplyTemplateBody = zod.object({
+  "name": zod.string().min(1),
+  "description": zod.string().optional(),
+  "startDate": zod.string()
 })
 
 

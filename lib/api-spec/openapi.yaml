@@ -26,6 +26,8 @@ tags:
     description: Team invite management
   - name: assistencia-tecnica
     description: Technical assistance requests
+  - name: templates
+    description: Project templates
   - name: notifications
     description: In-app notifications
   - name: attachments
@@ -1452,6 +1454,142 @@ paths:
         "404":
           description: Not found
 
+  /templates:
+    get:
+      operationId: listTemplates
+      tags: [templates]
+      summary: List project templates
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectTemplate"
+    post:
+      operationId: createTemplate
+      tags: [templates]
+      summary: Create a project template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectTemplateInput"
+      responses:
+        "201":
+          description: Created template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectTemplate"
+
+  /templates/{id}:
+    get:
+      operationId: getTemplate
+      tags: [templates]
+      summary: Get a template with its tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Template with tasks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectTemplateFull"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteTemplate
+      tags: [templates]
+      summary: Delete a template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /templates/{id}/tasks:
+    post:
+      operationId: addTemplateTask
+      tags: [templates]
+      summary: Add a task to a template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectTemplateTaskInput"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectTemplateTask"
+
+  /templates/{id}/tasks/{taskId}:
+    delete:
+      operationId: deleteTemplateTask
+      tags: [templates]
+      summary: Remove a task from a template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /templates/{id}/apply:
+    post:
+      operationId: applyTemplate
+      tags: [templates]
+      summary: Create a project from a template
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyTemplateInput"
+      responses:
+        "201":
+          description: Created project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
   /audit-logs:
     get:
       operationId: listAuditLogs
@@ -1903,6 +2041,11 @@ components:
           type: ["string", "null"]
         completedAt:
           type: ["string", "null"]
+        recurrence:
+          type: string
+          enum: [none, daily, weekly, monthly, yearly]
+        recurrenceEndDate:
+          type: ["string", "null"]
         createdAt:
           type: string
         subtaskCount:
@@ -1937,6 +2080,11 @@ components:
           type: integer
         dueDate:
           type: string
+        recurrence:
+          type: string
+          enum: [none, daily, weekly, monthly, yearly]
+        recurrenceEndDate:
+          type: string
 
     TaskUpdate:
       type: object
@@ -1958,6 +2106,11 @@ components:
           type: string
         projectId:
           type: integer
+        recurrence:
+          type: string
+          enum: [none, daily, weekly, monthly, yearly]
+        recurrenceEndDate:
+          type: string
 
     SubtaskInput:
       type: object
@@ -2718,4 +2871,100 @@ components:
         uploadURL:
           type: string
         objectPath:
+          type: string
+
+    ProjectTemplate:
+      type: object
+      required: [id, name, priority, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        taskCount:
+          type: integer
+        createdAt:
+          type: string
+
+    ProjectTemplateFull:
+      type: object
+      required: [id, name, priority, createdAt, tasks]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        createdAt:
+          type: string
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectTemplateTask"
+
+    ProjectTemplateTask:
+      type: object
+      required: [id, templateId, title, priority, offsetDays]
+      properties:
+        id:
+          type: integer
+        templateId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        offsetDays:
+          type: integer
+
+    ProjectTemplateInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+
+    ProjectTemplateTaskInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        offsetDays:
+          type: integer
+
+    ApplyTemplateInput:
+      type: object
+      required: [name, startDate]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        startDate:
           type: string

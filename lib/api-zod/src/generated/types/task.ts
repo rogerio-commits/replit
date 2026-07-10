@@ -7,6 +7,7 @@
  */
 import type { Tag } from './tag';
 import type { TaskPriority } from './taskPriority';
+import type { TaskRecurrence } from './taskRecurrence';
 import type { TaskStatus } from './taskStatus';
 
 export interface Task {
@@ -29,6 +30,9 @@ export interface Task {
   dueDate?: string | null;
   /** @nullable */
   completedAt?: string | null;
+  recurrence?: TaskRecurrence;
+  /** @nullable */
+  recurrenceEndDate?: string | null;
   createdAt: string;
   subtaskCount?: number;
   subtaskDoneCount?: number;

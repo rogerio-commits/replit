@@ -10,6 +10,7 @@ import {
   useListTasks,
   useUpdateProject,
   useDeleteProject,
+  useCreateProject,
   useCreateTask,
   useUpdateTask,
   useListProjectMembers,
@@ -95,6 +96,7 @@ import {
   Loader2,
   ThumbsUp,
   ThumbsDown,
+  Copy,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -372,6 +374,26 @@ export default function ProjectDetail() {
         setLocation("/projects");
       },
       onError: () => toast({ title: "Erro ao excluir projeto", variant: "destructive" }),
+    });
+  };
+
+  const createProject = useCreateProject();
+  const onDuplicateProject = () => {
+    if (!project) return;
+    createProject.mutate({
+      data: {
+        name: `Cópia de ${project.name}`,
+        description: project.description || undefined,
+        status: "a_iniciar",
+        priority: project.priority,
+      } as any,
+    }, {
+      onSuccess: (newProject) => {
+        toast({ title: "Projeto duplicado" });
+        queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+        setLocation(`/projects/${newProject.id}`);
+      },
+      onError: () => toast({ title: "Erro ao duplicar projeto", variant: "destructive" }),
     });
   };
 
@@ -717,6 +739,9 @@ export default function ProjectDetail() {
                   </DialogContent>
                 </Dialog>
 
+                <Button variant="outline" size="icon" onClick={onDuplicateProject} disabled={createProject.isPending} title="Duplicar projeto">
+                  <Copy className="h-4 w-4" />
+                </Button>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="destructive" size="icon">

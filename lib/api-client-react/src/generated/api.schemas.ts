@@ -289,6 +289,17 @@ export const TaskPriority = {
   high: 'high',
 } as const;
 
+export type TaskRecurrence = typeof TaskRecurrence[keyof typeof TaskRecurrence];
+
+
+export const TaskRecurrence = {
+  none: 'none',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
 export interface Task {
   id: number;
   projectId: number;
@@ -309,6 +320,9 @@ export interface Task {
   dueDate?: string | null;
   /** @nullable */
   completedAt?: string | null;
+  recurrence?: TaskRecurrence;
+  /** @nullable */
+  recurrenceEndDate?: string | null;
   createdAt: string;
   subtaskCount?: number;
   subtaskDoneCount?: number;
@@ -334,6 +348,17 @@ export const TaskInputPriority = {
   high: 'high',
 } as const;
 
+export type TaskInputRecurrence = typeof TaskInputRecurrence[keyof typeof TaskInputRecurrence];
+
+
+export const TaskInputRecurrence = {
+  none: 'none',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
 export interface TaskInput {
   projectId: number;
   parentId?: number;
@@ -344,6 +369,8 @@ export interface TaskInput {
   priority: TaskInputPriority;
   assignedTo?: number;
   dueDate?: string;
+  recurrence?: TaskInputRecurrence;
+  recurrenceEndDate?: string;
 }
 
 export type TaskUpdateStatus = typeof TaskUpdateStatus[keyof typeof TaskUpdateStatus];
@@ -365,6 +392,17 @@ export const TaskUpdatePriority = {
   high: 'high',
 } as const;
 
+export type TaskUpdateRecurrence = typeof TaskUpdateRecurrence[keyof typeof TaskUpdateRecurrence];
+
+
+export const TaskUpdateRecurrence = {
+  none: 'none',
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+  yearly: 'yearly',
+} as const;
+
 export interface TaskUpdate {
   /** @minLength 1 */
   title?: string;
@@ -374,6 +412,8 @@ export interface TaskUpdate {
   assignedTo?: number;
   dueDate?: string;
   projectId?: number;
+  recurrence?: TaskUpdateRecurrence;
+  recurrenceEndDate?: string;
 }
 
 export interface SubtaskInput {
@@ -966,6 +1006,103 @@ export interface AuditLog {
 export interface UploadUrlResponse {
   uploadURL: string;
   objectPath: string;
+}
+
+export type ProjectTemplatePriority = typeof ProjectTemplatePriority[keyof typeof ProjectTemplatePriority];
+
+
+export const ProjectTemplatePriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ProjectTemplate {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  priority: ProjectTemplatePriority;
+  taskCount?: number;
+  createdAt: string;
+}
+
+export type ProjectTemplateFullPriority = typeof ProjectTemplateFullPriority[keyof typeof ProjectTemplateFullPriority];
+
+
+export const ProjectTemplateFullPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export type ProjectTemplateTaskPriority = typeof ProjectTemplateTaskPriority[keyof typeof ProjectTemplateTaskPriority];
+
+
+export const ProjectTemplateTaskPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ProjectTemplateTask {
+  id: number;
+  templateId: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  priority: ProjectTemplateTaskPriority;
+  offsetDays: number;
+}
+
+export interface ProjectTemplateFull {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  priority: ProjectTemplateFullPriority;
+  createdAt: string;
+  tasks: ProjectTemplateTask[];
+}
+
+export type ProjectTemplateInputPriority = typeof ProjectTemplateInputPriority[keyof typeof ProjectTemplateInputPriority];
+
+
+export const ProjectTemplateInputPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ProjectTemplateInput {
+  /** @minLength 1 */
+  name: string;
+  description?: string;
+  priority?: ProjectTemplateInputPriority;
+}
+
+export type ProjectTemplateTaskInputPriority = typeof ProjectTemplateTaskInputPriority[keyof typeof ProjectTemplateTaskInputPriority];
+
+
+export const ProjectTemplateTaskInputPriority = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface ProjectTemplateTaskInput {
+  /** @minLength 1 */
+  title: string;
+  description?: string;
+  priority?: ProjectTemplateTaskInputPriority;
+  offsetDays?: number;
+}
+
+export interface ApplyTemplateInput {
+  /** @minLength 1 */
+  name: string;
+  description?: string;
+  startDate: string;
 }
 
 export type ListProjectsParams = {

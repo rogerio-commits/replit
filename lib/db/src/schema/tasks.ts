@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const taskStatusEnum = pgEnum("task_status", ["todo", "in_progress", "review", "done"]);
 export const taskPriorityEnum = pgEnum("task_priority", ["low", "medium", "high"]);
+export const taskRecurrenceEnum = pgEnum("task_recurrence", ["none", "daily", "weekly", "monthly", "yearly"]);
 
 export const tasksTable = pgTable("tasks", {
   id: serial("id").primaryKey(),
@@ -16,6 +17,8 @@ export const tasksTable = pgTable("tasks", {
   assignedTo: integer("assigned_to"),
   dueDate: text("due_date"),
   completedAt: timestamp("completed_at"),
+  recurrence: taskRecurrenceEnum("recurrence").notNull().default("none"),
+  recurrenceEndDate: text("recurrence_end_date"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

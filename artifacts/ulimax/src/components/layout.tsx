@@ -21,6 +21,7 @@ import {
   Sun,
   Clock,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -65,6 +66,7 @@ export function Layout({ children }: LayoutProps) {
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
         { href: "/projects", label: "Projetos", icon: Briefcase },
         { href: "/tasks", label: "Tarefas", icon: CheckSquare },
+        { href: "/templates", label: "Templates", icon: Layers },
         { href: "/kanban", label: "Kanban", icon: Columns3 },
         { href: "/members", label: "Equipe", icon: Users },
       ],

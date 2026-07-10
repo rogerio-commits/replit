@@ -101,6 +101,8 @@ function taskRow(
     projectName: row.projectName ?? null,
     dueDate: row.task.dueDate ?? null,
     completedAt: row.task.completedAt ? row.task.completedAt.toISOString() : null,
+    recurrence: row.task.recurrence ?? "none",
+    recurrenceEndDate: row.task.recurrenceEndDate ?? null,
     createdAt: row.task.createdAt.toISOString(),
     subtaskCount,
     subtaskDoneCount,
@@ -318,6 +320,8 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   if (body.data.assignedTo !== undefined) updateData.assignedTo = body.data.assignedTo;
   if (body.data.dueDate !== undefined) updateData.dueDate = body.data.dueDate;
   if (body.data.projectId !== undefined) updateData.projectId = body.data.projectId;
+  if (body.data.recurrence !== undefined) updateData.recurrence = body.data.recurrence;
+  if (body.data.recurrenceEndDate !== undefined) updateData.recurrenceEndDate = body.data.recurrenceEndDate;
 
   const previousAssignee = body.data.assignedTo !== undefined ? (
     await db.select({ assignedTo: tasksTable.assignedTo }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1)
@@ -355,6 +359,32 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     : "updated" as const;
   const patchChanges = diffObjects(body.data as Record<string, unknown>, updateData, ["status", "priority", "assignedTo", "dueDate", "title"]);
   logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: patchChanges.length === 1 && patchChanges[0].field === "status" ? "status_changed" : "updated", actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: patchChanges.length > 0 ? patchChanges : undefined }, req.log);
+
+  if (body.data.status === "done" && task.recurrence && task.recurrence !== "none" && task.dueDate) {
+    const currentDue = new Date(task.dueDate);
+    let nextDue = new Date(currentDue);
+    if (task.recurrence === "daily")   nextDue.setDate(nextDue.getDate() + 1);
+    else if (task.recurrence === "weekly")  nextDue.setDate(nextDue.getDate() + 7);
+    else if (task.recurrence === "monthly") nextDue.setMonth(nextDue.getMonth() + 1);
+    else if (task.recurrence === "yearly")  nextDue.setFullYear(nextDue.getFullYear() + 1);
+
+    const nextDueStr = nextDue.toISOString().slice(0, 10);
+    const endOk = !task.recurrenceEndDate || nextDueStr <= task.recurrenceEndDate;
+    if (endOk) {
+      await db.insert(tasksTable).values({
+        projectId: task.projectId,
+        parentId: task.parentId ?? undefined,
+        title: task.title,
+        description: task.description ?? undefined,
+        status: "todo",
+        priority: task.priority,
+        assignedTo: task.assignedTo ?? undefined,
+        dueDate: nextDueStr,
+        recurrence: task.recurrence,
+        recurrenceEndDate: task.recurrenceEndDate ?? undefined,
+      });
+    }
+  }
 
   return res.json(taskRow(row));
 });

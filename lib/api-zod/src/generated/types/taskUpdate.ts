@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { TaskUpdatePriority } from './taskUpdatePriority';
+import type { TaskUpdateRecurrence } from './taskUpdateRecurrence';
 import type { TaskUpdateStatus } from './taskUpdateStatus';
 
 export interface TaskUpdate {
@@ -17,4 +18,6 @@ export interface TaskUpdate {
   assignedTo?: number;
   dueDate?: string;
   projectId?: number;
+  recurrence?: TaskUpdateRecurrence;
+  recurrenceEndDate?: string;
 }
