@@ -56,6 +56,7 @@ import {
   Users,
   AlertCircle,
   Clock,
+  Download,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
@@ -305,6 +306,36 @@ export default function Projects() {
   const thCls = "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors whitespace-nowrap";
   const thInner = "flex items-center gap-1";
 
+  function handleExportCSV() {
+    if (!filtered || filtered.length === 0) return;
+    const headers = ["#", "Projeto", "Status", "Prioridade", "Material", "Tarefas Concluídas", "Total Tarefas", "Início Proj.", "Fim Est. Proj.", "Final Proj.", "Início Prod.", "Fim Est. Prod.", "Final Prod.", "Medição", "Início Inst."];
+    const rows = filtered.map((p, i) => [
+      i + 1,
+      `"${p.name.replace(/"/g, '""')}"`,
+      STATUS_LABELS[p.status] ?? p.status,
+      p.priority === "high" ? "Alta" : p.priority === "medium" ? "Normal" : "Baixa",
+      p.materialType ?? "",
+      p.taskDone ?? 0,
+      p.taskTotal ?? 0,
+      fmtDate(p.startDate),
+      fmtDate(p.endDate),
+      fmtDate(p.finalDate),
+      fmtDate(p.producaoStartDate),
+      fmtDate(p.producaoEndDate),
+      fmtDate(p.producaoFinalDate),
+      fmtDate(p.medicaoDate),
+      fmtDate(p.instalacaoStartDate),
+    ]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `projetos_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header */}
@@ -316,7 +347,12 @@ export default function Projects() {
           </p>
         </div>
 
-        {canEdit && (
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filtered.length === 0}>
+            <Download className="mr-2 h-4 w-4" />
+            Exportar CSV
+          </Button>
+          {canEdit && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -501,7 +537,8 @@ export default function Projects() {
               </Form>
             </DialogContent>
           </Dialog>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Filters */}

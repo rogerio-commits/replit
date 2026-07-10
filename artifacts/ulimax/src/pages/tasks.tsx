@@ -29,6 +29,11 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Form,
   FormControl,
   FormField,
@@ -48,7 +53,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase,
-  Trash2, Edit, MessageSquare, Download, X, CheckCheck, TrendingUp, User
+  Trash2, Edit, MessageSquare, Download, X, CheckCheck, TrendingUp, User,
+  Bookmark, BookmarkCheck,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -127,7 +133,16 @@ export default function Tasks() {
     tags?: Array<{ id: number; name: string; color: string }>;
   } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  
+
+  const SAVED_FILTERS_KEY = "ulimax-saved-filters-v1";
+  interface SavedFilter { id: string; name: string; status: string; project: string; priority: string; }
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
+    try { return JSON.parse(localStorage.getItem(SAVED_FILTERS_KEY) ?? "[]") as SavedFilter[]; }
+    catch { return []; }
+  });
+  const [saveFilterName, setSaveFilterName] = useState("");
+  const [isSavePopoverOpen, setIsSavePopoverOpen] = useState(false);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canEdit = useCanEdit();
@@ -277,6 +292,38 @@ export default function Tasks() {
       },
       onError: () => toast({ title: "Erro ao atualizar tarefas", variant: "destructive" }),
     });
+  }
+
+  function handleCycleStatus(taskId: number, currentStatus: string) {
+    const cycle: Record<string, string> = { todo: "in_progress", in_progress: "review", review: "done", done: "todo" };
+    const next = cycle[currentStatus] ?? "todo";
+    updateTask.mutate({ id: taskId, data: { status: next as any } }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() }),
+      onError: () => toast({ title: "Erro ao atualizar status", variant: "destructive" }),
+    });
+  }
+
+  function handleSaveFilter() {
+    if (!saveFilterName.trim()) return;
+    const f: SavedFilter = { id: Date.now().toString(), name: saveFilterName.trim(), status: statusFilter, project: projectFilter, priority: priorityFilter };
+    const updated = [...savedFilters, f];
+    setSavedFilters(updated);
+    localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated));
+    setSaveFilterName("");
+    setIsSavePopoverOpen(false);
+    toast({ title: "Filtro salvo!" });
+  }
+
+  function handleDeleteSavedFilter(id: string) {
+    const updated = savedFilters.filter((f) => f.id !== id);
+    setSavedFilters(updated);
+    localStorage.setItem(SAVED_FILTERS_KEY, JSON.stringify(updated));
+  }
+
+  function handleApplySavedFilter(f: SavedFilter) {
+    setStatusFilter(f.status);
+    setProjectFilter(f.project);
+    setPriorityFilter(f.priority);
   }
 
   const allFiltered = filteredTasks?.map((t) => t.id) ?? [];
@@ -483,6 +530,31 @@ export default function Tasks() {
         </div>
       )}
 
+      {savedFilters.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+            <BookmarkCheck className="h-3.5 w-3.5" /> Filtros salvos:
+          </span>
+          {savedFilters.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => handleApplySavedFilter(f)}
+              className="inline-flex items-center gap-1 text-xs bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 rounded-full px-2.5 py-1 transition-colors"
+            >
+              {f.name}
+              <span
+                role="button"
+                onClick={(e) => { e.stopPropagation(); handleDeleteSavedFilter(f.id); }}
+                className="text-primary/40 hover:text-destructive transition-colors ml-0.5 leading-none"
+                title="Remover filtro"
+              >
+                ×
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
@@ -522,6 +594,32 @@ export default function Tasks() {
                   {projects?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+              {(statusFilter !== "all" || projectFilter !== "all" || priorityFilter !== "all") && (
+                <Popover open={isSavePopoverOpen} onOpenChange={setIsSavePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                      <Bookmark className="h-3.5 w-3.5" />
+                      Salvar filtro
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3" align="end">
+                    <p className="text-sm font-medium mb-2">Nome do filtro</p>
+                    <div className="flex gap-2">
+                      <Input
+                        value={saveFilterName}
+                        onChange={(e) => setSaveFilterName(e.target.value)}
+                        placeholder="Ex.: Tarefas atrasadas"
+                        className="h-8 text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && handleSaveFilter()}
+                        autoFocus
+                      />
+                      <Button size="sm" className="h-8" onClick={handleSaveFilter} disabled={!saveFilterName.trim()}>
+                        OK
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -559,9 +657,19 @@ export default function Tasks() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">{task.title}</span>
-                          <Badge variant="outline" className={getTaskStatusColor(task.status)}>
-                            {TASK_STATUS_LABELS[task.status] ?? task.status}
-                          </Badge>
+                          {canEdit ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleCycleStatus(task.id, task.status); }}
+                              className={cn("inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border transition-all hover:opacity-70 hover:scale-105 cursor-pointer select-none", getTaskStatusColor(task.status))}
+                              title="Clique para avançar o status"
+                            >
+                              {TASK_STATUS_LABELS[task.status] ?? task.status}
+                            </button>
+                          ) : (
+                            <Badge variant="outline" className={getTaskStatusColor(task.status)}>
+                              {TASK_STATUS_LABELS[task.status] ?? task.status}
+                            </Badge>
+                          )}
                         </div>
                         {(task as any).tags && (task as any).tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
