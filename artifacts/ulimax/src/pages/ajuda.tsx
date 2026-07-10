@@ -31,6 +31,10 @@ import {
   Sun,
   Bookmark,
   Download,
+  Layers,
+  Repeat2,
+  Copy,
+  PencilLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +142,12 @@ const sections: Section[] = [
             <li><Strong>Prioridade</Strong>: Normal ou Alta</li>
           </ul>
         </Subsection>
+        <Subsection title="Duplicar um projeto">
+          <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Duplicar Projeto</Strong> no cabeçalho da página de detalhe. Uma cópia é criada com o mesmo nome (prefixada com "Cópia de"), mesmas configurações e todas as tarefas — o status do novo projeto volta para <em>A Iniciar</em>.</p>
+        </Subsection>
+        <Subsection title="Criar projeto a partir de um template">
+          <p className="text-sm text-muted-foreground">Acesse <Strong>Templates</Strong> no menu lateral, selecione o template desejado e clique em <Strong>Usar Template</Strong>. Informe o nome do projeto e a data de início — as tarefas do template são criadas automaticamente com os prazos calculados.</p>
+        </Subsection>
         <Subsection title="Exportar relatório em PDF">
           <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Exportar PDF</Strong> no cabeçalho da página. O arquivo gerado contém nome, status, datas, descrição, lista completa de tarefas e membros da equipe.</p>
         </Subsection>
@@ -158,9 +168,15 @@ const sections: Section[] = [
         <Subsection title="Criar uma tarefa">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Clique em <Strong>+ Nova Tarefa</Strong>.</li>
-            <li>Preencha: título, descrição (suporta Markdown), projeto vinculado, status, prioridade, responsável e data de entrega.</li>
+            <li>Preencha: título, descrição (suporta Markdown), projeto vinculado, status, prioridade, responsável, data de entrega e recorrência (opcional).</li>
             <li>Clique em <Strong>Criar Tarefa</Strong>.</li>
           </ol>
+        </Subsection>
+        <Subsection title="Edição inline do título">
+          <p className="text-sm text-muted-foreground">Para renomear uma tarefa rapidamente, sem abrir o modal completo, dê um <Strong>duplo clique</Strong> no título dela na lista. O título vira um campo de texto editável — pressione <Strong>Enter</Strong> para salvar ou <Strong>Esc</Strong> para cancelar. Também é possível clicar no ícone de lápis que aparece ao passar o mouse.</p>
+        </Subsection>
+        <Subsection title="Duplicar uma tarefa">
+          <p className="text-sm text-muted-foreground">Clique no ícone de <Strong>Copiar</Strong> (duas páginas sobrepostas) à direita de qualquer tarefa. Uma cópia idêntica é criada imediatamente com o mesmo título, projeto, prioridade e responsável — o status volta para <em>A Fazer</em>.</p>
         </Subsection>
         <Subsection title="Filtros disponíveis">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
@@ -195,7 +211,7 @@ const sections: Section[] = [
             <li><Strong>Anexos</Strong>: upload de arquivos por arrastar e soltar</li>
           </ul>
         </Subsection>
-        <Tip>Marque múltiplas tarefas com os checkboxes e use a barra de ações em massa para atualizar status ou prioridade de todas de uma vez.</Tip>
+        <Tip>Marque múltiplas tarefas com os checkboxes e use a barra de ações em massa para atualizar status, prioridade ou responsável de todas de uma vez.</Tip>
       </div>
     ),
   },
@@ -245,6 +261,8 @@ const sections: Section[] = [
             rows={[
               ["Alterar Status", "Define o mesmo status para todas as tarefas selecionadas"],
               ["Alterar Prioridade", "Define a mesma prioridade para todas as tarefas selecionadas"],
+              ["Alterar Responsável", "Atribui o mesmo responsável a todas as tarefas selecionadas"],
+              ["Excluir", "Remove permanentemente todas as tarefas selecionadas"],
               ["Limpar", "Desmarca todas as tarefas sem fazer alterações"],
             ]}
           />
@@ -619,6 +637,73 @@ const sections: Section[] = [
           />
         </Subsection>
         <Tip>Use esta página para identificar membros sobrecarregados ou subutilizados e redistribuir tarefas de forma mais equilibrada.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "templates",
+    title: "Templates de Projeto",
+    icon: Layers,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Templates são modelos reutilizáveis de projeto — defina uma estrutura padrão de tarefas uma vez e aplique quantas vezes precisar para criar projetos novos de forma ágil.</p>
+        <Subsection title="Criar um template">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Acesse <Strong>Templates</Strong> no menu lateral.</li>
+            <li>Clique em <Strong>Novo Template</Strong>.</li>
+            <li>Preencha nome, descrição e prioridade padrão.</li>
+            <li>Com o template selecionado, clique em <Strong>Adicionar Tarefa</Strong> para incluir as etapas padrão.</li>
+            <li>Para cada tarefa, informe título, prioridade e <Strong>Dias após início</Strong> — o offset que define em quantos dias após o início do projeto aquela tarefa deverá ser entregue.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Usar um template (criar projeto)">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Selecione o template na lista da esquerda.</li>
+            <li>Clique no botão <Strong>Usar Template</Strong> (ícone de play verde).</li>
+            <li>Informe o nome do projeto e a data de início.</li>
+            <li>Clique em <Strong>Criar Projeto</Strong> — o projeto é criado com todas as tarefas e os prazos calculados automaticamente.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Gerenciar tarefas do template">
+          <p className="text-sm text-muted-foreground">No painel de detalhe do template, cada tarefa exibe o título, prioridade e offset de dias. Clique no <Strong>×</Strong> ao lado de uma tarefa para removê-la do template sem afetar projetos já criados a partir dele.</p>
+        </Subsection>
+        <Tip>Crie templates para os tipos de projeto mais comuns na sua operação (ex.: "Residencial Alumínio", "Comercial Madeira") e padronize as etapas da equipe. Apenas gestores podem criar e excluir templates.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "recorrencia",
+    title: "Tarefas Recorrentes",
+    icon: Repeat2,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Tarefas recorrentes se repetem automaticamente em um intervalo definido — ao marcar uma como concluída, a próxima ocorrência é criada automaticamente com o prazo deslocado.</p>
+        <Subsection title="Configurar recorrência">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Ao criar ou editar uma tarefa, localize o campo <Strong>Recorrência</Strong> no formulário.</li>
+            <li>Escolha o intervalo: <em>Diária, Semanal, Mensal</em> ou <em>Anual</em>.</li>
+            <li>Opcionalmente, defina uma <Strong>Fim da recorrência</Strong> — data a partir da qual nenhuma nova ocorrência será criada.</li>
+            <li>Salve a tarefa normalmente.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Como funciona ao concluir">
+          <Table
+            headers={["Intervalo", "Próxima ocorrência criada em"]}
+            rows={[
+              ["Diária", "1 dia após o prazo original"],
+              ["Semanal", "7 dias após o prazo original"],
+              ["Mensal", "1 mês após o prazo original"],
+              ["Anual", "1 ano após o prazo original"],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground mt-2">A nova tarefa é criada com status <em>A Fazer</em> e herda o mesmo título, projeto, responsável e prioridade da original.</p>
+        </Subsection>
+        <Subsection title="Desativar recorrência">
+          <p className="text-sm text-muted-foreground">Edite a tarefa e mude o campo <Strong>Recorrência</Strong> para <em>Sem recorrência</em>. A partir de então, concluir a tarefa não gera novas ocorrências.</p>
+        </Subsection>
+        <Tip>Use tarefas recorrentes para atividades periódicas como vistorias semanais, relatórios mensais ou revisões anuais de contrato — o sistema cuida de criar as próximas ocorrências automaticamente.</Tip>
       </div>
     ),
   },
