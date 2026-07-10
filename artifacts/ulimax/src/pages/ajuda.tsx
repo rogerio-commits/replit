@@ -27,6 +27,9 @@ import {
   Camera,
   FolderOpen,
   BadgeCheck,
+  Sun,
+  Bookmark,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +90,32 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "meu-dia",
+    title: "Meu Dia",
+    icon: Sun,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Página pessoal que exibe somente as tarefas e projetos relacionados ao usuário logado — o ponto de partida ideal para começar o dia de trabalho.</p>
+        <Subsection title="O que aparece">
+          <Table
+            headers={["Seção", "Conteúdo"]}
+            rows={[
+              ["KPIs pessoais", "Total de tarefas atribuídas a você, concluídas, em andamento e atrasadas"],
+              ["Minhas Tarefas", "Lista das tarefas onde você é o responsável, com badge de prazo e status clicável"],
+              ["Meus Projetos", "Projetos em que você é participante, com progresso de tarefas"],
+              ["Prazos próximos", "Tarefas vencendo hoje ou nos próximos 7 dias"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">O <Strong>Meu Dia</Strong> é a tela inicial após o login — aparece em destaque âmbar no topo do menu lateral. Também pode ser acessado diretamente clicando nesse item no menu.</p>
+        </Subsection>
+        <Tip>Use o Meu Dia como ponto de partida diário: veja rapidamente o que está atrasado, o que vence hoje e quais projetos precisam de atenção — tudo filtrado para você.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "projetos",
     title: "Projetos",
     icon: Briefcase,
@@ -110,6 +139,9 @@ const sections: Section[] = [
         </Subsection>
         <Subsection title="Exportar relatório em PDF">
           <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Exportar PDF</Strong> no cabeçalho da página. O arquivo gerado contém nome, status, datas, descrição, lista completa de tarefas e membros da equipe.</p>
+        </Subsection>
+        <Subsection title="Exportar tabela em CSV">
+          <p className="text-sm text-muted-foreground">Na página <Strong>Projetos</Strong>, clique em <Strong>Exportar CSV</Strong> ao lado do botão "Novo Projeto". O arquivo exportado inclui todos os projetos visíveis com todas as colunas: status, prioridade, material, contagem de tarefas e todas as datas de fases.</p>
         </Subsection>
         <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas, tarefas vinculadas e o botão de exportação em PDF.</Tip>
       </div>
@@ -135,6 +167,21 @@ const sections: Section[] = [
             <li><Strong>Prioridade</Strong>: Alta · Normal · Baixa</li>
             <li><Strong>Projeto</Strong>: exibe somente tarefas de um projeto específico</li>
           </ul>
+        </Subsection>
+        <Subsection title="Toggle rápido de status">
+          <p className="text-sm text-muted-foreground">Na lista de tarefas, o <Strong>badge de status</Strong> (ex: <em>A Fazer</em>) é clicável. Cada clique avança o status em sequência: <Strong>A Fazer → Em Andamento → Em Revisão → Concluída → A Fazer</Strong>. Passe o mouse sobre o badge para ver a dica de interação.</p>
+        </Subsection>
+        <Subsection title="Filtros salvos">
+          <p className="text-sm text-muted-foreground mb-2">Salve combinações de filtros frequentes para acesso rápido:</p>
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Aplique os filtros desejados (status, projeto, prioridade).</li>
+            <li>Clique em <Strong>Salvar filtro</Strong> que aparece ao lado dos filtros ativos.</li>
+            <li>Digite um nome (ex: "Minhas atrasadas") e pressione <Strong>OK</Strong>.</li>
+            <li>O filtro salvo aparece como chip acima da lista — clique para aplicar, <Strong>×</Strong> para remover.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Exportar tarefas em CSV">
+          <p className="text-sm text-muted-foreground">Clique em <Strong>Exportar CSV</Strong> no cabeçalho da página para baixar todas as tarefas visíveis (respeitando os filtros ativos). O arquivo inclui título, status, prioridade, projeto, responsável e prazo.</p>
         </Subsection>
         <Subsection title="Painel de detalhes">
           <p className="text-sm text-muted-foreground mb-2">Clique no botão <Strong>Detalhes</Strong> em qualquer tarefa para abrir um painel com:</p>
@@ -428,6 +475,8 @@ const sections: Section[] = [
             headers={["Evento", "Quem recebe"]}
             rows={[
               ["Tarefa atribuída a você", "O responsável pela tarefa"],
+              ["Comentário adicionado na sua tarefa", "O responsável pela tarefa"],
+              ["Você foi mencionado com @nome", "A pessoa mencionada no comentário"],
               ["Status do projeto mudou de fase", "Todos os membros do projeto"],
               ["Projeto entrou em Em Aprovação", "Todos os membros + gestores"],
               ["Projeto aprovado ou rejeitado", "Todos os membros do projeto"],
