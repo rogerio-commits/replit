@@ -40,6 +40,7 @@ import { TourGuide } from "@/components/tour-guide";
 import { QuickCreate } from "@/components/quick-create";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { useRecentProjects } from "@/hooks/useRecentProjects";
+import { NavHelpPopover } from "@/components/nav-help";
 
 interface LayoutProps {
   children: ReactNode;
@@ -122,7 +123,7 @@ export function Layout({ children }: LayoutProps) {
                     <Link key={item.href} href={item.href}>
                       <div
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                          "group/nav flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                           isActive
                             ? item.highlight
                               ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
@@ -132,7 +133,7 @@ export function Layout({ children }: LayoutProps) {
                               : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         )}
                       >
-                        <Icon className={cn("h-4 w-4", item.highlight && !isActive && "text-amber-500")} />
+                        <Icon className={cn("h-4 w-4 shrink-0", item.highlight && !isActive && "text-amber-500")} />
                         <span className="flex-1">{item.label}</span>
                         {item.badge !== undefined && (
                           <span className={cn(
@@ -144,6 +145,7 @@ export function Layout({ children }: LayoutProps) {
                             {item.badge}
                           </span>
                         )}
+                        <NavHelpPopover href={item.href} label={item.label} />
                       </div>
                     </Link>
                   );
