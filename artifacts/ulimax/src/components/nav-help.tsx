@@ -152,7 +152,7 @@ export function NavHelpPopover({ href, label }: NavHelpPopoverProps) {
             e.preventDefault();
             e.stopPropagation();
           }}
-          className="opacity-0 group-hover/nav:opacity-100 transition-opacity p-0.5 rounded text-sidebar-foreground/40 hover:text-sidebar-foreground focus:opacity-100 focus:outline-none shrink-0"
+          className="opacity-20 hover:opacity-100 transition-opacity p-0.5 rounded text-sidebar-foreground/60 hover:text-sidebar-foreground focus:opacity-100 focus:outline-none shrink-0"
           title={`Ajuda: ${label}`}
           tabIndex={-1}
         >

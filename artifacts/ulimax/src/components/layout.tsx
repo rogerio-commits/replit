@@ -123,7 +123,7 @@ export function Layout({ children }: LayoutProps) {
                     <Link key={item.href} href={item.href}>
                       <div
                         className={cn(
-                          "group/nav flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
+                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                           isActive
                             ? item.highlight
                               ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
