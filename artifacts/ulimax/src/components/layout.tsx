@@ -20,6 +20,7 @@ import {
   History,
   Sun,
   Clock,
+  Sparkles,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -36,7 +37,7 @@ import {
 import { NotificationBell } from "@/components/notification-bell";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { CommandPalette } from "@/components/command-palette";
-import { TourGuide } from "@/components/tour-guide";
+import { TourGuide, openTour } from "@/components/tour-guide";
 import { QuickCreate } from "@/components/quick-create";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
 import { useRecentProjects } from "@/hooks/useRecentProjects";
@@ -193,6 +194,13 @@ export function Layout({ children }: LayoutProps) {
               <kbd className="text-[10px] bg-sidebar-border/30 px-1 rounded hidden lg:block">⌘K</kbd>
             </button>
           </div>
+          <button
+            onClick={openTour}
+            className="mx-3 mb-1 flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors cursor-pointer w-[calc(100%-1.5rem)]"
+          >
+            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+            Tour rápido
+          </button>
           <TourGuide />
           <CommandPalette />
           <div className="p-3 border-t border-sidebar-border">

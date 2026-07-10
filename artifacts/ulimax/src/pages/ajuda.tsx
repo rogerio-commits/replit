@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { openTour } from "@/components/tour-guide";
 import {
   BookOpen,
   LayoutDashboard,
@@ -927,6 +928,12 @@ export default function Ajuda() {
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
+          <button
+            onClick={openTour}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors px-3 py-1.5 rounded-lg border border-primary/30 hover:bg-primary/5"
+          >
+            ✨ Tour rápido
+          </button>
           <button
             onClick={expandAll}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted"
