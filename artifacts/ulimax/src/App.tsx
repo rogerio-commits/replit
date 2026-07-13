@@ -28,6 +28,8 @@ import Audit from "@/pages/audit";
 import MeuDia from "@/pages/meu-dia";
 import Templates from "@/pages/templates";
 import Automacao from "@/pages/automacao";
+import Portfolio from "@/pages/portfolio";
+import CamposPersonalizados from "@/pages/campos-personalizados";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -212,6 +214,8 @@ function ProtectedRoutes() {
             <Route path="/templates" component={Templates} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/automacao" component={Automacao} />
+            <Route path="/portfolio" component={Portfolio} />
+            <Route path="/campos-personalizados" component={CamposPersonalizados} />
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />
           </Switch>

@@ -1732,3 +1732,193 @@ export const GetStorageObjectParams = zod.object({
 })
 
 
+/**
+ * @summary List diary entries for a project
+ */
+export const ListObraDiaryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListObraDiaryResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "date": zod.coerce.date(),
+  "weather": zod.string().nullish(),
+  "teamCount": zod.number().nullish(),
+  "activities": zod.string(),
+  "observations": zod.string().nullish(),
+  "incidents": zod.string().nullish(),
+  "authorId": zod.number().nullish(),
+  "authorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListObraDiaryResponse = zod.array(ListObraDiaryResponseItem)
+
+
+/**
+ * @summary Create a diary entry
+ */
+export const CreateObraDiaryEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const createObraDiaryEntryBodyTeamCountMin = 0;
+
+
+
+
+export const CreateObraDiaryEntryBody = zod.object({
+  "date": zod.coerce.date(),
+  "weather": zod.string().optional(),
+  "teamCount": zod.number().min(createObraDiaryEntryBodyTeamCountMin).optional(),
+  "activities": zod.string().min(1),
+  "observations": zod.string().optional(),
+  "incidents": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a diary entry
+ */
+export const DeleteObraDiaryEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List materials for a project
+ */
+export const ListProjectMaterialsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectMaterialsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "name": zod.string(),
+  "unit": zod.string(),
+  "quantity": zod.number(),
+  "type": zod.enum(['entrada', 'saida', 'estoque']),
+  "unitPrice": zod.number().nullish(),
+  "date": zod.coerce.date(),
+  "notes": zod.string().nullish(),
+  "authorId": zod.number().nullish(),
+  "authorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListProjectMaterialsResponse = zod.array(ListProjectMaterialsResponseItem)
+
+
+/**
+ * @summary Create a material entry
+ */
+export const CreateProjectMaterialParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+export const createProjectMaterialBodyQuantityMin = 0.001;
+
+export const createProjectMaterialBodyUnitPriceMin = 0;
+
+
+
+export const CreateProjectMaterialBody = zod.object({
+  "name": zod.string().min(1),
+  "unit": zod.string().min(1),
+  "quantity": zod.number().min(createProjectMaterialBodyQuantityMin),
+  "type": zod.enum(['entrada', 'saida', 'estoque']),
+  "unitPrice": zod.number().min(createProjectMaterialBodyUnitPriceMin).optional(),
+  "date": zod.coerce.date(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a material entry
+ */
+export const DeleteProjectMaterialParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List custom field definitions
+ */
+export const ListCustomFieldsQueryParams = zod.object({
+  "entityType": zod.enum(['project', 'task']).optional()
+})
+
+export const ListCustomFieldsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.enum(['text', 'number', 'date', 'select']),
+  "entityType": zod.enum(['project', 'task']),
+  "options": zod.array(zod.string()).nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListCustomFieldsResponse = zod.array(ListCustomFieldsResponseItem)
+
+
+/**
+ * @summary Create a custom field definition
+ */
+
+
+
+export const CreateCustomFieldBody = zod.object({
+  "name": zod.string().min(1),
+  "type": zod.enum(['text', 'number', 'date', 'select']),
+  "entityType": zod.enum(['project', 'task']),
+  "options": zod.array(zod.string()).optional()
+})
+
+
+/**
+ * @summary Delete a custom field definition
+ */
+export const DeleteCustomFieldParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get custom field values for an entity
+ */
+export const ListCustomFieldValuesQueryParams = zod.object({
+  "entityType": zod.enum(['project', 'task']),
+  "entityId": zod.coerce.number()
+})
+
+export const ListCustomFieldValuesResponseItem = zod.object({
+  "id": zod.number(),
+  "fieldId": zod.number(),
+  "entityType": zod.string(),
+  "entityId": zod.number(),
+  "value": zod.string().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListCustomFieldValuesResponse = zod.array(ListCustomFieldValuesResponseItem)
+
+
+/**
+ * @summary Set a custom field value
+ */
+export const UpsertCustomFieldValueBody = zod.object({
+  "fieldId": zod.number(),
+  "entityType": zod.enum(['project', 'task']),
+  "entityId": zod.number(),
+  "value": zod.string().optional()
+})
+
+export const UpsertCustomFieldValueResponse = zod.object({
+  "id": zod.number(),
+  "fieldId": zod.number(),
+  "entityType": zod.string(),
+  "entityId": zod.number(),
+  "value": zod.string().nullish(),
+  "updatedAt": zod.coerce.date()
+})
+
+

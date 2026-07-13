@@ -23,6 +23,9 @@ import {
   Sparkles,
   Layers,
   Zap,
+  BarChart3,
+  Settings2,
+  Package,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -80,6 +83,13 @@ export function Layout({ children }: LayoutProps) {
         { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
         { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
         { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
+      ],
+    },
+    {
+      label: "Análises",
+      items: [
+        { href: "/portfolio", label: "Portfólio", icon: BarChart3 },
+        { href: "/campos-personalizados", label: "Campos Personalizados", icon: Settings2 },
       ],
     },
     {

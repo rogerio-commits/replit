@@ -46,6 +46,12 @@ tags:
     description: Task time tracking entries
   - name: automation
     description: Automation rules
+  - name: obra-diary
+    description: Daily construction diary entries
+  - name: project-materials
+    description: Project material control
+  - name: custom-fields
+    description: Custom field definitions and values
 paths:
   /healthz:
     get:
@@ -1899,6 +1905,227 @@ paths:
                 type: string
                 format: binary
 
+  /projects/{id}/obra-diary:
+    get:
+      operationId: listObraDiary
+      tags: [obra-diary]
+      summary: List diary entries for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of diary entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObraDiaryEntry"
+    post:
+      operationId: createObraDiaryEntry
+      tags: [obra-diary]
+      summary: Create a diary entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObraDiaryEntryInput"
+      responses:
+        "201":
+          description: Created diary entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ObraDiaryEntry"
+
+  /obra-diary/{id}:
+    delete:
+      operationId: deleteObraDiaryEntry
+      tags: [obra-diary]
+      summary: Delete a diary entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{id}/materials:
+    get:
+      operationId: listProjectMaterials
+      tags: [project-materials]
+      summary: List materials for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of materials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectMaterial"
+    post:
+      operationId: createProjectMaterial
+      tags: [project-materials]
+      summary: Create a material entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectMaterialInput"
+      responses:
+        "201":
+          description: Created material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectMaterial"
+
+  /materials/{id}:
+    delete:
+      operationId: deleteProjectMaterial
+      tags: [project-materials]
+      summary: Delete a material entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /custom-fields:
+    get:
+      operationId: listCustomFields
+      tags: [custom-fields]
+      summary: List custom field definitions
+      parameters:
+        - name: entityType
+          in: query
+          schema:
+            type: string
+            enum: [project, task]
+      responses:
+        "200":
+          description: List of custom field definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomFieldDefinition"
+    post:
+      operationId: createCustomField
+      tags: [custom-fields]
+      summary: Create a custom field definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomFieldDefinitionInput"
+      responses:
+        "201":
+          description: Created custom field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomFieldDefinition"
+
+  /custom-fields/{id}:
+    delete:
+      operationId: deleteCustomField
+      tags: [custom-fields]
+      summary: Delete a custom field definition
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /custom-field-values:
+    get:
+      operationId: listCustomFieldValues
+      tags: [custom-fields]
+      summary: Get custom field values for an entity
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [project, task]
+        - name: entityId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of custom field values
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomFieldValue"
+    put:
+      operationId: upsertCustomFieldValue
+      tags: [custom-fields]
+      summary: Set a custom field value
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomFieldValueInput"
+      responses:
+        "200":
+          description: Updated value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomFieldValue"
+        "201":
+          description: Created value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomFieldValue"
+
 components:
   schemas:
     HealthStatus:
@@ -3178,3 +3405,193 @@ components:
           enum: [notify_assignee, notify_all]
         isActive:
           type: boolean
+
+    ObraDiaryEntry:
+      type: object
+      required: [id, projectId, date, activities, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        date:
+          type: string
+          format: date
+        weather:
+          type: string
+          nullable: true
+        teamCount:
+          type: integer
+          nullable: true
+        activities:
+          type: string
+        observations:
+          type: string
+          nullable: true
+        incidents:
+          type: string
+          nullable: true
+        authorId:
+          type: integer
+          nullable: true
+        authorName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ObraDiaryEntryInput:
+      type: object
+      required: [date, activities]
+      properties:
+        date:
+          type: string
+          format: date
+        weather:
+          type: string
+        teamCount:
+          type: integer
+          minimum: 0
+        activities:
+          type: string
+          minLength: 1
+        observations:
+          type: string
+        incidents:
+          type: string
+
+    ProjectMaterial:
+      type: object
+      required: [id, projectId, name, unit, quantity, type, date, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        name:
+          type: string
+        unit:
+          type: string
+        quantity:
+          type: number
+        type:
+          type: string
+          enum: [entrada, saida, estoque]
+        unitPrice:
+          type: number
+          nullable: true
+        date:
+          type: string
+          format: date
+        notes:
+          type: string
+          nullable: true
+        authorId:
+          type: integer
+          nullable: true
+        authorName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ProjectMaterialInput:
+      type: object
+      required: [name, unit, quantity, type, date]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        unit:
+          type: string
+          minLength: 1
+        quantity:
+          type: number
+          minimum: 0.001
+        type:
+          type: string
+          enum: [entrada, saida, estoque]
+        unitPrice:
+          type: number
+          minimum: 0
+        date:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    CustomFieldDefinition:
+      type: object
+      required: [id, name, type, entityType, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [text, number, date, select]
+        entityType:
+          type: string
+          enum: [project, task]
+        options:
+          type: array
+          items:
+            type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CustomFieldDefinitionInput:
+      type: object
+      required: [name, type, entityType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [text, number, date, select]
+        entityType:
+          type: string
+          enum: [project, task]
+        options:
+          type: array
+          items:
+            type: string
+
+    CustomFieldValue:
+      type: object
+      required: [id, fieldId, entityType, entityId, updatedAt]
+      properties:
+        id:
+          type: integer
+        fieldId:
+          type: integer
+        entityType:
+          type: string
+        entityId:
+          type: integer
+        value:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    CustomFieldValueInput:
+      type: object
+      required: [fieldId, entityType, entityId]
+      properties:
+        fieldId:
+          type: integer
+        entityType:
+          type: string
+          enum: [project, task]
+        entityId:
+          type: integer
+        value:
+          type: string

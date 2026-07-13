@@ -40,6 +40,10 @@ import type {
   ChecklistItemInput,
   ChecklistItemUpdate,
   CreateInviteBody,
+  CustomFieldDefinition,
+  CustomFieldDefinitionInput,
+  CustomFieldValue,
+  CustomFieldValueInput,
   DashboardSummary,
   HealthStatus,
   InstallationEvent,
@@ -49,6 +53,8 @@ import type {
   ListAssistenciaTecnicaParams,
   ListAttachmentsParams,
   ListAuditLogsParams,
+  ListCustomFieldValuesParams,
+  ListCustomFieldsParams,
   ListInstallationEventsParams,
   ListProjectsParams,
   ListSampleControlsParams,
@@ -57,9 +63,13 @@ import type {
   MemberInput,
   MemberProductivity,
   MemberUpdate,
+  ObraDiaryEntry,
+  ObraDiaryEntryInput,
   Project,
   ProjectApprovalInput,
   ProjectInput,
+  ProjectMaterial,
+  ProjectMaterialInput,
   ProjectMember,
   ProjectObservation,
   ProjectObservationInput,
@@ -7010,4 +7020,822 @@ export function useGetStorageObject<TData = Awaited<ReturnType<typeof getStorage
 
 
 
+
+export const getListObraDiaryUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/obra-diary`
+}
+
+/**
+ * @summary List diary entries for a project
+ */
+export const listObraDiary = async (id: number, options?: RequestInit): Promise<ObraDiaryEntry[]> => {
+
+  return customFetch<ObraDiaryEntry[]>(getListObraDiaryUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListObraDiaryQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/obra-diary`
+    ] as const;
+    }
+
+
+export const getListObraDiaryQueryOptions = <TData = Awaited<ReturnType<typeof listObraDiary>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listObraDiary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListObraDiaryQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listObraDiary>>> = ({ signal }) => listObraDiary(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listObraDiary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListObraDiaryQueryResult = NonNullable<Awaited<ReturnType<typeof listObraDiary>>>
+export type ListObraDiaryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List diary entries for a project
+ */
+
+export function useListObraDiary<TData = Awaited<ReturnType<typeof listObraDiary>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listObraDiary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListObraDiaryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateObraDiaryEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/obra-diary`
+}
+
+/**
+ * @summary Create a diary entry
+ */
+export const createObraDiaryEntry = async (id: number,
+    obraDiaryEntryInput: ObraDiaryEntryInput, options?: RequestInit): Promise<ObraDiaryEntry> => {
+
+  return customFetch<ObraDiaryEntry>(getCreateObraDiaryEntryUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      obraDiaryEntryInput,)
+  }
+);}
+
+
+
+
+export const getCreateObraDiaryEntryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createObraDiaryEntry>>, TError,{id: number;data: BodyType<ObraDiaryEntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createObraDiaryEntry>>, TError,{id: number;data: BodyType<ObraDiaryEntryInput>}, TContext> => {
+
+const mutationKey = ['createObraDiaryEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createObraDiaryEntry>>, {id: number;data: BodyType<ObraDiaryEntryInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createObraDiaryEntry(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateObraDiaryEntryMutationResult = NonNullable<Awaited<ReturnType<typeof createObraDiaryEntry>>>
+    export type CreateObraDiaryEntryMutationBody = BodyType<ObraDiaryEntryInput>
+    export type CreateObraDiaryEntryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a diary entry
+ */
+export const useCreateObraDiaryEntry = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createObraDiaryEntry>>, TError,{id: number;data: BodyType<ObraDiaryEntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createObraDiaryEntry>>,
+        TError,
+        {id: number;data: BodyType<ObraDiaryEntryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateObraDiaryEntryMutationOptions(options));
+    }
+
+export const getDeleteObraDiaryEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/obra-diary/${id}`
+}
+
+/**
+ * @summary Delete a diary entry
+ */
+export const deleteObraDiaryEntry = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteObraDiaryEntryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteObraDiaryEntryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteObraDiaryEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteObraDiaryEntry>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteObraDiaryEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteObraDiaryEntry>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteObraDiaryEntry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteObraDiaryEntryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteObraDiaryEntry>>>
+
+    export type DeleteObraDiaryEntryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a diary entry
+ */
+export const useDeleteObraDiaryEntry = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteObraDiaryEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteObraDiaryEntry>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteObraDiaryEntryMutationOptions(options));
+    }
+
+export const getListProjectMaterialsUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/materials`
+}
+
+/**
+ * @summary List materials for a project
+ */
+export const listProjectMaterials = async (id: number, options?: RequestInit): Promise<ProjectMaterial[]> => {
+
+  return customFetch<ProjectMaterial[]>(getListProjectMaterialsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectMaterialsQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/materials`
+    ] as const;
+    }
+
+
+export const getListProjectMaterialsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectMaterials>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectMaterials>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectMaterialsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectMaterials>>> = ({ signal }) => listProjectMaterials(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectMaterials>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectMaterialsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectMaterials>>>
+export type ListProjectMaterialsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List materials for a project
+ */
+
+export function useListProjectMaterials<TData = Awaited<ReturnType<typeof listProjectMaterials>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectMaterials>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectMaterialsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateProjectMaterialUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/materials`
+}
+
+/**
+ * @summary Create a material entry
+ */
+export const createProjectMaterial = async (id: number,
+    projectMaterialInput: ProjectMaterialInput, options?: RequestInit): Promise<ProjectMaterial> => {
+
+  return customFetch<ProjectMaterial>(getCreateProjectMaterialUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectMaterialInput,)
+  }
+);}
+
+
+
+
+export const getCreateProjectMaterialMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectMaterial>>, TError,{id: number;data: BodyType<ProjectMaterialInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectMaterial>>, TError,{id: number;data: BodyType<ProjectMaterialInput>}, TContext> => {
+
+const mutationKey = ['createProjectMaterial'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectMaterial>>, {id: number;data: BodyType<ProjectMaterialInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createProjectMaterial(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectMaterialMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectMaterial>>>
+    export type CreateProjectMaterialMutationBody = BodyType<ProjectMaterialInput>
+    export type CreateProjectMaterialMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a material entry
+ */
+export const useCreateProjectMaterial = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectMaterial>>, TError,{id: number;data: BodyType<ProjectMaterialInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectMaterial>>,
+        TError,
+        {id: number;data: BodyType<ProjectMaterialInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectMaterialMutationOptions(options));
+    }
+
+export const getDeleteProjectMaterialUrl = (id: number,) => {
+
+
+
+
+  return `/api/materials/${id}`
+}
+
+/**
+ * @summary Delete a material entry
+ */
+export const deleteProjectMaterial = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteProjectMaterialUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteProjectMaterialMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectMaterial>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectMaterial>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteProjectMaterial'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectMaterial>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteProjectMaterial(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProjectMaterialMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectMaterial>>>
+
+    export type DeleteProjectMaterialMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a material entry
+ */
+export const useDeleteProjectMaterial = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectMaterial>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProjectMaterial>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteProjectMaterialMutationOptions(options));
+    }
+
+export const getListCustomFieldsUrl = (params?: ListCustomFieldsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/custom-fields?${stringifiedParams}` : `/api/custom-fields`
+}
+
+/**
+ * @summary List custom field definitions
+ */
+export const listCustomFields = async (params?: ListCustomFieldsParams, options?: RequestInit): Promise<CustomFieldDefinition[]> => {
+
+  return customFetch<CustomFieldDefinition[]>(getListCustomFieldsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCustomFieldsQueryKey = (params?: ListCustomFieldsParams,) => {
+    return [
+    `/api/custom-fields`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCustomFieldsQueryOptions = <TData = Awaited<ReturnType<typeof listCustomFields>>, TError = ErrorType<unknown>>(params?: ListCustomFieldsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCustomFields>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCustomFieldsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCustomFields>>> = ({ signal }) => listCustomFields(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCustomFields>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCustomFieldsQueryResult = NonNullable<Awaited<ReturnType<typeof listCustomFields>>>
+export type ListCustomFieldsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List custom field definitions
+ */
+
+export function useListCustomFields<TData = Awaited<ReturnType<typeof listCustomFields>>, TError = ErrorType<unknown>>(
+ params?: ListCustomFieldsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCustomFields>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCustomFieldsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateCustomFieldUrl = () => {
+
+
+
+
+  return `/api/custom-fields`
+}
+
+/**
+ * @summary Create a custom field definition
+ */
+export const createCustomField = async (customFieldDefinitionInput: CustomFieldDefinitionInput, options?: RequestInit): Promise<CustomFieldDefinition> => {
+
+  return customFetch<CustomFieldDefinition>(getCreateCustomFieldUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      customFieldDefinitionInput,)
+  }
+);}
+
+
+
+
+export const getCreateCustomFieldMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCustomField>>, TError,{data: BodyType<CustomFieldDefinitionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCustomField>>, TError,{data: BodyType<CustomFieldDefinitionInput>}, TContext> => {
+
+const mutationKey = ['createCustomField'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCustomField>>, {data: BodyType<CustomFieldDefinitionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCustomField(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCustomFieldMutationResult = NonNullable<Awaited<ReturnType<typeof createCustomField>>>
+    export type CreateCustomFieldMutationBody = BodyType<CustomFieldDefinitionInput>
+    export type CreateCustomFieldMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a custom field definition
+ */
+export const useCreateCustomField = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCustomField>>, TError,{data: BodyType<CustomFieldDefinitionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCustomField>>,
+        TError,
+        {data: BodyType<CustomFieldDefinitionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCustomFieldMutationOptions(options));
+    }
+
+export const getDeleteCustomFieldUrl = (id: number,) => {
+
+
+
+
+  return `/api/custom-fields/${id}`
+}
+
+/**
+ * @summary Delete a custom field definition
+ */
+export const deleteCustomField = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteCustomFieldUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteCustomFieldMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCustomField>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCustomField>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteCustomField'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCustomField>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCustomField(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCustomFieldMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCustomField>>>
+
+    export type DeleteCustomFieldMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a custom field definition
+ */
+export const useDeleteCustomField = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCustomField>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCustomField>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteCustomFieldMutationOptions(options));
+    }
+
+export const getListCustomFieldValuesUrl = (params: ListCustomFieldValuesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/custom-field-values?${stringifiedParams}` : `/api/custom-field-values`
+}
+
+/**
+ * @summary Get custom field values for an entity
+ */
+export const listCustomFieldValues = async (params: ListCustomFieldValuesParams, options?: RequestInit): Promise<CustomFieldValue[]> => {
+
+  return customFetch<CustomFieldValue[]>(getListCustomFieldValuesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCustomFieldValuesQueryKey = (params?: ListCustomFieldValuesParams,) => {
+    return [
+    `/api/custom-field-values`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListCustomFieldValuesQueryOptions = <TData = Awaited<ReturnType<typeof listCustomFieldValues>>, TError = ErrorType<unknown>>(params: ListCustomFieldValuesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCustomFieldValues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCustomFieldValuesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCustomFieldValues>>> = ({ signal }) => listCustomFieldValues(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCustomFieldValues>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCustomFieldValuesQueryResult = NonNullable<Awaited<ReturnType<typeof listCustomFieldValues>>>
+export type ListCustomFieldValuesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get custom field values for an entity
+ */
+
+export function useListCustomFieldValues<TData = Awaited<ReturnType<typeof listCustomFieldValues>>, TError = ErrorType<unknown>>(
+ params: ListCustomFieldValuesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCustomFieldValues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCustomFieldValuesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpsertCustomFieldValueUrl = () => {
+
+
+
+
+  return `/api/custom-field-values`
+}
+
+/**
+ * @summary Set a custom field value
+ */
+export const upsertCustomFieldValue = async (customFieldValueInput: CustomFieldValueInput, options?: RequestInit): Promise<CustomFieldValue> => {
+
+  return customFetch<CustomFieldValue>(getUpsertCustomFieldValueUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      customFieldValueInput,)
+  }
+);}
+
+
+
+
+export const getUpsertCustomFieldValueMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertCustomFieldValue>>, TError,{data: BodyType<CustomFieldValueInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertCustomFieldValue>>, TError,{data: BodyType<CustomFieldValueInput>}, TContext> => {
+
+const mutationKey = ['upsertCustomFieldValue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertCustomFieldValue>>, {data: BodyType<CustomFieldValueInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  upsertCustomFieldValue(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertCustomFieldValueMutationResult = NonNullable<Awaited<ReturnType<typeof upsertCustomFieldValue>>>
+    export type UpsertCustomFieldValueMutationBody = BodyType<CustomFieldValueInput>
+    export type UpsertCustomFieldValueMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set a custom field value
+ */
+export const useUpsertCustomFieldValue = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertCustomFieldValue>>, TError,{data: BodyType<CustomFieldValueInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertCustomFieldValue>>,
+        TError,
+        {data: BodyType<CustomFieldValueInput>},
+        TContext
+      > => {
+      return useMutation(getUpsertCustomFieldValueMutationOptions(options));
+    }
 

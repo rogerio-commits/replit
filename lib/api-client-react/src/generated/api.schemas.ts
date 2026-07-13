@@ -1178,6 +1178,146 @@ export interface AutomationRuleInput {
   isActive?: boolean;
 }
 
+export interface ObraDiaryEntry {
+  id: number;
+  projectId: number;
+  date: string;
+  weather?: string | null;
+  teamCount?: number | null;
+  activities: string;
+  observations?: string | null;
+  incidents?: string | null;
+  authorId?: number | null;
+  authorName?: string | null;
+  createdAt: string;
+}
+
+export interface ObraDiaryEntryInput {
+  date: string;
+  weather?: string;
+  /** @minimum 0 */
+  teamCount?: number;
+  /** @minLength 1 */
+  activities: string;
+  observations?: string;
+  incidents?: string;
+}
+
+export interface ProjectMaterial {
+  id: number;
+  projectId: number;
+  name: string;
+  unit: string;
+  quantity: number;
+  type: ProjectMaterialType;
+  unitPrice?: number | null;
+  date: string;
+  notes?: string | null;
+  authorId?: number | null;
+  authorName?: string | null;
+  createdAt: string;
+}
+
+export type ProjectMaterialInputType = typeof ProjectMaterialInputType[keyof typeof ProjectMaterialInputType];
+
+
+export const ProjectMaterialInputType = {
+  entrada: 'entrada',
+  saida: 'saida',
+  estoque: 'estoque',
+} as const;
+
+export interface ProjectMaterialInput {
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  unit: string;
+  /** @minimum 0.001 */
+  quantity: number;
+  type: ProjectMaterialInputType;
+  /** @minimum 0 */
+  unitPrice?: number;
+  date: string;
+  notes?: string;
+}
+
+export type CustomFieldDefinitionType = typeof CustomFieldDefinitionType[keyof typeof CustomFieldDefinitionType];
+
+
+export const CustomFieldDefinitionType = {
+  text: 'text',
+  number: 'number',
+  date: 'date',
+  select: 'select',
+} as const;
+
+export type CustomFieldDefinitionEntityType = typeof CustomFieldDefinitionEntityType[keyof typeof CustomFieldDefinitionEntityType];
+
+
+export const CustomFieldDefinitionEntityType = {
+  project: 'project',
+  task: 'task',
+} as const;
+
+export interface CustomFieldDefinition {
+  id: number;
+  name: string;
+  type: CustomFieldDefinitionType;
+  entityType: CustomFieldDefinitionEntityType;
+  options?: string[] | null;
+  createdAt: string;
+}
+
+export type CustomFieldDefinitionInputType = typeof CustomFieldDefinitionInputType[keyof typeof CustomFieldDefinitionInputType];
+
+
+export const CustomFieldDefinitionInputType = {
+  text: 'text',
+  number: 'number',
+  date: 'date',
+  select: 'select',
+} as const;
+
+export type CustomFieldDefinitionInputEntityType = typeof CustomFieldDefinitionInputEntityType[keyof typeof CustomFieldDefinitionInputEntityType];
+
+
+export const CustomFieldDefinitionInputEntityType = {
+  project: 'project',
+  task: 'task',
+} as const;
+
+export interface CustomFieldDefinitionInput {
+  /** @minLength 1 */
+  name: string;
+  type: CustomFieldDefinitionInputType;
+  entityType: CustomFieldDefinitionInputEntityType;
+  options?: string[];
+}
+
+export interface CustomFieldValue {
+  id: number;
+  fieldId: number;
+  entityType: string;
+  entityId: number;
+  value?: string | null;
+  updatedAt: string;
+}
+
+export type CustomFieldValueInputEntityType = typeof CustomFieldValueInputEntityType[keyof typeof CustomFieldValueInputEntityType];
+
+
+export const CustomFieldValueInputEntityType = {
+  project: 'project',
+  task: 'task',
+} as const;
+
+export interface CustomFieldValueInput {
+  fieldId: number;
+  entityType: CustomFieldValueInputEntityType;
+  entityId: number;
+  value?: string;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;
@@ -1294,5 +1434,30 @@ export type ListAttachmentsEntityType = typeof ListAttachmentsEntityType[keyof t
 export const ListAttachmentsEntityType = {
   task: 'task',
   project: 'project',
+} as const;
+
+export type ListCustomFieldsParams = {
+entityType?: ListCustomFieldsEntityType;
+};
+
+export type ListCustomFieldsEntityType = typeof ListCustomFieldsEntityType[keyof typeof ListCustomFieldsEntityType];
+
+
+export const ListCustomFieldsEntityType = {
+  project: 'project',
+  task: 'task',
+} as const;
+
+export type ListCustomFieldValuesParams = {
+entityType: ListCustomFieldValuesEntityType;
+entityId: number;
+};
+
+export type ListCustomFieldValuesEntityType = typeof ListCustomFieldValuesEntityType[keyof typeof ListCustomFieldValuesEntityType];
+
+
+export const ListCustomFieldValuesEntityType = {
+  project: 'project',
+  task: 'task',
 } as const;
 

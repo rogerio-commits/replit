@@ -33,6 +33,8 @@ import {
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { ProjectFiles } from "@/components/project-files";
+import { ProjectObraDiary } from "@/components/project-obra-diary";
+import { ProjectMaterials } from "@/components/project-materials";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1419,6 +1421,20 @@ export default function ProjectDetail() {
         </CardHeader>
         <CardContent className="p-4">
           <ProjectFiles projectId={projectId} mode="files" />
+        </CardContent>
+      </Card>
+
+      {/* Diário de Obra */}
+      <Card>
+        <CardContent className="p-4">
+          <ProjectObraDiary projectId={projectId} />
+        </CardContent>
+      </Card>
+
+      {/* Controle de Materiais */}
+      <Card>
+        <CardContent className="p-4">
+          <ProjectMaterials projectId={projectId} />
         </CardContent>
       </Card>
 

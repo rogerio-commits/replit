@@ -20,3 +20,7 @@ export * from "./task-dependencies";
 export * from "./templates";
 export * from "./time-entries";
 export * from "./automation-rules";
+export * from "./obra-diary";
+export * from "./project-materials";
+export * from "./custom-field-definitions";
+export * from "./custom-field-values";

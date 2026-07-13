@@ -23,6 +23,9 @@ import taskDependenciesRouter from "./task-dependencies";
 import templatesRouter from "./templates";
 import timeEntriesRouter from "./time-entries";
 import automationRulesRouter from "./automation-rules";
+import obraDiaryRouter from "./obra-diary";
+import projectMaterialsRouter from "./project-materials";
+import customFieldsRouter from "./custom-fields";
 
 const router: IRouter = Router();
 
@@ -52,5 +55,8 @@ router.use(taskDependenciesRouter);
 router.use(templatesRouter);
 router.use(timeEntriesRouter);
 router.use(automationRulesRouter);
+router.use(obraDiaryRouter);
+router.use(projectMaterialsRouter);
+router.use(customFieldsRouter);
 
 export default router;
