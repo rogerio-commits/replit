@@ -1105,6 +1105,79 @@ export interface ApplyTemplateInput {
   startDate: string;
 }
 
+export interface TimeEntry {
+  id: number;
+  taskId: number;
+  memberId: number;
+  memberName?: string | null;
+  hours: number;
+  description?: string | null;
+  date: string;
+  createdAt: string;
+}
+
+export interface TimeEntryInput {
+  /**
+     * @minimum 0.01
+     * @maximum 24
+     */
+  hours: number;
+  description?: string;
+  date: string;
+  memberId?: number;
+}
+
+export type AutomationRuleTrigger = typeof AutomationRuleTrigger[keyof typeof AutomationRuleTrigger];
+
+
+export const AutomationRuleTrigger = {
+  task_completed: 'task_completed',
+  task_status_changed: 'task_status_changed',
+  project_completed: 'project_completed',
+} as const;
+
+export type AutomationRuleActionType = typeof AutomationRuleActionType[keyof typeof AutomationRuleActionType];
+
+
+export const AutomationRuleActionType = {
+  notify_assignee: 'notify_assignee',
+  notify_all: 'notify_all',
+} as const;
+
+export interface AutomationRule {
+  id: number;
+  name: string;
+  trigger: AutomationRuleTrigger;
+  actionType: AutomationRuleActionType;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export type AutomationRuleInputTrigger = typeof AutomationRuleInputTrigger[keyof typeof AutomationRuleInputTrigger];
+
+
+export const AutomationRuleInputTrigger = {
+  task_completed: 'task_completed',
+  task_status_changed: 'task_status_changed',
+  project_completed: 'project_completed',
+} as const;
+
+export type AutomationRuleInputActionType = typeof AutomationRuleInputActionType[keyof typeof AutomationRuleInputActionType];
+
+
+export const AutomationRuleInputActionType = {
+  notify_assignee: 'notify_assignee',
+  notify_all: 'notify_all',
+} as const;
+
+export interface AutomationRuleInput {
+  /** @minLength 1 */
+  name: string;
+  trigger: AutomationRuleInputTrigger;
+  actionType: AutomationRuleInputActionType;
+  isActive?: boolean;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

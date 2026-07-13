@@ -21,6 +21,8 @@ import searchRouter from "./search";
 import tagsRouter from "./tags";
 import taskDependenciesRouter from "./task-dependencies";
 import templatesRouter from "./templates";
+import timeEntriesRouter from "./time-entries";
+import automationRulesRouter from "./automation-rules";
 
 const router: IRouter = Router();
 
@@ -48,5 +50,7 @@ router.use(searchRouter);
 router.use(tagsRouter);
 router.use(taskDependenciesRouter);
 router.use(templatesRouter);
+router.use(timeEntriesRouter);
+router.use(automationRulesRouter);
 
 export default router;

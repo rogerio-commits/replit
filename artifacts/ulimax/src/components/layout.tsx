@@ -22,6 +22,7 @@ import {
   Clock,
   Sparkles,
   Layers,
+  Zap,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
 import { useIsGestor } from "@/hooks/useAppUser";
@@ -85,6 +86,7 @@ export function Layout({ children }: LayoutProps) {
       label: "Sistema",
       items: [
         { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
+        { href: "/automacao", label: "Automações", icon: Zap },
         { href: "/auditoria", label: "Auditoria", icon: History },
         { href: "/produtividade", label: "Produtividade", icon: TrendingUp },
         { href: "/ajuda", label: "Ajuda", icon: BookOpen },

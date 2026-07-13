@@ -42,6 +42,10 @@ tags:
     description: Task labels and tags
   - name: task-dependencies
     description: Task blocking dependencies
+  - name: time-entries
+    description: Task time tracking entries
+  - name: automation
+    description: Automation rules
 paths:
   /healthz:
     get:
@@ -862,6 +866,135 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SearchResult"
+
+  /tasks/{id}/time-entries:
+    get:
+      operationId: listTimeEntries
+      tags: [time-entries]
+      summary: List time entries for a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of time entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimeEntry"
+    post:
+      operationId: createTimeEntry
+      tags: [time-entries]
+      summary: Add a time entry for a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeEntryInput"
+      responses:
+        "201":
+          description: Created time entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntry"
+
+  /time-entries/{id}:
+    delete:
+      operationId: deleteTimeEntry
+      tags: [time-entries]
+      summary: Delete a time entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /automation-rules:
+    get:
+      operationId: listAutomationRules
+      tags: [automation]
+      summary: List automation rules
+      responses:
+        "200":
+          description: List of automation rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AutomationRule"
+    post:
+      operationId: createAutomationRule
+      tags: [automation]
+      summary: Create an automation rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationRuleInput"
+      responses:
+        "201":
+          description: Created automation rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationRule"
+
+  /automation-rules/{id}:
+    patch:
+      operationId: updateAutomationRule
+      tags: [automation]
+      summary: Update an automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutomationRuleInput"
+      responses:
+        "200":
+          description: Updated automation rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutomationRule"
+    delete:
+      operationId: deleteAutomationRule
+      tags: [automation]
+      summary: Delete an automation rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /members:
     get:
@@ -2968,3 +3101,80 @@ components:
           type: string
         startDate:
           type: string
+
+    TimeEntry:
+      type: object
+      required: [id, taskId, memberId, hours, date, createdAt]
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+        memberId:
+          type: integer
+        memberName:
+          type: string
+          nullable: true
+        hours:
+          type: number
+        description:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+
+    TimeEntryInput:
+      type: object
+      required: [hours, date]
+      properties:
+        hours:
+          type: number
+          minimum: 0.01
+          maximum: 24
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        memberId:
+          type: integer
+
+    AutomationRule:
+      type: object
+      required: [id, name, trigger, actionType, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        trigger:
+          type: string
+          enum: [task_completed, task_status_changed, project_completed]
+        actionType:
+          type: string
+          enum: [notify_assignee, notify_all]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    AutomationRuleInput:
+      type: object
+      required: [name, trigger, actionType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        trigger:
+          type: string
+          enum: [task_completed, task_status_changed, project_completed]
+        actionType:
+          type: string
+          enum: [notify_assignee, notify_all]
+        isActive:
+          type: boolean

@@ -32,6 +32,8 @@ import type {
   Attachment,
   AttachmentInput,
   AuditLog,
+  AutomationRule,
+  AutomationRuleInput,
   BulkTaskUpdate,
   BulkUpdateTasks200,
   ChecklistItem,
@@ -86,6 +88,8 @@ import type {
   TaskDependencyInput,
   TaskInput,
   TaskUpdate,
+  TimeEntry,
+  TimeEntryInput,
   UploadUrlRequest,
   UploadUrlResponse,
   UserRoleUpdate
@@ -3004,6 +3008,515 @@ export function useSearch<TData = Awaited<ReturnType<typeof search>>, TError = E
 
 
 
+
+export const getListTimeEntriesUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/time-entries`
+}
+
+/**
+ * @summary List time entries for a task
+ */
+export const listTimeEntries = async (id: number, options?: RequestInit): Promise<TimeEntry[]> => {
+
+  return customFetch<TimeEntry[]>(getListTimeEntriesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTimeEntriesQueryKey = (id: number,) => {
+    return [
+    `/api/tasks/${id}/time-entries`
+    ] as const;
+    }
+
+
+export const getListTimeEntriesQueryOptions = <TData = Awaited<ReturnType<typeof listTimeEntries>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTimeEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTimeEntriesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTimeEntries>>> = ({ signal }) => listTimeEntries(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTimeEntries>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTimeEntriesQueryResult = NonNullable<Awaited<ReturnType<typeof listTimeEntries>>>
+export type ListTimeEntriesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List time entries for a task
+ */
+
+export function useListTimeEntries<TData = Awaited<ReturnType<typeof listTimeEntries>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTimeEntries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTimeEntriesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateTimeEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/tasks/${id}/time-entries`
+}
+
+/**
+ * @summary Add a time entry for a task
+ */
+export const createTimeEntry = async (id: number,
+    timeEntryInput: TimeEntryInput, options?: RequestInit): Promise<TimeEntry> => {
+
+  return customFetch<TimeEntry>(getCreateTimeEntryUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      timeEntryInput,)
+  }
+);}
+
+
+
+
+export const getCreateTimeEntryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeEntry>>, TError,{id: number;data: BodyType<TimeEntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTimeEntry>>, TError,{id: number;data: BodyType<TimeEntryInput>}, TContext> => {
+
+const mutationKey = ['createTimeEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTimeEntry>>, {id: number;data: BodyType<TimeEntryInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createTimeEntry(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTimeEntryMutationResult = NonNullable<Awaited<ReturnType<typeof createTimeEntry>>>
+    export type CreateTimeEntryMutationBody = BodyType<TimeEntryInput>
+    export type CreateTimeEntryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a time entry for a task
+ */
+export const useCreateTimeEntry = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeEntry>>, TError,{id: number;data: BodyType<TimeEntryInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTimeEntry>>,
+        TError,
+        {id: number;data: BodyType<TimeEntryInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTimeEntryMutationOptions(options));
+    }
+
+export const getDeleteTimeEntryUrl = (id: number,) => {
+
+
+
+
+  return `/api/time-entries/${id}`
+}
+
+/**
+ * @summary Delete a time entry
+ */
+export const deleteTimeEntry = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteTimeEntryUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteTimeEntryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTimeEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTimeEntry>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteTimeEntry'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTimeEntry>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTimeEntry(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTimeEntryMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTimeEntry>>>
+
+    export type DeleteTimeEntryMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a time entry
+ */
+export const useDeleteTimeEntry = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTimeEntry>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTimeEntry>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTimeEntryMutationOptions(options));
+    }
+
+export const getListAutomationRulesUrl = () => {
+
+
+
+
+  return `/api/automation-rules`
+}
+
+/**
+ * @summary List automation rules
+ */
+export const listAutomationRules = async ( options?: RequestInit): Promise<AutomationRule[]> => {
+
+  return customFetch<AutomationRule[]>(getListAutomationRulesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAutomationRulesQueryKey = () => {
+    return [
+    `/api/automation-rules`
+    ] as const;
+    }
+
+
+export const getListAutomationRulesQueryOptions = <TData = Awaited<ReturnType<typeof listAutomationRules>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAutomationRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAutomationRulesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAutomationRules>>> = ({ signal }) => listAutomationRules({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAutomationRules>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAutomationRulesQueryResult = NonNullable<Awaited<ReturnType<typeof listAutomationRules>>>
+export type ListAutomationRulesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List automation rules
+ */
+
+export function useListAutomationRules<TData = Awaited<ReturnType<typeof listAutomationRules>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAutomationRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAutomationRulesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateAutomationRuleUrl = () => {
+
+
+
+
+  return `/api/automation-rules`
+}
+
+/**
+ * @summary Create an automation rule
+ */
+export const createAutomationRule = async (automationRuleInput: AutomationRuleInput, options?: RequestInit): Promise<AutomationRule> => {
+
+  return customFetch<AutomationRule>(getCreateAutomationRuleUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      automationRuleInput,)
+  }
+);}
+
+
+
+
+export const getCreateAutomationRuleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAutomationRule>>, TError,{data: BodyType<AutomationRuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAutomationRule>>, TError,{data: BodyType<AutomationRuleInput>}, TContext> => {
+
+const mutationKey = ['createAutomationRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAutomationRule>>, {data: BodyType<AutomationRuleInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAutomationRule(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAutomationRuleMutationResult = NonNullable<Awaited<ReturnType<typeof createAutomationRule>>>
+    export type CreateAutomationRuleMutationBody = BodyType<AutomationRuleInput>
+    export type CreateAutomationRuleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an automation rule
+ */
+export const useCreateAutomationRule = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAutomationRule>>, TError,{data: BodyType<AutomationRuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAutomationRule>>,
+        TError,
+        {data: BodyType<AutomationRuleInput>},
+        TContext
+      > => {
+      return useMutation(getCreateAutomationRuleMutationOptions(options));
+    }
+
+export const getUpdateAutomationRuleUrl = (id: number,) => {
+
+
+
+
+  return `/api/automation-rules/${id}`
+}
+
+/**
+ * @summary Update an automation rule
+ */
+export const updateAutomationRule = async (id: number,
+    automationRuleInput: AutomationRuleInput, options?: RequestInit): Promise<AutomationRule> => {
+
+  return customFetch<AutomationRule>(getUpdateAutomationRuleUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      automationRuleInput,)
+  }
+);}
+
+
+
+
+export const getUpdateAutomationRuleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAutomationRule>>, TError,{id: number;data: BodyType<AutomationRuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAutomationRule>>, TError,{id: number;data: BodyType<AutomationRuleInput>}, TContext> => {
+
+const mutationKey = ['updateAutomationRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAutomationRule>>, {id: number;data: BodyType<AutomationRuleInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAutomationRule(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAutomationRuleMutationResult = NonNullable<Awaited<ReturnType<typeof updateAutomationRule>>>
+    export type UpdateAutomationRuleMutationBody = BodyType<AutomationRuleInput>
+    export type UpdateAutomationRuleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update an automation rule
+ */
+export const useUpdateAutomationRule = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAutomationRule>>, TError,{id: number;data: BodyType<AutomationRuleInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAutomationRule>>,
+        TError,
+        {id: number;data: BodyType<AutomationRuleInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateAutomationRuleMutationOptions(options));
+    }
+
+export const getDeleteAutomationRuleUrl = (id: number,) => {
+
+
+
+
+  return `/api/automation-rules/${id}`
+}
+
+/**
+ * @summary Delete an automation rule
+ */
+export const deleteAutomationRule = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteAutomationRuleUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteAutomationRuleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAutomationRule>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAutomationRule>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteAutomationRule'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAutomationRule>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAutomationRule(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAutomationRuleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAutomationRule>>>
+
+    export type DeleteAutomationRuleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an automation rule
+ */
+export const useDeleteAutomationRule = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAutomationRule>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAutomationRule>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteAutomationRuleMutationOptions(options));
+    }
 
 export const getListMembersUrl = () => {
 

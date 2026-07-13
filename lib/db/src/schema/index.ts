@@ -18,3 +18,5 @@ export * from "./audit-logs";
 export * from "./tags";
 export * from "./task-dependencies";
 export * from "./templates";
+export * from "./time-entries";
+export * from "./automation-rules";

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TaskComments } from "@/components/task-comments";
+import { TaskTimeEntries } from "@/components/task-time-entries";
 import { TaskAttachments } from "@/components/task-attachments";
 import { TaskSubtasks } from "@/components/task-subtasks";
 import { TaskTags } from "@/components/task-tags";
@@ -129,6 +130,10 @@ export function TaskDetailPanel({ task, open, onClose }: TaskDetailPanelProps) {
             <Separator />
 
             <TaskAttachments entityType="task" entityId={task.id} />
+
+            <Separator />
+
+            <TaskTimeEntries taskId={task.id} />
 
             <Separator />
 

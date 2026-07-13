@@ -815,6 +815,117 @@ export const SearchResponse = zod.array(SearchResponseItem)
 
 
 /**
+ * @summary List time entries for a task
+ */
+export const ListTimeEntriesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListTimeEntriesResponseItem = zod.object({
+  "id": zod.number(),
+  "taskId": zod.number(),
+  "memberId": zod.number(),
+  "memberName": zod.string().nullish(),
+  "hours": zod.number(),
+  "description": zod.string().nullish(),
+  "date": zod.coerce.date(),
+  "createdAt": zod.coerce.date()
+})
+export const ListTimeEntriesResponse = zod.array(ListTimeEntriesResponseItem)
+
+
+/**
+ * @summary Add a time entry for a task
+ */
+export const CreateTimeEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const createTimeEntryBodyHoursMin = 0.01;
+export const createTimeEntryBodyHoursMax = 24;
+
+
+
+export const CreateTimeEntryBody = zod.object({
+  "hours": zod.number().min(createTimeEntryBodyHoursMin).max(createTimeEntryBodyHoursMax),
+  "description": zod.string().optional(),
+  "date": zod.coerce.date(),
+  "memberId": zod.number().optional()
+})
+
+
+/**
+ * @summary Delete a time entry
+ */
+export const DeleteTimeEntryParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List automation rules
+ */
+export const ListAutomationRulesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAutomationRulesResponse = zod.array(ListAutomationRulesResponseItem)
+
+
+/**
+ * @summary Create an automation rule
+ */
+
+
+
+export const CreateAutomationRuleBody = zod.object({
+  "name": zod.string().min(1),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "isActive": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update an automation rule
+ */
+export const UpdateAutomationRuleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const UpdateAutomationRuleBody = zod.object({
+  "name": zod.string().min(1),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateAutomationRuleResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an automation rule
+ */
+export const DeleteAutomationRuleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List team members
  */
 export const ListMembersResponseItem = zod.object({
