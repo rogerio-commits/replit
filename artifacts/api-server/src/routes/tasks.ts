@@ -4,6 +4,7 @@ import { requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { eq, and, isNull, sql, inArray } from "drizzle-orm";
 import { sendTaskAssignedEmail } from "../lib/email";
 import { logAudit, diffObjects } from "../lib/audit";
+import { runAutomations } from "../lib/automation-engine";
 import {
   ListTasksQueryParams,
   CreateTaskBody,
@@ -352,6 +353,35 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   if (task.assignedTo && task.assignedTo !== previousAssignee) {
     const projNamePatch = row?.projectName ?? "";
     await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projNamePatch, actorNamePatch, req.log);
+    void runAutomations("task_assigned", {
+      taskId: task.id,
+      taskTitle: task.title,
+      taskAssignedTo: task.assignedTo,
+      projectId: task.projectId,
+      projectName: projNamePatch,
+    }, req.log);
+  }
+
+  if (body.data.status !== undefined) {
+    const projNameForAuto = row?.projectName ?? "";
+    if (body.data.status === "done") {
+      void runAutomations("task_completed", {
+        taskId: task.id,
+        taskTitle: task.title,
+        taskAssignedTo: task.assignedTo ?? null,
+        projectId: task.projectId,
+        projectName: projNameForAuto,
+      }, req.log);
+    } else {
+      void runAutomations("task_status_changed", {
+        taskId: task.id,
+        taskTitle: task.title,
+        taskAssignedTo: task.assignedTo ?? null,
+        projectId: task.projectId,
+        projectName: projNameForAuto,
+        newStatus: body.data.status,
+      }, req.log);
+    }
   }
 
   const patchAction = body.data.status !== undefined && body.data.status !== (await db.select({ status: tasksTable.status }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1)).at(0)?.status

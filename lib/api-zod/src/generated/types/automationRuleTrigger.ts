@@ -13,4 +13,6 @@ export const AutomationRuleTrigger = {
   task_completed: 'task_completed',
   task_status_changed: 'task_status_changed',
   project_completed: 'project_completed',
+  task_assigned: 'task_assigned',
+  project_status_changed: 'project_status_changed',
 } as const;

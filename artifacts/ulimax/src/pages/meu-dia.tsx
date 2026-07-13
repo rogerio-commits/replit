@@ -1,19 +1,25 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
-import { format, parseISO, isToday, isTomorrow, isPast } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   useListProjects,
   useListTasks,
   useListMembers,
+  useUpdateTask,
+  useListProjectMilestones,
+  getListTasksQueryKey,
 } from "@workspace/api-client-react";
 import type {
   ListProjectsQueryResult,
   ListTasksQueryResult,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAppUser } from "@/hooks/useAppUser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { TaskDrawer } from "@/components/task-drawer";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sun,
   Briefcase,
@@ -27,6 +33,7 @@ import {
   ArrowRight,
   Timer,
   Layers,
+  Flag,
 } from "lucide-react";
 
 type Project = ListProjectsQueryResult[number];
@@ -129,11 +136,69 @@ function greetingByTime(): string {
   return "Boa noite";
 }
 
+function ProjectMilestones({ projectId, projectName }: { projectId: number; projectName: string }) {
+  const { data: milestones } = useListProjectMilestones(projectId);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  const upcoming = useMemo(() => {
+    if (!milestones) return [];
+    return milestones
+      .filter(m => !m.completedAt)
+      .map(m => {
+        const d = parseISO(m.dueDate);
+        const diff = Math.floor((d.getTime() - today.getTime()) / 86_400_000);
+        return { ...m, diff };
+      })
+      .filter(m => m.diff <= 14)
+      .sort((a, b) => a.diff - b.diff);
+  }, [milestones]);
+
+  if (!upcoming.length) return null;
+
+  return (
+    <>
+      {upcoming.map(m => {
+        const urgency = m.diff < 0 ? "overdue" : m.diff === 0 ? "today" : m.diff <= 3 ? "urgent" : "soon";
+        return (
+          <div key={m.id} className={cn(
+            "flex items-center gap-2.5 px-3 py-2 rounded-lg border",
+            urgency === "overdue" ? "bg-red-50 border-red-100" :
+            urgency === "today"   ? "bg-red-50 border-red-100" :
+            urgency === "urgent"  ? "bg-orange-50 border-orange-100" :
+            "bg-amber-50 border-amber-100",
+          )}>
+            <Flag className={cn("h-3 w-3 shrink-0",
+              urgency === "overdue" || urgency === "today" ? "text-red-500" :
+              urgency === "urgent" ? "text-orange-500" : "text-amber-500")} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">{m.title}</p>
+              <p className="text-[10px] text-muted-foreground">{projectName}</p>
+            </div>
+            <span className={cn("text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded-full",
+              urgency === "overdue" ? "bg-red-100 text-red-700" :
+              urgency === "today"   ? "bg-red-100 text-red-700" :
+              urgency === "urgent"  ? "bg-orange-100 text-orange-700" :
+              "bg-amber-100 text-amber-700"
+            )}>
+              {m.diff < 0 ? `${Math.abs(m.diff)}d atraso` : m.diff === 0 ? "hoje" : `${m.diff}d`}
+            </span>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 export default function MeuDia() {
   const { data: me, isLoading: isLoadingMe } = useAppUser();
   const { data: projects, isLoading: isLoadingProjects } = useListProjects({});
   const { data: allTasks, isLoading: isLoadingTasks } = useListTasks();
   const { data: members, isLoading: isLoadingMembers } = useListMembers();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const updateTask = useUpdateTask();
 
   const loading = isLoadingMe || isLoadingProjects || isLoadingTasks || isLoadingMembers;
 
@@ -267,46 +332,67 @@ export default function MeuDia() {
                 {myTasks.map((t) => {
                   const due = taskDueInfo(t);
                   return (
-                    <Link key={t.id} href="/tasks">
-                      <div className={cn(
+                    <div
+                      key={t.id}
+                      className={cn(
                         "flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
                         due.urgent
                           ? "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30"
                           : t.status === "in_progress"
                             ? "bg-blue-50/50 border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/30"
                             : "bg-muted/30 border-border",
-                      )}>
-                        <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground leading-snug">{t.title}</p>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {t.projectName && (
-                              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                <Layers className="h-2.5 w-2.5" />{t.projectName}
-                              </span>
-                            )}
-                            <span className={cn(
-                              "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                              TASK_STATUS_LABEL[t.status] ? "bg-muted text-muted-foreground" : "",
-                            )}>
-                              {TASK_STATUS_LABEL[t.status] ?? t.status}
+                      )}
+                      onClick={() => { setSelectedTask(t); setDrawerOpen(true); }}
+                    >
+                      <button
+                        className="shrink-0 mt-0.5 group"
+                        title="Marcar como concluída"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateTask.mutate(
+                            { id: t.id, data: { status: "done" } },
+                            {
+                              onSuccess: () => {
+                                void queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+                                toast({ title: "Tarefa concluída!" });
+                              },
+                              onError: () => toast({ title: "Erro ao concluir tarefa", variant: "destructive" }),
+                            }
+                          );
+                        }}
+                      >
+                        <Circle className="h-4 w-4 text-muted-foreground/40 group-hover:hidden" />
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500 hidden group-hover:block" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground leading-snug">{t.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {t.projectName && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                              <Layers className="h-2.5 w-2.5" />{t.projectName}
                             </span>
-                            {t.priority && (
-                              <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", PRIORITY_PILL[t.priority])}>
-                                {PRIORITY_LABEL[t.priority] ?? t.priority}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="shrink-0 flex flex-col items-end gap-1">
-                          {t.dueDate && (
-                            <span className={cn("text-[10px] font-semibold flex items-center gap-0.5", due.color)}>
-                              <Timer className="h-2.5 w-2.5" />{due.label}
+                          )}
+                          <span className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                            TASK_STATUS_LABEL[t.status] ? "bg-muted text-muted-foreground" : "",
+                          )}>
+                            {TASK_STATUS_LABEL[t.status] ?? t.status}
+                          </span>
+                          {t.priority && (
+                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", PRIORITY_PILL[t.priority])}>
+                              {PRIORITY_LABEL[t.priority] ?? t.priority}
                             </span>
                           )}
                         </div>
                       </div>
-                    </Link>
+                      <div className="shrink-0 flex flex-col items-end gap-1">
+                        {t.dueDate && (
+                          <span className={cn("text-[10px] font-semibold flex items-center gap-0.5", due.color)}>
+                            <Timer className="h-2.5 w-2.5" />{due.label}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -357,6 +443,21 @@ export default function MeuDia() {
               </div>
             )}
           </div>
+
+          {/* Marcos */}
+          {myProjects.length > 0 && (
+            <div className="bg-card rounded-xl border border-border p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Flag className="h-4 w-4 text-violet-500" />
+                <h2 className="text-sm font-semibold text-foreground">Marcos — próximos 14 dias</h2>
+              </div>
+              <div className="space-y-1.5">
+                {myProjects.map(p => (
+                  <ProjectMilestones key={p.id} projectId={p.id} projectName={p.name} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Deadlines */}
           <div className="bg-card rounded-xl border border-border p-4">
@@ -423,6 +524,15 @@ export default function MeuDia() {
           </div>
         </div>
       </div>
+
+      <TaskDrawer
+        task={selectedTask as Parameters<typeof TaskDrawer>[0]["task"]}
+        open={drawerOpen}
+        onClose={() => {
+          setDrawerOpen(false);
+          void queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        }}
+      />
     </div>
   );
 }

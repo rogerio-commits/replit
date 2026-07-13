@@ -868,9 +868,11 @@ export const DeleteTimeEntryParams = zod.object({
 export const ListAutomationRulesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
-  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed', 'task_assigned', 'project_status_changed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all', 'notify_gestor', 'advance_task_status']),
   "isActive": zod.boolean(),
+  "executionCount": zod.number(),
+  "lastFiredAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 export const ListAutomationRulesResponse = zod.array(ListAutomationRulesResponseItem)
@@ -884,8 +886,8 @@ export const ListAutomationRulesResponse = zod.array(ListAutomationRulesResponse
 
 export const CreateAutomationRuleBody = zod.object({
   "name": zod.string().min(1),
-  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
-  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed', 'task_assigned', 'project_status_changed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all', 'notify_gestor', 'advance_task_status']),
   "isActive": zod.boolean().optional()
 })
 
@@ -902,17 +904,19 @@ export const UpdateAutomationRuleParams = zod.object({
 
 export const UpdateAutomationRuleBody = zod.object({
   "name": zod.string().min(1),
-  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
-  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed', 'task_assigned', 'project_status_changed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all', 'notify_gestor', 'advance_task_status']),
   "isActive": zod.boolean().optional()
 })
 
 export const UpdateAutomationRuleResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed']),
-  "actionType": zod.enum(['notify_assignee', 'notify_all']),
+  "trigger": zod.enum(['task_completed', 'task_status_changed', 'project_completed', 'task_assigned', 'project_status_changed']),
+  "actionType": zod.enum(['notify_assignee', 'notify_all', 'notify_gestor', 'advance_task_status']),
   "isActive": zod.boolean(),
+  "executionCount": zod.number(),
+  "lastFiredAt": zod.coerce.date().nullish(),
   "createdAt": zod.coerce.date()
 })
 

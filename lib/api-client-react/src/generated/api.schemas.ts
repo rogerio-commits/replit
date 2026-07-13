@@ -1134,6 +1134,8 @@ export const AutomationRuleTrigger = {
   task_completed: 'task_completed',
   task_status_changed: 'task_status_changed',
   project_completed: 'project_completed',
+  task_assigned: 'task_assigned',
+  project_status_changed: 'project_status_changed',
 } as const;
 
 export type AutomationRuleActionType = typeof AutomationRuleActionType[keyof typeof AutomationRuleActionType];
@@ -1142,6 +1144,8 @@ export type AutomationRuleActionType = typeof AutomationRuleActionType[keyof typ
 export const AutomationRuleActionType = {
   notify_assignee: 'notify_assignee',
   notify_all: 'notify_all',
+  notify_gestor: 'notify_gestor',
+  advance_task_status: 'advance_task_status',
 } as const;
 
 export interface AutomationRule {
@@ -1150,6 +1154,8 @@ export interface AutomationRule {
   trigger: AutomationRuleTrigger;
   actionType: AutomationRuleActionType;
   isActive: boolean;
+  executionCount: number;
+  lastFiredAt?: string | null;
   createdAt: string;
 }
 
@@ -1160,6 +1166,8 @@ export const AutomationRuleInputTrigger = {
   task_completed: 'task_completed',
   task_status_changed: 'task_status_changed',
   project_completed: 'project_completed',
+  task_assigned: 'task_assigned',
+  project_status_changed: 'project_status_changed',
 } as const;
 
 export type AutomationRuleInputActionType = typeof AutomationRuleInputActionType[keyof typeof AutomationRuleInputActionType];
@@ -1168,6 +1176,8 @@ export type AutomationRuleInputActionType = typeof AutomationRuleInputActionType
 export const AutomationRuleInputActionType = {
   notify_assignee: 'notify_assignee',
   notify_all: 'notify_all',
+  notify_gestor: 'notify_gestor',
+  advance_task_status: 'advance_task_status',
 } as const;
 
 export interface AutomationRuleInput {

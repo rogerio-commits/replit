@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { formatDistanceToNow, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   useListAutomationRules,
   useCreateAutomationRule,
@@ -41,7 +39,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, Zap, ArrowRight, Loader2, Info } from "lucide-react";
+import { Plus, Trash2, Zap, ArrowRight, Loader2, Info, PlayCircle } from "lucide-react";
+import { formatDistanceToNow as fdn, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -49,22 +49,30 @@ const TRIGGER_LABELS: Record<string, string> = {
   task_completed: "Tarefa concluída",
   task_status_changed: "Status da tarefa alterado",
   project_completed: "Projeto concluído",
+  task_assigned: "Tarefa atribuída a membro",
+  project_status_changed: "Status do projeto alterado",
 };
 
 const ACTION_LABELS: Record<string, string> = {
   notify_assignee: "Notificar responsável",
-  notify_all: "Notificar toda a equipe",
+  notify_all: "Notificar toda a equipe do projeto",
+  notify_gestor: "Notificar gestores",
+  advance_task_status: "Avançar status da tarefa",
 };
 
 const TRIGGER_COLORS: Record<string, string> = {
   task_completed: "bg-emerald-100 text-emerald-700 border-0",
   task_status_changed: "bg-blue-100 text-blue-700 border-0",
   project_completed: "bg-amber-100 text-amber-700 border-0",
+  task_assigned: "bg-violet-100 text-violet-700 border-0",
+  project_status_changed: "bg-orange-100 text-orange-700 border-0",
 };
 
 const ACTION_COLORS: Record<string, string> = {
   notify_assignee: "bg-violet-100 text-violet-700 border-0",
   notify_all: "bg-rose-100 text-rose-700 border-0",
+  notify_gestor: "bg-amber-100 text-amber-700 border-0",
+  advance_task_status: "bg-sky-100 text-sky-700 border-0",
 };
 
 interface RuleFormData {
@@ -250,9 +258,19 @@ export default function Automacao() {
 
                   {/* Meta + actions */}
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[10px] text-muted-foreground hidden sm:block">
-                      {formatDistanceToNow(parseISO(rule.createdAt), { addSuffix: true, locale: ptBR })}
-                    </span>
+                    <div className="hidden sm:flex flex-col items-end gap-0.5">
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <PlayCircle className="h-3 w-3" />
+                        {rule.executionCount} execuç{rule.executionCount === 1 ? "ão" : "ões"}
+                      </span>
+                      {rule.lastFiredAt ? (
+                        <span className="text-[10px] text-muted-foreground">
+                          última: {fdn(parseISO(rule.lastFiredAt), { addSuffix: true, locale: ptBR })}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground/50">nunca executada</span>
+                      )}
+                    </div>
                     <button
                       onClick={() => setDeleteId(rule.id)}
                       className="text-muted-foreground hover:text-destructive transition-colors"

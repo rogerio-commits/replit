@@ -12,4 +12,6 @@ export type AutomationRuleInputActionType = typeof AutomationRuleInputActionType
 export const AutomationRuleInputActionType = {
   notify_assignee: 'notify_assignee',
   notify_all: 'notify_all',
+  notify_gestor: 'notify_gestor',
+  advance_task_status: 'advance_task_status',
 } as const;

@@ -14,5 +14,7 @@ export interface AutomationRule {
   trigger: AutomationRuleTrigger;
   actionType: AutomationRuleActionType;
   isActive: boolean;
+  executionCount: number;
+  lastFiredAt?: Date | null;
   createdAt: Date;
 }

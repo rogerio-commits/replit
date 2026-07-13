@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { logAudit, diffObjects } from "../lib/audit";
+import { runAutomations } from "../lib/automation-engine";
 import { and, eq, inArray, count } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
@@ -333,6 +334,11 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
       updateData.approvalBy = null;
     }
     notifyProjectMembers(params.data.id, project.name, body.data.status, req.appUser!.email, req.log);
+    void runAutomations("project_status_changed", {
+      projectId: params.data.id,
+      projectName: project.name,
+      newStatus: body.data.status,
+    }, req.log);
   }
 
   if (body.data.status === "em_instalacao" && existing.status !== "em_instalacao") {
