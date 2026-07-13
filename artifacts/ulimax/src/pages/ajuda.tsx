@@ -43,6 +43,11 @@ import {
   Type,
   Hash,
   Calendar,
+  Flag,
+  TrendingUp,
+  Scale,
+  SlidersHorizontal,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -968,7 +973,7 @@ const sections: Section[] = [
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Visão executiva de todos os projetos em um único painel — progresso, prazo e saúde de cada um.
+          Visão executiva de todos os projetos em um único painel — progresso, prazo, saúde, score de risco e carga da equipe.
         </p>
         <Subsection title="Como acessar">
           <p className="text-sm text-muted-foreground">
@@ -988,20 +993,52 @@ const sections: Section[] = [
             ]}
           />
         </Subsection>
-        <Subsection title="Informações exibidas">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Nome, status e prioridade do projeto</li>
-            <li>Barra de progresso (% de tarefas concluídas)</li>
-            <li>Dias restantes ou dias de atraso</li>
-            <li>Indicador de saúde (Saudável / Em Risco / Crítico)</li>
-          </ul>
-        </Subsection>
-        <Tip>Clique em qualquer linha da tabela para ir direto ao detalhe do projeto.</Tip>
-        <Subsection title="Rodapé de resumo">
-          <p className="text-sm text-muted-foreground">
-            O rodapé da tabela mostra progresso médio de todos os projetos, total de tarefas e total concluídas.
+        <Subsection title="Score de Risco (0–100)">
+          <p className="text-sm text-muted-foreground mb-2">
+            Coluna <Strong>Score Risco</Strong> — número calculado automaticamente para cada projeto:
+          </p>
+          <Table
+            headers={["Faixa", "Interpretação"]}
+            rows={[
+              ["70 – 100", "Projeto sob controle (verde)"],
+              ["40 – 69",  "Atenção — atraso ou progresso baixo (âmbar)"],
+              ["0 – 39",   "Situação crítica — prazo vencido e/ou sem progresso (vermelho)"],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground mt-2">
+            O cálculo considera % de tarefas concluídas e penalidades por dias de atraso.
           </p>
         </Subsection>
+        <Subsection title="Filtros e busca">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Busca por nome</Strong> — campo no topo filtra projetos em tempo real.</li>
+            <li><Strong>Filtro de Saúde</Strong> — clique nos cards de resumo (Saudáveis / Em Risco / Críticos) para filtrar por saúde.</li>
+            <li><Strong>Filtro de Prioridade</Strong> — pills "Alta / Normal / Baixa" ao lado da busca.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Ordenação de colunas">
+          <p className="text-sm text-muted-foreground">
+            Clique no cabeçalho de qualquer coluna (Projeto, Progresso, Prazo, Score Risco, Saúde) para ordenar de forma crescente ou decrescente. Um ícone de seta indica a ordenação ativa.
+          </p>
+        </Subsection>
+        <Subsection title="Exportar para CSV">
+          <p className="text-sm text-muted-foreground">
+            Clique em <Strong>Exportar CSV</Strong> no canto superior direito. O arquivo exportado inclui todos os projetos <em>filtrados no momento</em>, com nome, status, prioridade, progresso, prazo, score de risco e saúde.
+          </p>
+        </Subsection>
+        <Subsection title="Comparação lado a lado">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Marque o <Strong>checkbox</Strong> à esquerda de 2 ou 3 projetos que deseja comparar.</li>
+            <li>Um painel fixo aparece no rodapé da tela com as métricas dos projetos selecionados lado a lado.</li>
+            <li>Clique no nome do projeto no painel para ir ao detalhe, ou no <Strong>X</Strong> para fechar a comparação.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Carga da Equipe">
+          <p className="text-sm text-muted-foreground">
+            Abaixo da tabela de projetos, a seção <Strong>Carga da Equipe</Strong> lista todos os membros com tarefas atribuídas, mostrando: tarefas abertas, tarefas vencidas e uma barra de conclusão. Os membros com mais tarefas abertas aparecem primeiro.
+          </p>
+        </Subsection>
+        <Tip>Clique em qualquer linha da tabela para ir direto ao detalhe do projeto.</Tip>
       </div>
     ),
   },
@@ -1128,6 +1165,119 @@ const sections: Section[] = [
           </p>
         </Subsection>
         <Tip>Informe o <Strong>valor unitário</Strong> sempre que possível — isso permite acompanhar o custo total de materiais por projeto.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "marcos",
+    title: "Marcos do Projeto",
+    icon: Flag,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Marcos são datas-chave intermediárias dentro de um projeto — como "Aprovação do projeto", "Início da instalação" ou "Entrega ao cliente". Ficam visíveis no detalhe de cada projeto com indicador de prazo e status.
+        </p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">
+            Abra o <Strong>Detalhe de um Projeto</Strong> e localize o card <Strong>Marcos do Projeto</Strong> (aparece ao lado do Gráfico de Progresso Semanal).
+          </p>
+        </Subsection>
+        <Subsection title="Criar um marco">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>+ Adicionar marco</Strong> (visível apenas para Gestores).</li>
+            <li>Informe o <Strong>nome do marco</Strong> e selecione a <Strong>data prevista</Strong>.</li>
+            <li>Clique em <Strong>Salvar</Strong> ou pressione Enter.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Status dos marcos">
+          <Table
+            headers={["Ícone", "Significado"]}
+            rows={[
+              ["✅ Verde", "Marco concluído — clique para reabrir se necessário"],
+              ["🕐 Muted", "Marco futuro — dentro do prazo"],
+              ["🟡 Âmbar", "Marco vence em 7 dias ou menos"],
+              ["🔴 Vermelho", "Marco vencido — data já passou e não foi concluído"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Marcar como concluído">
+          <p className="text-sm text-muted-foreground">
+            Clique no ícone de círculo à esquerda do marco para alternar entre concluído e pendente. Qualquer membro pode fazer isso. Marcos concluídos ficam com texto riscado e fundo verde claro.
+          </p>
+        </Subsection>
+        <Tip>Use marcos para monitorar etapas críticas que não dependem de tarefas — como aprovações externas, datas de entrega contratuais ou vistorias.</Tip>
+        <Subsection title="Excluir um marco">
+          <p className="text-sm text-muted-foreground">
+            Passe o mouse sobre o marco e clique no ícone de lixeira que aparece à direita (visível apenas para Gestores). A exclusão é permanente.
+          </p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "burndown",
+    title: "Gráfico de Progresso Semanal",
+    icon: TrendingUp,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Gráfico de barras que mostra a evolução semanal de tarefas criadas versus tarefas concluídas nas últimas 12 semanas de cada projeto. Permite identificar ritmo de trabalho, gargalos e períodos de alta entrega.
+        </p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">
+            Abra o <Strong>Detalhe de um Projeto</Strong> e localize o card <Strong>Progresso Semanal</Strong> (aparece ao lado dos Marcos do Projeto).
+          </p>
+        </Subsection>
+        <Subsection title="Como ler o gráfico">
+          <Table
+            headers={["Barra", "Significado"]}
+            rows={[
+              ["Cinza (Criadas)", "Tarefas criadas naquela semana — crescimento do escopo"],
+              ["Azul/Primária (Concluídas)", "Tarefas concluídas naquela semana — velocidade de entrega"],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground mt-2">
+            Semanas em que as barras <Strong>azuis superam as cinzas</Strong> indicam alta produtividade. Semanas em que as cinzas dominam podem indicar escopo crescendo mais rápido que a equipe entrega.
+          </p>
+        </Subsection>
+        <Tip>Se o gráfico aparecer vazio, significa que nenhuma tarefa foi criada ou concluída nas últimas 12 semanas. Adicione tarefas ao projeto para começar a ver o histórico.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "dashboard-analytics",
+    title: "Dashboard — Análises e Alertas",
+    icon: AlertCircle,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          O Dashboard ganhou duas novas seções de análise na parte inferior: <Strong>Carga da Equipe</Strong> e <Strong>Projetos com Prazo Vencido</Strong>.
+        </p>
+        <Subsection title="Carga da Equipe">
+          <p className="text-sm text-muted-foreground mb-2">
+            Exibe todos os membros que possuem tarefas atribuídas, com:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Tarefas abertas</Strong> — quantidade de tarefas ainda não concluídas atribuídas ao membro.</li>
+            <li><Strong>Tarefas vencidas</Strong> — abertas com prazo já expirado (aparece em vermelho).</li>
+            <li><Strong>Barra de progresso</Strong> — percentual de tarefas concluídas em relação ao total atribuído.</li>
+          </ul>
+          <p className="text-sm text-muted-foreground mt-2">Os membros com mais tarefas abertas aparecem no topo da lista.</p>
+        </Subsection>
+        <Subsection title="Projetos com Prazo Vencido">
+          <p className="text-sm text-muted-foreground">
+            Lista todos os projetos que têm pelo menos uma data de fase no passado (fim estimado, entrega, produção etc.), agrupados por projeto. Cada item mostra quantos prazos estão vencidos e qual o maior atraso em dias. Clique no item para ir direto ao projeto.
+          </p>
+        </Subsection>
+        <Tip>Use o card <Strong>Alertas de Prazo</Strong> (existente) para ver todas as datas próximas, e o novo card <Strong>Projetos com Prazo Vencido</Strong> para focar exclusivamente no que já passou da data.</Tip>
+        <Subsection title="Complemento: Portfólio">
+          <p className="text-sm text-muted-foreground">
+            Para uma análise mais completa por membro, acesse a página <Strong>Portfólio</Strong> — a seção <Strong>Carga da Equipe</Strong> lá mostra o mesmo dado com barras de progresso individuais para cada membro.
+          </p>
+        </Subsection>
       </div>
     ),
   },
