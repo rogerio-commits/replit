@@ -35,6 +35,8 @@ import {
   Repeat2,
   Copy,
   PencilLine,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -208,6 +210,7 @@ const sections: Section[] = [
             <li><Strong>Descrição</Strong>: renderizada em Markdown formatado</li>
             <li><Strong>Subtarefas</Strong>: etapas menores com barra de progresso</li>
             <li><Strong>Comentários</Strong>: histórico de mensagens contextualizadas</li>
+            <li><Strong>Registro de Horas</Strong>: lançamento e histórico de horas trabalhadas</li>
             <li><Strong>Anexos</Strong>: upload de arquivos por arrastar e soltar</li>
           </ul>
         </Subsection>
@@ -704,6 +707,85 @@ const sections: Section[] = [
           <p className="text-sm text-muted-foreground">Edite a tarefa e mude o campo <Strong>Recorrência</Strong> para <em>Sem recorrência</em>. A partir de então, concluir a tarefa não gera novas ocorrências.</p>
         </Subsection>
         <Tip>Use tarefas recorrentes para atividades periódicas como vistorias semanais, relatórios mensais ou revisões anuais de contrato — o sistema cuida de criar as próximas ocorrências automaticamente.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "registro-horas",
+    title: "Registro de Horas",
+    icon: Clock,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Registre o tempo trabalhado em cada tarefa para acompanhar o esforço real da equipe e comparar com o planejado.</p>
+        <Subsection title="Como registrar horas">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Na página <Strong>Tarefas</Strong>, clique em <Strong>Detalhes</Strong> na tarefa desejada.</li>
+            <li>No painel lateral, role até a seção <Strong>Registro de Horas</Strong>.</li>
+            <li>Preencha a quantidade de horas, a data e uma descrição do que foi feito.</li>
+            <li>Clique em <Strong>Registrar</Strong> — o lançamento aparece no histórico imediatamente.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Histórico e total">
+          <Table
+            headers={["Campo", "Descrição"]}
+            rows={[
+              ["Data", "Data em que o trabalho foi realizado"],
+              ["Horas", "Tempo investido naquela sessão (ex: 2.5 = 2h30m)"],
+              ["Descrição", "Breve relato do que foi executado"],
+              ["Total", "Soma de todas as horas registradas na tarefa, exibida no rodapé"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Excluir um lançamento">
+          <p className="text-sm text-muted-foreground">Passe o mouse sobre um registro no histórico e clique no ícone de <Strong>lixeira</Strong> que aparece à direita. A exclusão é imediata e o total é recalculado automaticamente.</p>
+        </Subsection>
+        <Tip>Use decimais para frações de hora — por exemplo, <em>1.5</em> equivale a 1h30m. O total acumulado na tarefa é sempre exibido em destaque para facilitar o acompanhamento de esforço.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "automacao",
+    title: "Regras de Automação",
+    icon: Zap,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Crie regras que disparam ações automaticamente quando determinados eventos acontecem no sistema — sem precisar agir manualmente em cada caso.</p>
+        <Subsection title="Como criar uma regra">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Acesse <Strong>Automações</Strong> no menu lateral (seção Sistema).</li>
+            <li>Clique em <Strong>+ Nova Regra</Strong>.</li>
+            <li>Preencha o nome da regra, escolha o <Strong>Gatilho</Strong> e a <Strong>Ação</Strong>.</li>
+            <li>Clique em <Strong>Criar Regra</Strong> — a regra entra em vigor imediatamente.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Gatilhos disponíveis">
+          <Table
+            headers={["Gatilho", "Quando é acionado"]}
+            rows={[
+              ["Tarefa concluída", "Sempre que uma tarefa muda para o status Concluída"],
+              ["Status alterado", "Quando qualquer tarefa muda de status"],
+              ["Projeto concluído", "Quando todas as tarefas de um projeto são concluídas"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Ações disponíveis">
+          <Table
+            headers={["Ação", "O que acontece"]}
+            rows={[
+              ["Notificar responsável", "Envia notificação ao responsável pela tarefa ou projeto"],
+              ["Notificar toda a equipe", "Envia notificação para todos os membros com acesso ao projeto"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Ativar e desativar regras">
+          <p className="text-sm text-muted-foreground">Cada regra possui um <Strong>toggle</Strong> na lista. Desative uma regra temporariamente sem precisar excluí-la — o toggle fica cinza quando inativa e verde quando ativa. O painel de estatísticas no topo mostra quantas regras estão ativas.</p>
+        </Subsection>
+        <Subsection title="Excluir uma regra">
+          <p className="text-sm text-muted-foreground">Clique no ícone de <Strong>lixeira</Strong> ao lado da regra. A exclusão é permanente e a regra deixa de funcionar imediatamente.</p>
+        </Subsection>
+        <Tip>Comece com regras simples como "Notificar responsável ao concluir tarefa" para garantir que ninguém perca atualizações importantes. Somente Gestores podem criar e excluir regras de automação.</Tip>
       </div>
     ),
   },
