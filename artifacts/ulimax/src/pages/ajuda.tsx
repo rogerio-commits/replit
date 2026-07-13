@@ -37,6 +37,12 @@ import {
   PencilLine,
   Clock,
   Zap,
+  BarChart3,
+  Settings2,
+  Package,
+  Type,
+  Hash,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -951,6 +957,177 @@ const sections: Section[] = [
           ]}
         />
         <Tip>O status de acesso indica se o membro já aceitou o convite (✅ Ativo) ou ainda não (📧 Pendente).</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "portfolio",
+    title: "Portfólio de Projetos",
+    icon: BarChart3,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Visão executiva de todos os projetos em um único painel — progresso, prazo e saúde de cada um.
+        </p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">
+            Clique em <Strong>Portfólio</Strong> no menu lateral, na seção <Strong>Análises</Strong>.
+          </p>
+        </Subsection>
+        <Subsection title="Indicador de Saúde">
+          <p className="text-sm text-muted-foreground mb-2">
+            Cada projeto recebe automaticamente um indicador baseado no progresso de tarefas e prazo:
+          </p>
+          <Table
+            headers={["Status", "Critério"]}
+            rows={[
+              ["✅ Saudável", "Projeto concluído ou com bom progresso dentro do prazo"],
+              ["⚠️ Em Risco", "Prazo em 7 dias ou menos e progresso abaixo de 80%"],
+              ["🔴 Crítico", "Prazo vencido (data de término no passado)"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Informações exibidas">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Nome, status e prioridade do projeto</li>
+            <li>Barra de progresso (% de tarefas concluídas)</li>
+            <li>Dias restantes ou dias de atraso</li>
+            <li>Indicador de saúde (Saudável / Em Risco / Crítico)</li>
+          </ul>
+        </Subsection>
+        <Tip>Clique em qualquer linha da tabela para ir direto ao detalhe do projeto.</Tip>
+        <Subsection title="Rodapé de resumo">
+          <p className="text-sm text-muted-foreground">
+            O rodapé da tabela mostra progresso médio de todos os projetos, total de tarefas e total concluídas.
+          </p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "campos-personalizados",
+    title: "Campos Personalizados",
+    icon: Settings2,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Adicione campos extras a projetos e tarefas para registrar informações específicas do seu negócio — como número de contrato, metragem, cidade ou qualquer dado relevante.
+        </p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">
+            Clique em <Strong>Campos Personalizados</Strong> no menu lateral, na seção <Strong>Análises</Strong>.
+          </p>
+        </Subsection>
+        <Subsection title="Tipos de campo disponíveis">
+          <Table
+            headers={["Tipo", "Uso"]}
+            rows={[
+              ["Texto", "Qualquer informação livre: endereço, observação, código..."],
+              ["Número", "Valores numéricos: metragem, quantidade, valor estimado..."],
+              ["Data", "Datas específicas: entrega prevista, início de garantia..."],
+              ["Seleção", "Lista de opções predefinidas: aprovado/reprovado, região..."],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Criar um campo">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>+ Novo Campo</Strong>.</li>
+            <li>Informe o nome, escolha se aplica a Projeto ou Tarefa e selecione o tipo.</li>
+            <li>Para campos de <Strong>Seleção</Strong>, informe as opções separadas por vírgula.</li>
+            <li>Clique em <Strong>Criar Campo</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Tip>Use o filtro no topo para ver apenas campos de Projetos ou apenas campos de Tarefas.</Tip>
+        <Subsection title="Excluir um campo">
+          <p className="text-sm text-muted-foreground">
+            Passe o mouse sobre o campo e clique no ícone de lixeira que aparece à direita. A exclusão é permanente.
+          </p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "diario-obra",
+    title: "Diário de Obra",
+    icon: BookOpen,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Registro diário das atividades executadas em campo — clima, efetivo, ocorrências e observações — acessível dentro de cada projeto.
+        </p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">
+            Abra o <Strong>Detalhe de um Projeto</Strong> e role a página até encontrar o card <Strong>Diário de Obra</Strong>.
+          </p>
+        </Subsection>
+        <Subsection title="Criar um registro">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>Novo Registro</Strong>.</li>
+            <li>Selecione a <Strong>data</Strong> e o número de pessoas em campo (<Strong>Efetivo</Strong>).</li>
+            <li>Escolha o <Strong>clima</Strong> do dia (opcional).</li>
+            <li>Descreva as <Strong>Atividades executadas</Strong> (campo obrigatório).</li>
+            <li>Preencha <Strong>Observações</Strong> e <Strong>Ocorrências</Strong> se houver.</li>
+            <li>Clique em <Strong>Salvar Registro</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Visualizar registros">
+          <p className="text-sm text-muted-foreground">
+            Os registros aparecem em ordem cronológica. Clique em um registro para expandi-lo e ver todos os detalhes. Clique novamente para recolher.
+          </p>
+        </Subsection>
+        <Tip>O campo <Strong>Ocorrências</Strong> é ideal para registrar acidentes, imprevistos, falta de material ou qualquer situação que afete o andamento da obra.</Tip>
+        <Subsection title="Excluir um registro">
+          <p className="text-sm text-muted-foreground">
+            Expanda o registro e clique em <Strong>Excluir</Strong> no rodapé. A ação é irreversível.
+          </p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "materiais",
+    title: "Controle de Materiais",
+    icon: Package,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Registre entradas, saídas e estoque de materiais utilizados em cada projeto, com quantidade, valor unitário e histórico completo.
+        </p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">
+            Abra o <Strong>Detalhe de um Projeto</Strong> e role a página até encontrar o card <Strong>Controle de Materiais</Strong>.
+          </p>
+        </Subsection>
+        <Subsection title="Tipos de movimentação">
+          <Table
+            headers={["Tipo", "Quando usar"]}
+            rows={[
+              ["Entrada", "Material chegou ao projeto (compra, transferência recebida)"],
+              ["Saída", "Material foi utilizado, retirado ou devolvido"],
+              ["Estoque", "Inventário atual — quantidade disponível no momento"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Registrar um material">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>Registrar</Strong>.</li>
+            <li>Informe o <Strong>nome</Strong> do material, <Strong>unidade</Strong> (sacos, m², kg...) e <Strong>tipo</Strong>.</li>
+            <li>Preencha a <Strong>quantidade</Strong> e, opcionalmente, o <Strong>valor unitário</Strong>.</li>
+            <li>Selecione a <Strong>data</Strong> da movimentação.</li>
+            <li>Adicione <Strong>observações</Strong> como fornecedor ou nota fiscal (opcional).</li>
+            <li>Clique em <Strong>Registrar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="Cards de resumo">
+          <p className="text-sm text-muted-foreground">
+            Quando há registros, aparecem 3 cards automáticos: total de entradas, total de saídas e valor financeiro total (soma de quantidade × valor unitário de todos os registros com preço informado).
+          </p>
+        </Subsection>
+        <Tip>Informe o <Strong>valor unitário</Strong> sempre que possível — isso permite acompanhar o custo total de materiais por projeto.</Tip>
       </div>
     ),
   },
