@@ -52,6 +52,10 @@ tags:
     description: Project material control
   - name: custom-fields
     description: Custom field definitions and values
+  - name: milestones
+    description: Project milestones and key dates
+  - name: burndown
+    description: Weekly task progress data per project
 paths:
   /healthz:
     get:
@@ -2126,6 +2130,105 @@ paths:
               schema:
                 $ref: "#/components/schemas/CustomFieldValue"
 
+  /projects/{id}/milestones:
+    get:
+      operationId: listProjectMilestones
+      tags: [milestones]
+      summary: List milestones for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of milestones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Milestone"
+    post:
+      operationId: createMilestone
+      tags: [milestones]
+      summary: Create a milestone
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MilestoneInput"
+      responses:
+        "201":
+          description: Created milestone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Milestone"
+
+  /milestones/{id}/toggle:
+    patch:
+      operationId: toggleMilestone
+      tags: [milestones]
+      summary: Toggle milestone completion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated milestone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Milestone"
+
+  /milestones/{id}:
+    delete:
+      operationId: deleteMilestone
+      tags: [milestones]
+      summary: Delete a milestone
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{id}/burndown:
+    get:
+      operationId: getProjectBurndown
+      tags: [burndown]
+      summary: Weekly task creation and completion data for burndown chart
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Burndown data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BurndownPoint"
+
 components:
   schemas:
     HealthStatus:
@@ -3595,3 +3698,47 @@ components:
           type: integer
         value:
           type: string
+
+    Milestone:
+      type: object
+      required: [id, projectId, title, dueDate, completedAt, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        title:
+          type: string
+        dueDate:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    MilestoneInput:
+      type: object
+      required: [title, dueDate]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        dueDate:
+          type: string
+          minLength: 1
+
+    BurndownPoint:
+      type: object
+      required: [label, fullLabel, created, completed]
+      properties:
+        label:
+          type: string
+        fullLabel:
+          type: string
+        created:
+          type: integer
+        completed:
+          type: integer

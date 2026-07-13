@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
-import { format, parseISO, isToday, isTomorrow, isPast, addDays, startOfDay } from "date-fns";
+import { format, parseISO, isToday, isTomorrow, isPast, addDays, startOfDay, differenceInDays } from "date-fns";
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, Tooltip, ResponsiveContainer,
@@ -969,6 +969,120 @@ export default function Dashboard() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* ── Carga da Equipe + Projetos Vencidos ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Carga da Equipe */}
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1.5 h-4 rounded-full bg-indigo-500" />
+            <h2 className="text-sm font-semibold text-foreground">Carga da Equipe</h2>
+            <span className="text-xs text-muted-foreground ml-1">— tarefas abertas por membro</span>
+          </div>
+          {isTasksLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
+            </div>
+          ) : (() => {
+            const workload = (members ?? [])
+              .map(m => {
+                const mine = (allTasks ?? []).filter(t => (t as unknown as { assignedTo?: number | null }).assignedTo === m.id);
+                const open = mine.filter(t => t.status !== "done").length;
+                const overdue = mine.filter(t => {
+                  if (t.status === "done") return false;
+                  const d = (t as unknown as { dueDate?: string | null }).dueDate;
+                  return d ? differenceInDays(parseISO(d), new Date()) < 0 : false;
+                }).length;
+                return { member: m, open, overdue, total: mine.length };
+              })
+              .filter(w => w.total > 0)
+              .sort((a, b) => b.open - a.open);
+
+            if (workload.length === 0) return (
+              <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma tarefa atribuída.</p>
+            );
+
+            return (
+              <div className="space-y-2.5">
+                {workload.map(w => (
+                  <div key={w.member.id} className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs font-medium text-foreground truncate">{w.member.name}</span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                          {w.open} aber.
+                          {w.overdue > 0 && <span className="text-red-600 ml-1">{w.overdue} venc.</span>}
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-500 rounded-full transition-all"
+                          style={{ width: `${w.total > 0 ? Math.round(((w.total - w.open) / w.total) * 100) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Projetos Vencidos */}
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1.5 h-4 rounded-full bg-red-500" />
+            <h2 className="text-sm font-semibold text-foreground">Projetos com Prazo Vencido</h2>
+            {alerts.filter(a => a.level === "overdue").length > 0 && (
+              <span className="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
+                {alerts.filter(a => a.level === "overdue").length}
+              </span>
+            )}
+          </div>
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : (() => {
+            const overdueAlerts = alerts.filter(a => a.level === "overdue");
+            if (overdueAlerts.length === 0) return (
+              <div className="py-8 text-center flex flex-col items-center gap-2">
+                <CheckCircle2 className="h-7 w-7 text-emerald-500 opacity-60" />
+                <p className="text-sm text-muted-foreground">Nenhum projeto com prazo vencido.</p>
+              </div>
+            );
+            const byProject = new Map<number, typeof overdueAlerts>();
+            for (const a of overdueAlerts) {
+              const id = a.project.id;
+              if (!byProject.has(id)) byProject.set(id, []);
+              byProject.get(id)!.push(a);
+            }
+            return (
+              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                {[...byProject.entries()].map(([pid, projectAlerts]) => {
+                  const proj = projectAlerts[0].project;
+                  const maxDelay = Math.max(...projectAlerts.map(a => Math.abs(a.daysLeft)));
+                  return (
+                    <Link key={pid} href={`/projects/${pid}`}>
+                      <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900 cursor-pointer hover:opacity-80 transition-opacity">
+                        <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{proj.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{projectAlerts.length} prazo(s) vencido(s)</p>
+                        </div>
+                        <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded font-medium shrink-0">
+                          {maxDelay}d atraso
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

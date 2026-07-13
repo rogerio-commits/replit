@@ -26,6 +26,8 @@ import automationRulesRouter from "./automation-rules";
 import obraDiaryRouter from "./obra-diary";
 import projectMaterialsRouter from "./project-materials";
 import customFieldsRouter from "./custom-fields";
+import milestonesRouter from "./milestones";
+import burndownRouter from "./burndown";
 
 const router: IRouter = Router();
 
@@ -58,5 +60,7 @@ router.use(automationRulesRouter);
 router.use(obraDiaryRouter);
 router.use(projectMaterialsRouter);
 router.use(customFieldsRouter);
+router.use(milestonesRouter);
+router.use(burndownRouter);
 
 export default router;

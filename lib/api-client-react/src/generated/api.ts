@@ -36,6 +36,7 @@ import type {
   AutomationRuleInput,
   BulkTaskUpdate,
   BulkUpdateTasks200,
+  BurndownPoint,
   ChecklistItem,
   ChecklistItemInput,
   ChecklistItemUpdate,
@@ -63,6 +64,8 @@ import type {
   MemberInput,
   MemberProductivity,
   MemberUpdate,
+  Milestone,
+  MilestoneInput,
   ObraDiaryEntry,
   ObraDiaryEntryInput,
   Project,
@@ -7838,4 +7841,370 @@ export const useUpsertCustomFieldValue = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpsertCustomFieldValueMutationOptions(options));
     }
+
+export const getListProjectMilestonesUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/milestones`
+}
+
+/**
+ * @summary List milestones for a project
+ */
+export const listProjectMilestones = async (id: number, options?: RequestInit): Promise<Milestone[]> => {
+
+  return customFetch<Milestone[]>(getListProjectMilestonesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectMilestonesQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/milestones`
+    ] as const;
+    }
+
+
+export const getListProjectMilestonesQueryOptions = <TData = Awaited<ReturnType<typeof listProjectMilestones>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectMilestonesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectMilestones>>> = ({ signal }) => listProjectMilestones(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectMilestonesQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectMilestones>>>
+export type ListProjectMilestonesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List milestones for a project
+ */
+
+export function useListProjectMilestones<TData = Awaited<ReturnType<typeof listProjectMilestones>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectMilestones>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectMilestonesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateMilestoneUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/milestones`
+}
+
+/**
+ * @summary Create a milestone
+ */
+export const createMilestone = async (id: number,
+    milestoneInput: MilestoneInput, options?: RequestInit): Promise<Milestone> => {
+
+  return customFetch<Milestone>(getCreateMilestoneUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      milestoneInput,)
+  }
+);}
+
+
+
+
+export const getCreateMilestoneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,{id: number;data: BodyType<MilestoneInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,{id: number;data: BodyType<MilestoneInput>}, TContext> => {
+
+const mutationKey = ['createMilestone'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMilestone>>, {id: number;data: BodyType<MilestoneInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createMilestone(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMilestoneMutationResult = NonNullable<Awaited<ReturnType<typeof createMilestone>>>
+    export type CreateMilestoneMutationBody = BodyType<MilestoneInput>
+    export type CreateMilestoneMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a milestone
+ */
+export const useCreateMilestone = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMilestone>>, TError,{id: number;data: BodyType<MilestoneInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMilestone>>,
+        TError,
+        {id: number;data: BodyType<MilestoneInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMilestoneMutationOptions(options));
+    }
+
+export const getToggleMilestoneUrl = (id: number,) => {
+
+
+
+
+  return `/api/milestones/${id}/toggle`
+}
+
+/**
+ * @summary Toggle milestone completion
+ */
+export const toggleMilestone = async (id: number, options?: RequestInit): Promise<Milestone> => {
+
+  return customFetch<Milestone>(getToggleMilestoneUrl(id),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+export const getToggleMilestoneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toggleMilestone>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof toggleMilestone>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['toggleMilestone'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toggleMilestone>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  toggleMilestone(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToggleMilestoneMutationResult = NonNullable<Awaited<ReturnType<typeof toggleMilestone>>>
+
+    export type ToggleMilestoneMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Toggle milestone completion
+ */
+export const useToggleMilestone = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toggleMilestone>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof toggleMilestone>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getToggleMilestoneMutationOptions(options));
+    }
+
+export const getDeleteMilestoneUrl = (id: number,) => {
+
+
+
+
+  return `/api/milestones/${id}`
+}
+
+/**
+ * @summary Delete a milestone
+ */
+export const deleteMilestone = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteMilestoneUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteMilestoneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteMilestone'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMilestone>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMilestone(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMilestoneMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMilestone>>>
+
+    export type DeleteMilestoneMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a milestone
+ */
+export const useDeleteMilestone = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMilestone>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMilestone>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteMilestoneMutationOptions(options));
+    }
+
+export const getGetProjectBurndownUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/burndown`
+}
+
+/**
+ * @summary Weekly task creation and completion data for burndown chart
+ */
+export const getProjectBurndown = async (id: number, options?: RequestInit): Promise<BurndownPoint[]> => {
+
+  return customFetch<BurndownPoint[]>(getGetProjectBurndownUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProjectBurndownQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/burndown`
+    ] as const;
+    }
+
+
+export const getGetProjectBurndownQueryOptions = <TData = Awaited<ReturnType<typeof getProjectBurndown>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectBurndown>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectBurndownQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectBurndown>>> = ({ signal }) => getProjectBurndown(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectBurndown>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProjectBurndownQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectBurndown>>>
+export type GetProjectBurndownQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Weekly task creation and completion data for burndown chart
+ */
+
+export function useGetProjectBurndown<TData = Awaited<ReturnType<typeof getProjectBurndown>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectBurndown>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProjectBurndownQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

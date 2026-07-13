@@ -35,6 +35,8 @@ import {
 import { ProjectFiles } from "@/components/project-files";
 import { ProjectObraDiary } from "@/components/project-obra-diary";
 import { ProjectMaterials } from "@/components/project-materials";
+import { ProjectMilestones } from "@/components/project-milestones";
+import { ProjectBurndown } from "@/components/project-burndown";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1423,6 +1425,20 @@ export default function ProjectDetail() {
           <ProjectFiles projectId={projectId} mode="files" />
         </CardContent>
       </Card>
+
+      {/* Marcos + Burndown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <ProjectMilestones projectId={projectId} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <ProjectBurndown projectId={projectId} />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Diário de Obra */}
       <Card>

@@ -1318,6 +1318,29 @@ export interface CustomFieldValueInput {
   value?: string;
 }
 
+export interface Milestone {
+  id: number;
+  projectId: number;
+  title: string;
+  dueDate: string;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export interface MilestoneInput {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  dueDate: string;
+}
+
+export interface BurndownPoint {
+  label: string;
+  fullLabel: string;
+  created: number;
+  completed: number;
+}
+
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;

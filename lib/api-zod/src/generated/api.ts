@@ -1922,3 +1922,79 @@ export const UpsertCustomFieldValueResponse = zod.object({
 })
 
 
+/**
+ * @summary List milestones for a project
+ */
+export const ListProjectMilestonesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectMilestonesResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "title": zod.string(),
+  "dueDate": zod.string(),
+  "completedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})
+export const ListProjectMilestonesResponse = zod.array(ListProjectMilestonesResponseItem)
+
+
+/**
+ * @summary Create a milestone
+ */
+export const CreateMilestoneParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+export const CreateMilestoneBody = zod.object({
+  "title": zod.string().min(1),
+  "dueDate": zod.string().min(1)
+})
+
+
+/**
+ * @summary Toggle milestone completion
+ */
+export const ToggleMilestoneParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ToggleMilestoneResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "title": zod.string(),
+  "dueDate": zod.string(),
+  "completedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a milestone
+ */
+export const DeleteMilestoneParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Weekly task creation and completion data for burndown chart
+ */
+export const GetProjectBurndownParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetProjectBurndownResponseItem = zod.object({
+  "label": zod.string(),
+  "fullLabel": zod.string(),
+  "created": zod.number(),
+  "completed": zod.number()
+})
+export const GetProjectBurndownResponse = zod.array(GetProjectBurndownResponseItem)
+
+
