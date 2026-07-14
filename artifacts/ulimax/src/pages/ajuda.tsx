@@ -120,16 +120,34 @@ const sections: Section[] = [
             headers={["Seção", "Conteúdo"]}
             rows={[
               ["KPIs pessoais", "Total de tarefas atribuídas a você, concluídas, em andamento e atrasadas"],
-              ["Minhas Tarefas", "Lista das tarefas onde você é o responsável, com badge de prazo e status clicável"],
+              ["Minhas Tarefas", "Lista das tarefas onde você é o responsável, com conclusão inline e painel de detalhes"],
               ["Meus Projetos", "Projetos em que você é participante, com progresso de tarefas"],
               ["Prazos próximos", "Tarefas vencendo hoje ou nos próximos 7 dias"],
+              ["Marcos", "Marcos dos seus projetos com vencimento nos próximos 14 dias, no painel lateral"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Concluir uma tarefa sem sair da página">
+          <p className="text-sm text-muted-foreground">Passe o mouse sobre o <Strong>círculo</Strong> à esquerda de qualquer tarefa em <em>Minhas Tarefas</em> — ele exibe um ícone de ✓ verde. Clique para marcar a tarefa como concluída instantaneamente, sem abrir nenhum modal.</p>
+        </Subsection>
+        <Subsection title="Abrir detalhes de uma tarefa">
+          <p className="text-sm text-muted-foreground">Clique em qualquer lugar no <Strong>card da tarefa</Strong> para abrir o painel lateral completo com descrição, subtarefas, comentários, anexos e registro de horas — o mesmo painel disponível na página Tarefas.</p>
+        </Subsection>
+        <Subsection title="Seção Marcos (sidebar)">
+          <p className="text-sm text-muted-foreground mb-2">O painel lateral direito exibe a seção <Strong>Marcos</Strong> com os marcos dos seus projetos que vencem nos próximos 14 dias. Cada item mostra o nome do marco, o projeto de origem e um badge de urgência:</p>
+          <Table
+            headers={["Cor do badge", "Significado"]}
+            rows={[
+              ["Vermelho", "Marco vencido ou vence hoje"],
+              ["Laranja", "Vence em até 3 dias"],
+              ["Âmbar", "Vence entre 4 e 14 dias"],
             ]}
           />
         </Subsection>
         <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">O <Strong>Meu Dia</Strong> é a tela inicial após o login — aparece em destaque âmbar no topo do menu lateral. Também pode ser acessado diretamente clicando nesse item no menu.</p>
+          <p className="text-sm text-muted-foreground">O <Strong>Meu Dia</Strong> é a tela inicial após o login — aparece em destaque âmbar no topo do menu lateral.</p>
         </Subsection>
-        <Tip>Use o Meu Dia como ponto de partida diário: veja rapidamente o que está atrasado, o que vence hoje e quais projetos precisam de atenção — tudo filtrado para você.</Tip>
+        <Tip>Use o Meu Dia como ponto de partida diário: conclua tarefas com um clique, abra detalhes sem navegar para outra página, e acompanhe seus marcos no painel lateral.</Tip>
       </div>
     ),
   },
@@ -762,7 +780,7 @@ const sections: Section[] = [
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Crie regras que disparam ações automaticamente quando determinados eventos acontecem no sistema — sem precisar agir manualmente em cada caso.</p>
+        <p className="text-sm text-muted-foreground">Crie regras que disparam ações automaticamente no servidor quando determinados eventos acontecem — sem precisar agir manualmente em cada caso. As regras são executadas em tempo real pelo backend.</p>
         <Subsection title="Como criar uma regra">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Acesse <Strong>Automações</Strong> no menu lateral (seção Sistema).</li>
@@ -775,9 +793,11 @@ const sections: Section[] = [
           <Table
             headers={["Gatilho", "Quando é acionado"]}
             rows={[
-              ["Tarefa concluída", "Sempre que uma tarefa muda para o status Concluída"],
-              ["Status alterado", "Quando qualquer tarefa muda de status"],
+              ["Tarefa concluída", "Quando uma tarefa muda para o status Concluída"],
+              ["Status de tarefa alterado", "Quando qualquer tarefa muda de um status para outro"],
               ["Projeto concluído", "Quando todas as tarefas de um projeto são concluídas"],
+              ["Tarefa atribuída a membro", "Quando o campo responsável de uma tarefa é preenchido ou alterado"],
+              ["Status do projeto alterado", "Quando o status de um projeto muda (ex: Em Projeto → Em Aprovação)"],
             ]}
           />
         </Subsection>
@@ -785,10 +805,19 @@ const sections: Section[] = [
           <Table
             headers={["Ação", "O que acontece"]}
             rows={[
-              ["Notificar responsável", "Envia notificação ao responsável pela tarefa ou projeto"],
-              ["Notificar toda a equipe", "Envia notificação para todos os membros com acesso ao projeto"],
+              ["Notificar responsável", "Envia notificação ao responsável pela tarefa"],
+              ["Notificar toda a equipe", "Envia notificação para todos os membros do projeto"],
+              ["Notificar gestores", "Envia notificação a todos os usuários com papel de Gestor"],
+              ["Avançar status da tarefa", "Avança o status da tarefa automaticamente para o próximo: A Fazer → Em Andamento → Em Revisão → Concluída"],
             ]}
           />
+        </Subsection>
+        <Subsection title="Estatísticas de execução">
+          <p className="text-sm text-muted-foreground">Cada regra exibe duas informações de uso diretamente na lista:</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground mt-1">
+            <li><Strong>Execuções</Strong> — contador de quantas vezes a regra disparou desde sua criação.</li>
+            <li><Strong>Última execução</Strong> — data e hora da última vez que a regra foi acionada. Regras nunca executadas exibem "Nunca executada".</li>
+          </ul>
         </Subsection>
         <Subsection title="Ativar e desativar regras">
           <p className="text-sm text-muted-foreground">Cada regra possui um <Strong>toggle</Strong> na lista. Desative uma regra temporariamente sem precisar excluí-la — o toggle fica cinza quando inativa e verde quando ativa. O painel de estatísticas no topo mostra quantas regras estão ativas.</p>
@@ -796,7 +825,7 @@ const sections: Section[] = [
         <Subsection title="Excluir uma regra">
           <p className="text-sm text-muted-foreground">Clique no ícone de <Strong>lixeira</Strong> ao lado da regra. A exclusão é permanente e a regra deixa de funcionar imediatamente.</p>
         </Subsection>
-        <Tip>Comece com regras simples como "Notificar responsável ao concluir tarefa" para garantir que ninguém perca atualizações importantes. Somente Gestores podem criar e excluir regras de automação.</Tip>
+        <Tip>Combine "Tarefa atribuída" + "Notificar responsável" para avisar automaticamente o colaborador toda vez que uma nova tarefa chegar para ele. Somente Gestores podem criar e excluir regras.</Tip>
       </div>
     ),
   },
