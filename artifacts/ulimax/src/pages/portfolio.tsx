@@ -511,8 +511,8 @@ export default function Portfolio() {
         <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b bg-muted/20 flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm text-foreground">Carga da Equipe</span>
-            <span className="text-xs text-muted-foreground ml-1">— tarefas abertas por membro</span>
+            <span className="font-semibold text-sm text-foreground">Produtividade da Equipe</span>
+            <span className="text-xs text-muted-foreground ml-1">— carga, atrasos e conclusão por membro</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -529,10 +529,17 @@ export default function Portfolio() {
                 {memberWorkload.map(w => {
                   const openPct = w.total > 0 ? Math.round((w.open / w.total) * 100) : 0;
                   return (
-                    <tr key={w.member.id} className="bg-card hover:bg-muted/20 transition-colors">
+                    <tr
+                      key={w.member.id}
+                      className="bg-card hover:bg-muted/20 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/tasks?responsavel=${w.member.id}`)}
+                      title="Ver tarefas deste membro"
+                    >
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-foreground text-sm">{w.member.name}</div>
-                        <div className="text-xs text-muted-foreground">{w.member.role}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {({ gestor: "Gestor", executor: "Executor", observador: "Observador" } as Record<string, string>)[w.member.role] ?? w.member.role}
+                        </div>
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <span className={cn("font-semibold", w.open > 5 ? "text-amber-600" : "text-foreground")}>

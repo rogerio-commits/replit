@@ -101,28 +101,12 @@ export const NAV_HELP: Record<string, HelpEntry> = {
       "Use junto com o Calendário para planejamento detalhado",
     ],
   },
-  "/alertas": {
-    description: "Central de notificações e alertas do sistema.",
-    tips: [
-      "Veja tarefas vencidas, próximas do prazo ou sem responsável",
-      "Alertas são atualizados automaticamente",
-      "Clique em um alerta para ir direto à tarefa ou projeto",
-    ],
-  },
   "/auditoria": {
     description: "Histórico completo de alterações feitas no sistema.",
     tips: [
       "Consulte quem criou, editou ou excluiu cada registro",
       "Filtre por usuário, tipo de ação ou período",
       "Use para rastrear mudanças inesperadas nos dados",
-    ],
-  },
-  "/produtividade": {
-    description: "Métricas de desempenho e produtividade da equipe.",
-    tips: [
-      "Veja o volume de tarefas concluídas por membro",
-      "Acompanhe tendências de entrega ao longo do tempo",
-      "Identifique membros sobrecarregados ou com baixa entrega",
     ],
   },
   "/ajuda": {

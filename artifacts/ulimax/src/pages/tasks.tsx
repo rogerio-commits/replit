@@ -127,6 +127,8 @@ export default function Tasks() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [overdueOnly, setOverdueOnly] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const autoOpenedRef = useRef(false);
   const [editingTask, setEditingTask] = useState<number | null>(null);
@@ -164,6 +166,19 @@ export default function Tasks() {
       autoOpenedRef.current = true;
     }
   }, [searchStr, canEdit]);
+
+  // Filtros vindos da URL (ex.: links do Dashboard) — aplicados uma única vez
+  const urlFiltersRef = useRef(false);
+  useEffect(() => {
+    if (urlFiltersRef.current) return;
+    const p = new URLSearchParams(searchStr);
+    const st = p.get("status");
+    if (st && ["todo", "in_progress", "review", "done"].includes(st)) setStatusFilter(st);
+    const resp = p.get("responsavel");
+    if (resp && /^\d+$/.test(resp)) setAssigneeFilter(resp);
+    if (p.get("vencidas") === "1") setOverdueOnly(true);
+    urlFiltersRef.current = true;
+  }, [searchStr]);
 
   const { data: tasks, isLoading: isTasksLoading } = useListTasks();
   const { data: projects } = useListProjects();
@@ -297,7 +312,19 @@ export default function Tasks() {
     const matchesStatus = statusFilter === "all" || t.status === statusFilter;
     const matchesProject = projectFilter === "all" || t.projectId.toString() === projectFilter;
     const matchesPriority = priorityFilter === "all" || t.priority === priorityFilter;
-    return matchesSearch && matchesStatus && matchesProject && matchesPriority;
+    const assignedTo = (t as unknown as { assignedTo?: number | null }).assignedTo;
+    const matchesAssignee = assigneeFilter === "all" || (assignedTo != null && assignedTo.toString() === assigneeFilter);
+    let matchesOverdue = true;
+    if (overdueOnly) {
+      if (t.status === "done" || !t.dueDate) {
+        matchesOverdue = false;
+      } else {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const due = new Date(t.dueDate.split("T")[0] + "T00:00:00");
+        matchesOverdue = due < today;
+      }
+    }
+    return matchesSearch && matchesStatus && matchesProject && matchesPriority && matchesAssignee && matchesOverdue;
   });
 
   function handleExportCSV() {
@@ -396,6 +423,8 @@ export default function Tasks() {
     setStatusFilter(f.status);
     setProjectFilter(f.project);
     setPriorityFilter(f.priority);
+    setAssigneeFilter("all");
+    setOverdueOnly(false);
     setActiveFilterId(f.id);
   }
 
@@ -403,6 +432,8 @@ export default function Tasks() {
     setStatusFilter("all");
     setProjectFilter("all");
     setPriorityFilter("all");
+    setAssigneeFilter("all");
+    setOverdueOnly(false);
     setActiveFilterId(null);
   }
 
@@ -753,6 +784,22 @@ export default function Tasks() {
                   {projects?.map((p) => <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Responsável" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Responsáveis</SelectItem>
+                  {members?.map((m) => <SelectItem key={m.id} value={m.id.toString()}>{m.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button
+                variant={overdueOnly ? "default" : "outline"}
+                size="sm"
+                className="h-9 gap-1.5"
+                onClick={() => setOverdueOnly((v) => !v)}
+              >
+                <AlertCircle className="h-3.5 w-3.5" />
+                Atrasadas
+              </Button>
               {(statusFilter !== "all" || projectFilter !== "all" || priorityFilter !== "all") && (
                 <Popover open={isSavePopoverOpen} onOpenChange={setIsSavePopoverOpen}>
                   <PopoverTrigger asChild>
@@ -971,7 +1018,7 @@ export default function Tasks() {
               <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-1">
                 <CheckSquare className="h-8 w-8 text-muted-foreground opacity-30" />
               </div>
-              {search || statusFilter !== "all" || projectFilter !== "all" || priorityFilter !== "all" ? (
+              {search || statusFilter !== "all" || projectFilter !== "all" || priorityFilter !== "all" || assigneeFilter !== "all" || overdueOnly ? (
                 <>
                   <p className="font-medium text-foreground">Nenhuma tarefa corresponde aos filtros</p>
                   <p className="text-sm text-muted-foreground">Tente remover ou alterar os filtros para ver mais resultados.</p>

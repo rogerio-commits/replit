@@ -14,9 +14,11 @@ const ROUTE_LABELS: Record<string, string> = {
   "/assistencia-tecnica": "Assistência Técnica",
   "/controle-amostras": "Amostras",
   "/gantt": "Gantt",
-  "/alertas": "Alertas",
+  "/portfolio": "Portfólio",
+  "/templates": "Templates",
+  "/campos-personalizados": "Campos Personalizados",
+  "/automacao": "Automações",
   "/auditoria": "Auditoria",
-  "/produtividade": "Produtividade",
   "/ajuda": "Ajuda",
 };
 

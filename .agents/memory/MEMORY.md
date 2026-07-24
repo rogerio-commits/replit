@@ -1,3 +1,4 @@
 - [Project participant authorization](project-participant-auth.md) — executors can only edit projects/tasks where they are listed as participants; gestors bypass the check.
 - [Uppy React duplicate instance fix](uppy-react-override.md) — installing Uppy brings duplicate React copies; fix with pnpm overrides in root package.json.
 - [Clerk invitation ticket flow blocked](clerk-invitation-flow.md) — Clerk email invites 403 through the Replit proxy; use app-managed invites (invitesTable + JIT role on sign-up) instead.
+- [Role-based route access](role-route-access.md) — access.ts is the single source of truth for per-role routes; new pages must be added there or RoleGate redirects users away.

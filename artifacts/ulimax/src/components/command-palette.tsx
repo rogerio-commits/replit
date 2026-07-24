@@ -11,6 +11,8 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { useSearch, getSearchQueryKey } from "@workspace/api-client-react";
+import { useAppUser } from "@/hooks/useAppUser";
+import { canAccessRoute } from "@/lib/access";
 
 const KIND_ICONS = {
   project: Briefcase,
@@ -30,11 +32,20 @@ const KIND_PATHS: Record<string, (id: number) => string> = {
   member: () => `/members`,
 };
 
+/** Rota base de cada tipo de resultado — usada para esconder resultados que o papel não pode acessar */
+const KIND_ROUTES: Record<"project" | "task" | "member", string> = {
+  project: "/projects",
+  task: "/tasks",
+  member: "/members",
+};
+
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [, setLocation] = useLocation();
+  const { data: me } = useAppUser();
+  const role = me?.role;
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query), 250);
@@ -89,22 +100,28 @@ export function CommandPalette() {
       <CommandList>
         {!searching && (
           <CommandGroup heading="Páginas">
-            <CommandItem onSelect={() => go("/")} className="gap-2">
-              <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-              Dashboard
-            </CommandItem>
+            {role !== "executor" && (
+              <CommandItem onSelect={() => go("/dashboard")} className="gap-2">
+                <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                Dashboard
+              </CommandItem>
+            )}
             <CommandItem onSelect={() => go("/projects")} className="gap-2">
               <Briefcase className="h-4 w-4 text-muted-foreground" />
               Projetos
             </CommandItem>
-            <CommandItem onSelect={() => go("/tasks")} className="gap-2">
-              <CheckSquare className="h-4 w-4 text-muted-foreground" />
-              Tarefas
-            </CommandItem>
-            <CommandItem onSelect={() => go("/members")} className="gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              Equipe
-            </CommandItem>
+            {role !== "observador" && (
+              <CommandItem onSelect={() => go("/tasks")} className="gap-2">
+                <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                Tarefas
+              </CommandItem>
+            )}
+            {(role === "gestor" || !role) && (
+              <CommandItem onSelect={() => go("/members")} className="gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                Equipe
+              </CommandItem>
+            )}
           </CommandGroup>
         )}
 
@@ -121,7 +138,9 @@ export function CommandPalette() {
 
         {searching && !isFetching && results && results.length > 0 && (
           <>
-            {(["project", "task", "member"] as const).map((kind) => {
+            {(["project", "task", "member"] as const)
+              .filter((kind) => !role || canAccessRoute(role, KIND_ROUTES[kind]))
+              .map((kind) => {
               const items = grouped[kind];
               if (!items || items.length === 0) return null;
               const Icon = KIND_ICONS[kind];

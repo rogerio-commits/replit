@@ -36,7 +36,6 @@ export function useKeyboardShortcuts(navigate: NavigateFn) {
           case "m": navigate("/members"); break;
           case "k": navigate("/kanban"); break;
           case "c": navigate("/calendario"); break;
-          case "a": navigate("/alertas"); break;
           case "l": navigate("/templates"); break;
         }
         return;

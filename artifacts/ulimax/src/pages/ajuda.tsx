@@ -653,18 +653,17 @@ const sections: Section[] = [
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">O Dashboard de Produtividade oferece uma visão analítica do desempenho individual de cada membro da equipe, com base nas tarefas concluídas.</p>
+        <p className="text-sm text-muted-foreground">A análise de produtividade mostra o desempenho individual de cada membro da equipe, com base nas tarefas atribuídas e concluídas.</p>
         <Subsection title="Acessar">
-          <p className="text-sm text-muted-foreground">Clique em <Strong>Produtividade</Strong> no menu lateral (visível para Gestores).</p>
+          <p className="text-sm text-muted-foreground">Abra <Strong>Portfólio</Strong> no menu lateral e veja a seção <Strong>Produtividade da Equipe</Strong> (visível para Gestores).</p>
         </Subsection>
         <Subsection title="O que você vê">
           <Table
             headers={["Gráfico / Seção", "O que mostra"]}
             rows={[
-              ["Ranking de membros", "Quem concluiu mais tarefas no período"],
-              ["Tarefas por membro", "Gráfico de barras com o volume de tarefas de cada pessoa"],
+              ["Carga da equipe", "Tarefas abertas, vencidas e concluídas por membro"],
               ["Taxa de conclusão", "Percentual de tarefas concluídas em relação ao total atribuído"],
-              ["Breakdown por status", "Distribuição das tarefas em A Fazer · Em Andamento · Revisão · Concluída para cada membro"],
+              ["Ranking de membros", "Quem está com mais tarefas abertas ou atrasadas"],
             ]}
           />
         </Subsection>
@@ -894,7 +893,7 @@ const sections: Section[] = [
     icon: Bell,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Central de notificações automáticas do sistema sobre situações críticas.</p>
+        <p className="text-sm text-muted-foreground">Os alertas automáticos do sistema aparecem na <Strong>Central de Alertas</Strong> do Dashboard e no sino de notificações.</p>
         <Table
           headers={["Nível", "Quando aparece"]}
           rows={[

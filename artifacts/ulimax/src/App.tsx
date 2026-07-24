@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
@@ -8,8 +8,11 @@ import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from "wo
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
 
 import { Layout } from "@/components/layout";
+import { useAppUser } from "@/hooks/useAppUser";
+import { canAccessRoute, homeForRole } from "@/lib/access";
 import Dashboard from "@/pages/dashboard";
 import Projects from "@/pages/projects";
 import ProjectDetail from "@/pages/project-detail";
@@ -17,12 +20,10 @@ import Tasks from "@/pages/tasks";
 import Members from "@/pages/members";
 import Kanban from "@/pages/kanban";
 import Calendario from "@/pages/calendario";
-import Alertas from "@/pages/alertas";
 import Checklist from "@/pages/checklist";
 import AssistenciaTecnica from "@/pages/assistencia-tecnica";
 import SampleControls from "@/pages/sample-controls";
 import Ajuda from "@/pages/ajuda";
-import Productivity from "@/pages/productivity";
 import Gantt from "@/pages/gantt";
 import Audit from "@/pages/audit";
 import MeuDia from "@/pages/meu-dia";
@@ -175,11 +176,36 @@ function SignUpPage() {
   );
 }
 
+function RoleLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function RoleHome() {
+  const { data: me, isLoading } = useAppUser();
+  if (isLoading) return <RoleLoading />;
+  // Se o perfil não carregar (erro), cai no dashboard — os dados continuam protegidos pelo servidor
+  return <Redirect to={homeForRole(me?.role ?? "gestor")} replace />;
+}
+
+function RoleGate({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
+  const { data: me, isLoading } = useAppUser();
+  if (isLoading) return <RoleLoading />;
+  if (me && !canAccessRoute(me.role, location)) {
+    return <Redirect to={homeForRole(me.role)} replace />;
+  }
+  return <>{children}</>;
+}
+
 function HomeRedirect() {
   return (
     <>
       <Show when="signed-in">
-        <Redirect to="/meu-dia" />
+        <RoleHome />
       </Show>
       <Show when="signed-out">
         <Landing />
@@ -195,6 +221,7 @@ function ProtectedRoutes() {
     <>
       <Show when="signed-in">
         <Layout>
+          <RoleGate>
           <Switch>
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/projects" component={Projects} />
@@ -203,11 +230,11 @@ function ProtectedRoutes() {
             <Route path="/kanban" component={Kanban} />
             <Route path="/members" component={Members} />
             <Route path="/calendario" component={Calendario} />
-            <Route path="/alertas" component={Alertas} />
+            <Route path="/alertas"><Redirect to="/dashboard" replace /></Route>
             <Route path="/checklist" component={Checklist} />
             <Route path="/assistencia-tecnica" component={AssistenciaTecnica} />
             <Route path="/controle-amostras" component={SampleControls} />
-            <Route path="/produtividade" component={Productivity} />
+            <Route path="/produtividade"><Redirect to="/portfolio" replace /></Route>
             <Route path="/gantt" component={Gantt} />
             <Route path="/auditoria" component={Audit} />
             <Route path="/meu-dia" component={MeuDia} />
@@ -219,6 +246,7 @@ function ProtectedRoutes() {
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />
           </Switch>
+          </RoleGate>
         </Layout>
       </Show>
       <Show when="signed-out">

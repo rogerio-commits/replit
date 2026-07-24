@@ -1,27 +1,21 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
-import { format, parseISO, isToday, isTomorrow, isPast, addDays, startOfDay, differenceInDays } from "date-fns";
-import {
-  PieChart, Pie, Cell,
-  BarChart, Bar, XAxis, Tooltip, ResponsiveContainer,
-} from "recharts";
+import { format, parseISO, isToday, isTomorrow, isPast, addDays, startOfDay } from "date-fns";
+import { PieChart, Pie, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
 import {
   useGetDashboardSummary,
   useListProjects,
   useListAllSiteVisits,
   useGetRecentActivity,
-  useGetMemberProductivity,
   useListTasks,
   useListMembers,
 } from "@workspace/api-client-react";
 import type {
   ListProjectsQueryResult,
   GetRecentActivityQueryResult,
-  GetMemberProductivityQueryResult,
-  ListTasksQueryResult,
 } from "@workspace/api-client-react";
-import { useAppUser } from "@/hooks/useAppUser";
+import { useAlerts, type Alert } from "@/hooks/useAlerts";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -34,15 +28,14 @@ import {
   Users,
   CalendarDays,
   Layers,
-  Circle,
   CheckCircle2,
-  ArrowRight,
+  Info,
+  UserX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Project = ListProjectsQueryResult[number];
 type ActivityItem = GetRecentActivityQueryResult[number];
-type MemberRow = GetMemberProductivityQueryResult[number];
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -79,11 +72,6 @@ const STATUS_PILL: Record<string, string> = {
 const STATUS_LABEL: Record<string, string> = {
   a_iniciar: "A Iniciar", em_projeto: "Em Projeto", em_aprovacao: "Em Aprovação",
   em_producao: "Em Produção", aguardando_instalacao: "Ag. Instalação", em_instalacao: "Em Instalação",
-};
-
-const STATUS_BAR: Record<string, string> = {
-  a_iniciar: "bg-slate-400", em_projeto: "bg-violet-500", em_aprovacao: "bg-purple-500",
-  em_producao: "bg-blue-500", aguardando_instalacao: "bg-amber-500", em_instalacao: "bg-emerald-500",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -189,14 +177,12 @@ function nearestDeadline(p: Project): { label: string; date: string; overdue: bo
 
 function PipelineChart({
   title,
-  accent,
   flowColor,
   barColor,
   textColor,
   data,
 }: {
   title: string;
-  accent: string;
   flowColor: string;
   barColor: string;
   textColor: string;
@@ -239,54 +225,72 @@ function PipelineChart({
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+const SEVERITY_META = {
+  danger:  { label: "Críticos",     icon: AlertCircle, row: "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30",       iconColor: "text-red-500",   chip: "bg-red-100 text-red-700" },
+  warning: { label: "Atenção",      icon: Clock,       row: "bg-amber-50 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30", iconColor: "text-amber-500", chip: "bg-amber-100 text-amber-700" },
+  info:    { label: "Informativos", icon: Info,        row: "bg-muted/30 border-border",                                                  iconColor: "text-blue-500",  chip: "bg-blue-100 text-blue-700" },
+} as const;
 
-type TaskItem2 = ListTasksQueryResult[number];
-
-function taskDueLabel(t: TaskItem2): { label: string; urgent: boolean; done: boolean } {
-  const done = t.status === "done";
-  if (done) return { label: "Concluída", urgent: false, done: true };
-  if (!t.dueDate) return { label: "Sem prazo", urgent: false, done: false };
-  try {
-    const d = parseISO(t.dueDate);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const diff = Math.floor((d.getTime() - today.getTime()) / 86_400_000);
-    if (diff < 0) return { label: `${Math.abs(diff)}d atraso`, urgent: true, done: false };
-    if (diff === 0) return { label: "Hoje", urgent: true, done: false };
-    if (diff === 1) return { label: "Amanhã", urgent: false, done: false };
-    return { label: format(d, "dd/MM", { locale: ptBR }), urgent: false, done: false };
-  } catch { return { label: "—", urgent: false, done: false }; }
+function AlertRow({ alert }: { alert: Alert }) {
+  const meta = SEVERITY_META[alert.severity];
+  const Icon = meta.icon;
+  return (
+    <Link href={alert.href}>
+      <div className={cn(
+        "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
+        meta.row,
+      )}>
+        <Icon className={cn("h-3.5 w-3.5 shrink-0", meta.iconColor)} />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-foreground truncate">{alert.title}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{alert.description}</p>
+        </div>
+        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+      </div>
+    </Link>
+  );
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export default function Dashboard() {
-  const { data: me } = useAppUser();
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: projects, isLoading: isProjectsLoading } = useListProjects({});
   const { data: siteVisits, isLoading: isVisitsLoading } = useListAllSiteVisits();
   const { data: activity, isLoading: isActivityLoading } = useGetRecentActivity();
-  const { data: productivity, isLoading: isProductivityLoading } = useGetMemberProductivity();
   const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
   const { data: members } = useListMembers();
+  const allAlerts = useAlerts();
 
   const loading = isSummaryLoading || isProjectsLoading;
 
-  const myMemberId = useMemo(() => {
-    if (!members || !me) return null;
-    const m = members.find(mb => mb.email === me.email);
-    return m?.id ?? null;
-  }, [members, me]);
+  // Central de alertas — tudo, exceto os alertas pessoais ("tarefa para você")
+  const centralAlerts = useMemo(
+    () => allAlerts.filter(a => a.type !== "task_assigned_to_me"),
+    [allAlerts],
+  );
+  const alertCounts = useMemo(() => ({
+    danger:  centralAlerts.filter(a => a.severity === "danger").length,
+    warning: centralAlerts.filter(a => a.severity === "warning").length,
+    info:    centralAlerts.filter(a => a.severity === "info").length,
+  }), [centralAlerts]);
+  const actionableAlerts = alertCounts.danger + alertCounts.warning;
 
-  const myTasks = useMemo(() => {
-    if (!allTasks || myMemberId === null) return [];
-    return (allTasks as TaskItem2[])
-      .filter(t => t.assignedTo === myMemberId && t.status !== "done")
-      .sort((a, b) => {
-        const dateA = a.dueDate ? parseISO(a.dueDate).getTime() : Infinity;
-        const dateB = b.dueDate ? parseISO(b.dueDate).getTime() : Infinity;
-        return dateA - dateB;
-      })
-      .slice(0, 5);
-  }, [allTasks, myMemberId]);
+  // Tarefas atrasadas por responsável
+  const overdueByMember = useMemo(() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const isTaskOverdue = (t: { status: string; dueDate?: string | null }) => {
+      if (t.status === "done" || !t.dueDate) return false;
+      try { return parseISO(t.dueDate) < today; } catch { return false; }
+    };
+    const tasks = (allTasks ?? []) as unknown as { assignedTo?: number | null; status: string; dueDate?: string | null }[];
+    const rows = (members ?? []).map(m => {
+      const mine = tasks.filter(t => t.assignedTo === m.id && t.status !== "done");
+      return { member: m, open: mine.length, overdue: mine.filter(isTaskOverdue).length };
+    }).filter(w => w.overdue > 0).sort((a, b) => b.overdue - a.overdue);
+    const unassignedOverdue = tasks.filter(t => !t.assignedTo && isTaskOverdue(t)).length;
+    return { rows, unassignedOverdue };
+  }, [members, allTasks]);
 
   // Pipeline counts broken out by material
   const pipelineData = useMemo(() => {
@@ -300,18 +304,14 @@ export default function Dashboard() {
     }
     return PHASE_CONFIG.map(ph => {
       const counts = byStatusMaterial.get(ph.id) ?? { madeira: 0, aluminio: 0 };
-      return {
-        ...ph,
-        madeira: counts.madeira,
-        aluminio: counts.aluminio,
-      };
+      return { ...ph, madeira: counts.madeira, aluminio: counts.aluminio };
     });
   }, [projects]);
 
   const madeiraPipeline = pipelineData.map(p => ({ ...p, count: p.madeira }));
   const aluminioPipeline = pipelineData.map(p => ({ ...p, count: p.aluminio }));
 
-  const alerts = useMemo(() => buildAlerts(projects ?? []), [projects]);
+  const dateAlerts = useMemo(() => buildAlerts(projects ?? []), [projects]);
   const upcoming15 = useMemo(() => buildUpcoming15(projects ?? []), [projects]);
   const activeProjects = useMemo(
     () => (projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).slice(0, 6),
@@ -330,7 +330,6 @@ export default function Dashboard() {
   // Upcoming site visits — sort by date ascending, show future ones first
   const upcomingVisits = useMemo(() => {
     if (!siteVisits) return [];
-    const today = new Date(); today.setHours(0, 0, 0, 0);
     return [...siteVisits]
       .filter(v => { try { return !isPast(parseISO(v.date)) || isToday(parseISO(v.date)); } catch { return false; } })
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -359,20 +358,17 @@ export default function Dashboard() {
       if (t.status in c) c[t.status as keyof typeof c]++;
     }
     return [
-      { name: "A Fazer",      value: c.todo,        fill: "#94a3b8" },
-      { name: "Em Andamento", value: c.in_progress,  fill: "#3b82f6" },
-      { name: "Em Revisão",   value: c.review,       fill: "#f59e0b" },
-      { name: "Concluída",    value: c.done,          fill: "#10b981" },
+      { key: "todo",        name: "A Fazer",      value: c.todo,         fill: "#94a3b8" },
+      { key: "in_progress", name: "Em Andamento", value: c.in_progress,  fill: "#3b82f6" },
+      { key: "review",      name: "Em Revisão",   value: c.review,       fill: "#f59e0b" },
+      { key: "done",        name: "Concluída",    value: c.done,         fill: "#10b981" },
     ];
   }, [allTasks]);
 
-  const memberBarData = useMemo(() => {
-    return (productivity as MemberRow[] ?? []).slice(0, 7).map(m => ({
-      name: m.memberName.split(" ")[0],
-      Concluídas: m.doneTasks,
-      Pendentes: m.totalTasks - m.doneTasks,
-    }));
-  }, [productivity]);
+  function scrollToAlerts(e: React.MouseEvent) {
+    e.preventDefault();
+    document.getElementById("central-alertas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -391,119 +387,167 @@ export default function Dashboard() {
       ) : (
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {/* Total de Projetos — com breakdown de material */}
-          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Total de Projetos</span>
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
+          <Link href="/projects">
+            <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Total de Projetos</span>
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-2xl font-bold text-foreground">{total}</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-md px-2 py-0.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  Madeira <strong>{materialCounts.madeira}</strong>
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-2 py-0.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                  Alumínio <strong>{materialCounts.aluminio}</strong>
+                </span>
+              </div>
             </div>
-            <div className="text-2xl font-bold text-foreground">{total}</div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="flex items-center gap-1 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-md px-2 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                Madeira <strong>{materialCounts.madeira}</strong>
-              </span>
-              <span className="flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-2 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                Alumínio <strong>{materialCounts.aluminio}</strong>
-              </span>
-            </div>
-          </div>
+          </Link>
 
           {/* Projetos Ativos */}
-          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Projetos Ativos</span>
-              <Layers className="h-4 w-4 text-blue-500" />
+          <Link href="/projects">
+            <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Projetos Ativos</span>
+                <Layers className="h-4 w-4 text-blue-500" />
+              </div>
+              <div className="text-2xl font-bold text-blue-600">
+                {(projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).length}
+              </div>
+              <p className="text-xs text-muted-foreground">em projeto, produção ou instalação</p>
             </div>
-            <div className="text-2xl font-bold text-blue-600">
-              {(projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).length}
-            </div>
-            <p className="text-xs text-muted-foreground">em projeto, produção ou instalação</p>
-          </div>
+          </Link>
 
-          {/* Alertas de Prazo */}
-          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Alertas de Prazo</span>
-              <AlertCircle className={cn("h-4 w-4", alerts.length > 0 ? "text-red-500" : "text-muted-foreground")} />
+          {/* Alertas */}
+          <a href="#central-alertas" onClick={scrollToAlerts}>
+            <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Alertas</span>
+                <AlertCircle className={cn("h-4 w-4", actionableAlerts > 0 ? "text-red-500" : "text-muted-foreground")} />
+              </div>
+              <div className={cn("text-2xl font-bold", actionableAlerts > 0 ? "text-red-600" : "text-foreground")}>
+                {actionableAlerts}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {alertCounts.danger} críticos · {alertCounts.warning} atenção
+              </p>
             </div>
-            <div className={cn("text-2xl font-bold", alerts.length > 0 ? "text-red-600" : "text-foreground")}>
-              {alerts.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {alerts.filter(a => a.level === "overdue").length} vencidos · {alerts.filter(a => a.level === "soon").length} próximos
-            </p>
-          </div>
+          </a>
 
           {/* Tarefas Concluídas */}
-          <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Tarefas Concluídas</span>
-              <CheckSquare className="h-4 w-4 text-emerald-500" />
+          <Link href={summary?.overdueTasks ? "/tasks?vencidas=1" : "/tasks"}>
+            <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Tarefas Concluídas</span>
+                <CheckSquare className="h-4 w-4 text-emerald-500" />
+              </div>
+              <div className="text-2xl font-bold text-emerald-600">
+                {summary ? `${summary.doneTasks}/${summary.totalTasks}` : "—"}
+              </div>
+              <p className={cn("text-xs", summary?.overdueTasks ? "text-red-600 font-medium" : "text-muted-foreground")}>
+                {summary?.overdueTasks ? `${summary.overdueTasks} tarefa(s) atrasada(s) — ver` : "nenhuma tarefa atrasada"}
+              </p>
             </div>
-            <div className="text-2xl font-bold text-emerald-600">
-              {summary ? `${summary.doneTasks}/${summary.totalTasks}` : "—"}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {summary?.overdueTasks ? `${summary.overdueTasks} tarefa(s) atrasada(s)` : "nenhuma tarefa atrasada"}
-            </p>
-          </div>
+          </Link>
         </div>
       )}
 
-      {/* ── Minhas Tarefas ── */}
-      <div className="bg-card rounded-xl border border-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-4 rounded-full bg-violet-500" />
-            <h2 className="text-sm font-semibold text-foreground">Minhas Tarefas</h2>
+      {/* ── Central de Alertas + Atrasadas por Responsável ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* Central de Alertas */}
+        <div id="central-alertas" className="lg:col-span-3 bg-card rounded-xl border border-border p-4 scroll-mt-4">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="w-1.5 h-4 rounded-full bg-red-500" />
+            <h2 className="text-sm font-semibold text-foreground">Central de Alertas</h2>
+            <div className="ml-auto flex items-center gap-1.5">
+              {(["danger", "warning", "info"] as const).map(sev => (
+                alertCounts[sev] > 0 && (
+                  <span key={sev} className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", SEVERITY_META[sev].chip)}>
+                    {alertCounts[sev]} {SEVERITY_META[sev].label.toLowerCase()}
+                  </span>
+                )
+              ))}
+            </div>
           </div>
-          <Link href="/tasks">
-            <span className="text-xs text-primary hover:underline flex items-center gap-0.5 cursor-pointer">
-              Ver todas <ArrowRight className="h-3 w-3" />
-            </span>
-          </Link>
+          {isTasksLoading || isProjectsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-11 w-full" />)}
+            </div>
+          ) : centralAlerts.length === 0 ? (
+            <div className="py-10 text-center flex flex-col items-center gap-2">
+              <CheckCircle2 className="h-8 w-8 text-emerald-500 opacity-60" />
+              <p className="text-sm text-muted-foreground">Nenhum alerta no momento. Tudo em dia!</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+              {centralAlerts.slice(0, 40).map(a => <AlertRow key={a.id} alert={a} />)}
+              {centralAlerts.length > 40 && (
+                <p className="text-[10px] text-muted-foreground text-center pt-1">
+                  +{centralAlerts.length - 40} outros alertas
+                </p>
+              )}
+            </div>
+          )}
         </div>
-        {isTasksLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
+
+        {/* Tarefas Atrasadas por Responsável */}
+        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1.5 h-4 rounded-full bg-violet-500" />
+            <h2 className="text-sm font-semibold text-foreground">Atrasadas por Responsável</h2>
           </div>
-        ) : myTasks.length === 0 ? (
-          <div className="py-6 text-center flex flex-col items-center gap-2">
-            <CheckCircle2 className="h-7 w-7 text-emerald-500 opacity-60" />
-            <p className="text-sm text-muted-foreground">Nenhuma tarefa atribuída a você.</p>
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {myTasks.map((t) => {
-              const due = taskDueLabel(t);
-              return (
-                <Link key={t.id} href={`/tasks`}>
-                  <div className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
-                    due.urgent ? "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30" : "bg-muted/30 border-border",
-                  )}>
-                    <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
-                      {t.projectName && (
-                        <p className="text-[10px] text-muted-foreground truncate">{t.projectName}</p>
-                      )}
+          {isTasksLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : overdueByMember.rows.length === 0 && overdueByMember.unassignedOverdue === 0 ? (
+            <div className="py-10 text-center flex flex-col items-center gap-2">
+              <CheckCircle2 className="h-8 w-8 text-emerald-500 opacity-60" />
+              <p className="text-sm text-muted-foreground">Nenhuma tarefa atrasada.</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+              {overdueByMember.rows.map(w => {
+                const initials = w.member.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+                return (
+                  <Link key={w.member.id} href={`/tasks?responsavel=${w.member.id}&vencidas=1`}>
+                    <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-muted/30 border-border cursor-pointer hover:border-primary/40 transition-colors">
+                      <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{w.member.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{w.open} aberta(s) no total</p>
+                      </div>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-red-100 text-red-700 whitespace-nowrap">
+                        {w.overdue} atrasada{w.overdue > 1 ? "s" : ""}
+                      </span>
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap",
-                      due.urgent
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        : "bg-muted text-muted-foreground",
-                    )}>
-                      {due.label}
+                  </Link>
+                );
+              })}
+              {overdueByMember.unassignedOverdue > 0 && (
+                <Link href="/tasks?vencidas=1">
+                  <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-amber-50 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30 cursor-pointer hover:opacity-80 transition-opacity">
+                    <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                      <UserX className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground">Sem responsável</p>
+                      <p className="text-[10px] text-muted-foreground">tarefas atrasadas sem dono</p>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-amber-100 text-amber-700">
+                      {overdueByMember.unassignedOverdue}
                     </span>
                   </div>
                 </Link>
-              );
-            })}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Mini Calendário 7 dias ── */}
@@ -576,7 +620,6 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-4">
           <PipelineChart
             title="Pipeline — Madeira"
-            accent="text-amber-600"
             barColor="bg-amber-400"
             flowColor="bg-amber-200"
             textColor="text-amber-600"
@@ -584,7 +627,6 @@ export default function Dashboard() {
           />
           <PipelineChart
             title="Pipeline — Alumínio"
-            accent="text-blue-600"
             barColor="bg-blue-400"
             flowColor="bg-blue-200"
             textColor="text-blue-600"
@@ -593,9 +635,9 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Analytics: Status + Membros ── */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Task status donut */}
+      {/* ── Analytics: Status das Tarefas + Projetos Vencidos ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Task status donut — legenda clicável */}
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-3">
             <CheckSquare className="h-4 w-4 text-primary" />
@@ -626,42 +668,74 @@ export default function Dashboard() {
                   </Pie>
                 </PieChart>
               </div>
-              <div className="flex-1 space-y-2 min-w-0">
+              <div className="flex-1 space-y-1 min-w-0">
                 {taskStatusCounts.map(s => (
-                  <div key={s.name} className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.fill }} />
-                    <span className="text-xs text-muted-foreground flex-1 truncate">{s.name}</span>
-                    <span className="text-xs font-bold text-foreground shrink-0">{s.value}</span>
-                  </div>
+                  <Link key={s.key} href={`/tasks?status=${s.key}`}>
+                    <div className="flex items-center gap-2 rounded-md px-1.5 py-1 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.fill }} />
+                      <span className="text-xs text-muted-foreground flex-1 truncate">{s.name}</span>
+                      <span className="text-xs font-bold text-foreground shrink-0">{s.value}</span>
+                      <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>
           )}
         </div>
 
-        {/* Member bar chart */}
+        {/* Projetos com Prazo Vencido */}
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Users className="h-4 w-4 text-violet-500" />
-            <h2 className="text-sm font-semibold text-foreground">Tarefas por Membro</h2>
+            <div className="w-1.5 h-4 rounded-full bg-red-500" />
+            <h2 className="text-sm font-semibold text-foreground">Projetos com Prazo Vencido</h2>
+            {dateAlerts.filter(a => a.level === "overdue").length > 0 && (
+              <span className="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
+                {dateAlerts.filter(a => a.level === "overdue").length}
+              </span>
+            )}
           </div>
-          {isProductivityLoading ? (
-            <Skeleton className="h-28 w-full rounded-lg" />
-          ) : memberBarData.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-6 text-center">Sem dados disponíveis.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={110}>
-              <BarChart data={memberBarData} barSize={10} barCategoryGap="35%" margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid #e2e8f0" }}
-                  cursor={{ fill: "rgba(0,0,0,0.04)" }}
-                />
-                <Bar dataKey="Concluídas" fill="#10b981" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="Pendentes" fill="#94a3b8" radius={[2, 2, 0, 0]} stackId="a" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+          {loading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+            </div>
+          ) : (() => {
+            const overdueAlerts = dateAlerts.filter(a => a.level === "overdue");
+            if (overdueAlerts.length === 0) return (
+              <div className="py-8 text-center flex flex-col items-center gap-2">
+                <CheckCircle2 className="h-7 w-7 text-emerald-500 opacity-60" />
+                <p className="text-sm text-muted-foreground">Nenhum projeto com prazo vencido.</p>
+              </div>
+            );
+            const byProject = new Map<number, typeof overdueAlerts>();
+            for (const a of overdueAlerts) {
+              const id = a.project.id;
+              if (!byProject.has(id)) byProject.set(id, []);
+              byProject.get(id)!.push(a);
+            }
+            return (
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                {[...byProject.entries()].map(([pid, projectAlerts]) => {
+                  const proj = projectAlerts[0].project;
+                  const maxDelay = Math.max(...projectAlerts.map(a => Math.abs(a.daysLeft)));
+                  return (
+                    <Link key={pid} href={`/projects/${pid}`}>
+                      <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900 cursor-pointer hover:opacity-80 transition-opacity">
+                        <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{proj.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{projectAlerts.length} prazo(s) vencido(s)</p>
+                        </div>
+                        <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded font-medium shrink-0">
+                          {maxDelay}d atraso
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -735,10 +809,10 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ── Projetos em Andamento + Sidebar ── */}
-      <div className="grid grid-cols-5 gap-4">
+      {/* ── Projetos em Andamento + Próximas Visitas ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Tabela de projetos ativos */}
-        <div className="col-span-3 bg-card rounded-xl border border-border p-4">
+        <div className="lg:col-span-3 bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-foreground">Projetos em Andamento</h2>
             <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
@@ -796,294 +870,85 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Sidebar: equipe + visitas */}
-        <div className="col-span-2 space-y-4">
-          {/* Carga da Equipe */}
-          <div className="bg-card rounded-xl border border-border p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-violet-500" />
-              <h2 className="text-sm font-semibold text-foreground">Carga da Equipe</h2>
-            </div>
-            {isProductivityLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-7 w-full" />)}
-              </div>
-            ) : !productivity || productivity.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-4 text-center">Nenhum membro com tarefas.</p>
-            ) : (
-              <div className="space-y-2.5">
-                {(productivity as MemberRow[]).slice(0, 5).map((m) => {
-                  const pct = m.totalTasks > 0 ? Math.round((m.doneTasks / m.totalTasks) * 100) : 0;
-                  const initials = m.memberName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
-                  return (
-                    <div key={m.memberId} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10px] font-bold shrink-0">
-                        {initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-xs font-medium truncate">{m.memberName.split(" ")[0]}</span>
-                          <span className="text-[10px] text-muted-foreground shrink-0">{m.doneTasks}/{m.totalTasks}</span>
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className={cn("h-full rounded-full", pct === 100 ? "bg-emerald-500" : "bg-violet-400")}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Próximas Visitas */}
-          <div className="bg-card rounded-xl border border-border p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin className="h-4 w-4 text-emerald-600" />
-              <h2 className="text-sm font-semibold text-foreground">Próximas Visitas</h2>
-            </div>
-            {isVisitsLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-              </div>
-            ) : upcomingVisits.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma visita programada.</p>
-            ) : (
-              <div className="space-y-2">
-                {upcomingVisits.map((v) => {
-                  const { label, today } = visitDateLabel(v.date);
-                  return (
-                    <div key={v.id} className="flex gap-2.5 pb-2 border-b last:border-0 last:pb-0">
-                      <div className="text-center min-w-[44px]">
-                        <div className={cn(
-                          "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                          today ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground",
-                        )}>{label}</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5 justify-center">
-                          <CalendarDays className="w-2.5 h-2.5" />
-                          {(() => { try { return format(parseISO(v.date), "dd/MM", { locale: ptBR }); } catch { return ""; } })()}
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/projects/${v.projectId}`}>
-                          <p className="text-xs font-medium truncate hover:text-primary cursor-pointer">{v.projectName}</p>
-                        </Link>
-                        <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
-                          <Users className="w-2.5 h-2.5 shrink-0" />{v.visitors}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Alertas + Atividade Recente ── */}
-      <div className="grid grid-cols-5 gap-4">
-        {/* Alertas de Prazo */}
-        <div className="col-span-2 bg-card rounded-xl border border-border p-4">
+        {/* Próximas Visitas */}
+        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 rounded-full bg-red-500" />
-            <h2 className="text-sm font-semibold text-foreground">Alertas de Prazo</h2>
-            {alerts.length > 0 && (
-              <span className="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
-                {alerts.length}
-              </span>
-            )}
+            <MapPin className="h-4 w-4 text-emerald-600" />
+            <h2 className="text-sm font-semibold text-foreground">Próximas Visitas</h2>
           </div>
-          {loading ? (
+          {isVisitsLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
-          ) : alerts.length === 0 ? (
-            <div className="py-8 text-center flex flex-col items-center gap-2">
-              <CheckSquare className="h-7 w-7 text-emerald-500 opacity-60" />
-              <p className="text-sm text-muted-foreground">Nenhum prazo vencido ou próximo.</p>
-            </div>
+          ) : upcomingVisits.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma visita programada.</p>
           ) : (
-            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-              {alerts.map((a, idx) => (
-                <Link key={idx} href={`/projects/${a.project.id}`}>
-                  <div className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
-                    a.level === "overdue" ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100",
-                  )}>
-                    {a.level === "overdue"
-                      ? <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                      : <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{a.project.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{a.fieldLabel}</p>
+            <div className="space-y-2">
+              {upcomingVisits.map((v) => {
+                const { label, today } = visitDateLabel(v.date);
+                return (
+                  <div key={v.id} className="flex gap-2.5 pb-2 border-b last:border-0 last:pb-0">
+                    <div className="text-center min-w-[44px]">
+                      <div className={cn(
+                        "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                        today ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground",
+                      )}>{label}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5 justify-center">
+                        <CalendarDays className="w-2.5 h-2.5" />
+                        {(() => { try { return format(parseISO(v.date), "dd/MM", { locale: ptBR }); } catch { return ""; } })()}
+                      </div>
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 whitespace-nowrap",
-                      a.level === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
-                    )}>
-                      {a.level === "overdue" ? `${Math.abs(a.daysLeft)}d atraso` : a.daysLeft === 0 ? "hoje" : `${a.daysLeft}d`}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/projects/${v.projectId}`}>
+                        <p className="text-xs font-medium truncate hover:text-primary cursor-pointer">{v.projectName}</p>
+                      </Link>
+                      <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
+                        <Users className="w-2.5 h-2.5 shrink-0" />{v.visitors}
+                      </p>
+                    </div>
                   </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Atividade Recente */}
-        <div className="col-span-3 bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 rounded-full bg-blue-500" />
-            <h2 className="text-sm font-semibold text-foreground">Atividade Recente</h2>
+      {/* ── Atividade Recente ── */}
+      <div className="bg-card rounded-xl border border-border p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-1.5 h-4 rounded-full bg-blue-500" />
+          <h2 className="text-sm font-semibold text-foreground">Atividade Recente</h2>
+        </div>
+        {isActivityLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
           </div>
-          {isActivityLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
-            </div>
-          ) : !activity || activity.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">Nenhuma atividade recente.</p>
-            </div>
-          ) : (
-            <div className="space-y-0">
-              {(activity as ActivityItem[]).slice(0, 8).map((item, i, arr) => (
-                <div key={`${item.type}-${item.id}`} className="flex gap-3 pb-3 relative">
-                  {i < arr.length - 1 && (
-                    <div className="absolute left-[9px] top-5 bottom-0 w-px bg-border" />
-                  )}
-                  <div className="w-[18px] h-[18px] rounded-full bg-muted border border-border flex items-center justify-center text-[10px] shrink-0 z-10 mt-0.5">
-                    {activityIcon(item)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground leading-snug">{activityText(item)}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {item.projectName && <span>{item.projectName} · </span>}
-                      há {timeAgo(item.createdAt)}
-                    </p>
-                  </div>
+        ) : !activity || activity.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-muted-foreground">Nenhuma atividade recente.</p>
+          </div>
+        ) : (
+          <div className="space-y-0">
+            {(activity as ActivityItem[]).slice(0, 8).map((item, i, arr) => (
+              <div key={`${item.type}-${item.id}`} className="flex gap-3 pb-3 relative">
+                {i < arr.length - 1 && (
+                  <div className="absolute left-[9px] top-5 bottom-0 w-px bg-border" />
+                )}
+                <div className="w-[18px] h-[18px] rounded-full bg-muted border border-border flex items-center justify-center text-[10px] shrink-0 z-10 mt-0.5">
+                  {activityIcon(item)}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Carga da Equipe + Projetos Vencidos ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Carga da Equipe */}
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 rounded-full bg-indigo-500" />
-            <h2 className="text-sm font-semibold text-foreground">Carga da Equipe</h2>
-            <span className="text-xs text-muted-foreground ml-1">— tarefas abertas por membro</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground leading-snug">{activityText(item)}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {item.projectName && <span>{item.projectName} · </span>}
+                    há {timeAgo(item.createdAt)}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
-          {isTasksLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
-            </div>
-          ) : (() => {
-            const workload = (members ?? [])
-              .map(m => {
-                const mine = (allTasks ?? []).filter(t => (t as unknown as { assignedTo?: number | null }).assignedTo === m.id);
-                const open = mine.filter(t => t.status !== "done").length;
-                const overdue = mine.filter(t => {
-                  if (t.status === "done") return false;
-                  const d = (t as unknown as { dueDate?: string | null }).dueDate;
-                  return d ? differenceInDays(parseISO(d), new Date()) < 0 : false;
-                }).length;
-                return { member: m, open, overdue, total: mine.length };
-              })
-              .filter(w => w.total > 0)
-              .sort((a, b) => b.open - a.open);
-
-            if (workload.length === 0) return (
-              <p className="text-sm text-muted-foreground py-4 text-center">Nenhuma tarefa atribuída.</p>
-            );
-
-            return (
-              <div className="space-y-2.5">
-                {workload.map(w => (
-                  <div key={w.member.id} className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="text-xs font-medium text-foreground truncate">{w.member.name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0 ml-2">
-                          {w.open} aber.
-                          {w.overdue > 0 && <span className="text-red-600 ml-1">{w.overdue} venc.</span>}
-                        </span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="h-full bg-indigo-500 rounded-full transition-all"
-                          style={{ width: `${w.total > 0 ? Math.round(((w.total - w.open) / w.total) * 100) : 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* Projetos Vencidos */}
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 rounded-full bg-red-500" />
-            <h2 className="text-sm font-semibold text-foreground">Projetos com Prazo Vencido</h2>
-            {alerts.filter(a => a.level === "overdue").length > 0 && (
-              <span className="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
-                {alerts.filter(a => a.level === "overdue").length}
-              </span>
-            )}
-          </div>
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-            </div>
-          ) : (() => {
-            const overdueAlerts = alerts.filter(a => a.level === "overdue");
-            if (overdueAlerts.length === 0) return (
-              <div className="py-8 text-center flex flex-col items-center gap-2">
-                <CheckCircle2 className="h-7 w-7 text-emerald-500 opacity-60" />
-                <p className="text-sm text-muted-foreground">Nenhum projeto com prazo vencido.</p>
-              </div>
-            );
-            const byProject = new Map<number, typeof overdueAlerts>();
-            for (const a of overdueAlerts) {
-              const id = a.project.id;
-              if (!byProject.has(id)) byProject.set(id, []);
-              byProject.get(id)!.push(a);
-            }
-            return (
-              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                {[...byProject.entries()].map(([pid, projectAlerts]) => {
-                  const proj = projectAlerts[0].project;
-                  const maxDelay = Math.max(...projectAlerts.map(a => Math.abs(a.daysLeft)));
-                  return (
-                    <Link key={pid} href={`/projects/${pid}`}>
-                      <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900 cursor-pointer hover:opacity-80 transition-opacity">
-                        <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-foreground truncate">{proj.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{projectAlerts.length} prazo(s) vencido(s)</p>
-                        </div>
-                        <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded font-medium shrink-0">
-                          {maxDelay}d atraso
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </div>
+        )}
       </div>
     </div>
   );

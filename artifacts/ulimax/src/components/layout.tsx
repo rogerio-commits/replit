@@ -9,12 +9,10 @@ import {
   CalendarDays,
   LogOut,
   ChevronDown,
-  Bell,
   ClipboardList,
   Wrench,
   FlaskConical,
   BookOpen,
-  TrendingUp,
   Search,
   GanttChartSquare,
   History,
@@ -28,7 +26,7 @@ import {
   Package,
 } from "lucide-react";
 import { useClerk, useUser } from "@clerk/react";
-import { useIsGestor } from "@/hooks/useAppUser";
+import { useAppUser } from "@/hooks/useAppUser";
 import { useAlertCounts } from "@/hooks/useAlerts";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -56,53 +54,108 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { signOut } = useClerk();
   const { user } = useUser();
-  const isGestor = useIsGestor();
+  const { data: me } = useAppUser();
+  const role = me?.role as "gestor" | "executor" | "observador" | undefined;
   const alertCounts = useAlertCounts();
   const recentProjects = useRecentProjects();
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  const navGroups = [
-    {
-      label: "Principal",
-      items: [
-        { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
-        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/projects", label: "Projetos", icon: Briefcase },
-        { href: "/tasks", label: "Tarefas", icon: CheckSquare },
-        { href: "/templates", label: "Templates", icon: Layers },
-        { href: "/kanban", label: "Kanban", icon: Columns3 },
-        { href: "/members", label: "Equipe", icon: Users },
-      ],
-    },
-    {
-      label: "Obra",
-      items: [
-        { href: "/checklist", label: "Instalações", icon: ClipboardList },
-        { href: "/calendario", label: "Calendário", icon: CalendarDays },
-        { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
-        { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
-        { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
-      ],
-    },
-    {
-      label: "Análises",
-      items: [
-        { href: "/portfolio", label: "Portfólio", icon: BarChart3 },
-        { href: "/campos-personalizados", label: "Campos Personalizados", icon: Settings2 },
-      ],
-    },
-    {
-      label: "Sistema",
-      items: [
-        { href: "/alertas", label: "Alertas", icon: Bell, badge: alertCounts.total > 0 ? alertCounts.total : undefined, badgeDanger: alertCounts.danger > 0 },
-        { href: "/automacao", label: "Automações", icon: Zap },
-        { href: "/auditoria", label: "Auditoria", icon: History },
-        { href: "/produtividade", label: "Produtividade", icon: TrendingUp },
-        { href: "/ajuda", label: "Ajuda", icon: BookOpen },
-      ],
-    },
-  ] as { label: string; items: { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean; highlight?: boolean }[] }[];
+  type NavItem = { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean; highlight?: boolean };
+
+  const dashboardItem: NavItem = {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    badge: alertCounts.total > 0 ? alertCounts.total : undefined,
+    badgeDanger: alertCounts.danger > 0,
+  };
+
+  const navGroups: { label: string; items: NavItem[] }[] =
+    role === "executor"
+      ? [
+          {
+            label: "Principal",
+            items: [
+              { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
+              { href: "/tasks", label: "Tarefas", icon: CheckSquare },
+              { href: "/kanban", label: "Kanban", icon: Columns3 },
+              { href: "/projects", label: "Projetos", icon: Briefcase },
+            ],
+          },
+          {
+            label: "Obra",
+            items: [
+              { href: "/checklist", label: "Instalações", icon: ClipboardList },
+              { href: "/calendario", label: "Calendário", icon: CalendarDays },
+            ],
+          },
+          {
+            label: "Sistema",
+            items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
+          },
+        ]
+      : role === "observador"
+        ? [
+            {
+              label: "Principal",
+              items: [
+                dashboardItem,
+                { href: "/projects", label: "Projetos", icon: Briefcase },
+                { href: "/calendario", label: "Calendário", icon: CalendarDays },
+              ],
+            },
+            {
+              label: "Análises",
+              items: [{ href: "/portfolio", label: "Portfólio", icon: BarChart3 }],
+            },
+            {
+              label: "Sistema",
+              items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
+            },
+          ]
+        : role === "gestor"
+          ? [
+              {
+                label: "Principal",
+                items: [
+                  { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
+                  dashboardItem,
+                  { href: "/projects", label: "Projetos", icon: Briefcase },
+                  { href: "/tasks", label: "Tarefas", icon: CheckSquare },
+                  { href: "/kanban", label: "Kanban", icon: Columns3 },
+                  { href: "/members", label: "Equipe", icon: Users },
+                ],
+              },
+              {
+                label: "Obra",
+                items: [
+                  { href: "/checklist", label: "Instalações", icon: ClipboardList },
+                  { href: "/calendario", label: "Calendário", icon: CalendarDays },
+                  { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
+                  { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
+                  { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
+                ],
+              },
+              {
+                label: "Análises",
+                items: [{ href: "/portfolio", label: "Portfólio", icon: BarChart3 }],
+              },
+              {
+                label: "Configurações",
+                items: [
+                  { href: "/templates", label: "Templates", icon: Layers },
+                  { href: "/campos-personalizados", label: "Campos Personalizados", icon: Settings2 },
+                  { href: "/automacao", label: "Automações", icon: Zap },
+                  { href: "/auditoria", label: "Auditoria", icon: History },
+                ],
+              },
+              {
+                label: "Sistema",
+                items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
+              },
+            ]
+          : [];
 
   const initials = user?.firstName && user?.lastName
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
