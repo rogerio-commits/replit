@@ -140,11 +140,12 @@ interface MemberCardProps {
   onSendInvite: (member: Member) => void;
   onResendInvite: (inviteId: number, member: { email: string; name: string }, intendedRole: string) => void;
   onResetLink: (memberId: number, memberName: string) => void;
+  onCopyInviteLink: () => void;
 }
 
 function MemberCard({
   member, users, invitations, isGestor, pendingRoleId, resendingInviteId,
-  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, onResendInvite, onResetLink,
+  onEdit, onDelete, onRoleChange, onRevokeInvite, onSendInvite, onResendInvite, onResetLink, onCopyInviteLink,
 }: MemberCardProps) {
   const linkedUser   = users?.find(u => u.email.toLowerCase() === member.email.toLowerCase());
   const pendingInvite = invitations?.find(inv => inv.email.toLowerCase() === member.email.toLowerCase());
@@ -222,6 +223,17 @@ function MemberCard({
                 {resendingInviteId === pendingInvite.id ? "Reenviando…" : "Reenviar"}
               </Button>
             )}
+            {isGestor && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[11px] px-2 gap-1 text-muted-foreground hover:text-foreground"
+                onClick={onCopyInviteLink}
+              >
+                <Copy className="h-3 w-3" />
+                Copiar link
+              </Button>
+            )}
           </div>
         ) : isGestor ? (
           <Button
@@ -296,6 +308,7 @@ interface TeamSectionProps {
   onSendInvite: (member: Member) => void;
   onResendInvite: (inviteId: number, member: { email: string; name: string }, intendedRole: string) => void;
   onResetLink: (memberId: number, memberName: string) => void;
+  onCopyInviteLink: () => void;
 }
 
 function TeamSection({ team, members, isLoading, ...cardProps }: TeamSectionProps) {
@@ -428,8 +441,13 @@ export default function Members() {
         createInvitation.mutate(
           { data: { email: data.email, name: data.name, intendedRole: data.intendedRole } },
           {
-            onSuccess: () => {
-              toast({ title: "Membro adicionado e convite enviado!", description: `Um e-mail foi enviado para ${data.email}.` });
+            onSuccess: (inv) => {
+              toast({
+                title: inv.emailSent ? "Membro adicionado e convite enviado!" : "Membro adicionado e convite criado!",
+                description: inv.emailSent
+                  ? `Um e-mail foi enviado para ${data.email}.`
+                  : `Use "Copiar link" no card do membro e envie o link de cadastro para ${data.email}. O acesso é liberado automaticamente ao criar a conta com esse e-mail.`,
+              });
               queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
             },
             onError: (err: unknown) => {
@@ -504,8 +522,13 @@ export default function Members() {
     createInvitation.mutate(
       { data: { email: invitingMember.email, name: invitingMember.name, intendedRole: data.intendedRole } },
       {
-        onSuccess: () => {
-          toast({ title: "Convite enviado!", description: `Um e-mail foi enviado para ${invitingMember.email}.` });
+        onSuccess: (inv) => {
+          toast({
+            title: inv.emailSent ? "Convite enviado!" : "Convite criado!",
+            description: inv.emailSent
+              ? `Um e-mail foi enviado para ${invitingMember.email}.`
+              : `Use "Copiar link" e envie o link de cadastro para ${invitingMember.email}. O acesso é liberado automaticamente ao criar a conta com esse e-mail.`,
+          });
           queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
           setInvitingMember(null);
         },
@@ -524,8 +547,13 @@ export default function Members() {
         createInvitation.mutate(
           { data: { email: member.email, name: member.name, intendedRole: intendedRole as SystemRole } },
           {
-            onSuccess: () => {
-              toast({ title: "Convite reenviado!", description: `Um novo e-mail foi enviado para ${member.email}.` });
+            onSuccess: (inv) => {
+              toast({
+                title: inv.emailSent ? "Convite reenviado!" : "Convite recriado!",
+                description: inv.emailSent
+                  ? `Um novo e-mail foi enviado para ${member.email}.`
+                  : `Use "Copiar link" e envie o link de cadastro para ${member.email}.`,
+              });
               queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
             },
             onError: () => toast({ title: "Erro ao reenviar convite", variant: "destructive" }),
@@ -537,6 +565,15 @@ export default function Members() {
         toast({ title: "Erro ao reenviar convite", variant: "destructive" });
         setResendingInviteId(null);
       },
+    });
+  };
+
+  const handleCopyInviteLink = () => {
+    const link = `${window.location.origin}/sign-up`;
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copiado!",
+      description: "Envie este link ao convidado. Ele deve criar a conta com o mesmo e-mail do convite.",
     });
   };
 
@@ -595,6 +632,7 @@ export default function Members() {
     onSendInvite: handleSendInvite,
     onResendInvite: handleResendInvite,
     onResetLink: handleResetLink,
+    onCopyInviteLink: handleCopyInviteLink,
   };
 
   return (
@@ -730,6 +768,15 @@ export default function Members() {
                       >
                         <RefreshCw className={cn("h-3 w-3", resendingInviteId === inv.id && "animate-spin")} />
                         {resendingInviteId === inv.id ? "Reenviando…" : "Reenviar"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[11px] px-2 gap-1 text-muted-foreground hover:text-foreground"
+                        onClick={handleCopyInviteLink}
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copiar link
                       </Button>
                       <Button
                         variant="ghost"

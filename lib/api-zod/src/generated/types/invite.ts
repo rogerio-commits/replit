@@ -15,4 +15,6 @@ export interface Invite {
   /** @nullable */
   clerkInvitationId?: string | null;
   invitedAt: string;
+  emailSent?: boolean;
+  signUpUrl?: string;
 }

@@ -3,8 +3,26 @@ import { clerkClient } from "@clerk/express";
 import { db, invitesTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireGestor } from "../middlewares/requireAuth";
+import { sendInviteEmail } from "../lib/email";
 
 const router = Router();
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** Build the sign-up link only from domains this repl actually serves. */
+function getTrustedOrigin(forwardedHost: string | undefined): string {
+  const allowed = [
+    ...(process.env.REPLIT_DOMAINS?.split(",") ?? []),
+    process.env.REPLIT_DEV_DOMAIN,
+  ]
+    .map((d) => d?.trim())
+    .filter((d): d is string => !!d);
+
+  const requested = forwardedHost?.split(",")[0]?.trim();
+  const host = requested && allowed.includes(requested) ? requested : allowed[0];
+  if (host) return `https://${host}`;
+  return process.env.APP_URL ?? "https://gestao-de-projetos.replit.app";
+}
 
 function inviteRow(inv: typeof invitesTable.$inferSelect) {
   return {
@@ -33,6 +51,14 @@ router.post("/invitations", requireGestor, async (req, res) => {
     return res.status(400).json({ error: "email, name e intendedRole são obrigatórios" });
   }
 
+  if (!EMAIL_RE.test(email.trim()) || email.length > 254) {
+    return res.status(400).json({ error: "E-mail inválido. Verifique e tente novamente." });
+  }
+
+  if (name.trim().length === 0 || name.length > 120) {
+    return res.status(400).json({ error: "Nome inválido." });
+  }
+
   const validRoles = ["gestor", "executor", "observador"];
   if (!validRoles.includes(intendedRole)) {
     return res.status(400).json({ error: "papel inválido" });
@@ -56,22 +82,7 @@ router.post("/invitations", requireGestor, async (req, res) => {
     return res.status(409).json({ error: "Um convite já foi enviado para este e-mail." });
   }
 
-  const proto = (req.headers["x-forwarded-proto"] as string) ?? "https";
-  const host  = (req.headers["x-forwarded-host"] as string) ?? req.headers.host ?? "";
-  const redirectUrl = `${proto}://${host}`;
-
-  let clerkInvitationId: string | null = null;
-  try {
-    const inv = await clerkClient.invitations.createInvitation({
-      emailAddress: email.toLowerCase(),
-      redirectUrl,
-      publicMetadata: { intendedRole },
-    });
-    clerkInvitationId = inv.id;
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return res.status(500).json({ error: `Erro ao enviar convite: ${msg}` });
-  }
+  const signUpUrl = `${getTrustedOrigin(req.headers["x-forwarded-host"] as string | undefined)}/sign-up`;
 
   const [invite] = await db
     .insert(invitesTable)
@@ -79,11 +90,20 @@ router.post("/invitations", requireGestor, async (req, res) => {
       email: email.toLowerCase(),
       name,
       intendedRole: intendedRole as "gestor" | "executor" | "observador",
-      clerkInvitationId,
+      clerkInvitationId: null,
     })
     .returning();
 
-  return res.status(201).json(inviteRow(invite));
+  // Best-effort email; role assignment happens automatically on first sign-in
+  // (requireAuth matches the pending invite by e-mail).
+  const emailSent = await sendInviteEmail({
+    toEmail: email.toLowerCase(),
+    toName: name,
+    intendedRole,
+    signUpUrl,
+  });
+
+  return res.status(201).json({ ...inviteRow(invite), emailSent, signUpUrl });
 });
 
 router.delete("/invitations/:id", requireGestor, async (req, res) => {

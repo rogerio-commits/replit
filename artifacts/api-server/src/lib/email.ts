@@ -7,6 +7,15 @@ const client = process.env.RESEND_API_KEY
 const FROM = process.env.EMAIL_FROM ?? "Ulimax <onboarding@resend.dev>";
 const APP_URL = process.env.APP_URL ?? "https://gestao-de-projetos.replit.app";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function baseTemplate(title: string, body: string): string {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -36,6 +45,39 @@ function baseTemplate(title: string, body: string): string {
   </table>
 </body>
 </html>`;
+}
+
+export async function sendInviteEmail(opts: {
+  toEmail: string;
+  toName: string;
+  intendedRole: string;
+  signUpUrl: string;
+}): Promise<boolean> {
+  if (!client) return false;
+  const toEmail = escapeHtml(opts.toEmail);
+  const toName = escapeHtml(opts.toName);
+  const signUpUrl = escapeHtml(opts.signUpUrl);
+  const { intendedRole } = opts;
+  const roleLabel =
+    intendedRole === "gestor" ? "Gestor" : intendedRole === "executor" ? "Executor" : "Observador";
+  const body = `
+    <h2 style="margin:0 0 8px;font-size:20px;color:#18181b;">Você foi convidado para o Ulimax</h2>
+    <p style="margin:0 0 24px;font-size:14px;color:#71717a;">Olá, <strong>${toName}</strong>. Você recebeu um convite para acessar o Sistema de Controle de Projetos da Ulimax como <strong>${roleLabel}</strong>.</p>
+    <p style="margin:0 0 24px;font-size:14px;color:#3f3f46;">Para começar, crie sua conta usando <strong>este mesmo e-mail (${toEmail})</strong> — seu acesso será liberado automaticamente.</p>
+    <a href="${signUpUrl}" style="display:inline-block;background:#ff6600;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Criar minha conta</a>
+    <p style="margin:24px 0 0;font-size:12px;color:#71717a;">Se o botão não funcionar, copie e cole este link no navegador:<br><a href="${signUpUrl}" style="color:#ff6600;">${signUpUrl}</a></p>
+  `;
+  try {
+    await client.emails.send({
+      from: FROM,
+      to: opts.toEmail,
+      subject: `[Ulimax] Convite para acessar o sistema`,
+      html: baseTemplate("Convite — Ulimax", body),
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function sendTaskAssignedEmail(opts: {

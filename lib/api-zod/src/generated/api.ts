@@ -1113,7 +1113,9 @@ export const ListInvitationsResponseItem = zod.object({
   "name": zod.string(),
   "intendedRole": zod.enum(['gestor', 'executor', 'observador']),
   "clerkInvitationId": zod.string().nullish(),
-  "invitedAt": zod.string()
+  "invitedAt": zod.string(),
+  "emailSent": zod.boolean().optional(),
+  "signUpUrl": zod.string().optional()
 })
 export const ListInvitationsResponse = zod.array(ListInvitationsResponseItem)
 

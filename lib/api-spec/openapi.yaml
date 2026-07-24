@@ -2758,6 +2758,10 @@ components:
           type: ["string", "null"]
         invitedAt:
           type: string
+        emailSent:
+          type: boolean
+        signUpUrl:
+          type: string
 
     CreateInviteBody:
       type: object
