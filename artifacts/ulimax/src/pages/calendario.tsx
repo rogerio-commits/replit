@@ -1,5 +1,15 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { useCanEdit } from "@/hooks/useAppUser";
+import {
   useListInstallationEvents,
   useCreateInstallationEvent,
   useUpdateInstallationEvent,
@@ -190,6 +200,189 @@ function packSubRows(events: InstallationEvent[]): Map<number, number> {
     }
   }
   return result;
+}
+
+// ── Drag & drop building blocks ───────────────────────────────────────────────
+
+/** Day cell inside a team row — droppable target for event bars + click-to-create */
+function DroppableDayCell({
+  team,
+  dateStr,
+  left,
+  bgColor,
+  interactive,
+  onClick,
+}: {
+  team: string;
+  dateStr: string;
+  left: number;
+  bgColor?: string;
+  interactive: boolean;
+  onClick: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cell|${team}|${dateStr}`,
+    data: { team, date: dateStr },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={interactive ? onClick : undefined}
+      className={cn(
+        "absolute top-0 bottom-0 border-r border-border/30 transition-colors",
+        interactive && "cursor-pointer"
+      )}
+      style={{ left, width: DAY_W, backgroundColor: bgColor }}
+    >
+      <div
+        className={cn(
+          "absolute inset-0 transition-colors",
+          isOver ? "bg-primary/15" : interactive ? "hover:bg-primary/5" : undefined
+        )}
+      />
+    </div>
+  );
+}
+
+/** Event bar — draggable horizontally (remarcar) and vertically (trocar equipe) */
+function DraggableEventBar({
+  event,
+  team,
+  style,
+  bgStyle,
+  progW,
+  overflowLeft,
+  overflowRight,
+  canEdit,
+  onEdit,
+  onDelete,
+}: {
+  event: InstallationEvent;
+  team: string;
+  style: React.CSSProperties;
+  bgStyle: React.CSSProperties;
+  progW: number | null;
+  overflowLeft: boolean;
+  overflowRight: boolean;
+  canEdit: boolean;
+  onEdit: (e: InstallationEvent) => void;
+  onDelete: (e: InstallationEvent) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `ev-${event.id}`,
+    data: { event, team },
+    disabled: !canEdit,
+  });
+  const dragHappened = useRef(false);
+  if (isDragging) dragHappened.current = true;
+  // Libera o guard pouco depois do drop — se o navegador não emitir o "ghost click",
+  // o próximo clique real não pode ser engolido
+  useEffect(() => {
+    if (!isDragging && dragHappened.current) {
+      const t = setTimeout(() => { dragHappened.current = false; }, 250);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [isDragging]);
+
+  const evStart = parseISO(event.startDate);
+  const evEnd   = event.endDate ? parseISO(event.endDate) : evStart;
+
+  const mergedStyle: React.CSSProperties = {
+    ...style,
+    ...(transform
+      ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 60 }
+      : {}),
+    ...(isDragging ? { boxShadow: "0 10px 28px rgba(0,0,0,0.35)", opacity: 0.92 } : {}),
+  };
+
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!canEdit) return;
+    if (dragHappened.current) {
+      dragHappened.current = false;
+      return;
+    }
+    onEdit(event);
+  }
+
+  return (
+    <TooltipProvider delayDuration={300}>
+      <Tooltip open={isDragging ? false : undefined}>
+        <TooltipTrigger asChild>
+          <div
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            style={mergedStyle}
+            onClick={handleClick}
+            className={cn(
+              "group flex items-center px-2 select-none overflow-hidden z-20 hover:brightness-105",
+              canEdit ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+              colorText(event.color)
+            )}
+          >
+            {/* Background layer — grayscale only here, not on text */}
+            <div style={bgStyle} />
+
+            {/* Progress overlay (semi-transparent darker strip) */}
+            {progW !== null && (
+              <div
+                className="absolute top-0 left-0 bottom-0 pointer-events-none rounded-l-[7px]"
+                style={{ width: progW, backgroundColor: "rgba(0,0,0,0.18)" }}
+              />
+            )}
+
+            {overflowLeft && <span className="mr-1 text-[10px] opacity-70 relative z-10">◂</span>}
+            {event.eventType === "assistencia"
+              ? <Wrench className="h-3 w-3 mr-1 shrink-0 opacity-90 relative z-10" />
+              : <HardHat className="h-3 w-3 mr-1 shrink-0 opacity-90 relative z-10" />}
+            <span className="text-[11px] font-semibold truncate flex-1 relative z-10">{event.title}</span>
+            {overflowRight && <span className="ml-1 text-[10px] opacity-70 relative z-10">▸</span>}
+            {/* Hover actions */}
+            {canEdit && (
+              <span className="hidden group-hover:flex items-center gap-0.5 shrink-0 ml-1 relative z-10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEdit(event); }}
+                  className="p-0.5 rounded hover:bg-white/20"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(event); }}
+                  className="p-0.5 rounded hover:bg-white/20"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs">
+          <p className="font-semibold">{event.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(evStart, "d MMM", { locale: ptBR })}
+            {!isSameDay(evStart, evEnd) && <> — {format(evEnd, "d MMM", { locale: ptBR })}</>}
+            {" · "}
+            {differenceInDays(evEnd, evStart) + 1} dia(s)
+          </p>
+          <p className="text-xs mt-0.5">
+            {event.eventType === "assistencia" ? "🛠️ Assistência" : "🔧 Instalação"}
+          </p>
+          {event.teamDescription && <p className="text-xs mt-0.5">{event.teamDescription}</p>}
+          {event.notes && <p className="text-xs mt-1 opacity-80">{event.notes}</p>}
+          {progW !== null && (
+            <p className="text-xs mt-1 font-medium text-blue-400">
+              Em andamento
+            </p>
+          )}
+          {canEdit && (
+            <p className="text-[10px] mt-1 opacity-60">Arraste para remarcar ou trocar de equipe</p>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 // ── Schema ────────────────────────────────────────────────────────────────────
@@ -402,6 +595,7 @@ function GanttRow({
   onRenameTeam,
   dayEventCount,
   holidays,
+  canEdit,
 }: {
   team: string;
   events: InstallationEvent[];
@@ -415,6 +609,7 @@ function GanttRow({
   onRenameTeam: (oldName: string, newName: string) => void;
   dayEventCount: Map<string, number>;
   holidays: Map<string, string>;
+  canEdit: boolean;
 }) {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue]     = useState(team);
@@ -541,18 +736,19 @@ function GanttRow({
           ) : (
             <button
               type="button"
-              onClick={startEdit}
-              title="Clique para renomear a equipe"
+              onClick={canEdit ? startEdit : undefined}
+              title={canEdit ? "Clique para renomear a equipe" : undefined}
               className={cn(
                 "flex-1 min-w-0 text-left text-sm font-medium truncate",
-                "rounded px-1 -mx-1 hover:bg-muted transition-colors",
+                "rounded px-1 -mx-1 transition-colors",
+                canEdit ? "hover:bg-muted cursor-pointer" : "cursor-default",
                 team === NO_TEAM && "text-muted-foreground italic"
               )}
             >
               {team}
             </button>
           )}
-          {!editingName && (
+          {!editingName && canEdit && (
             <button
               type="button"
               onClick={startEdit}
@@ -584,18 +780,15 @@ function GanttRow({
           else if (count > 0)     bgColor = `rgba(59,130,246,${density * 0.07})`;
 
           return (
-            <div
+            <DroppableDayCell
               key={dateStr}
+              team={team}
+              dateStr={dateStr}
+              left={differenceInDays(day, monthStart) * DAY_W}
+              bgColor={bgColor}
+              interactive={canEdit}
               onClick={() => onDayClick(team, dateStr)}
-              className="absolute top-0 bottom-0 border-r border-border/30 cursor-pointer transition-colors"
-              style={{
-                left: differenceInDays(day, monthStart) * DAY_W,
-                width: DAY_W,
-                backgroundColor: bgColor,
-              }}
-            >
-              <div className="absolute inset-0 hover:bg-primary/5 transition-colors" />
-            </div>
+            />
           );
         })}
 
@@ -620,82 +813,21 @@ function GanttRow({
           if (!style) return null;
           const evStart = parseISO(event.startDate);
           const evEnd   = event.endDate ? parseISO(event.endDate) : evStart;
-          const overflowLeft  = evStart < monthStart;
-          const overflowRight = evEnd > monthEnd;
-          const progW    = progressWidth(event, style);
-          const isPast   = evEnd < today;
 
           return (
-            <TooltipProvider key={event.id} delayDuration={300}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div
-                    style={style}
-                    onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
-                    className={cn(
-                      "group flex items-center px-2 cursor-pointer select-none overflow-hidden",
-                      "z-20 transition-all hover:brightness-105",
-                      colorText(event.color)
-                    )}
-                  >
-                    {/* Background layer — grayscale only here, not on text */}
-                    <div style={barBgStyle(event, isPast)} />
-
-                    {/* Progress overlay (semi-transparent darker strip) */}
-                    {progW !== null && (
-                      <div
-                        className="absolute top-0 left-0 bottom-0 pointer-events-none rounded-l-[7px]"
-                        style={{
-                          width: progW,
-                          backgroundColor: "rgba(0,0,0,0.18)",
-                        }}
-                      />
-                    )}
-
-                    {overflowLeft && <span className="mr-1 text-[10px] opacity-70 relative z-10">◂</span>}
-                    {event.eventType === "assistencia"
-                      ? <Wrench className="h-3 w-3 mr-1 shrink-0 opacity-90 relative z-10" />
-                      : <HardHat className="h-3 w-3 mr-1 shrink-0 opacity-90 relative z-10" />}
-                    <span className="text-[11px] font-semibold truncate flex-1 relative z-10">{event.title}</span>
-                    {overflowRight && <span className="ml-1 text-[10px] opacity-70 relative z-10">▸</span>}
-                    {/* Hover actions */}
-                    <span className="hidden group-hover:flex items-center gap-0.5 shrink-0 ml-1 relative z-10">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onEditEvent(event); }}
-                        className="p-0.5 rounded hover:bg-white/20"
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDeleteEvent(event); }}
-                        className="p-0.5 rounded hover:bg-white/20"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="font-semibold">{event.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(evStart, "d MMM", { locale: ptBR })}
-                    {!isSameDay(evStart, evEnd) && <> — {format(evEnd, "d MMM", { locale: ptBR })}</>}
-                    {" · "}
-                    {differenceInDays(evEnd, evStart) + 1} dia(s)
-                  </p>
-                  <p className="text-xs mt-0.5">
-                    {event.eventType === "assistencia" ? "🛠️ Assistência" : "🔧 Instalação"}
-                  </p>
-                  {event.teamDescription && <p className="text-xs mt-0.5">{event.teamDescription}</p>}
-                  {event.notes && <p className="text-xs mt-1 opacity-80">{event.notes}</p>}
-                  {progW !== null && (
-                    <p className="text-xs mt-1 font-medium text-blue-400">
-                      Em andamento
-                    </p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <DraggableEventBar
+              key={event.id}
+              event={event}
+              team={team}
+              style={style}
+              bgStyle={barBgStyle(event, evEnd < today)}
+              progW={progressWidth(event, style)}
+              overflowLeft={evStart < monthStart}
+              overflowRight={evEnd > monthEnd}
+              canEdit={canEdit}
+              onEdit={onEditEvent}
+              onDelete={onDeleteEvent}
+            />
           );
         })}
       </div>
@@ -724,6 +856,68 @@ export default function Calendario() {
   const updateMut      = useUpdateInstallationEvent();
 
   const { data: events = [], isLoading } = useListInstallationEvents();
+  const canEdit = useCanEdit();
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  /** Drop de uma barra: desloca as datas pelo nº de dias arrastados e/ou troca a equipe */
+  function handleDragEnd(e: DragEndEvent) {
+    const data = e.active.data.current as { event: InstallationEvent; team: string } | undefined;
+    if (!data) return;
+    const ev = data.event;
+    const overData = e.over?.data.current as { team: string; date: string } | undefined;
+    // Soltou fora da grade (cabeçalho, lateral, fora da janela) → cancela sem alterar nada
+    if (!overData) return;
+    const daysDelta = Math.round(e.delta.x / DAY_W);
+    const newTeam = overData.team;
+    // Mover para "Sem equipe" não altera a equipe (a API não limpa o campo) — só as datas
+    const teamChanged = newTeam !== data.team && newTeam !== NO_TEAM;
+    if (daysDelta === 0 && !teamChanged) return;
+
+    const newStart = ymd(addDays(parseISO(ev.startDate), daysDelta));
+    const newEnd = ev.endDate ? ymd(addDays(parseISO(ev.endDate), daysDelta)) : undefined;
+
+    const key = getListInstallationEventsQueryKey();
+    qc.setQueryData<InstallationEvent[]>(key, (old) =>
+      old?.map((x) =>
+        x.id === ev.id
+          ? {
+              ...x,
+              startDate: newStart,
+              endDate: ev.endDate ? (newEnd as string) : x.endDate,
+              teamDescription: teamChanged ? newTeam : x.teamDescription,
+            }
+          : x
+      )
+    );
+    updateMut.mutate(
+      {
+        id: ev.id,
+        data: {
+          startDate: newStart,
+          ...(ev.endDate ? { endDate: newEnd } : {}),
+          ...(teamChanged ? { teamDescription: newTeam } : {}),
+        },
+      },
+      {
+        onSuccess: () => {
+          qc.invalidateQueries({ queryKey: key });
+          const dateLabel = format(parseISO(newStart), "dd/MM", { locale: ptBR });
+          toast({
+            title:
+              teamChanged && daysDelta !== 0
+                ? `Movido para "${newTeam}" e remarcado para ${dateLabel}.`
+                : teamChanged
+                  ? `Movido para "${newTeam}".`
+                  : `Remarcado para ${dateLabel}.`,
+          });
+        },
+        onError: () => {
+          qc.invalidateQueries({ queryKey: key });
+          toast({ title: "Não foi possível mover o evento.", variant: "destructive" });
+        },
+      }
+    );
+  }
 
   async function handleRenameTeam(oldName: string, newName: string) {
     const toUpdate = events.filter(
@@ -918,7 +1112,9 @@ export default function Calendario() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight leading-tight">Calendário de Instalações</h1>
-              <p className="text-xs text-muted-foreground">Visão de equipes e obras no tempo</p>
+              <p className="text-xs text-muted-foreground">
+                {canEdit ? "Arraste as barras para remarcar datas ou trocar de equipe" : "Visão de equipes e obras no tempo"}
+              </p>
             </div>
           </div>
 
@@ -958,12 +1154,16 @@ export default function Calendario() {
             </Button>
           </div>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
-          <Button variant="outline" size="sm" className="h-8" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
-            <Users className="mr-1.5 h-4 w-4" /> Nova Equipe
-          </Button>
-          <Button size="sm" className="h-8" onClick={() => openCreate("", isoDate(new Date()))}>
-            <Plus className="mr-1.5 h-4 w-4" /> Novo Evento
-          </Button>
+          {canEdit && (
+            <>
+              <Button variant="outline" size="sm" className="h-8" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
+                <Users className="mr-1.5 h-4 w-4" /> Nova Equipe
+              </Button>
+              <Button size="sm" className="h-8" onClick={() => openCreate("", isoDate(new Date()))}>
+                <Plus className="mr-1.5 h-4 w-4" /> Novo Evento
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -973,6 +1173,7 @@ export default function Calendario() {
           <Loader2 className="h-5 w-5 animate-spin" /> Carregando...
         </div>
       ) : (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd} autoScroll={false}>
         <div ref={scrollRef} className="flex-1 overflow-auto" onScroll={handleScrollEdge}>
           <div style={{ minWidth: LEFT_W + totalW }}>
 
@@ -1096,6 +1297,7 @@ export default function Calendario() {
                 onRenameTeam={handleRenameTeam}
                 dayEventCount={dayEventCount}
                 holidays={holidays}
+                canEdit={canEdit}
               />
             ))}
 
@@ -1153,6 +1355,7 @@ export default function Calendario() {
             </div>
           </div>
         </div>
+        </DndContext>
       )}
 
       {/* ── Dialogs ──────────────────────────────────────────────────────── */}
