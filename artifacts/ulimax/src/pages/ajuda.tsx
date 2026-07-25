@@ -48,6 +48,10 @@ import {
   Scale,
   SlidersHorizontal,
   AlertCircle,
+  CircleDot,
+  Presentation,
+  Activity,
+  ClipboardPaste,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +101,7 @@ const sections: Section[] = [
           headers={["Componente", "Descrição"]}
           rows={[
             ["KPIs", "Total de projetos, projetos ativos, alertas de prazo e percentual de tarefas concluídas"],
+            ["Farol de Projetos", "Contadores 🟢🟡🔴 e os projetos que precisam de atenção, com o motivo"],
             ["Fases dos Projetos", "Quantidade de projetos em cada etapa (A Iniciar → Em Instalação)"],
             ["Visitas em Obras", "Agenda de visitas: data, responsável e objetivo"],
             ["Alertas de Prazo", "Projetos com datas vencidas ou próximas do vencimento"],
@@ -108,10 +113,41 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "farol",
+    title: "Farol de Projetos",
+    icon: CircleDot,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Cada projeto recebe automaticamente uma cor de farol — 🟢, 🟡 ou 🔴 — sempre acompanhada do motivo em linguagem simples (ex: <em>"3 tarefas atrasadas"</em>). Dá para ver em segundos o que precisa de atenção, sem abrir projeto por projeto.</p>
+        <Subsection title="O que cada cor significa">
+          <Table
+            headers={["Cor", "Significado"]}
+            rows={[
+              ["🟢 Em dia", "Nenhum atraso e nada vencendo nos próximos dias"],
+              ["🟡 Atenção", "Tarefas vencendo em até 3 dias, tarefa parada há 7+ dias ou entrega do projeto próxima com pouco progresso"],
+              ["🔴 Crítico", "Tarefas com prazo vencido ou data de entrega do projeto já ultrapassada"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Onde aparece">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Dashboard</Strong>: seção <em>🚦 Farol de Projetos</em> com contadores e os projetos que precisam de atenção — clique em um deles para abri-lo.</li>
+            <li><Strong>Projetos</Strong>: coluna <em>Farol</em> na tabela — passe o mouse na bolinha para ver o motivo.</li>
+            <li><Strong>Relatório do projeto e Reunião Semanal</Strong>: o farol também abre essas páginas.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Filtrar pela cor">
+          <p className="text-sm text-muted-foreground">Na página <Strong>Projetos</Strong>, os contadores 🔴 🟡 🟢 na barra de filtros são clicáveis — clique para ver somente os projetos daquela cor e clique de novo para desfazer.</p>
+        </Subsection>
+        <Tip>Projetos concluídos aparecem sempre 🟢. O farol é calculado na hora com base nas tarefas e datas — mantenha os prazos preenchidos para ele refletir a realidade.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "meu-dia",
     title: "Meu Dia",
     icon: Sun,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Página pessoal que exibe somente as tarefas e projetos relacionados ao usuário logado — o ponto de partida ideal para começar o dia de trabalho.</p>
@@ -128,7 +164,7 @@ const sections: Section[] = [
           />
         </Subsection>
         <Subsection title="Concluir uma tarefa sem sair da página">
-          <p className="text-sm text-muted-foreground">Passe o mouse sobre o <Strong>círculo</Strong> à esquerda de qualquer tarefa em <em>Minhas Tarefas</em> — ele exibe um ícone de ✓ verde. Clique para marcar a tarefa como concluída instantaneamente, sem abrir nenhum modal.</p>
+          <p className="text-sm text-muted-foreground">Passe o mouse sobre o <Strong>círculo</Strong> à esquerda de qualquer tarefa em <em>Minhas Tarefas</em> — ele exibe um ícone de ✓ verde. Clique para marcar a tarefa como concluída instantaneamente, sem abrir nenhum modal. Também é possível <Strong>adiar o prazo</Strong> (amanhã, em 3 dias ou próxima semana) pelo botão de adiar na própria linha da tarefa.</p>
         </Subsection>
         <Subsection title="Abrir detalhes de uma tarefa">
           <p className="text-sm text-muted-foreground">Clique em qualquer lugar no <Strong>card da tarefa</Strong> para abrir o painel lateral completo com descrição, subtarefas, comentários, anexos e registro de horas — o mesmo painel disponível na página Tarefas.</p>
@@ -171,6 +207,7 @@ const sections: Section[] = [
             <li><Strong>Busca por texto</Strong>: filtra por nome ou descrição</li>
             <li><Strong>Status</Strong>: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação</li>
             <li><Strong>Prioridade</Strong>: Normal ou Alta</li>
+            <li><Strong>Farol</Strong>: clique nos contadores 🔴 🟡 🟢 para ver só os projetos daquela cor</li>
           </ul>
         </Subsection>
         <Subsection title="Duplicar um projeto">
@@ -179,13 +216,13 @@ const sections: Section[] = [
         <Subsection title="Criar projeto a partir de um template">
           <p className="text-sm text-muted-foreground">Acesse <Strong>Templates</Strong> no menu lateral, selecione o template desejado e clique em <Strong>Usar Template</Strong>. Informe o nome do projeto e a data de início — as tarefas do template são criadas automaticamente com os prazos calculados.</p>
         </Subsection>
-        <Subsection title="Exportar relatório em PDF">
-          <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Exportar PDF</Strong> no cabeçalho da página. O arquivo gerado contém nome, status, datas, descrição, lista completa de tarefas e membros da equipe.</p>
+        <Subsection title="Relatório do projeto">
+          <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Relatório</Strong> no cabeçalho da página. Abre uma página de status completa — farol, progresso, datas, marcos e tarefas — pronta para <Strong>imprimir ou salvar em PDF</Strong>. Veja a seção <em>Relatório do Projeto</em> desta ajuda.</p>
         </Subsection>
         <Subsection title="Exportar tabela em CSV">
           <p className="text-sm text-muted-foreground">Na página <Strong>Projetos</Strong>, clique em <Strong>Exportar CSV</Strong> ao lado do botão "Novo Projeto". O arquivo exportado inclui todos os projetos visíveis com todas as colunas: status, prioridade, material, contagem de tarefas e todas as datas de fases.</p>
         </Subsection>
-        <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas, tarefas vinculadas e o botão de exportação em PDF.</Tip>
+        <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas, tarefas vinculadas e o botão <Strong>Relatório</Strong>.</Tip>
       </div>
     ),
   },
@@ -219,6 +256,9 @@ const sections: Section[] = [
         <Subsection title="Toggle rápido de status">
           <p className="text-sm text-muted-foreground">Na lista de tarefas, o <Strong>badge de status</Strong> (ex: <em>A Fazer</em>) é clicável. Cada clique avança o status em sequência: <Strong>A Fazer → Em Andamento → Em Revisão → Concluída → A Fazer</Strong>. Passe o mouse sobre o badge para ver a dica de interação.</p>
         </Subsection>
+        <Subsection title="Ações rápidas: Concluir e Adiar">
+          <p className="text-sm text-muted-foreground">Em cada tarefa em aberto aparecem os botões <Strong>Concluir</Strong> (marca como concluída na hora) e <Strong>Adiar</Strong> (move o prazo para <em>amanhã</em>, <em>em 3 dias</em> ou <em>próxima semana</em>) — sem abrir nenhuma janela. Tarefas sem andamento há mais de 7 dias exibem o aviso âmbar <Strong>"Parada há X d"</Strong>.</p>
+        </Subsection>
         <Subsection title="Filtros salvos">
           <p className="text-sm text-muted-foreground mb-2">Salve combinações de filtros frequentes para acesso rápido:</p>
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
@@ -248,10 +288,41 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "criar-lote",
+    title: "Criar Tarefas em Lote",
+    icon: ClipboardPaste,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Transforme uma lista anotada (do papel, do WhatsApp, de uma reunião) em tarefas de verdade em segundos — cada linha vira uma tarefa.</p>
+        <Subsection title="Como usar">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Na página <Strong>Tarefas</Strong>, clique em <Strong>Criar em Lote</Strong>.</li>
+            <li>Escolha o <Strong>projeto</Strong> que receberá as tarefas.</li>
+            <li>Cole ou digite a lista — <Strong>uma tarefa por linha</Strong>.</li>
+            <li>Confira a prévia (título, responsável e prazo reconhecidos) e clique em <Strong>Criar</Strong>.</li>
+          </ol>
+        </Subsection>
+        <Subsection title="O sistema reconhece automaticamente">
+          <Table
+            headers={["Você escreve", "O sistema entende"]}
+            rows={[
+              ["Medir vão da janela - João - sexta", "Tarefa para João com prazo na próxima sexta-feira"],
+              ["Comprar dobradiças ; 28/07", "Tarefa com prazo em 28/07"],
+              ["Enviar projeto | Maria | amanhã", "Tarefa para Maria com prazo amanhã"],
+              ["Revisar orçamento", "Tarefa simples, sem responsável nem prazo"],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground mt-2">Separe as partes com <Strong>-</Strong>, <Strong>;</Strong> ou <Strong>|</Strong>. Prazos aceitos: <em>hoje</em>, <em>amanhã</em>, dias da semana (<em>segunda</em> a <em>sábado</em>) e datas como <em>25/07</em>.</p>
+        </Subsection>
+        <Tip>Se houver duas pessoas com nomes parecidos, o sistema deixa a tarefa sem responsável em vez de arriscar atribuir errado — o nome fica no título para você definir depois.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "subtarefas",
     title: "Subtarefas",
     icon: ListTree,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Divida qualquer tarefa em etapas menores para acompanhar o progresso passo a passo.</p>
@@ -276,7 +347,6 @@ const sections: Section[] = [
     id: "operacoes-massa",
     title: "Operações em Massa",
     icon: CheckCheck,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Atualize o status ou a prioridade de várias tarefas ao mesmo tempo, sem precisar editar uma a uma.</p>
@@ -307,7 +377,6 @@ const sections: Section[] = [
     id: "etiquetas",
     title: "Etiquetas (Tags)",
     icon: Tag,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Classifique tarefas com etiquetas coloridas para facilitar a identificação visual e a organização por categoria.</p>
@@ -333,7 +402,6 @@ const sections: Section[] = [
     id: "dependencias",
     title: "Dependências entre Tarefas",
     icon: Link2,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Indique quais tarefas precisam ser concluídas antes que outra possa ser iniciada, tornando as sequências de trabalho explícitas e visíveis.</p>
@@ -366,7 +434,6 @@ const sections: Section[] = [
     id: "markdown",
     title: "Descrições em Markdown",
     icon: FileText,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A descrição das tarefas suporta formatação Markdown — escreva com marcações simples e o sistema renderiza o resultado com visual limpo e legível.</p>
@@ -403,7 +470,6 @@ const sections: Section[] = [
     id: "busca",
     title: "Busca Global",
     icon: Search,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Encontre qualquer projeto, tarefa ou membro instantaneamente sem precisar navegar pelos menus.</p>
@@ -436,7 +502,6 @@ const sections: Section[] = [
     id: "comentarios",
     title: "Comentários em Tarefas",
     icon: MessageSquare,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Cada tarefa possui um histórico de comentários para comunicação contextualizada diretamente no item de trabalho.</p>
@@ -459,7 +524,6 @@ const sections: Section[] = [
     id: "anexos",
     title: "Anexos em Tarefas",
     icon: Paperclip,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Arquivos (imagens, PDFs, planilhas, etc.) podem ser anexados diretamente a qualquer tarefa para centralizar as evidências e documentos do trabalho.</p>
@@ -482,31 +546,32 @@ const sections: Section[] = [
   },
   {
     id: "pdf",
-    title: "Relatório PDF de Projeto",
+    title: "Relatório do Projeto (1 clique)",
     icon: FileDown,
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Gere um relatório completo de qualquer projeto em formato PDF, pronto para compartilhar com clientes ou para arquivo.</p>
-        <Subsection title="Gerar o PDF">
+        <p className="text-sm text-muted-foreground">Gere um relatório de status completo de qualquer projeto, pronto para imprimir ou salvar em PDF e enviar ao cliente.</p>
+        <Subsection title="Como gerar">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Acesse <Strong>Projetos</Strong> e clique no projeto desejado para abrir o detalhe.</li>
-            <li>No cabeçalho da página, clique em <Strong>Exportar PDF</Strong>.</li>
-            <li>O arquivo é gerado automaticamente e o download começa em instantes.</li>
+            <li>No cabeçalho da página, clique em <Strong>Relatório</Strong>.</li>
+            <li>Na página que se abre, clique em <Strong>Imprimir / Salvar PDF</Strong> — na janela do navegador, escolha a impressora ou a opção <em>"Salvar como PDF"</em>.</li>
           </ol>
         </Subsection>
         <Subsection title="O que está no relatório">
           <Table
             headers={["Seção", "Conteúdo"]}
             rows={[
-              ["Cabeçalho", "Nome do projeto, status, prioridade e datas de início e entrega"],
-              ["Descrição", "Texto completo da descrição do projeto"],
-              ["Tarefas", "Lista de todas as tarefas com status, prioridade e responsável"],
-              ["Equipe", "Membros participantes com nome e função"],
+              ["Cabeçalho", "Nome do projeto, farol 🟢🟡🔴 com os motivos e o status atual"],
+              ["Progresso", "Barra de andamento e contagem de tarefas concluídas"],
+              ["Datas principais", "Início, fim estimado, medição e início da instalação"],
+              ["Marcos", "Datas-chave do projeto com a situação de cada uma"],
+              ["Tarefas", "Atrasadas, próximas em aberto e concluídas na última semana"],
             ]}
           />
         </Subsection>
-        <Tip>O PDF é gerado diretamente no navegador, sem necessidade de servidor externo. O nome do arquivo inclui o nome do projeto para fácil identificação.</Tip>
+        <Tip>Este relatório substitui o antigo botão "Exportar PDF" — agora com farol, marcos e visual pronto para apresentar ao cliente.</Tip>
       </div>
     ),
   },
@@ -514,7 +579,6 @@ const sections: Section[] = [
     id: "notificacoes",
     title: "Notificações",
     icon: Bell,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">O sistema gera notificações automáticas para manter toda a equipe informada sobre mudanças importantes em projetos e tarefas.</p>
@@ -545,7 +609,6 @@ const sections: Section[] = [
     id: "gantt",
     title: "Linha do Tempo (Gantt)",
     icon: GanttChart,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Cada projeto possui uma aba de <Strong>Linha do Tempo</Strong> que exibe as tarefas em formato Gantt, com barras coloridas representando início, duração e prazo de cada item.</p>
@@ -578,7 +641,6 @@ const sections: Section[] = [
     id: "fotos-arquivos",
     title: "Fotos e Arquivos do Projeto",
     icon: Camera,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Cada projeto possui duas seções dedicadas a mídia: <Strong>Fotos</Strong> (galeria de imagens da obra) e <Strong>Arquivos</Strong> (documentos, planilhas, PDFs e demais tipos).</p>
@@ -613,7 +675,6 @@ const sections: Section[] = [
     id: "aprovacao",
     title: "Fluxo de Aprovação",
     icon: BadgeCheck,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Quando um projeto avança para a fase <Strong>Em Aprovação</Strong>, um painel de revisão é exibido no topo da página de detalhe para que gestores tomem a decisão de aprovar ou rejeitar.</p>
@@ -650,7 +711,6 @@ const sections: Section[] = [
     id: "produtividade",
     title: "Produtividade",
     icon: BarChart2,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A análise de produtividade mostra o desempenho individual de cada membro da equipe, com base nas tarefas atribuídas e concluídas.</p>
@@ -675,7 +735,6 @@ const sections: Section[] = [
     id: "templates",
     title: "Templates de Projeto",
     icon: Layers,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Templates são modelos reutilizáveis de projeto — defina uma estrutura padrão de tarefas uma vez e aplique quantas vezes precisar para criar projetos novos de forma ágil.</p>
@@ -707,7 +766,6 @@ const sections: Section[] = [
     id: "recorrencia",
     title: "Tarefas Recorrentes",
     icon: Repeat2,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Tarefas recorrentes se repetem automaticamente em um intervalo definido — ao marcar uma como concluída, a próxima ocorrência é criada automaticamente com o prazo deslocado.</p>
@@ -742,7 +800,6 @@ const sections: Section[] = [
     id: "registro-horas",
     title: "Registro de Horas",
     icon: Clock,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Registre o tempo trabalhado em cada tarefa para acompanhar o esforço real da equipe e comparar com o planejado.</p>
@@ -776,7 +833,6 @@ const sections: Section[] = [
     id: "automacao",
     title: "Regras de Automação",
     icon: Zap,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Crie regras que disparam ações automaticamente no servidor quando determinados eventos acontecem — sem precisar agir manualmente em cada caso. As regras são executadas em tempo real pelo backend.</p>
@@ -898,7 +954,7 @@ const sections: Section[] = [
           headers={["Nível", "Quando aparece"]}
           rows={[
             ["🔴 Crítico", "Instalação atrasada, tarefa vencida"],
-            ["🟡 Atenção", "Prazo próximo, projeto sem data de instalação"],
+            ["🟡 Atenção", "Prazo próximo, projeto sem data de instalação, tarefa parada há 7+ dias"],
             ["🔵 Informativo", "Projetos parados, tarefas sem responsável"],
           ]}
         />
@@ -994,10 +1050,70 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "reuniao",
+    title: "Reunião Semanal",
+    icon: Presentation,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Pauta de reunião montada automaticamente com o que importa na semana — abra na segunda-feira e conduza a reunião sem preparar nada.</p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">Menu lateral → seção <Strong>Análises</Strong> → <Strong>Reunião Semanal</Strong> (visível somente para Gestores).</p>
+        </Subsection>
+        <Subsection title="O que aparece na pauta">
+          <Table
+            headers={["Bloco", "Conteúdo"]}
+            rows={[
+              ["Projetos que pedem atenção", "Projetos 🔴 e 🟡 com os motivos do farol"],
+              ["Tarefas atrasadas", "Agrupadas por responsável, para cobrança direta"],
+              ["Vencem nos próximos 7 dias", "O que precisa ser priorizado nesta semana"],
+              ["Paradas há 7+ dias", "Tarefas sem andamento que merecem uma decisão"],
+              ["Concluídas na última semana", "Reconhecimento do que foi entregue, por pessoa"],
+              ["Sem responsável", "Tarefas abertas que ninguém assumiu ainda"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Imprimir a pauta">
+          <p className="text-sm text-muted-foreground">Clique em <Strong>Imprimir / Salvar PDF</Strong> no topo da página para levar a pauta em papel ou salvar o arquivo.</p>
+        </Subsection>
+        <Tip>Use a pauta como roteiro fixo: comece pelos projetos em vermelho, passe pelas atrasadas e termine celebrando as entregas da semana.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "desempenho",
+    title: "Desempenho da Equipe",
+    icon: Activity,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Números simples por pessoa para acompanhar a produtividade da equipe — sem precisar de planilha.</p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">Menu lateral → seção <Strong>Análises</Strong> → <Strong>Desempenho</Strong> (visível somente para Gestores).</p>
+        </Subsection>
+        <Subsection title="O que você vê">
+          <Table
+            headers={["Indicador", "Significado"]}
+            rows={[
+              ["Concluídas", "Quantas tarefas cada pessoa terminou no período"],
+              ["Pontualidade", "Percentual das concluídas que foram entregues dentro do prazo"],
+              ["Tempo médio", "Dias médios entre a criação e a conclusão das tarefas"],
+              ["Abertas agora", "Carga atual de cada pessoa, com destaque para atrasadas"],
+            ]}
+          />
+          <p className="text-sm text-muted-foreground mt-2">Além dos cartões e do gráfico por pessoa (entregas no prazo × com atraso), uma tabela detalhada mostra todos os números lado a lado.</p>
+        </Subsection>
+        <Subsection title="Período de análise">
+          <p className="text-sm text-muted-foreground">Use o seletor no topo para analisar os últimos <Strong>7, 30 ou 90 dias</Strong>, ou <Strong>todo o histórico</Strong>.</p>
+        </Subsection>
+        <Tip>Tarefas sem responsável não entram na conta — atribua responsáveis para os números refletirem o trabalho real da equipe.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "portfolio",
     title: "Portfólio de Projetos",
     icon: BarChart3,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -1074,7 +1190,6 @@ const sections: Section[] = [
     id: "campos-personalizados",
     title: "Campos Personalizados",
     icon: Settings2,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -1117,7 +1232,6 @@ const sections: Section[] = [
     id: "diario-obra",
     title: "Diário de Obra",
     icon: BookOpen,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -1156,7 +1270,6 @@ const sections: Section[] = [
     id: "materiais",
     title: "Controle de Materiais",
     icon: Package,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -1200,7 +1313,6 @@ const sections: Section[] = [
     id: "marcos",
     title: "Marcos do Projeto",
     icon: Flag,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -1247,7 +1359,6 @@ const sections: Section[] = [
     id: "burndown",
     title: "Gráfico de Progresso Semanal",
     icon: TrendingUp,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -1278,7 +1389,6 @@ const sections: Section[] = [
     id: "dashboard-analytics",
     title: "Dashboard — Análises e Alertas",
     icon: AlertCircle,
-    isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
