@@ -105,7 +105,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
-import { ProjectPDFExport } from "@/components/project-pdf-export";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -582,11 +581,9 @@ export default function ProjectDetail() {
           </div>
 
           <div className="flex items-center gap-2">
-            <ProjectPDFExport
-              project={project}
-              tasks={tasks?.map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, assigneeName: t.assigneeName, dueDate: t.dueDate })) ?? []}
-              members={projectMembers?.map(m => ({ id: m.memberId, name: m.memberName, role: m.memberRole })) ?? []}
-            />
+            <Button variant="outline" onClick={() => setLocation(`/projects/${projectId}/relatorio`)}>
+              Relatório
+            </Button>
             {canEdit && (
               <>
                 <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

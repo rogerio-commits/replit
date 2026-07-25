@@ -308,3 +308,12 @@
     inset: -1px;
   }
 }
+/* ── Impressão: relatórios e pauta de reunião ── */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+  body {
+    background: white !important;
+  }
+}

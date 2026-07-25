@@ -3,3 +3,4 @@
 - [Clerk invitation ticket flow blocked](clerk-invitation-flow.md) — Clerk email invites 403 through the Replit proxy; use app-managed invites (invitesTable + JIT role on sign-up) instead.
 - [Role-based route access](role-route-access.md) — access.ts is the single source of truth for per-role routes; new pages must be added there or RoleGate redirects users away.
 - [Stale task detection](stale-task-detection.md) — tasks lack updatedAt; staleness = todo + createdAt ≥7d, and date strings must parse as local midnight (never `new Date("YYYY-MM-DD")`).
+- [Printable pages in the SPA shell](spa-print-support.md) — h-screen/overflow shell prints only page 1; layout.tsx print: overrides fix it, new printable pages just call window.print().

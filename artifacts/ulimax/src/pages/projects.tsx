@@ -7,6 +7,7 @@ import {
   useCreateProject,
   useAddProjectMember,
   useListMembers,
+  useListTasks,
   getListProjectsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -61,6 +62,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
+import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -207,6 +209,7 @@ export default function Projects() {
     setStatusFilter(initialStatus);
   }, [initialStatus]);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [farolFilter, setFarolFilter] = useState<"all" | FarolLevel>("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -227,6 +230,20 @@ export default function Projects() {
 
   const { data: projects, isLoading } = useListProjects();
   const { data: allMembers } = useListMembers();
+  const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
+
+  const healthMap = useMemo(
+    () => computeHealthMap(projects ?? [], allTasks ?? []),
+    [projects, allTasks]
+  );
+  const farolCounts = useMemo(() => {
+    const c = { red: 0, yellow: 0, green: 0 };
+    for (const p of projects ?? []) {
+      const lvl = healthMap.get(p.id)?.level;
+      if (lvl) c[lvl]++;
+    }
+    return c;
+  }, [projects, healthMap]);
   const createProject = useCreateProject();
   const addMember = useAddProjectMember();
 
@@ -284,6 +301,7 @@ export default function Projects() {
     }
     if (statusFilter !== "all") list = list.filter(p => p.status === statusFilter);
     if (priorityFilter !== "all") list = list.filter(p => p.priority === priorityFilter);
+    if (farolFilter !== "all") list = list.filter(p => healthMap.get(p.id)?.level === farolFilter);
 
     list = [...list].sort((a, b) => {
       let cmp = 0;
@@ -311,7 +329,7 @@ export default function Projects() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return list;
-  }, [projects, search, statusFilter, priorityFilter, sortKey, sortDir]);
+  }, [projects, search, statusFilter, priorityFilter, farolFilter, healthMap, sortKey, sortDir]);
 
   const thCls = "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors whitespace-nowrap";
   const thInner = "flex items-center gap-1";
@@ -588,8 +606,26 @@ export default function Projects() {
                 <SelectItem value="medium">Normal</SelectItem>
               </SelectContent>
             </Select>
-            {(search || statusFilter !== "all" || priorityFilter !== "all") && (
-              <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); }}>
+            {!isTasksLoading && (
+              <div className="flex items-center gap-1.5" title="Farol: clique para filtrar">
+                {(["red", "yellow", "green"] as const).map((lvl) => (
+                  <button
+                    key={lvl}
+                    onClick={() => setFarolFilter(farolFilter === lvl ? "all" : lvl)}
+                    className={cn(
+                      "text-xs font-semibold px-2.5 py-1.5 rounded-full border transition-all",
+                      FAROL_META[lvl].chip,
+                      farolFilter === lvl ? "ring-2 ring-primary/40" : "opacity-75 hover:opacity-100"
+                    )}
+                    title={`Mostrar só projetos "${FAROL_META[lvl].label}"`}
+                  >
+                    {FAROL_META[lvl].emoji} {farolCounts[lvl]}
+                  </button>
+                ))}
+              </div>
+            )}
+            {(search || statusFilter !== "all" || priorityFilter !== "all" || farolFilter !== "all") && (
+              <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); setFarolFilter("all"); }}>
                 Limpar filtros
               </Button>
             )}
@@ -605,13 +641,13 @@ export default function Projects() {
               <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-1">
                 <Briefcase className="h-8 w-8 text-muted-foreground opacity-30" />
               </div>
-              {search || statusFilter !== "all" || priorityFilter !== "all" ? (
+              {search || statusFilter !== "all" || priorityFilter !== "all" || farolFilter !== "all" ? (
                 <>
                   <p className="font-medium text-foreground">Nenhum projeto corresponde aos filtros</p>
                   <p className="text-sm text-muted-foreground">Tente remover ou alterar os filtros aplicados.</p>
                   <button
                     className="mt-1 text-sm text-primary hover:underline"
-                    onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); }}
+                    onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); setFarolFilter("all"); }}
                   >
                     Limpar filtros
                   </button>
@@ -629,6 +665,7 @@ export default function Projects() {
                 <thead className="border-b bg-muted/30 sticky top-0">
                   <tr>
                     <th className={cn(thCls, "pl-4 w-8")}>#</th>
+                    <th className={cn(thCls, "w-12 text-center")}>Farol</th>
                     <th className={thCls} onClick={() => handleSort("name")}>
                       <div className={thInner}>Projeto <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
@@ -678,6 +715,22 @@ export default function Projects() {
                       )}
                     >
                       <td className="pl-4 py-2.5 text-xs text-muted-foreground font-mono tabular-nums w-8">{idx + 1}</td>
+                      <td className="px-2 py-2.5 w-12">
+                        {(() => {
+                          if (isTasksLoading) return null;
+                          const h = healthMap.get(project.id);
+                          if (!h) return null;
+                          return (
+                            <Link
+                              href={`/projects/${project.id}`}
+                              className="flex items-center justify-center"
+                              title={`${FAROL_META[h.level].label}: ${h.reasons.join(" · ")}`}
+                            >
+                              <span className={cn("h-3 w-3 rounded-full", FAROL_META[h.level].dot)} />
+                            </Link>
+                          );
+                        })()}
+                      </td>
                       <td className="px-3 py-2.5 max-w-[260px]">
                         <Link href={`/projects/${project.id}`} className="block">
                           <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate leading-snug">

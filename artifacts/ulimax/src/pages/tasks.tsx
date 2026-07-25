@@ -67,6 +67,7 @@ import { useSearch } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 import { TaskDetailPanel } from "@/components/task-detail-panel";
+import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { TagBadge } from "@/components/task-tags";
 import { MarkdownEditor } from "@/components/markdown-editor";
 import { cn } from "@/lib/utils";
@@ -495,6 +496,8 @@ export default function Tasks() {
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
+
+          {canEdit && <BatchCreateTasks projects={projects ?? []} />}
 
           {canEdit && (
             <Dialog open={isCreateOpen} onOpenChange={(open) => {

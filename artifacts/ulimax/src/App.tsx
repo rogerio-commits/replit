@@ -31,6 +31,9 @@ import Templates from "@/pages/templates";
 import Automacao from "@/pages/automacao";
 import Portfolio from "@/pages/portfolio";
 import CamposPersonalizados from "@/pages/campos-personalizados";
+import Reuniao from "@/pages/reuniao";
+import Desempenho from "@/pages/desempenho";
+import RelatorioProjeto from "@/pages/relatorio-projeto";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
 
@@ -225,6 +228,7 @@ function ProtectedRoutes() {
           <Switch>
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/projects" component={Projects} />
+            <Route path="/projects/:id/relatorio" component={RelatorioProjeto} />
             <Route path="/projects/:id" component={ProjectDetail} />
             <Route path="/tasks" component={Tasks} />
             <Route path="/kanban" component={Kanban} />
@@ -242,6 +246,8 @@ function ProtectedRoutes() {
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/automacao" component={Automacao} />
             <Route path="/portfolio" component={Portfolio} />
+            <Route path="/reuniao" component={Reuniao} />
+            <Route path="/desempenho" component={Desempenho} />
             <Route path="/campos-personalizados" component={CamposPersonalizados} />
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />

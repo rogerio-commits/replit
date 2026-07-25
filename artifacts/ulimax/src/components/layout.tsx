@@ -25,6 +25,8 @@ import {
   Settings2,
   Package,
   Menu,
+  Presentation,
+  TrendingUp,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useClerk, useUser } from "@clerk/react";
@@ -142,7 +144,11 @@ export function Layout({ children }: LayoutProps) {
               },
               {
                 label: "Análises",
-                items: [{ href: "/portfolio", label: "Portfólio", icon: BarChart3 }],
+                items: [
+                  { href: "/reuniao", label: "Reunião Semanal", icon: Presentation },
+                  { href: "/desempenho", label: "Desempenho", icon: TrendingUp },
+                  { href: "/portfolio", label: "Portfólio", icon: BarChart3 },
+                ],
               },
               {
                 label: "Configurações",
@@ -172,9 +178,9 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <div className="flex h-screen w-full bg-muted/30">
+      <div className="flex h-screen w-full bg-muted/30 print:h-auto print:block print:bg-white">
         {/* Sidebar */}
-        <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex shrink-0">
+        <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex shrink-0 print:hidden">
           <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center">
               <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6 brightness-0 invert" />
@@ -306,9 +312,9 @@ export function Layout({ children }: LayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden">
+        <main className="flex-1 flex flex-col h-full overflow-hidden print:h-auto print:overflow-visible print:block">
           {/* Desktop topbar — breadcrumb + search + quick create */}
-          <header className="h-12 border-b bg-card/80 backdrop-blur-sm items-center px-6 shrink-0 hidden md:flex gap-4">
+          <header className="h-12 border-b bg-card/80 backdrop-blur-sm items-center px-6 shrink-0 hidden md:flex gap-4 print:hidden">
             <div className="flex-1 min-w-0">
               <BreadcrumbNav />
             </div>
@@ -325,7 +331,7 @@ export function Layout({ children }: LayoutProps) {
             <QuickCreate />
           </header>
           {/* Mobile header */}
-          <header className="h-14 border-b bg-card flex items-center justify-between px-3 shrink-0 md:hidden">
+          <header className="h-14 border-b bg-card flex items-center justify-between px-3 shrink-0 md:hidden print:hidden">
             <div className="flex items-center gap-1.5">
               <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
                 <SheetTrigger asChild>
@@ -408,7 +414,7 @@ export function Layout({ children }: LayoutProps) {
               <DarkModeToggle />
             </div>
           </header>
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 print:overflow-visible print:p-0">
             <div className="max-w-7xl mx-auto w-full">
               {children}
             </div>
