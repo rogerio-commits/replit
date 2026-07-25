@@ -129,7 +129,6 @@ export function Layout({ children }: LayoutProps) {
                   { href: "/projects", label: "Projetos", icon: Briefcase },
                   { href: "/tasks", label: "Tarefas", icon: CheckSquare },
                   { href: "/kanban", label: "Kanban", icon: Columns3 },
-                  { href: "/members", label: "Equipe", icon: Users },
                 ],
               },
               {
@@ -154,6 +153,7 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Configurações",
                 items: [
+                  { href: "/members", label: "Equipe", icon: Users },
                   { href: "/templates", label: "Templates", icon: Layers },
                   { href: "/campos-personalizados", label: "Campos Personalizados", icon: Settings2 },
                   { href: "/automacao", label: "Automações", icon: Zap },
