@@ -26,6 +26,8 @@ import type {
   AppNotification,
   AppUser,
   ApplyTemplateInput,
+  AssistantChatInput,
+  AssistantChatReply,
   AssistenciaTecnica,
   AssistenciaTecnicaInput,
   AssistenciaTecnicaUpdate,
@@ -84,6 +86,7 @@ import type {
   ProjectTemplateTask,
   ProjectTemplateTaskInput,
   ProjectUpdate,
+  RemindersRunOutcome,
   SampleControl,
   SampleControlInput,
   SearchParams,
@@ -8207,4 +8210,145 @@ export function useGetProjectBurndown<TData = Awaited<ReturnType<typeof getProje
 
 
 
+
+export const getAssistantChatUrl = () => {
+
+
+
+
+  return `/api/assistant/chat`
+}
+
+/**
+ * @summary Ask the AI assistant about projects and tasks (gestor only)
+ */
+export const assistantChat = async (assistantChatInput: AssistantChatInput, options?: RequestInit): Promise<AssistantChatReply> => {
+
+  return customFetch<AssistantChatReply>(getAssistantChatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      assistantChatInput,)
+  }
+);}
+
+
+
+
+export const getAssistantChatMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantChat>>, TError,{data: BodyType<AssistantChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof assistantChat>>, TError,{data: BodyType<AssistantChatInput>}, TContext> => {
+
+const mutationKey = ['assistantChat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assistantChat>>, {data: BodyType<AssistantChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  assistantChat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssistantChatMutationResult = NonNullable<Awaited<ReturnType<typeof assistantChat>>>
+    export type AssistantChatMutationBody = BodyType<AssistantChatInput>
+    export type AssistantChatMutationError = ErrorType<void>
+
+    /**
+ * @summary Ask the AI assistant about projects and tasks (gestor only)
+ */
+export const useAssistantChat = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assistantChat>>, TError,{data: BodyType<AssistantChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof assistantChat>>,
+        TError,
+        {data: BodyType<AssistantChatInput>},
+        TContext
+      > => {
+      return useMutation(getAssistantChatMutationOptions(options));
+    }
+
+export const getRunRemindersUrl = () => {
+
+
+
+
+  return `/api/reminders/run`
+}
+
+/**
+ * @summary Run the daily reminder sweep now (gestor only)
+ */
+export const runReminders = async ( options?: RequestInit): Promise<RemindersRunOutcome> => {
+
+  return customFetch<RemindersRunOutcome>(getRunRemindersUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRunRemindersMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runReminders>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runReminders>>, TError,void, TContext> => {
+
+const mutationKey = ['runReminders'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runReminders>>, void> = () => {
+
+
+          return  runReminders(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunRemindersMutationResult = NonNullable<Awaited<ReturnType<typeof runReminders>>>
+
+    export type RunRemindersMutationError = ErrorType<void>
+
+    /**
+ * @summary Run the daily reminder sweep now (gestor only)
+ */
+export const useRunReminders = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runReminders>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runReminders>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunRemindersMutationOptions(options));
+    }
 

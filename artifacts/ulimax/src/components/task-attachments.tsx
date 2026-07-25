@@ -9,7 +9,7 @@ import {
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Paperclip, Trash2, Download, Upload } from "lucide-react";
+import { Paperclip, Trash2, Download, Upload, Camera } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +103,8 @@ export function TaskAttachments({ entityType, entityId }: TaskAttachmentsProps) 
     a.click();
   };
 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const isUploading = requestUploadUrl.isPending || createAttachment.isPending;
 
   return (
@@ -112,19 +114,43 @@ export function TaskAttachments({ entityType, entityId }: TaskAttachmentsProps) 
           <Paperclip className="h-4 w-4" />
           <span>Anexos {attachments ? `(${attachments.length})` : ""}</span>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs gap-1.5"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          <Upload className="h-3.5 w-3.5" />
-          {isUploading ? "Enviando..." : "Enviar"}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs gap-1.5 sm:hidden"
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isUploading}
+          >
+            <Camera className="h-3.5 w-3.5" />
+            Foto
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs gap-1.5"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            {isUploading ? "Enviando..." : "Enviar"}
+          </Button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleUpload(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -149,21 +175,21 @@ export function TaskAttachments({ entityType, entityId }: TaskAttachmentsProps) 
                   {formatBytes(a.sizeBytes)} · {a.uploaderName} · {format(new Date(a.createdAt), "dd/MM/yy", { locale: ptBR })}
                 </p>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-2 -m-0.5 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => handleDownload(a.filename, a.originalName)}
                   title="Baixar"
                 >
-                  <Download className="h-3.5 w-3.5" />
+                  <Download className="h-4 w-4" />
                 </button>
                 {(isGestor || a.uploaderName === user?.emailAddresses?.[0]?.emailAddress) && (
                   <button
-                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    className="p-2 -m-0.5 text-muted-foreground hover:text-destructive transition-colors"
                     onClick={() => handleDelete(a.id)}
                     title="Remover"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 )}
               </div>

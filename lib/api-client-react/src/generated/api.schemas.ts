@@ -5,6 +5,43 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
+export type AssistantChatMessageRole = typeof AssistantChatMessageRole[keyof typeof AssistantChatMessageRole];
+
+
+export const AssistantChatMessageRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface AssistantChatMessage {
+  role: AssistantChatMessageRole;
+  content: string;
+}
+
+export interface AssistantChatInput {
+  messages: AssistantChatMessage[];
+}
+
+export interface AssistantChatReply {
+  reply: string;
+}
+
+export interface RemindersRunCounts {
+  membersNotified: number;
+  gestoresNotified: number;
+  totalAtrasadas: number;
+  totalVencemHoje: number;
+  totalProximas: number;
+  totalParadas: number;
+  semResponsavel: number;
+}
+
+export interface RemindersRunOutcome {
+  ran: boolean;
+  reason?: string;
+  result?: RemindersRunCounts;
+}
+
 export interface HealthStatus {
   status: string;
 }

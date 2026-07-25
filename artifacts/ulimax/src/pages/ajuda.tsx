@@ -52,6 +52,9 @@ import {
   Presentation,
   Activity,
   ClipboardPaste,
+  Sparkles,
+  BellRing,
+  Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -1107,6 +1110,87 @@ const sections: Section[] = [
           <p className="text-sm text-muted-foreground">Use o seletor no topo para analisar os últimos <Strong>7, 30 ou 90 dias</Strong>, ou <Strong>todo o histórico</Strong>.</p>
         </Subsection>
         <Tip>Tarefas sem responsável não entram na conta — atribua responsáveis para os números refletirem o trabalho real da equipe.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "assistente",
+    title: "Assistente Inteligente",
+    icon: Sparkles,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Converse com o sistema em português e receba respostas na hora, com base nos dados de agora — projetos, tarefas, prazos e equipe. Sem precisar abrir tela por tela.</p>
+        <Subsection title="Como acessar">
+          <p className="text-sm text-muted-foreground">Menu lateral → seção <Strong>Análises</Strong> → <Strong>Assistente</Strong> (visível somente para Gestores).</p>
+        </Subsection>
+        <Subsection title="Exemplos de perguntas">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><em>"O que está atrasado hoje?"</em></li>
+            <li><em>"Como está a carga de trabalho da equipe?"</em></li>
+            <li><em>"Quais projetos precisam de mais atenção?"</em></li>
+            <li><em>"O que vence nos próximos 3 dias?"</em></li>
+          </ul>
+        </Subsection>
+        <Subsection title="Bom saber">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>O assistente responde <Strong>apenas com os dados do sistema</Strong> — ele não inventa informações e avisa quando não sabe.</li>
+            <li>A conversa fica só no seu navegador e não é salva no servidor. Use <Strong>Limpar</Strong> para recomeçar.</li>
+          </ul>
+        </Subsection>
+        <Tip>Use o assistente como um primeiro resumo rápido — para decisões importantes, confirme os números nas telas de Projetos e Tarefas.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "cobranca-automatica",
+    title: "Cobrança Automática",
+    icon: BellRing,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Todo dia, a partir das <Strong>7h</Strong>, o sistema cobra as pendências sozinho: cada pessoa recebe um aviso no sininho 🔔 com o que precisa de atenção, e os gestores recebem um resumo geral da equipe.</p>
+        <Subsection title="O que cada um recebe">
+          <Table
+            headers={["Quem", "O que recebe"]}
+            rows={[
+              ["Cada membro", "Aviso com suas tarefas atrasadas, que vencem hoje, que vencem em até 3 dias e paradas há 7+ dias"],
+              ["Gestores", "Resumo do dia: totais de atrasadas, vencendo hoje/em breve, paradas e tarefas sem responsável"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Disparar a cobrança agora">
+          <p className="text-sm text-muted-foreground">Menu lateral → <Strong>Automações</Strong> → cartão <Strong>Cobrança automática de pendências</Strong> → botão <Strong>Executar agora</Strong> (somente Gestores). Útil antes de uma reunião ou no fim do dia.</p>
+        </Subsection>
+        <Tip>Hoje os avisos chegam pelo sininho dentro do sistema. O envio também por e-mail já está preparado e pode ser ativado no futuro.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "celular-obra",
+    title: "Uso no Celular (Obra)",
+    icon: Smartphone,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">O sistema funciona no navegador do celular e se adapta à tela pequena — ideal para consultar tarefas e registrar fotos direto da obra.</p>
+        <Subsection title="Navegação no telefone">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>O menu lateral vira o botão <Strong>☰</Strong> no topo da tela.</li>
+            <li>Comece pelo <Strong>Meu Dia</Strong>: suas tarefas de hoje em uma lista só.</li>
+            <li>Listas e formulários se reorganizam automaticamente para a tela estreita.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Tirar foto na obra">
+          <p className="text-sm text-muted-foreground">Abra a tarefa (ou projeto) → seção <Strong>Anexos</Strong> → toque em <Strong>Foto</Strong> 📷. A câmera abre na hora e a foto já fica anexada — ótimo para registrar medições, problemas e instalações concluídas.</p>
+        </Subsection>
+        <Subsection title="Atalho na tela inicial (como um app)">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>iPhone (Safari)</Strong>: botão Compartilhar → <em>Adicionar à Tela de Início</em>.</li>
+            <li><Strong>Android (Chrome)</Strong>: menu ⋮ → <em>Adicionar à tela inicial</em>.</li>
+          </ul>
+        </Subsection>
+        <Tip>Peça para a equipe de instalação anexar uma foto ao concluir cada esquadria — o histórico da obra fica registrado sem esforço.</Tip>
       </div>
     ),
   },

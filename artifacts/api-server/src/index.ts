@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startScheduler } from "./lib/scheduler";
 import { db, usersTable } from "@workspace/db";
 import { eq, count, sql } from "drizzle-orm";
 
@@ -63,6 +64,7 @@ async function main() {
     }
 
     logger.info({ port }, "Server listening");
+    startScheduler(logger);
   });
 }
 

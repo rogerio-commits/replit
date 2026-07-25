@@ -4,3 +4,4 @@
 - [Role-based route access](role-route-access.md) — access.ts is the single source of truth for per-role routes; new pages must be added there or RoleGate redirects users away.
 - [Stale task detection](stale-task-detection.md) — tasks lack updatedAt; staleness = todo + createdAt ≥7d, and date strings must parse as local midnight (never `new Date("YYYY-MM-DD")`).
 - [Printable pages in the SPA shell](spa-print-support.md) — h-screen/overflow shell prints only page 1; layout.tsx print: overrides fix it, new printable pages just call window.print().
+- [Composite libs & one-off scripts](composite-libs-typecheck.md) — after lib/db schema edits run `tsc -b lib/db` or api-server typecheck sees stale dist; no tsx/python3 — esbuild-bundle one-off TS scripts.

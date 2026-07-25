@@ -2004,3 +2004,36 @@ export const GetProjectBurndownResponseItem = zod.object({
 export const GetProjectBurndownResponse = zod.array(GetProjectBurndownResponseItem)
 
 
+/**
+ * @summary Ask the AI assistant about projects and tasks (gestor only)
+ */
+export const AssistantChatBody = zod.object({
+  "messages": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string()
+}))
+})
+
+export const AssistantChatResponse = zod.object({
+  "reply": zod.string()
+})
+
+
+/**
+ * @summary Run the daily reminder sweep now (gestor only)
+ */
+export const RunRemindersResponse = zod.object({
+  "ran": zod.boolean(),
+  "reason": zod.string().optional(),
+  "result": zod.object({
+  "membersNotified": zod.number(),
+  "gestoresNotified": zod.number(),
+  "totalAtrasadas": zod.number(),
+  "totalVencemHoje": zod.number(),
+  "totalProximas": zod.number(),
+  "totalParadas": zod.number(),
+  "semResponsavel": zod.number()
+}).optional()
+})
+
+

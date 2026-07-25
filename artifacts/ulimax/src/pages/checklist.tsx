@@ -314,7 +314,7 @@ export default function ChecklistPage() {
                       autoFocus
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         Responsável
@@ -474,6 +474,7 @@ export default function ChecklistPage() {
         </div>
       ) : (
         <div className="rounded-xl border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/40">
@@ -636,6 +637,7 @@ export default function ChecklistPage() {
               </tbody>
             ))}
           </table>
+          </div>
         </div>
       )}
     </div>

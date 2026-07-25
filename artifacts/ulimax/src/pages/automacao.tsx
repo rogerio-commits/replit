@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   useListAutomationRules,
+  useRunReminders,
   useCreateAutomationRule,
   useUpdateAutomationRule,
   useDeleteAutomationRule,
@@ -124,6 +125,26 @@ export default function Automacao() {
     },
   });
 
+  const runReminders = useRunReminders({
+    mutation: {
+      onSuccess: (outcome) => {
+        const r = outcome.result;
+        if (!r || (r.membersNotified === 0 && r.gestoresNotified === 0)) {
+          toast({
+            title: "Nenhum aviso necessário",
+            description: "Ninguém tem pendências para cobrar neste momento.",
+          });
+          return;
+        }
+        toast({
+          title: "Cobrança enviada",
+          description: `${r.membersNotified} pessoa${r.membersNotified === 1 ? "" : "s"} avisada${r.membersNotified === 1 ? "" : "s"} · ${r.totalAtrasadas} atrasada${r.totalAtrasadas === 1 ? "" : "s"} · ${r.totalVencemHoje} vencendo hoje`,
+        });
+      },
+      onError: () => toast({ title: "Erro ao executar a cobrança", variant: "destructive" }),
+    },
+  });
+
   function handleCreate() {
     if (!form.name.trim() || !form.trigger || !form.actionType) {
       toast({ title: "Preencha todos os campos", variant: "destructive" });
@@ -196,6 +217,36 @@ export default function Automacao() {
           <span className="font-semibold">Como funciona:</span> Quando um gatilho ocorre no sistema (ex: tarefa concluída), todas as regras ativas com esse gatilho disparam automaticamente suas ações configuradas.
         </div>
       </div>
+
+      {/* Cobrança automática diária */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Cobrança automática de pendências
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Todo dia, a partir das 7h, o sistema avisa cada pessoa das tarefas
+            atrasadas, das que vencem hoje ou em breve e das paradas há mais de
+            7 dias — e envia um resumo geral para os gestores. Use o botão para
+            disparar a cobrança agora mesmo.
+          </p>
+          <Button
+            variant="outline"
+            className="gap-2 shrink-0"
+            onClick={() => runReminders.mutate()}
+            disabled={runReminders.isPending}
+          >
+            {runReminders.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <PlayCircle className="h-4 w-4" />
+            )}
+            Executar agora
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Rules list */}
       <Card>

@@ -145,6 +145,7 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Análises",
                 items: [
+                  { href: "/assistente", label: "Assistente", icon: Sparkles },
                   { href: "/reuniao", label: "Reunião Semanal", icon: Presentation },
                   { href: "/desempenho", label: "Desempenho", icon: TrendingUp },
                   { href: "/portfolio", label: "Portfólio", icon: BarChart3 },
@@ -178,7 +179,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <div className="flex h-screen w-full bg-muted/30 print:h-auto print:block print:bg-white">
+      <div className="flex h-dvh w-full bg-muted/30 print:h-auto print:block print:bg-white">
         {/* Sidebar */}
         <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex shrink-0 print:hidden">
           <div className="h-16 flex items-center px-6 border-b border-sidebar-border">

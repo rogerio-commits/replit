@@ -33,6 +33,7 @@ import Portfolio from "@/pages/portfolio";
 import CamposPersonalizados from "@/pages/campos-personalizados";
 import Reuniao from "@/pages/reuniao";
 import Desempenho from "@/pages/desempenho";
+import Assistente from "@/pages/assistente";
 import RelatorioProjeto from "@/pages/relatorio-projeto";
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
@@ -248,6 +249,7 @@ function ProtectedRoutes() {
             <Route path="/portfolio" component={Portfolio} />
             <Route path="/reuniao" component={Reuniao} />
             <Route path="/desempenho" component={Desempenho} />
+            <Route path="/assistente" component={Assistente} />
             <Route path="/campos-personalizados" component={CamposPersonalizados} />
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />

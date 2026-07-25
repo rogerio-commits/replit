@@ -48,6 +48,10 @@ tags:
     description: Automation rules
   - name: obra-diary
     description: Daily construction diary entries
+  - name: reminders
+    description: Daily reminder sweep (cobranca automatica)
+  - name: assistant
+    description: AI assistant for gestores
   - name: project-materials
     description: Project material control
   - name: custom-fields
@@ -2229,8 +2233,100 @@ paths:
                 items:
                   $ref: "#/components/schemas/BurndownPoint"
 
+  /assistant/chat:
+    post:
+      operationId: assistantChat
+      tags: [assistant]
+      summary: Ask the AI assistant about projects and tasks (gestor only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistantChatInput"
+      responses:
+        "200":
+          description: Assistant reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistantChatReply"
+        "403":
+          description: Forbidden
+
+  /reminders/run:
+    post:
+      operationId: runReminders
+      tags: [reminders]
+      summary: Run the daily reminder sweep now (gestor only)
+      responses:
+        "200":
+          description: Outcome of the run
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RemindersRunOutcome"
+        "403":
+          description: Forbidden
+
 components:
   schemas:
+    AssistantChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+
+    AssistantChatInput:
+      type: object
+      required: [messages]
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssistantChatMessage"
+
+    AssistantChatReply:
+      type: object
+      required: [reply]
+      properties:
+        reply:
+          type: string
+
+    RemindersRunCounts:
+      type: object
+      required: [membersNotified, gestoresNotified, totalAtrasadas, totalVencemHoje, totalProximas, totalParadas, semResponsavel]
+      properties:
+        membersNotified:
+          type: integer
+        gestoresNotified:
+          type: integer
+        totalAtrasadas:
+          type: integer
+        totalVencemHoje:
+          type: integer
+        totalProximas:
+          type: integer
+        totalParadas:
+          type: integer
+        semResponsavel:
+          type: integer
+
+    RemindersRunOutcome:
+      type: object
+      required: [ran]
+      properties:
+        ran:
+          type: boolean
+        reason:
+          type: string
+        result:
+          $ref: "#/components/schemas/RemindersRunCounts"
+
     HealthStatus:
       type: object
       properties:

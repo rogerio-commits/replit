@@ -649,7 +649,7 @@ export default function ProjectDetail() {
                             </FormItem>
                           )} />
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <FormField control={projectForm.control} name="startDate" render={({ field }) => (
                             <FormItem>
                               <FormLabel>Início do Projeto</FormLabel>
@@ -674,7 +674,7 @@ export default function ProjectDetail() {
                             </FormItem>
                           )} />
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <FormField control={projectForm.control} name="producaoStartDate" render={({ field }) => (
                             <FormItem>
                               <FormLabel>Início da Produção</FormLabel>

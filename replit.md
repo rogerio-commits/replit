@@ -42,6 +42,9 @@ Sistema de gestão e controle de projetos para a Ulimax, com projetos, tarefas, 
 - **Projetos** — CRUD completo com filtros por status e prioridade, detalhe com estatísticas e tarefas do projeto
 - **Tarefas** — lista global com filtros por projeto, status, prioridade e responsável
 - **Equipe** — gestão de membros com nome, cargo e e-mail
+- **Cobrança automática** — scheduler diário (7h America/Sao_Paulo, once/day claim em `scheduler_state`) notifica pendências por membro + resumo para gestores; botão "Executar agora" em Automações; e-mails prontos porém dormentes (sem `RESEND_API_KEY`)
+- **Assistente IA** — chat PT-BR gestor-only (`/assistente`, POST `/assistant/chat`) via Replit AI Integrations (OpenAI-compat, modelo `gpt-5.6-terra`); snapshot compacto do banco no system prompt; conversa não persistida no servidor
+- **Mobile** — nav hambúrguer, formulários empilham em telas estreitas, anexos com botão "Foto" (captura direta da câmera)
 
 ## User preferences
 

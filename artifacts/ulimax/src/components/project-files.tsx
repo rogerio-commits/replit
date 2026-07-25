@@ -132,6 +132,8 @@ export function ProjectFiles({ projectId, mode = "all" }: ProjectFilesProps) {
     }
   }
 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const accept =
     mode === "photos"
       ? "image/*"
@@ -152,7 +154,7 @@ export function ProjectFiles({ projectId, mode = "all" }: ProjectFilesProps) {
         <span className="text-xs text-muted-foreground">
           {displayed.length} {displayed.length === 1 ? "item" : "itens"}
         </span>
-        <div>
+        <div className="flex items-center gap-1.5">
           <input
             ref={fileInputRef}
             type="file"
@@ -161,6 +163,26 @@ export function ProjectFiles({ projectId, mode = "all" }: ProjectFilesProps) {
             className="hidden"
             onChange={handleFileChange}
           />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          {mode !== "files" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 sm:hidden"
+              disabled={uploading}
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              <Camera className="h-4 w-4" />
+              Foto
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"

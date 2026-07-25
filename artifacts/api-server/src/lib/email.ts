@@ -206,3 +206,121 @@ export async function sendDeadlineReminderEmail(opts: {
     html: baseTemplate(`Prazo próximo: ${taskTitle}`, body),
   });
 }
+
+export interface DigestTaskItem {
+  title: string;
+  meta: string;
+}
+
+function renderTaskBucket(label: string, color: string, items: DigestTaskItem[]): string {
+  if (!items.length) return "";
+  const shown = items.slice(0, 6);
+  const extra = items.length - shown.length;
+  const rows = shown
+    .map(
+      (t) => `
+      <tr><td style="padding:6px 0;border-bottom:1px solid #f4f4f5;">
+        <p style="margin:0;font-size:13px;font-weight:600;color:#18181b;">${escapeHtml(t.title)}</p>
+        <p style="margin:2px 0 0;font-size:12px;color:#71717a;">${escapeHtml(t.meta)}</p>
+      </td></tr>`,
+    )
+    .join("");
+  const extraRow = extra > 0
+    ? `<tr><td style="padding:6px 0;"><p style="margin:0;font-size:12px;color:#71717a;">+ ${extra} outra${extra > 1 ? "s" : ""}</p></td></tr>`
+    : "";
+  return `
+    <p style="margin:20px 0 4px;font-size:12px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.5px;">${escapeHtml(label)} (${items.length})</p>
+    <table width="100%" cellpadding="0" cellspacing="0">${rows}${extraRow}</table>`;
+}
+
+export async function sendDailySummaryEmail(opts: {
+  toEmail: string;
+  toName: string;
+  atrasadas: DigestTaskItem[];
+  vencemHoje: DigestTaskItem[];
+  proximas: DigestTaskItem[];
+  paradas: DigestTaskItem[];
+}): Promise<void> {
+  if (!client) return;
+  const { toEmail, toName, atrasadas, vencemHoje, proximas, paradas } = opts;
+  const total = atrasadas.length + vencemHoje.length + proximas.length + paradas.length;
+  if (!total) return;
+  const link = `${APP_URL}/meu-dia`;
+  const body = `
+    <h2 style="margin:0 0 8px;font-size:20px;color:#18181b;">⏰ Suas pendências de hoje</h2>
+    <p style="margin:0 0 8px;font-size:14px;color:#71717a;">Olá, <strong>${escapeHtml(toName)}</strong>. Este é o seu lembrete automático diário — ${total} ${total === 1 ? "tarefa precisa" : "tarefas precisam"} da sua atenção.</p>
+    ${renderTaskBucket("Atrasadas", "#ef4444", atrasadas)}
+    ${renderTaskBucket("Vencem hoje", "#f97316", vencemHoje)}
+    ${renderTaskBucket("Vencem em até 3 dias", "#eab308", proximas)}
+    ${renderTaskBucket("Paradas há 7+ dias", "#71717a", paradas)}
+    <a href="${link}" style="display:inline-block;margin-top:24px;background:#ff6600;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Abrir Meu Dia</a>
+  `;
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: `[Ulimax] ⏰ Você tem ${total} ${total === 1 ? "pendência" : "pendências"} hoje`,
+    html: baseTemplate("Suas pendências de hoje", body),
+  });
+}
+
+export async function sendGestorDigestEmail(opts: {
+  toEmail: string;
+  toName: string;
+  totalAtrasadas: number;
+  totalVencemHoje: number;
+  totalProximas: number;
+  totalParadas: number;
+  semResponsavel: number;
+  porPessoa: { name: string; atrasadas: number; vencemHoje: number; proximas: number; paradas: number }[];
+}): Promise<void> {
+  if (!client) return;
+  const { toEmail, toName, totalAtrasadas, totalVencemHoje, totalProximas, totalParadas, semResponsavel, porPessoa } = opts;
+  const kpi = (label: string, value: number, color: string) => `
+    <td align="center" style="padding:12px 4px;background:#f4f4f5;border-radius:8px;">
+      <p style="margin:0;font-size:22px;font-weight:700;color:${color};">${value}</p>
+      <p style="margin:2px 0 0;font-size:11px;color:#71717a;">${label}</p>
+    </td>`;
+  const pessoaRows = porPessoa
+    .filter((p) => p.atrasadas + p.vencemHoje + p.proximas + p.paradas > 0)
+    .map(
+      (p) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #f4f4f5;font-size:13px;font-weight:600;color:#18181b;">${escapeHtml(p.name)}</td>
+        <td align="center" style="padding:8px 4px;border-bottom:1px solid #f4f4f5;font-size:13px;color:${p.atrasadas ? "#ef4444" : "#a1a1aa"};font-weight:${p.atrasadas ? "700" : "400"};">${p.atrasadas}</td>
+        <td align="center" style="padding:8px 4px;border-bottom:1px solid #f4f4f5;font-size:13px;color:${p.vencemHoje ? "#f97316" : "#a1a1aa"};font-weight:${p.vencemHoje ? "700" : "400"};">${p.vencemHoje}</td>
+        <td align="center" style="padding:8px 4px;border-bottom:1px solid #f4f4f5;font-size:13px;color:${p.proximas ? "#eab308" : "#a1a1aa"};">${p.proximas}</td>
+        <td align="center" style="padding:8px 4px;border-bottom:1px solid #f4f4f5;font-size:13px;color:#71717a;">${p.paradas}</td>
+      </tr>`,
+    )
+    .join("");
+  const body = `
+    <h2 style="margin:0 0 8px;font-size:20px;color:#18181b;">📋 Resumo diário da equipe</h2>
+    <p style="margin:0 0 20px;font-size:14px;color:#71717a;">Olá, <strong>${escapeHtml(toName)}</strong>. Situação das tarefas da equipe nesta manhã:</p>
+    <table width="100%" cellpadding="0" cellspacing="8"><tr>
+      ${kpi("Atrasadas", totalAtrasadas, "#ef4444")}
+      ${kpi("Vencem hoje", totalVencemHoje, "#f97316")}
+      ${kpi("Em 3 dias", totalProximas, "#eab308")}
+      ${kpi("Paradas 7d+", totalParadas, "#71717a")}
+    </tr></table>
+    ${pessoaRows ? `
+    <p style="margin:24px 0 4px;font-size:12px;font-weight:700;color:#71717a;text-transform:uppercase;letter-spacing:.5px;">Por pessoa</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:4px 0;font-size:11px;color:#a1a1aa;">Membro</td>
+        <td align="center" style="padding:4px;font-size:11px;color:#a1a1aa;">Atrasadas</td>
+        <td align="center" style="padding:4px;font-size:11px;color:#a1a1aa;">Hoje</td>
+        <td align="center" style="padding:4px;font-size:11px;color:#a1a1aa;">3 dias</td>
+        <td align="center" style="padding:4px;font-size:11px;color:#a1a1aa;">Paradas</td>
+      </tr>
+      ${pessoaRows}
+    </table>` : ""}
+    ${semResponsavel > 0 ? `<p style="margin:16px 0 0;font-size:13px;color:#3f3f46;">⚠️ <strong>${semResponsavel}</strong> tarefa${semResponsavel > 1 ? "s" : ""} em aberto sem responsável definido.</p>` : ""}
+    <a href="${APP_URL}" style="display:inline-block;margin-top:24px;background:#ff6600;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Abrir o painel</a>
+  `;
+  await client.emails.send({
+    from: FROM,
+    to: toEmail,
+    subject: `[Ulimax] 📋 Resumo do dia: ${totalAtrasadas} atrasada${totalAtrasadas === 1 ? "" : "s"}, ${totalVencemHoje} vence${totalVencemHoje === 1 ? "" : "m"} hoje`,
+    html: baseTemplate("Resumo diário da equipe", body),
+  });
+}
