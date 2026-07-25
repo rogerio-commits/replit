@@ -151,8 +151,12 @@ export default function RelatorioProjeto() {
           <p className="text-sm font-semibold text-foreground mb-2">Datas principais</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <div><p className="text-[11px] text-muted-foreground">Início do projeto</p><p className="font-medium text-foreground">{fmtDate(project.startDate)}</p></div>
-            <div><p className="text-[11px] text-muted-foreground">Fim estimado</p><p className="font-medium text-foreground">{fmtDate(project.endDate)}</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Fim est. do projeto</p><p className="font-medium text-foreground">{fmtDate(project.endDate)}</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Data final</p><p className="font-medium text-foreground">{fmtDate(project.finalDate)}</p></div>
             <div><p className="text-[11px] text-muted-foreground">Medição</p><p className="font-medium text-foreground">{fmtDate(project.medicaoDate)}</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Início produção</p><p className="font-medium text-foreground">{fmtDate(project.producaoStartDate)}</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Fim est. produção</p><p className="font-medium text-foreground">{fmtDate(project.producaoEndDate)}</p></div>
+            <div><p className="text-[11px] text-muted-foreground">Final da produção</p><p className="font-medium text-foreground">{fmtDate(project.producaoFinalDate)}</p></div>
             <div><p className="text-[11px] text-muted-foreground">Início instalação</p><p className="font-medium text-foreground">{fmtDate(project.instalacaoStartDate)}</p></div>
           </div>
         </div>

@@ -37,6 +37,7 @@ import { ProjectObraDiary } from "@/components/project-obra-diary";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectMilestones } from "@/components/project-milestones";
 import { ProjectBurndown } from "@/components/project-burndown";
+import { ProjectDates } from "@/components/project-dates";
 import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -772,19 +773,15 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-6 mt-6 pt-6 border-t border-border/50 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="mt-6 pt-6 border-t border-border/50 space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <AlertCircle className={`h-4 w-4 ${getPriorityColor(project.priority)}`} />
             <span className="font-medium text-foreground">{PRIORITY_LABELS[project.priority] ?? project.priority}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>Início: <span className="font-medium text-foreground">{project.startDate ? format(new Date(project.startDate), "d MMM yyyy", { locale: ptBR }) : "—"}</span></span>
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>Fim Est. Projeto: <span className="font-medium text-foreground">{project.endDate ? format(new Date(project.endDate), "d MMM yyyy", { locale: ptBR }) : "—"}</span></span>
-          </div>
+          <ProjectDates
+            project={project}
+            emptyHint={isGestor ? "Nenhuma data preenchida ainda — clique em “Editar Projeto” para incluir as datas." : undefined}
+          />
         </div>
       </div>
 

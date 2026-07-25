@@ -568,7 +568,7 @@ const sections: Section[] = [
             rows={[
               ["Cabeçalho", "Nome do projeto, farol 🟢🟡🔴 com os motivos e o status atual"],
               ["Progresso", "Barra de andamento e contagem de tarefas concluídas"],
-              ["Datas principais", "Início, fim estimado, medição e início da instalação"],
+              ["Datas principais", "Todas as datas do projeto: início, fim estimado, data final, medição, produção e instalação"],
               ["Marcos", "Datas-chave do projeto com a situação de cada uma"],
               ["Tarefas", "Atrasadas, próximas em aberto e concluídas na última semana"],
             ]}
