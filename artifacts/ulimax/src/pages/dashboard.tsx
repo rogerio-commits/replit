@@ -21,6 +21,8 @@ import {
   useListTasks,
   useListMembers,
   useUpdateTask,
+  useGetYesterdaySummary,
+  getGetYesterdaySummaryQueryKey,
   getListTasksQueryKey,
 } from "@workspace/api-client-react";
 import type {
@@ -29,7 +31,7 @@ import type {
 } from "@workspace/api-client-react";
 import { useAlerts, type Alert } from "@/hooks/useAlerts";
 import { computeHealthMap, FAROL_META } from "@/lib/project-health";
-import { useCanEdit } from "@/hooks/useAppUser";
+import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
 import { useToast } from "@/hooks/use-toast";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -335,6 +337,10 @@ export default function Dashboard() {
   const { data: members } = useListMembers();
   const allAlerts = useAlerts();
   const canEdit = useCanEdit();
+  const isGestor = useIsGestor();
+  const { data: yesterday } = useGetYesterdaySummary({
+    query: { enabled: isGestor, queryKey: getGetYesterdaySummaryQueryKey() },
+  });
   const qc = useQueryClient();
   const { toast } = useToast();
   const updateTask = useUpdateTask();
@@ -561,6 +567,38 @@ export default function Dashboard() {
               </p>
             </div>
           </Link>
+        </div>
+      )}
+
+      {/* ── Resumo de ontem (gestores) ── */}
+      {isGestor && yesterday && (
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-sm font-semibold text-foreground">🕗 Resumo de ontem</h2>
+            <span className="text-[11px] text-muted-foreground capitalize">
+              {format(parseISO(yesterday.date), "EEEE, dd/MM", { locale: ptBR })}
+            </span>
+          </div>
+          {yesterday.tasksCompleted === 0 && yesterday.tasksCreated === 0 && yesterday.projectsChanged === 0 ? (
+            <p className="text-xs text-muted-foreground mt-2">Sem movimento ontem. Que tal combinar as prioridades de hoje com a equipe?</p>
+          ) : (
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                ✔ {yesterday.tasksCompleted} concluída(s)
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                + {yesterday.tasksCreated} criada(s)
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-50 text-violet-700 border border-violet-200">
+                {yesterday.projectsChanged} projeto(s) movimentado(s)
+              </span>
+              {yesterday.completedByPerson.map((p) => (
+                <span key={p.name} className="px-2 py-0.5 rounded-full text-[11px] bg-muted text-muted-foreground">
+                  {p.name}: {p.count} ✔
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -49,6 +49,7 @@ import type {
   CustomFieldValueInput,
   DashboardSummary,
   HealthStatus,
+  InstallDefaultTemplateResult,
   InstallationEvent,
   InstallationEventInput,
   InstallationEventUpdate,
@@ -108,7 +109,8 @@ import type {
   TimeEntryInput,
   UploadUrlRequest,
   UploadUrlResponse,
-  UserRoleUpdate
+  UserRoleUpdate,
+  YesterdaySummary
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -4055,6 +4057,83 @@ export function useGetRecentActivity<TData = Awaited<ReturnType<typeof getRecent
 
 
 
+export const getGetYesterdaySummaryUrl = () => {
+
+
+
+
+  return `/api/dashboard/yesterday`
+}
+
+/**
+ * @summary Get a summary of yesterday's activity
+ */
+export const getYesterdaySummary = async ( options?: RequestInit): Promise<YesterdaySummary> => {
+
+  return customFetch<YesterdaySummary>(getGetYesterdaySummaryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetYesterdaySummaryQueryKey = () => {
+    return [
+    `/api/dashboard/yesterday`
+    ] as const;
+    }
+
+
+export const getGetYesterdaySummaryQueryOptions = <TData = Awaited<ReturnType<typeof getYesterdaySummary>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getYesterdaySummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetYesterdaySummaryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getYesterdaySummary>>> = ({ signal }) => getYesterdaySummary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getYesterdaySummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetYesterdaySummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getYesterdaySummary>>>
+export type GetYesterdaySummaryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a summary of yesterday's activity
+ */
+
+export function useGetYesterdaySummary<TData = Awaited<ReturnType<typeof getYesterdaySummary>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getYesterdaySummary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetYesterdaySummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
 export const getGetMeUrl = () => {
 
 
@@ -6351,6 +6430,76 @@ export const useApplyTemplate = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getApplyTemplateMutationOptions(options));
+    }
+
+export const getInstallDefaultTemplateUrl = () => {
+
+
+
+
+  return `/api/templates/install-default`
+}
+
+/**
+ * @summary Install the built-in default Ulimax template
+ */
+export const installDefaultTemplate = async ( options?: RequestInit): Promise<InstallDefaultTemplateResult> => {
+
+  return customFetch<InstallDefaultTemplateResult>(getInstallDefaultTemplateUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getInstallDefaultTemplateMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof installDefaultTemplate>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof installDefaultTemplate>>, TError,void, TContext> => {
+
+const mutationKey = ['installDefaultTemplate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof installDefaultTemplate>>, void> = () => {
+
+
+          return  installDefaultTemplate(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InstallDefaultTemplateMutationResult = NonNullable<Awaited<ReturnType<typeof installDefaultTemplate>>>
+
+    export type InstallDefaultTemplateMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Install the built-in default Ulimax template
+ */
+export const useInstallDefaultTemplate = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof installDefaultTemplate>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof installDefaultTemplate>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getInstallDefaultTemplateMutationOptions(options));
     }
 
 export const getListAuditLogsUrl = (params?: ListAuditLogsParams,) => {

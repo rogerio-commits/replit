@@ -213,6 +213,7 @@ export default function Projects() {
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [showAllFields, setShowAllFields] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
   const autoOpenedRef = useRef(false);
   const { toast } = useToast();
@@ -273,6 +274,7 @@ export default function Projects() {
         toast({ title: "Projeto criado com sucesso" });
         queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
         setIsCreateOpen(false);
+        setShowAllFields(false);
         setSelectedMemberIds(new Set());
         form.reset();
       },
@@ -381,7 +383,7 @@ export default function Projects() {
             Exportar CSV
           </Button>
           {canEdit && (
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if (!open) setShowAllFields(false); }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -401,6 +403,21 @@ export default function Projects() {
                       <FormMessage />
                     </FormItem>
                   )} />
+                  {!showAllFields && (
+                    <>
+                      <FormField control={form.control} name="finalDate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prazo de Entrega (Data Final)</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <p className="text-[11px] text-muted-foreground">
+                        Dica: na tela <span className="font-medium text-foreground">Modelos de Projeto</span> você cria um projeto já com as tarefas típicas da Ulimax.
+                      </p>
+                    </>
+                  )}
+                  {showAllFields && (<>
                   <FormField control={form.control} name="description" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Descrição</FormLabel>
@@ -525,6 +542,18 @@ export default function Projects() {
                       <FormMessage />
                     </FormItem>
                   )} />
+                  </>)}
+                  <button
+                    type="button"
+                    onClick={() => setShowAllFields((v) => !v)}
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    {showAllFields ? (
+                      <><ChevronUp className="h-3.5 w-3.5" /> Mostrar menos campos</>
+                    ) : (
+                      <><ChevronDown className="h-3.5 w-3.5" /> Mostrar todos os campos (datas, material, descrição...)</>
+                    )}
+                  </button>
                   {allMembers && allMembers.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5">

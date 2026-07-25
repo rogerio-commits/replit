@@ -11,6 +11,7 @@ import {
   useAddTemplateTask,
   useDeleteTemplateTask,
   useApplyTemplate,
+  useInstallDefaultTemplate,
   getListTemplatesQueryKey,
   getGetTemplateQueryKey,
 } from "@workspace/api-client-react";
@@ -115,6 +116,22 @@ export default function Templates() {
   const addTemplateTask = useAddTemplateTask();
   const deleteTemplateTask = useDeleteTemplateTask();
   const applyTemplate = useApplyTemplate();
+  const installDefault = useInstallDefaultTemplate();
+
+  const onInstallDefault = () => {
+    installDefault.mutate(undefined, {
+      onSuccess: (r) => {
+        queryClient.invalidateQueries({ queryKey: getListTemplatesQueryKey() });
+        setSelectedTemplateId(r.templateId);
+        toast({
+          title: r.installed
+            ? "Modelo padrão Ulimax instalado!"
+            : "O modelo padrão já estava instalado.",
+        });
+      },
+      onError: () => toast({ title: "Erro ao instalar o modelo padrão", variant: "destructive" }),
+    });
+  };
 
   const templateForm = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
@@ -209,9 +226,15 @@ export default function Templates() {
           </p>
         </div>
         {isGestor && (
-          <Button onClick={() => setIsCreateOpen(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Novo Template
-          </Button>
+          <div className="flex gap-2 flex-wrap justify-end">
+            <Button variant="outline" onClick={onInstallDefault} disabled={installDefault.isPending} className="gap-1.5">
+              <Layers className="h-4 w-4" />
+              {installDefault.isPending ? "Instalando..." : "Instalar modelo padrão Ulimax"}
+            </Button>
+            <Button onClick={() => setIsCreateOpen(true)} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Novo Template
+            </Button>
+          </div>
         )}
       </div>
 
@@ -225,9 +248,14 @@ export default function Templates() {
               <Layers className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
               <p className="text-sm text-muted-foreground">Nenhum template criado ainda.</p>
               {isGestor && (
-                <Button size="sm" variant="outline" className="mt-3" onClick={() => setIsCreateOpen(true)}>
-                  Criar primeiro template
-                </Button>
+                <div className="flex flex-col items-center gap-2 mt-3">
+                  <Button size="sm" onClick={onInstallDefault} disabled={installDefault.isPending}>
+                    {installDefault.isPending ? "Instalando..." : "Instalar modelo padrão Ulimax"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setIsCreateOpen(true)}>
+                    Criar do zero
+                  </Button>
+                </div>
               )}
             </div>
           ) : (

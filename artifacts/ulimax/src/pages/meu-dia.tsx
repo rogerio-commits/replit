@@ -41,6 +41,7 @@ import {
   Layers,
   Flag,
   CalendarClock,
+  Play,
 } from "lucide-react";
 
 type Project = ListProjectsQueryResult[number];
@@ -405,6 +406,28 @@ export default function MeuDia() {
                             </span>
                           )}
                         </div>
+                        {t.status === "todo" && (
+                          <button
+                            className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 hover:bg-blue-100 transition-colors dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300"
+                            title="Marcar como em andamento"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateTask.mutate(
+                                { id: t.id, data: { status: "in_progress" } },
+                                {
+                                  onSuccess: () => {
+                                    void queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+                                    toast({ title: "Tarefa iniciada!" });
+                                  },
+                                  onError: () => toast({ title: "Erro ao iniciar tarefa", variant: "destructive" }),
+                                }
+                              );
+                            }}
+                          >
+                            <Play className="h-3 w-3" />
+                            Iniciar
+                          </button>
+                        )}
                       </div>
                       <div className="shrink-0 flex flex-col items-end gap-1">
                         {t.dueDate && (

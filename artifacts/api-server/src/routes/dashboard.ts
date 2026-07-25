@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, projectsTable, tasksTable, membersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, projectsTable, tasksTable, membersTable, auditLogsTable } from "@workspace/db";
+import { eq, gte } from "drizzle-orm";
 
 const router = Router();
 
@@ -85,6 +85,51 @@ router.get("/dashboard/recent-activity", async (_req, res) => {
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
 
   return res.json(activity);
+});
+
+router.get("/dashboard/yesterday", async (_req, res) => {
+  const dayFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const now = new Date();
+  const yesterdayStr = dayFmt.format(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+  // Janela de 48h cobre todo o dia de ontem no fuso de São Paulo
+  const since = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+  const logs = await db.select().from(auditLogsTable).where(gte(auditLogsTable.createdAt, since));
+  const yesterdayLogs = logs.filter((l) => dayFmt.format(l.createdAt) === yesterdayStr);
+
+  type Change = { field?: string; to?: unknown };
+  const completed = yesterdayLogs.filter(
+    (l) =>
+      l.entityType === "task" &&
+      (l.action === "status_changed" || l.action === "updated") &&
+      Array.isArray(l.changes) &&
+      (l.changes as Change[]).some((c) => c.field === "status" && c.to === "done")
+  );
+  const tasksCreated = yesterdayLogs.filter((l) => l.entityType === "task" && l.action === "created").length;
+  const projectsChanged = new Set(
+    yesterdayLogs.filter((l) => l.entityType === "project").map((l) => l.entityId)
+  ).size;
+
+  const byPerson = new Map<string, number>();
+  for (const l of completed) {
+    const name = l.actorName || "—";
+    byPerson.set(name, (byPerson.get(name) ?? 0) + 1);
+  }
+
+  return res.json({
+    date: yesterdayStr,
+    tasksCompleted: completed.length,
+    tasksCreated,
+    projectsChanged,
+    completedByPerson: Array.from(byPerson.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count),
+  });
 });
 
 router.get("/dashboard/member-productivity", async (_req, res) => {

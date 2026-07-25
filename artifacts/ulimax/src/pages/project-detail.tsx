@@ -37,6 +37,7 @@ import { ProjectObraDiary } from "@/components/project-obra-diary";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectMilestones } from "@/components/project-milestones";
 import { ProjectBurndown } from "@/components/project-burndown";
+import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1210,11 +1211,14 @@ export default function ProjectDetail() {
 
       {/* Tasks */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
+          <div className="mr-auto">
             <CardTitle>Tarefas do Projeto</CardTitle>
             <CardDescription>Todas as tarefas vinculadas a este projeto.</CardDescription>
           </div>
+          {canEdit && project && (
+            <BatchCreateTasks projects={[{ id: project.id, name: project.name }]} defaultProjectId={project.id} />
+          )}
           {canEdit && (
             <Dialog open={isCreateTaskOpen} onOpenChange={(open) => {
               setIsCreateTaskOpen(open);

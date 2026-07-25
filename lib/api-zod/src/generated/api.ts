@@ -1060,6 +1060,21 @@ export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem
 
 
 /**
+ * @summary Get a summary of yesterday's activity
+ */
+export const GetYesterdaySummaryResponse = zod.object({
+  "date": zod.string(),
+  "tasksCompleted": zod.number(),
+  "tasksCreated": zod.number(),
+  "projectsChanged": zod.number(),
+  "completedByPerson": zod.array(zod.object({
+  "name": zod.string(),
+  "count": zod.number()
+}))
+})
+
+
+/**
  * @summary Get current authenticated user
  */
 export const GetMeResponse = zod.object({
@@ -1592,6 +1607,15 @@ export const ApplyTemplateBody = zod.object({
   "name": zod.string().min(1),
   "description": zod.string().optional(),
   "startDate": zod.string()
+})
+
+
+/**
+ * @summary Install the built-in default Ulimax template
+ */
+export const InstallDefaultTemplateResponse = zod.object({
+  "installed": zod.boolean(),
+  "templateId": zod.number()
 })
 
 

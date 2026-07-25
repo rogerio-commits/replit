@@ -1114,6 +1114,30 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "uso-rapido",
+    title: "Uso Rápido no Dia a Dia",
+    icon: Zap,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Atalhos para gastar menos tempo cadastrando e atualizando o sistema — pensados para o corre do dia a dia.</p>
+        <Subsection title="Projeto novo em segundos">
+          <p className="text-sm text-muted-foreground">Em <Strong>Projetos → Novo Projeto</Strong>, preencha só o <Strong>nome</Strong>, o <Strong>prazo de entrega</Strong> e os <Strong>participantes</Strong>. Clique em <Strong>Mostrar todos os campos</Strong> apenas quando precisar das datas detalhadas, material ou descrição — tudo isso também pode ser preenchido depois, na tela do projeto.</p>
+        </Subsection>
+        <Subsection title="Várias tarefas de uma vez">
+          <p className="text-sm text-muted-foreground">Em <Strong>Tarefas → Criar em Lote</Strong> (também disponível na tela do projeto), cole uma lista com uma tarefa por linha. O sistema reconhece responsável e prazo automaticamente, ex.: <em>"Medir vão da janela - João - sexta"</em>.</p>
+        </Subsection>
+        <Subsection title="Andamento com 1 toque">
+          <p className="text-sm text-muted-foreground">No <Strong>Meu Dia</Strong>, cada tarefa tem o botão <Strong>▶ Iniciar</Strong> (avisa a equipe que você começou) e o <Strong>círculo</Strong> para concluir. Para adiar o prazo, use o ícone de calendário — sem abrir formulário nenhum.</p>
+        </Subsection>
+        <Subsection title="Resumo de ontem (Gestores)">
+          <p className="text-sm text-muted-foreground">No <Strong>Dashboard</Strong>, o cartão <Strong>Resumo de ontem</Strong> mostra o que a equipe concluiu, criou e movimentou no dia anterior — ótimo para a conversa rápida da manhã.</p>
+        </Subsection>
+        <Tip>Para começar um projeto já com as tarefas típicas da Ulimax (medição → projeto → produção → instalação → entrega), use o <Strong>Modelo padrão Ulimax</Strong> na tela de Modelos de Projeto.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "assistente",
     title: "Assistente Inteligente",
     icon: Sparkles,

@@ -96,9 +96,9 @@ function parseLine(raw: string, members: MemberLite[]): ParsedLine | null {
   return out;
 }
 
-export function BatchCreateTasks({ projects }: { projects: { id: number; name: string }[] }) {
+export function BatchCreateTasks({ projects, defaultProjectId }: { projects: { id: number; name: string }[]; defaultProjectId?: number }) {
   const [open, setOpen] = useState(false);
-  const [projectId, setProjectId] = useState<string>("");
+  const [projectId, setProjectId] = useState<string>(defaultProjectId ? defaultProjectId.toString() : "");
   const [text, setText] = useState("");
   const [creating, setCreating] = useState(false);
 

@@ -513,6 +513,19 @@ export interface MemberUpdate {
   team?: MemberTeam;
 }
 
+export interface YesterdayPersonCount {
+  name: string;
+  count: number;
+}
+
+export interface YesterdaySummary {
+  date: string;
+  tasksCompleted: number;
+  tasksCreated: number;
+  projectsChanged: number;
+  completedByPerson: YesterdayPersonCount[];
+}
+
 export type DashboardSummaryProjectsByStatus = {
   a_iniciar: number;
   em_projeto: number;
@@ -1142,6 +1155,11 @@ export interface ApplyTemplateInput {
   name: string;
   description?: string;
   startDate: string;
+}
+
+export interface InstallDefaultTemplateResult {
+  installed: boolean;
+  templateId: number;
 }
 
 export interface TimeEntry {

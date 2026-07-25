@@ -324,9 +324,13 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   if (body.data.recurrence !== undefined) updateData.recurrence = body.data.recurrence;
   if (body.data.recurrenceEndDate !== undefined) updateData.recurrenceEndDate = body.data.recurrenceEndDate;
 
-  const previousAssignee = body.data.assignedTo !== undefined ? (
-    await db.select({ assignedTo: tasksTable.assignedTo }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1)
-  ).at(0)?.assignedTo : undefined;
+  const [previousTask] = await db
+    .select()
+    .from(tasksTable)
+    .where(eq(tasksTable.id, params.data.id))
+    .limit(1);
+  if (!previousTask) return res.status(404).json({ error: "Not found" });
+  const previousAssignee = previousTask.assignedTo;
 
   const [task] = await db
     .update(tasksTable)
@@ -384,10 +388,7 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     }
   }
 
-  const patchAction = body.data.status !== undefined && body.data.status !== (await db.select({ status: tasksTable.status }).from(tasksTable).where(eq(tasksTable.id, params.data.id)).limit(1)).at(0)?.status
-    ? "status_changed" as const
-    : "updated" as const;
-  const patchChanges = diffObjects(body.data as Record<string, unknown>, updateData, ["status", "priority", "assignedTo", "dueDate", "title"]);
+  const patchChanges = diffObjects(previousTask as unknown as Record<string, unknown>, updateData, ["status", "priority", "assignedTo", "dueDate", "title"]);
   logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: patchChanges.length === 1 && patchChanges[0].field === "status" ? "status_changed" : "updated", actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: patchChanges.length > 0 ? patchChanges : undefined }, req.log);
 
   if (body.data.status === "done" && task.recurrence && task.recurrence !== "none" && task.dueDate) {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db, projectTemplatesTable, projectTemplateTasksTable, projectsTable, tasksTable } from "@workspace/db";
 import { requireGestor } from "../middlewares/requireAuth";
-import { eq, count } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 import {
   CreateTemplateBody,
   AddTemplateTaskBody,
@@ -166,6 +166,59 @@ router.post("/templates/:id/apply", requireGestor, async (req, res) => {
     ...project,
     createdAt: project.createdAt.toISOString(),
   });
+});
+
+const DEFAULT_TEMPLATE_NAME = "Modelo padrão Ulimax";
+const DEFAULT_TEMPLATE_TASKS: { title: string; description?: string; priority: "low" | "medium" | "high"; offsetDays: number }[] = [
+  { title: "Medição na obra", description: "Conferir medidas no local e registrar fotos.", priority: "high", offsetDays: 2 },
+  { title: "Projeto executivo e detalhamento", description: "Desenhos finais para produção.", priority: "high", offsetDays: 7 },
+  { title: "Aprovação do cliente", description: "Enviar projeto e colher aprovação.", priority: "high", offsetDays: 10 },
+  { title: "Pedido de materiais", description: "Comprar chapas, ferragens e insumos.", priority: "medium", offsetDays: 12 },
+  { title: "Produção — corte e usinagem", priority: "medium", offsetDays: 20 },
+  { title: "Produção — montagem e acabamento", priority: "medium", offsetDays: 30 },
+  { title: "Conferência de qualidade", description: "Checar peças antes de sair da fábrica.", priority: "high", offsetDays: 32 },
+  { title: "Agendar instalação com o cliente", priority: "medium", offsetDays: 33 },
+  { title: "Instalação", priority: "high", offsetDays: 38 },
+  { title: "Vistoria final e entrega", description: "Checklist de entrega assinado pelo cliente.", priority: "high", offsetDays: 40 },
+];
+
+router.post("/templates/install-default", requireGestor, async (_req, res) => {
+  const result = await db.transaction(async (tx) => {
+    // Trava transacional: evita template duplicado em requisições simultâneas
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext('ulimax-install-default-template'))`);
+
+    const [existing] = await tx
+      .select()
+      .from(projectTemplatesTable)
+      .where(eq(projectTemplatesTable.name, DEFAULT_TEMPLATE_NAME));
+
+    if (existing) {
+      return { installed: false, templateId: existing.id };
+    }
+
+    const [template] = await tx
+      .insert(projectTemplatesTable)
+      .values({
+        name: DEFAULT_TEMPLATE_NAME,
+        description: "Fluxo típico Ulimax: medição → projeto → aprovação → produção → instalação → entrega.",
+        priority: "medium",
+      })
+      .returning();
+
+    await tx.insert(projectTemplateTasksTable).values(
+      DEFAULT_TEMPLATE_TASKS.map((t) => ({
+        templateId: template.id,
+        title: t.title,
+        description: t.description,
+        priority: t.priority,
+        offsetDays: t.offsetDays,
+      }))
+    );
+
+    return { installed: true, templateId: template.id };
+  });
+
+  return res.json(result);
 });
 
 export default router;
