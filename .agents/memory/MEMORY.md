@@ -2,3 +2,4 @@
 - [Uppy React duplicate instance fix](uppy-react-override.md) — installing Uppy brings duplicate React copies; fix with pnpm overrides in root package.json.
 - [Clerk invitation ticket flow blocked](clerk-invitation-flow.md) — Clerk email invites 403 through the Replit proxy; use app-managed invites (invitesTable + JIT role on sign-up) instead.
 - [Role-based route access](role-route-access.md) — access.ts is the single source of truth for per-role routes; new pages must be added there or RoleGate redirects users away.
+- [Stale task detection](stale-task-detection.md) — tasks lack updatedAt; staleness = todo + createdAt ≥7d, and date strings must parse as local midnight (never `new Date("YYYY-MM-DD")`).

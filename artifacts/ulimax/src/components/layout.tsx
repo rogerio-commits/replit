@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
@@ -24,7 +24,9 @@ import {
   BarChart3,
   Settings2,
   Package,
+  Menu,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useClerk, useUser } from "@clerk/react";
 import { useAppUser } from "@/hooks/useAppUser";
 import { useAlertCounts } from "@/hooks/useAlerts";
@@ -58,6 +60,7 @@ export function Layout({ children }: LayoutProps) {
   const role = me?.role as "gestor" | "executor" | "observador" | undefined;
   const alertCounts = useAlertCounts();
   const recentProjects = useRecentProjects();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -322,18 +325,90 @@ export function Layout({ children }: LayoutProps) {
             <QuickCreate />
           </header>
           {/* Mobile header */}
-          <header className="h-16 border-b bg-card flex items-center justify-between px-6 shrink-0 md:hidden">
-            <Link href="/" className="flex items-center">
-              <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6" />
-            </Link>
-            <button
-              onClick={() => signOut({ redirectUrl: basePath || "/" })}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
+          <header className="h-14 border-b bg-card flex items-center justify-between px-3 shrink-0 md:hidden">
+            <div className="flex items-center gap-1.5">
+              <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted text-foreground transition-colors"
+                    aria-label="Abrir menu"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-72 p-0 flex flex-col">
+                  <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
+                  <div className="h-14 flex items-center px-4 border-b shrink-0">
+                    <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6" />
+                  </div>
+                  <nav className="flex-1 overflow-y-auto py-3 px-3">
+                    {navGroups.map((group) => (
+                      <div key={group.label} className="mb-2">
+                        <div className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest px-2 py-1.5">
+                          {group.label}
+                        </div>
+                        {group.items.map((item) => {
+                          const isActive = location === item.href || (item.href.length > 1 && location.startsWith(item.href));
+                          const Icon = item.icon;
+                          return (
+                            <Link key={item.href} href={item.href} onClick={() => setMobileNavOpen(false)}>
+                              <div
+                                className={cn(
+                                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium cursor-pointer transition-colors",
+                                  isActive
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-foreground/70 hover:bg-muted"
+                                )}
+                              >
+                                <Icon className={cn("h-4 w-4 shrink-0", item.highlight && !isActive && "text-amber-500")} />
+                                <span className="flex-1">{item.label}</span>
+                                {item.badge !== undefined && (
+                                  <span
+                                    className={cn(
+                                      "text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none",
+                                      item.badgeDanger ? "bg-red-500 text-white" : "bg-amber-400 text-amber-900"
+                                    )}
+                                  >
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </nav>
+                  <div className="border-t p-3 space-y-1 shrink-0">
+                    <div className="px-3 pb-1">
+                      <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
+                    </div>
+                    <button
+                      onClick={() => { setMobileNavOpen(false); openTour(); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors"
+                    >
+                      <Sparkles className="h-4 w-4" /> Tour rápido
+                    </button>
+                    <button
+                      onClick={() => signOut({ redirectUrl: basePath || "/" })}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" /> Sair
+                    </button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <Link href="/" className="flex items-center">
+                <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6" />
+              </Link>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <NotificationBell />
+              <DarkModeToggle />
+            </div>
           </header>
-          <div className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
             <div className="max-w-7xl mx-auto w-full">
               {children}
             </div>

@@ -11,6 +11,7 @@ export type AlertType =
   | "no_installation_date"
   | "stalled_project"
   | "no_assignee"
+  | "stale_task"
   | "task_assigned_to_me"
   | "overdue_sample"
   | "approaching_sample";
@@ -29,6 +30,7 @@ export interface Alert {
 const APPROACHING_DAYS = 7;
 const SAMPLE_APPROACHING_DAYS = 5;
 const STALLED_DAYS = 30;
+const STALE_TASK_DAYS = 7;
 
 function todayMidnight() {
   const d = new Date();
@@ -135,6 +137,24 @@ export function computeAlerts(
         href: "/tasks",
         taskId: task.id,
       });
+    }
+
+    // Tarefa parada: continua "A fazer" há muitos dias (e ainda não está atrasada,
+    // senão o alerta de atraso já cobre; sem responsável, o alerta de responsável já cobre)
+    if (task.status === "todo" && task.assignedTo) {
+      const age = daysDiff(parseDate(task.createdAt.split("T")[0]), t);
+      const isOverdue = task.dueDate ? parseDate(task.dueDate) < t : false;
+      if (age >= STALE_TASK_DAYS && !isOverdue) {
+        alerts.push({
+          id: `stale-task-${task.id}`,
+          type: "stale_task",
+          severity: "warning",
+          title: `Tarefa parada: ${task.title}`,
+          description: `Criada há ${age} dias e ainda em "A Fazer"${task.projectName ? ` · ${task.projectName}` : ""}.`,
+          href: "/tasks",
+          taskId: task.id,
+        });
+      }
     }
 
     if (myMemberId && task.assignedTo === myMemberId && task.status !== "done") {

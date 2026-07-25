@@ -21,6 +21,12 @@ import { cn } from "@/lib/utils";
 import { TaskDrawer } from "@/components/task-drawer";
 import { useToast } from "@/hooks/use-toast";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Sun,
   Briefcase,
   CheckSquare,
@@ -34,6 +40,7 @@ import {
   Timer,
   Layers,
   Flag,
+  CalendarClock,
 } from "lucide-react";
 
 type Project = ListProjectsQueryResult[number];
@@ -200,6 +207,20 @@ export default function MeuDia() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const updateTask = useUpdateTask();
 
+  /** Ação rápida: adiar o prazo em N dias a partir de hoje */
+  function postpone(taskId: number, days: number) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + days);
+    updateTask.mutate({ id: taskId, data: { dueDate: format(d, "yyyy-MM-dd") } }, {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        toast({ title: `Prazo adiado para ${format(d, "dd/MM", { locale: ptBR })}.` });
+      },
+      onError: () => toast({ title: "Erro ao adiar prazo", variant: "destructive" }),
+    });
+  }
+
   const loading = isLoadingMe || isLoadingProjects || isLoadingTasks || isLoadingMembers;
 
   const myMember = useMemo(() => {
@@ -256,11 +277,11 @@ export default function MeuDia() {
 
       {/* KPI strip */}
       {loading ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
               <Briefcase className="h-5 w-5 text-blue-600" />
@@ -299,9 +320,9 @@ export default function MeuDia() {
         </div>
       )}
 
-      <div className="grid grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Tasks — col 3 */}
-        <div className="col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           <div className="bg-card rounded-xl border border-border p-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -391,6 +412,22 @@ export default function MeuDia() {
                             <Timer className="h-2.5 w-2.5" />{due.label}
                           </span>
                         )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="p-1 rounded hover:bg-muted text-muted-foreground/60 hover:text-foreground transition-colors"
+                              title="Adiar prazo"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <CalendarClock className="h-3.5 w-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => postpone(t.id, 1)}>Amanhã</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => postpone(t.id, 3)}>Em 3 dias</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => postpone(t.id, 7)}>Próxima semana</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   );
@@ -401,7 +438,7 @@ export default function MeuDia() {
         </div>
 
         {/* Right sidebar — col 2 */}
-        <div className="col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           {/* My Projects */}
           <div className="bg-card rounded-xl border border-border p-4">
             <div className="flex items-center justify-between mb-3">

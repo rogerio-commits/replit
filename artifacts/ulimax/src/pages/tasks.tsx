@@ -54,8 +54,14 @@ import * as z from "zod";
 import {
   Search, Plus, CheckSquare, Clock, AlertCircle, HardHat, Briefcase,
   Trash2, Edit, MessageSquare, Download, X, CheckCheck, TrendingUp, User,
-  Bookmark, BookmarkCheck, Copy, Pencil,
+  Bookmark, BookmarkCheck, Copy, Pencil, CheckCircle2, CalendarClock, Hourglass,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useSearch } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -78,11 +84,21 @@ const PRIORITY_LABELS: Record<string, string> = {
   low: "Baixa",
 };
 
+/** Interpreta uma string de data (YYYY-MM-DD ou ISO) como data local à meia-noite */
+function parseLocalDate(s: string): Date {
+  return new Date(s.split("T")[0] + "T00:00:00");
+}
+
+/** Dias entre a data (parte de data apenas) e hoje, ambos à meia-noite local */
+function daysFromToday(s: string): number {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((parseLocalDate(s).getTime() - today.getTime()) / 86_400_000);
+}
+
 function getTaskDueInfo(dueDate?: string | null): { label: string; cls: string; iconCls: string } | null {
   if (!dueDate) return null;
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const d = new Date(dueDate); d.setHours(0, 0, 0, 0);
-  const diff = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+  const d = parseLocalDate(dueDate);
+  const diff = daysFromToday(dueDate);
   if (diff < 0)  return { label: `${Math.abs(diff)}d atraso`,   cls: "text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 font-semibold", iconCls: "text-red-500" };
   if (diff === 0) return { label: "Vence hoje",                  cls: "text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 font-semibold", iconCls: "text-red-500" };
   if (diff <= 2)  return { label: `${diff}d restante${diff > 1 ? "s" : ""}`, cls: "text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-semibold", iconCls: "text-amber-500" };
@@ -398,6 +414,31 @@ export default function Tasks() {
     updateTask.mutate({ id: taskId, data: { status: next as any } }, {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() }),
       onError: () => toast({ title: "Erro ao atualizar status", variant: "destructive" }),
+    });
+  }
+
+  /** Ação rápida: concluir sem abrir a tarefa */
+  function handleQuickDone(taskId: number) {
+    updateTask.mutate({ id: taskId, data: { status: "done" as any } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        toast({ title: "Tarefa concluída!" });
+      },
+      onError: () => toast({ title: "Erro ao concluir tarefa", variant: "destructive" }),
+    });
+  }
+
+  /** Ação rápida: adiar o prazo em N dias a partir de hoje */
+  function handlePostpone(taskId: number, days: number) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + days);
+    updateTask.mutate({ id: taskId, data: { dueDate: format(d, "yyyy-MM-dd") } as any }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey() });
+        toast({ title: `Prazo adiado para ${format(d, "dd/MM", { locale: ptBR })}.` });
+      },
+      onError: () => toast({ title: "Erro ao adiar prazo", variant: "destructive" }),
     });
   }
 
@@ -924,6 +965,17 @@ export default function Tasks() {
                               {task.assigneeName}
                             </span>
                           )}
+                          {task.status === "todo" && (() => {
+                            const age = -daysFromToday(task.createdAt);
+                            return age >= 7 ? (
+                              <span
+                                className="flex items-center gap-1 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-full px-2 py-0.5 font-medium"
+                                title={`Criada há ${age} dias e ainda em "A Fazer"`}
+                              >
+                                <Hourglass className="h-3 w-3" /> Parada há {age}d
+                              </span>
+                            ) : null;
+                          })()}
                           {inlineDateId === task.id && canEdit ? (
                             <input
                               type="date"
@@ -970,6 +1022,31 @@ export default function Tasks() {
                     </div>
 
                     <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+                      {canEdit && task.status !== "done" && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Concluir tarefa"
+                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                            onClick={() => handleQuickDone(task.id)}
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" title="Adiar prazo">
+                                <CalendarClock className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handlePostpone(task.id, 1)}>Amanhã</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePostpone(task.id, 3)}>Em 3 dias</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePostpone(task.id, 7)}>Próxima semana</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
                       <Button variant="ghost" size="sm" className="text-xs gap-1.5" onClick={() => setSelectedTask(task as any)}>
                         <MessageSquare className="h-3.5 w-3.5" />
                         Detalhes
