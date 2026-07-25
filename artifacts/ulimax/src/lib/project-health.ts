@@ -101,6 +101,27 @@ export function computeProjectHealth(project: HealthProject, projectTasks: Healt
   return { level, reasons, overdue, dueSoon, stale };
 }
 
+/**
+ * Pontuação de atenção: quanto maior, mais urgente. Ordena o "Onde focar
+ * agora" (Dashboard e Painel de Projetos). Deriva apenas do farol, do prazo
+ * e da prioridade — assim a ordem nunca contradiz a cor exibida.
+ */
+export function attentionScore(
+  project: HealthProject & { priority?: string | null },
+  health: ProjectHealth,
+): number {
+  const base = health.level === "red" ? 1000 : health.level === "yellow" ? 500 : 0;
+  let extra = health.overdue * 30;
+  const endDays = project.endDate ? daysFromToday(project.endDate) : null;
+  if (endDays !== null && endDays < 0) extra += Math.min(300, -endDays * 5);
+  extra += health.dueSoon * 10;
+  extra += health.stale * 8;
+  if (project.priority === "high") extra += 40;
+  // A parte variável fica sempre menor que o degrau entre níveis (500):
+  // garante que 🟡 nunca pontua acima de 🔴, nem 🟢 acima de 🟡.
+  return base + Math.min(499, extra);
+}
+
 /** Calcula o farol de todos os projetos de uma vez (tarefas agrupadas por projeto). */
 export function computeHealthMap(projects: HealthProject[], tasks: HealthTask[]): Map<number, ProjectHealth> {
   const byProject = new Map<number, HealthTask[]>();

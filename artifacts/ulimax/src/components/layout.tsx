@@ -106,13 +106,10 @@ export function Layout({ children }: LayoutProps) {
               label: "Principal",
               items: [
                 dashboardItem,
+                { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
-            },
-            {
-              label: "Análises",
-              items: [{ href: "/portfolio", label: "Portfólio", icon: BarChart3 }],
             },
             {
               label: "Sistema",
@@ -126,6 +123,7 @@ export function Layout({ children }: LayoutProps) {
                 items: [
                   { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
                   dashboardItem,
+                  { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
                   { href: "/projects", label: "Projetos", icon: Briefcase },
                   { href: "/tasks", label: "Tarefas", icon: CheckSquare },
                   { href: "/kanban", label: "Kanban", icon: Columns3 },
@@ -147,7 +145,6 @@ export function Layout({ children }: LayoutProps) {
                   { href: "/assistente", label: "Assistente", icon: Sparkles },
                   { href: "/reuniao", label: "Reunião Semanal", icon: Presentation },
                   { href: "/desempenho", label: "Desempenho", icon: TrendingUp },
-                  { href: "/portfolio", label: "Portfólio", icon: BarChart3 },
                 ],
               },
               {

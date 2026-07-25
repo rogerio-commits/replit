@@ -718,15 +718,15 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A análise de produtividade mostra o desempenho individual de cada membro da equipe, com base nas tarefas atribuídas e concluídas.</p>
         <Subsection title="Acessar">
-          <p className="text-sm text-muted-foreground">Abra <Strong>Portfólio</Strong> no menu lateral e veja a seção <Strong>Produtividade da Equipe</Strong> (visível para Gestores).</p>
+          <p className="text-sm text-muted-foreground">Abra <Strong>Painel de Projetos</Strong> no menu lateral (seção <Strong>Principal</Strong>) e veja a seção <Strong>Carga da Equipe</Strong> no fim da página.</p>
         </Subsection>
         <Subsection title="O que você vê">
           <Table
             headers={["Gráfico / Seção", "O que mostra"]}
             rows={[
               ["Carga da equipe", "Tarefas abertas, vencidas e concluídas por membro"],
-              ["Taxa de conclusão", "Percentual de tarefas concluídas em relação ao total atribuído"],
-              ["Ranking de membros", "Quem está com mais tarefas abertas ou atrasadas"],
+              ["Barra de conclusão", "Percentual de tarefas concluídas em relação ao total atribuído"],
+              ["Ordenação", "Quem tem mais tarefas vencidas ou abertas aparece no topo"],
             ]}
           />
         </Subsection>
@@ -1220,74 +1220,59 @@ const sections: Section[] = [
   },
   {
     id: "portfolio",
-    title: "Portfólio de Projetos",
+    title: "Painel de Projetos",
     icon: BarChart3,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Visão executiva de todos os projetos em um único painel — progresso, prazo, saúde, score de risco e carga da equipe.
+          A visão rápida do gestor: o status de todos os projetos em um só lugar e uma lista clara de onde focar sua atenção — sempre com o mesmo farol 🔴🟡🟢 do Dashboard e do Kanban.
         </p>
         <Subsection title="Como acessar">
           <p className="text-sm text-muted-foreground">
-            Clique em <Strong>Portfólio</Strong> no menu lateral, na seção <Strong>Análises</Strong>.
+            Clique em <Strong>Painel de Projetos</Strong> no menu lateral, na seção <Strong>Principal</Strong>.
           </p>
         </Subsection>
-        <Subsection title="Indicador de Saúde">
+        <Subsection title="Farol do projeto">
           <p className="text-sm text-muted-foreground mb-2">
-            Cada projeto recebe automaticamente um indicador baseado no progresso de tarefas e prazo:
+            Calculado automaticamente a partir das tarefas e do prazo final de cada projeto:
           </p>
           <Table
-            headers={["Status", "Critério"]}
+            headers={["Cor", "Quando acontece"]}
             rows={[
-              ["✅ Saudável", "Projeto concluído ou com bom progresso dentro do prazo"],
-              ["⚠️ Em Risco", "Prazo em 7 dias ou menos e progresso abaixo de 80%"],
-              ["🔴 Crítico", "Prazo vencido (data de término no passado)"],
+              ["🔴 Crítico", "Alguma tarefa atrasada ou o prazo final do projeto já venceu"],
+              ["🟡 Atenção", "Tarefa vencendo em até 3 dias, tarefa parada há 7+ dias, ou fim do projeto em até 7 dias com menos de 70% concluído"],
+              ["🟢 Em dia", "Nenhuma pendência crítica"],
             ]}
           />
         </Subsection>
-        <Subsection title="Score de Risco (0–100)">
-          <p className="text-sm text-muted-foreground mb-2">
-            Coluna <Strong>Score Risco</Strong> — número calculado automaticamente para cada projeto:
+        <Subsection title="Onde focar agora">
+          <p className="text-sm text-muted-foreground">
+            Lista só os projetos em 🔴 ou 🟡, do mais urgente para o menos urgente, cada um com o motivo escrito por extenso (ex.: <em>"2 tarefas atrasadas · prazo do projeto vencido há 3d"</em>). Clique em qualquer item para abrir o projeto.
           </p>
-          <Table
-            headers={["Faixa", "Interpretação"]}
-            rows={[
-              ["70 – 100", "Projeto sob controle (verde)"],
-              ["40 – 69",  "Atenção — atraso ou progresso baixo (âmbar)"],
-              ["0 – 39",   "Situação crítica — prazo vencido e/ou sem progresso (vermelho)"],
-            ]}
-          />
           <p className="text-sm text-muted-foreground mt-2">
-            O cálculo considera % de tarefas concluídas e penalidades por dias de atraso.
+            Projetos <Strong>sem nenhuma tarefa cadastrada</Strong> aparecem em um aviso separado — sem tarefas, o farol não tem o que avaliar.
           </p>
         </Subsection>
         <Subsection title="Filtros e busca">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Busca por nome</Strong> — campo no topo filtra projetos em tempo real.</li>
-            <li><Strong>Filtro de Saúde</Strong> — clique nos cards de resumo (Saudáveis / Em Risco / Críticos) para filtrar por saúde.</li>
-            <li><Strong>Filtro de Prioridade</Strong> — pills "Alta / Normal / Baixa" ao lado da busca.</li>
+            <li><Strong>Busca por nome</Strong> — campo acima da tabela filtra projetos em tempo real.</li>
+            <li><Strong>Filtro de farol</Strong> — clique nos cartões de resumo (Críticos / Atenção / Em dia) para filtrar a tabela.</li>
+            <li><Strong>Filtro de fase</Strong> — clique nas pílulas de fase (A Iniciar, Em Produção…) para ver só os projetos daquela fase; cada pílula mostra a contagem.</li>
           </ul>
         </Subsection>
         <Subsection title="Ordenação de colunas">
           <p className="text-sm text-muted-foreground">
-            Clique no cabeçalho de qualquer coluna (Projeto, Progresso, Prazo, Score Risco, Saúde) para ordenar de forma crescente ou decrescente. Um ícone de seta indica a ordenação ativa.
+            Clique no cabeçalho de qualquer coluna (Projeto, Farol, Fase, Progresso, Prazo) para ordenar de forma crescente ou decrescente. Sem ordenação escolhida, a tabela já vem do mais urgente para o menos urgente.
           </p>
         </Subsection>
         <Subsection title="Exportar para CSV">
           <p className="text-sm text-muted-foreground">
-            Clique em <Strong>Exportar CSV</Strong> no canto superior direito. O arquivo exportado inclui todos os projetos <em>filtrados no momento</em>, com nome, status, prioridade, progresso, prazo, score de risco e saúde.
+            Clique em <Strong>Exportar CSV</Strong> no canto superior direito. O arquivo inclui os projetos <em>filtrados no momento</em>, com fase, prioridade, farol, motivos, progresso e prazo — pronto para abrir no Excel.
           </p>
-        </Subsection>
-        <Subsection title="Comparação lado a lado">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Marque o <Strong>checkbox</Strong> à esquerda de 2 ou 3 projetos que deseja comparar.</li>
-            <li>Um painel fixo aparece no rodapé da tela com as métricas dos projetos selecionados lado a lado.</li>
-            <li>Clique no nome do projeto no painel para ir ao detalhe, ou no <Strong>X</Strong> para fechar a comparação.</li>
-          </ol>
         </Subsection>
         <Subsection title="Carga da Equipe">
           <p className="text-sm text-muted-foreground">
-            Abaixo da tabela de projetos, a seção <Strong>Carga da Equipe</Strong> lista todos os membros com tarefas atribuídas, mostrando: tarefas abertas, tarefas vencidas e uma barra de conclusão. Os membros com mais tarefas abertas aparecem primeiro.
+            Abaixo da tabela de projetos, a seção <Strong>Carga da Equipe</Strong> lista todos os membros com tarefas atribuídas, mostrando: tarefas abertas, tarefas vencidas e uma barra de conclusão. Quem tem mais tarefas vencidas aparece primeiro.
           </p>
         </Subsection>
         <Tip>Clique em qualquer linha da tabela para ir direto ao detalhe do projeto.</Tip>
@@ -1519,9 +1504,9 @@ const sections: Section[] = [
           </p>
         </Subsection>
         <Tip>Use o card <Strong>Alertas de Prazo</Strong> (existente) para ver todas as datas próximas, e o novo card <Strong>Projetos com Prazo Vencido</Strong> para focar exclusivamente no que já passou da data.</Tip>
-        <Subsection title="Complemento: Portfólio">
+        <Subsection title="Complemento: Painel de Projetos">
           <p className="text-sm text-muted-foreground">
-            Para uma análise mais completa por membro, acesse a página <Strong>Portfólio</Strong> — a seção <Strong>Carga da Equipe</Strong> lá mostra o mesmo dado com barras de progresso individuais para cada membro.
+            Para uma análise mais completa por membro, acesse a página <Strong>Painel de Projetos</Strong> — a seção <Strong>Carga da Equipe</Strong> lá mostra o mesmo dado com barras de progresso individuais para cada membro.
           </p>
         </Subsection>
       </div>

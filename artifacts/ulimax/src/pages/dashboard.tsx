@@ -30,7 +30,8 @@ import type {
   GetRecentActivityQueryResult,
 } from "@workspace/api-client-react";
 import { useAlerts, type Alert } from "@/hooks/useAlerts";
-import { computeHealthMap, FAROL_META } from "@/lib/project-health";
+import { computeHealthMap, FAROL_META, attentionScore } from "@/lib/project-health";
+import { projectStatusLabel } from "@/lib/project-status";
 import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
 import { useToast } from "@/hooks/use-toast";
 import { OnboardingBanner } from "@/components/onboarding-banner";
@@ -479,10 +480,14 @@ export default function Dashboard() {
 
   const farol = useMemo(() => {
     const map = computeHealthMap(projects ?? [], allTasks ?? []);
-    const red = (projects ?? []).filter((p) => map.get(p.id)?.level === "red");
-    const yellow = (projects ?? []).filter((p) => map.get(p.id)?.level === "yellow");
-    const green = (projects ?? []).length - red.length - yellow.length;
-    return { map, red, yellow, green };
+    // Projetos que pedem atenção, do mais urgente para o menos urgente
+    const attention = (projects ?? [])
+      .filter((p) => (map.get(p.id)?.level ?? "green") !== "green")
+      .sort((a, b) => attentionScore(b, map.get(b.id)!) - attentionScore(a, map.get(a.id)!));
+    const red = attention.filter((p) => map.get(p.id)!.level === "red").length;
+    const yellow = attention.length - red;
+    const green = (projects ?? []).length - attention.length;
+    return { map, attention, red, yellow, green };
   }, [projects, allTasks]);
 
   return (
@@ -570,6 +575,53 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── Onde focar agora ── */}
+      {!loading && !isTasksLoading && (projects?.length ?? 0) > 0 && (
+        <div className="bg-card rounded-xl border border-border p-4">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            <h2 className="text-sm font-semibold text-foreground">🚦 Onde focar agora</h2>
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">🔴 {farol.red}</span>
+              <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">🟡 {farol.yellow}</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 {farol.green}</span>
+            </span>
+            <Link href="/portfolio" className="ml-auto flex items-center gap-0.5 text-xs font-medium text-primary hover:underline">
+              Ver painel completo <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          {farol.attention.length === 0 ? (
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Todos os projetos em dia — nenhum precisa de atenção especial.
+            </p>
+          ) : (
+            <div className="divide-y divide-border/60">
+              {farol.attention.slice(0, 5).map((p) => {
+                const h = farol.map.get(p.id)!;
+                const meta = FAROL_META[h.level];
+                return (
+                  <Link key={p.id} href={`/projects/${p.id}`}>
+                    <div className="flex items-center gap-2.5 py-2 px-1 -mx-1 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                      <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", meta.dot)} />
+                      <span className="text-sm font-medium text-foreground truncate max-w-[240px] shrink-0">{p.name}</span>
+                      <span className="text-[11px] text-muted-foreground shrink-0 hidden md:inline">{projectStatusLabel(p.status)}</span>
+                      <span className="text-xs text-muted-foreground truncate flex-1">{h.reasons.slice(0, 2).join(" · ")}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </div>
+                  </Link>
+                );
+              })}
+              {farol.attention.length > 5 && (
+                <Link href="/portfolio">
+                  <p className="text-xs text-muted-foreground pt-2 cursor-pointer hover:text-primary transition-colors">
+                    +{farol.attention.length - 5} outro{farol.attention.length - 5 > 1 ? "s" : ""} projeto{farol.attention.length - 5 > 1 ? "s" : ""} precisando de atenção — ver painel completo
+                  </p>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Resumo de ontem (gestores) ── */}
       {isGestor && yesterday && (
         <div className="bg-card rounded-xl border border-border p-4">
@@ -597,51 +649,6 @@ export default function Dashboard() {
                   {p.name}: {p.count} ✔
                 </span>
               ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Farol de Projetos ── */}
-      {!loading && !isTasksLoading && (projects?.length ?? 0) > 0 && (
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <h2 className="text-sm font-semibold text-foreground">🚦 Farol de Projetos</h2>
-            <Link href="/projects" className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold">
-              <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">🔴 {farol.red.length}</span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">🟡 {farol.yellow.length}</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 {farol.green}</span>
-            </Link>
-          </div>
-          {farol.red.length === 0 && farol.yellow.length === 0 ? (
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Todos os projetos em dia.
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {[...farol.red, ...farol.yellow].slice(0, 8).map((p) => {
-                const h = farol.map.get(p.id)!;
-                const meta = FAROL_META[h.level];
-                return (
-                  <Link key={p.id} href={`/projects/${p.id}`}>
-                    <span
-                      className={cn("inline-flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1 cursor-pointer hover:opacity-80 transition-opacity", meta.chip)}
-                      title={h.reasons.join(" · ")}
-                    >
-                      <span className={cn("h-2 w-2 rounded-full shrink-0", meta.dot)} />
-                      <span className="max-w-[180px] truncate">{p.name}</span>
-                      <span className="opacity-70 hidden sm:inline">· {h.reasons[0]}</span>
-                    </span>
-                  </Link>
-                );
-              })}
-              {farol.red.length + farol.yellow.length > 8 && (
-                <Link href="/projects">
-                  <span className="inline-flex items-center text-xs font-medium border border-border rounded-full px-2.5 py-1 text-muted-foreground cursor-pointer hover:bg-muted transition-colors">
-                    +{farol.red.length + farol.yellow.length - 8} outros
-                  </span>
-                </Link>
-              )}
             </div>
           )}
         </div>
