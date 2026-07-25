@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useLocation } from "wouter";
 import {
   DndContext,
   DragOverlay,
@@ -15,11 +16,13 @@ import {
   useListTasks,
   useUpdateTask,
   useListProjects,
+  useUpdateProject,
   useListMembers,
   useCreateTask,
   getListTasksQueryKey,
+  getListProjectsQueryKey,
 } from "@workspace/api-client-react";
-import type { ListTasksQueryResult } from "@workspace/api-client-react";
+import type { ListTasksQueryResult, ListProjectsQueryResult } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,9 +36,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { computeHealthMap, FAROL_META, daysFromToday, type FarolLevel } from "@/lib/project-health";
 import {
   CalendarDays, GripVertical, Plus, User, AlertCircle,
-  Loader2, CheckSquare,
+  Loader2, CheckSquare, Briefcase,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -50,6 +54,19 @@ const TASK_COLUMNS: { id: TaskStatus; label: string; color: string; bg: string }
   { id: "in_progress", label: "Em Andamento", color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-900/20" },
   { id: "review",      label: "Revisão",      color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-900/20" },
   { id: "done",        label: "Concluído",    color: "text-green-600",  bg: "bg-green-50 dark:bg-green-900/20" },
+];
+
+type ProjectStatusId = "a_iniciar" | "em_projeto" | "em_aprovacao" | "em_producao" | "aguardando_instalacao" | "em_instalacao";
+
+type ProjectItem = ListProjectsQueryResult[number];
+
+const PROJECT_COLUMNS: { id: ProjectStatusId; label: string; color: string; bg: string }[] = [
+  { id: "a_iniciar",             label: "A Iniciar",             color: "text-slate-600",  bg: "bg-slate-100 dark:bg-slate-800/60" },
+  { id: "em_projeto",            label: "Em Projeto",            color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-900/20" },
+  { id: "em_aprovacao",          label: "Em Aprovação",          color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+  { id: "em_producao",           label: "Em Produção",           color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-900/20" },
+  { id: "aguardando_instalacao", label: "Aguardando Instalação", color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-900/20" },
+  { id: "em_instalacao",         label: "Em Instalação",         color: "text-green-600",  bg: "bg-green-50 dark:bg-green-900/20" },
 ];
 
 
@@ -160,6 +177,63 @@ function DraggableTaskCard({ task }: { task: TaskItem }) {
   return (
     <div ref={setNodeRef} {...listeners} {...attributes} style={{ opacity: isDragging ? 0 : 1 }}>
       <TaskCard task={task} />
+    </div>
+  );
+}
+
+// ── Project Card ──────────────────────────────────────────────────────────────
+
+function ProjectCard({ project, farol, isDragging = false }: { project: ProjectItem; farol?: FarolLevel; isDragging?: boolean }) {
+  const overdue = project.endDate ? daysFromToday(project.endDate) < 0 : false;
+  const meta = farol ? FAROL_META[farol] : null;
+  return (
+    <div data-testid={`kanban-card-project-${project.id}`} className={cn(
+      "bg-card border rounded-lg p-3 space-y-2 shadow-sm select-none cursor-pointer",
+      isDragging ? "shadow-xl rotate-1 opacity-90 ring-2 ring-primary/30" : "hover:shadow-md transition-shadow",
+      overdue && "border-red-300"
+    )}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium leading-snug flex-1">{project.name}</p>
+        <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {meta && (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium border rounded-full px-1.5 py-0.5", meta.chip)}>
+            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", meta.dot)} />
+            {meta.label}
+          </span>
+        )}
+        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PRIORITY_COLORS[project.priority])}>
+          {PRIORITY_LABELS[project.priority]}
+        </Badge>
+      </div>
+      <div className="flex items-center justify-between gap-2 pt-0.5">
+        {project.taskTotal > 0
+          ? <span className="text-[11px] text-muted-foreground tabular-nums">{project.taskDone}/{project.taskTotal} tarefas</span>
+          : <span />
+        }
+        {project.endDate && (
+          <div className={cn("flex items-center gap-1 text-[11px]", overdue ? "text-red-600 font-medium" : "text-muted-foreground")}>
+            {overdue ? <AlertCircle className="h-3 w-3" /> : <CalendarDays className="h-3 w-3" />}
+            <span>{formatDate(project.endDate)}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DraggableProjectCard({ project, farol, onOpen }: { project: ProjectItem; farol?: FarolLevel; onOpen: () => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `project-${project.id}` });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{ opacity: isDragging ? 0 : 1 }}
+      onClick={onOpen}
+    >
+      <ProjectCard project={project} farol={farol} />
     </div>
   );
 }
@@ -356,6 +430,100 @@ function TasksBoard() {
   );
 }
 
+// ── Projects Board ────────────────────────────────────────────────────────────
+
+function ProjectsBoard() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
+  // Evita o "clique fantasma" que dispara logo após soltar um cartão arrastado
+  const draggedRecentlyRef = useRef(false);
+
+  const { data: projects, isLoading } = useListProjects();
+  const { data: allTasks } = useListTasks();
+  const updateProject = useUpdateProject();
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  const healthMap = useMemo(
+    () => computeHealthMap(projects ?? [], allTasks ?? []),
+    [projects, allTasks]
+  );
+
+  const projectsByColumn = useMemo(() => {
+    const map: Record<ProjectStatusId, ProjectItem[]> = {
+      a_iniciar: [], em_projeto: [], em_aprovacao: [],
+      em_producao: [], aguardando_instalacao: [], em_instalacao: [],
+    };
+    projects?.forEach((p) => { if (map[p.status as ProjectStatusId]) map[p.status as ProjectStatusId].push(p); });
+    return map;
+  }, [projects]);
+
+  function openProject(id: number) {
+    if (draggedRecentlyRef.current) return;
+    navigate(`/projects/${id}`);
+  }
+
+  function endDragCleanup() {
+    setActiveProject(null);
+    setTimeout(() => { draggedRecentlyRef.current = false; }, 150);
+  }
+
+  function handleDragStart(e: DragStartEvent) {
+    draggedRecentlyRef.current = true;
+    const id = Number(String(e.active.id).replace("project-", ""));
+    setActiveProject(projects?.find((p) => p.id === id) ?? null);
+  }
+
+  function handleDragCancel() {
+    endDragCleanup();
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    endDragCleanup();
+    const { active, over } = e;
+    if (!over) return;
+    const projectId = Number(String(active.id).replace("project-", ""));
+    const newStatus = over.id as ProjectStatusId;
+    const project = projects?.find((p) => p.id === projectId);
+    if (!project || project.status === newStatus) return;
+
+    const previous = queryClient.getQueryData<ProjectItem[]>(getListProjectsQueryKey());
+    queryClient.setQueryData(getListProjectsQueryKey(), (old: ProjectItem[] | undefined) =>
+      old?.map((p) => (p.id === projectId ? { ...p, status: newStatus } : p))
+    );
+    updateProject.mutate({ id: projectId, data: { status: newStatus } }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() }),
+      onError: () => {
+        queryClient.setQueryData(getListProjectsQueryKey(), previous);
+        queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+        toast({ title: "Erro ao mover projeto.", variant: "destructive" });
+      },
+    });
+  }
+
+  if (isLoading) return <BoardSkeleton />;
+
+  return (
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+      <div className="flex gap-4 overflow-x-auto pb-6 flex-1">
+        {PROJECT_COLUMNS.map((col) => (
+          <KanbanColumn key={col.id} colId={col.id} label={col.label} color={col.color} bg={col.bg}
+            count={projectsByColumn[col.id].length} onAdd={() => navigate("/projects?create=1")}>
+            {projectsByColumn[col.id].map((p) => (
+              <DraggableProjectCard key={p.id} project={p} farol={healthMap.get(p.id)?.level} onOpen={() => openProject(p.id)} />
+            ))}
+          </KanbanColumn>
+        ))}
+      </div>
+      <DragOverlay dropAnimation={{ duration: 180, easing: "ease" }}>
+        {activeProject ? <ProjectCard project={activeProject} farol={healthMap.get(activeProject.id)?.level} isDragging /> : null}
+      </DragOverlay>
+    </DndContext>
+  );
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function BoardSkeleton() {
@@ -374,13 +542,42 @@ function BoardSkeleton() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Kanban() {
+  const [view, setView] = useState<"tarefas" | "projetos">("tarefas");
   return (
     <div className="flex flex-col gap-5 h-full">
-      <div className="shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight">Kanban de Tarefas</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Arraste os cards para atualizar o status.</p>
+      <div className="shrink-0 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Arraste os cards para atualizar o status.</p>
+        </div>
+        <div className="inline-flex items-center rounded-lg border bg-muted/40 p-0.5">
+          <button
+            onClick={() => setView("tarefas")}
+            data-testid="button-kanban-tarefas"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+              view === "tarefas"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <CheckSquare className="h-4 w-4" /> Tarefas
+          </button>
+          <button
+            onClick={() => setView("projetos")}
+            data-testid="button-kanban-projetos"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+              view === "projetos"
+                ? "bg-background text-foreground shadow-sm border"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Briefcase className="h-4 w-4" /> Projetos
+          </button>
+        </div>
       </div>
-      <TasksBoard />
+      {view === "tarefas" ? <TasksBoard /> : <ProjectsBoard />}
     </div>
   );
 }

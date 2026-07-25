@@ -46,11 +46,11 @@ export const NAV_HELP: Record<string, HelpEntry> = {
     ],
   },
   "/kanban": {
-    description: "Visualização das tarefas em colunas por status.",
+    description: "Tarefas ou projetos em colunas por status — alterne no topo da página.",
     tips: [
+      "Use o seletor Tarefas / Projetos para trocar de quadro",
       "Arraste cartões entre colunas para atualizar o status",
-      "Filtre por projeto ou responsável no topo",
-      "Clique em um cartão para ver ou editar os detalhes",
+      "No quadro de projetos, clique em um cartão para abrir o projeto",
     ],
   },
   "/members": {
