@@ -944,6 +944,11 @@ const sections: Section[] = [
         <Subsection title="Renomear uma equipe">
           <p className="text-sm text-muted-foreground">Clique diretamente sobre o nome da equipe na coluna esquerda. Pressione <Strong>Enter</Strong> para confirmar ou <Strong>Esc</Strong> para cancelar.</p>
         </Subsection>
+        <Subsection title="Enviar agenda pelo WhatsApp">
+          <p className="text-sm text-muted-foreground">
+            Na barra do Calendário há um botão <Strong>WhatsApp</Strong> (ícone de mensagem). Escolha o período — <Strong>Hoje</Strong>, <Strong>Hoje e amanhã</Strong> ou <Strong>Próximos 7 dias</Strong> — e o WhatsApp abre com a agenda já montada e agrupada por equipe, pronta para enviar. O mesmo botão aparece na <Strong>Central da Obra</Strong>.
+          </p>
+        </Subsection>
       </div>
     ),
   },
@@ -1163,6 +1168,18 @@ const sections: Section[] = [
         <Subsection title="Projeto novo em segundos">
           <p className="text-sm text-muted-foreground">Em <Strong>Projetos → Novo Projeto</Strong>, preencha só o <Strong>nome</Strong>, o <Strong>prazo de entrega</Strong> e os <Strong>participantes</Strong>. Clique em <Strong>Mostrar todos os campos</Strong> apenas quando precisar das datas detalhadas, material ou descrição — tudo isso também pode ser preenchido depois, na tela do projeto.</p>
         </Subsection>
+        <Subsection title="Botão + Criar (em qualquer tela)">
+          <p className="text-sm text-muted-foreground">O botão <Strong>+ Criar</Strong> no topo cria rapidamente o item certo dependendo da sua função:</p>
+          <Table
+            headers={["Opção", "Disponível para"]}
+            rows={[
+              ["Nova Tarefa", "Gestor, Gestor de Obras, Executor"],
+              ["Novo Projeto", "Gestor, Gestor de Obras, Executor"],
+              ["Novo Evento (instalação)", "Gestor, Gestor de Obras, Executor"],
+              ["Nova Assistência", "Gestor, Gestor de Obras"],
+            ]}
+          />
+        </Subsection>
         <Subsection title="Várias tarefas de uma vez">
           <p className="text-sm text-muted-foreground">Em <Strong>Tarefas → Criar em Lote</Strong> (também disponível na tela do projeto), cole uma lista com uma tarefa por linha. O sistema reconhece responsável e prazo automaticamente, ex.: <em>"Medir vão da janela - João - sexta"</em>.</p>
         </Subsection>
@@ -1218,7 +1235,7 @@ const sections: Section[] = [
             headers={["Quem", "O que recebe"]}
             rows={[
               ["Cada membro", "Aviso com suas tarefas atrasadas, que vencem hoje, que vencem em até 3 dias e paradas há 7+ dias"],
-              ["Gestores", "Resumo do dia: totais de atrasadas, vencendo hoje/em breve, paradas e tarefas sem responsável"],
+              ["Gestores e Gestores de Obras", "Resumo do dia: totais de atrasadas, vencendo hoje/em breve, paradas e tarefas sem responsável"],
             ]}
           />
         </Subsection>
