@@ -80,12 +80,14 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@types/papaparse": "^5.5.2",
     "@uppy/aws-s3": "^5.1.0",
     "@uppy/core": "^5.2.0",
     "@uppy/dashboard": "^5.1.1",
     "@uppy/react": "^5.2.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
+    "papaparse": "^5.5.4",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1"
   }

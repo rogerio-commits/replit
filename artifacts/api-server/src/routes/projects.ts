@@ -224,6 +224,65 @@ router.get("/projects", async (req, res) => {
   )));
 });
 
+// ── Importação em lote via CSV ─────────────────────────────────────────────
+const VALID_IMPORT_STATUSES = ["a_iniciar", "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao"] as const;
+type ImportStatus = typeof VALID_IMPORT_STATUSES[number];
+const VALID_IMPORT_PRIORITIES = ["low", "medium", "high"] as const;
+type ImportPriority = typeof VALID_IMPORT_PRIORITIES[number];
+const VALID_IMPORT_MATERIALS = ["madeira", "aluminio"] as const;
+type ImportMaterial = typeof VALID_IMPORT_MATERIALS[number];
+
+function isImportStatus(v: unknown): v is ImportStatus { return VALID_IMPORT_STATUSES.includes(v as ImportStatus); }
+function isImportPriority(v: unknown): v is ImportPriority { return VALID_IMPORT_PRIORITIES.includes(v as ImportPriority); }
+function isImportMaterial(v: unknown): v is ImportMaterial { return VALID_IMPORT_MATERIALS.includes(v as ImportMaterial); }
+
+router.post("/projects/import", requireExecutorOrGestor, async (req, res) => {
+  const rows = (req.body as { projects?: unknown })?.projects;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ error: "projects array is required" });
+  }
+  if (rows.length > 500) {
+    return res.status(400).json({ error: "Máximo de 500 projetos por importação" });
+  }
+
+  const importedIds: number[] = [];
+  const errors: { row: number; name: string; message: string }[] = [];
+
+  const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i] as Record<string, unknown>;
+    const name = typeof row.name === "string" ? row.name.trim() : "";
+    if (!name) {
+      errors.push({ row: i + 1, name: String(row.name ?? ""), message: "Nome é obrigatório" });
+      continue;
+    }
+    const status: ImportStatus = isImportStatus(row.status) ? row.status : "a_iniciar";
+    const priority: ImportPriority = isImportPriority(row.priority) ? row.priority : "medium";
+    const materialType: ImportMaterial | null = isImportMaterial(row.materialType) ? row.materialType : null;
+
+    try {
+      const [project] = await db.insert(projectsTable).values({
+        name,
+        description: typeof row.description === "string" && row.description.trim() ? row.description.trim() : null,
+        status,
+        priority,
+        startDate:  typeof row.startDate === "string"  && row.startDate  ? row.startDate  : null,
+        endDate:    typeof row.endDate === "string"     && row.endDate    ? row.endDate    : null,
+        finalDate:  typeof row.finalDate === "string"   && row.finalDate  ? row.finalDate  : null,
+        materialType,
+      }).returning();
+      logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "created", actorName, actorEmail: req.appUser!.email }, req.log);
+      importedIds.push(project.id);
+    } catch {
+      errors.push({ row: i + 1, name, message: "Erro interno ao inserir" });
+    }
+  }
+
+  return res.json({ imported: importedIds.length, errors });
+});
+
 router.post("/projects", requireExecutorOrGestor, async (req, res) => {
   const body = CreateProjectBody.safeParse(req.body);
   if (!body.success) {

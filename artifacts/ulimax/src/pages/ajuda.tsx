@@ -226,6 +226,26 @@ const sections: Section[] = [
         <Subsection title="Exportar tabela em CSV">
           <p className="text-sm text-muted-foreground">Na página <Strong>Projetos</Strong>, clique em <Strong>Exportar CSV</Strong> ao lado do botão "Novo Projeto". O arquivo exportado inclui todos os projetos visíveis com todas as colunas: status, prioridade, material, contagem de tarefas e todas as datas de fases.</p>
         </Subsection>
+        <Subsection title="Importar projetos de uma planilha">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique em <Strong>Importar CSV</Strong> na página Projetos.</li>
+            <li>Clique em <Strong>Baixar modelo</Strong> para obter a planilha com as colunas certas.</li>
+            <li>Preencha o modelo no Excel: uma linha por projeto. Só o <Strong>nome</Strong> é obrigatório.</li>
+            <li>No Excel: <em>Arquivo → Salvar como → CSV UTF-8</em>.</li>
+            <li>De volta no sistema, clique em <Strong>Selecionar arquivo CSV</Strong>, confira o preview e clique em <Strong>Importar</Strong>.</li>
+          </ol>
+          <Table
+            headers={["Coluna", "O que preencher"]}
+            rows={[
+              ["nome", "Nome do projeto (obrigatório)"],
+              ["status", "a_iniciar · em_projeto · em_aprovacao · em_producao · aguardando_instalacao · em_instalacao"],
+              ["prioridade", "baixa · normal · alta"],
+              ["data_inicio / prazo_entrega / data_final", "Formato AAAA-MM-DD ou DD/MM/AAAA"],
+              ["material", "madeira · aluminio"],
+              ["descricao", "Texto livre"],
+            ]}
+          />
+        </Subsection>
         <Tip>Clique no nome de um projeto para ver seu detalhe completo com estatísticas, tarefas vinculadas e o botão <Strong>Relatório</Strong>.</Tip>
       </div>
     ),

@@ -358,6 +358,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.1.0)
+      '@types/papaparse':
+        specifier: ^5.5.2
+        version: 5.5.2
       '@uppy/aws-s3':
         specifier: ^5.1.0
         version: 5.1.0(@uppy/core@5.2.0)
@@ -376,6 +379,9 @@ importers:
       jspdf:
         specifier: ^4.2.1
         version: 4.2.1
+      papaparse:
+        specifier: ^5.5.4
+        version: 5.5.4
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.14)(react@19.1.0)
@@ -2649,6 +2655,9 @@ packages:
   '@types/pako@2.0.4':
     resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
 
+  '@types/papaparse@5.5.2':
+    resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
+
   '@types/pg@8.20.0':
     resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
 
@@ -4213,6 +4222,9 @@ packages:
 
   pako@2.2.0:
     resolution: {integrity: sha512-zJq6RP/5q+TO2OpFV3FHzlPnFjmkb7Nc99a5SNjJE+uu/PkpChs+NIZSSzbBoD+6kjiISXjfYdwj1ZRQ81dz/w==}
+
+  papaparse@5.5.4:
+    resolution: {integrity: sha512-SwzWD9gl/ElwYLCI0nUja1mFJzjq2D8ziShfNBa7zCHzkOozeOGDwHWQ+tvCzEZcewecWZ5U7kUopDnG+DFYEQ==}
 
   parse-entities@4.0.2:
     resolution: {integrity: sha512-GG2AQYWoLgL877gQIKeRPGO1xF9+eG1ujIb5soS5gPvLQ1y2o8FL90w2QWNdf9I361Mpp7726c+lj3U0qK1uGw==}
@@ -6849,6 +6861,10 @@ snapshots:
 
   '@types/pako@2.0.4': {}
 
+  '@types/papaparse@5.5.2':
+    dependencies:
+      '@types/node': 25.6.2
+
   '@types/pg@8.20.0':
     dependencies:
       '@types/node': 25.6.2
@@ -8639,6 +8655,8 @@ snapshots:
   p-timeout@6.1.4: {}
 
   pako@2.2.0: {}
+
+  papaparse@5.5.4: {}
 
   parse-entities@4.0.2:
     dependencies:

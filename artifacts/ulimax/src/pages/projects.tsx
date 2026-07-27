@@ -58,11 +58,100 @@ import {
   AlertCircle,
   Clock,
   Download,
+  Upload,
+  FileText,
+  CheckCircle2,
+  XCircle,
+  Loader2,
 } from "lucide-react";
+import Papa from "papaparse";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
+
+// ── CSV Import helpers ───────────────────────────────────────────────────────
+const TEMPLATE_CSV = [
+  ["nome", "status", "prioridade", "data_inicio", "prazo_entrega", "data_final", "material", "descricao"],
+  ["Apartamento Silva", "a_iniciar", "alta", "2026-08-01", "2026-09-30", "2026-10-15", "madeira", "Cozinha e dormitórios"],
+  ["Escritório Beta", "em_producao", "normal", "", "2026-10-10", "", "aluminio", ""],
+  ["Casa Costa", "", "", "", "", "", "", ""],
+].map(r => r.join(",")).join("\n");
+
+const STATUS_MAP: Record<string, string> = {
+  "a iniciar": "a_iniciar", "a_iniciar": "a_iniciar",
+  "em projeto": "em_projeto", "em_projeto": "em_projeto",
+  "em aprovação": "em_aprovacao", "em aprovacao": "em_aprovacao", "em_aprovacao": "em_aprovacao",
+  "em produção": "em_producao", "em producao": "em_producao", "em_producao": "em_producao",
+  "aguardando instalação": "aguardando_instalacao", "aguardando instalacao": "aguardando_instalacao", "aguardando_instalacao": "aguardando_instalacao",
+  "em instalação": "em_instalacao", "em instalacao": "em_instalacao", "em_instalacao": "em_instalacao",
+};
+const PRIORITY_MAP: Record<string, string> = {
+  baixa: "low", low: "low",
+  normal: "medium", media: "medium", média: "medium", medium: "medium",
+  alta: "high", high: "high",
+};
+const MATERIAL_MAP: Record<string, string> = {
+  madeira: "madeira", aluminio: "aluminio", alumínio: "aluminio",
+};
+
+function normKey(s: string) { return s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+
+function parseImportDate(raw: string): string | undefined {
+  const s = raw.trim();
+  if (!s) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return undefined;
+}
+
+interface ImportRow {
+  name: string; status?: string; priority?: string;
+  startDate?: string; endDate?: string; finalDate?: string;
+  materialType?: string; description?: string;
+}
+interface ImportError { row: number; name: string; message: string; }
+
+function parseCsvToRows(text: string): { rows: ImportRow[]; parseErrors: string[] } {
+  const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
+  const parseErrors: string[] = result.errors.map(e => e.message);
+  const rows: ImportRow[] = [];
+  for (const r of result.data) {
+    const get = (candidates: string[]) => {
+      for (const c of candidates) {
+        const k = Object.keys(r).find(k => normKey(k) === c);
+        if (k && r[k]?.trim()) return r[k].trim();
+      }
+      return "";
+    };
+    const name = get(["nome", "name", "projeto"]);
+    const rawStatus = normKey(get(["status"]));
+    const rawPriority = normKey(get(["prioridade", "priority"]));
+    const rawMaterial = normKey(get(["material", "materialtype", "material_type"]));
+    rows.push({
+      name,
+      status: STATUS_MAP[rawStatus] || undefined,
+      priority: PRIORITY_MAP[rawPriority] || undefined,
+      startDate: parseImportDate(get(["data_inicio", "data inicio", "startdate", "inicio"])),
+      endDate: parseImportDate(get(["prazo_entrega", "prazo entrega", "enddate", "prazo"])),
+      finalDate: parseImportDate(get(["data_final", "data final", "finaldate", "final"])),
+      materialType: MATERIAL_MAP[rawMaterial] || undefined,
+      description: get(["descricao", "descrição", "description"]) || undefined,
+    });
+  }
+  return { rows, parseErrors };
+}
+
+function downloadTemplate() {
+  const blob = new Blob(["\uFEFF" + TEMPLATE_CSV], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "modelo_importacao_projetos.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const projectSchema = z.object({
   name: z.string().min(1, "Nome obrigatório"),
@@ -214,6 +303,12 @@ export default function Projects() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [showAllFields, setShowAllFields] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importRows, setImportRows] = useState<ImportRow[]>([]);
+  const [importParseErrors, setImportParseErrors] = useState<string[]>([]);
+  const [importResult, setImportResult] = useState<{ imported: number; errors: ImportError[] } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
   const autoOpenedRef = useRef(false);
   const { toast } = useToast();
@@ -336,6 +431,53 @@ export default function Projects() {
   const thCls = "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors whitespace-nowrap";
   const thInner = "flex items-center gap-1";
 
+  function handleImportFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const { rows, parseErrors } = parseCsvToRows(text);
+      setImportRows(rows);
+      setImportParseErrors(parseErrors);
+      setImportResult(null);
+    };
+    reader.readAsText(file, "utf-8");
+    // reset input so same file can be re-selected
+    e.target.value = "";
+  }
+
+  async function handleConfirmImport() {
+    if (importRows.length === 0 || isImporting) return;
+    const validRows = importRows.filter(r => r.name.trim());
+    if (validRows.length === 0) return;
+    setIsImporting(true);
+    try {
+      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const resp = await fetch(`${base}/api/projects/import`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projects: validRows }),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      const result = await resp.json() as { imported: number; errors: ImportError[] };
+      setImportResult(result);
+      queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+    } catch {
+      toast({ title: "Erro ao importar projetos", variant: "destructive" });
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  function resetImport() {
+    setImportRows([]);
+    setImportParseErrors([]);
+    setImportResult(null);
+    setIsImporting(false);
+  }
+
   function handleExportCSV() {
     if (!filtered || filtered.length === 0) return;
     const headers = ["#", "Projeto", "Status", "Prioridade", "Material", "Tarefas Concluídas", "Total Tarefas", "Início Proj.", "Fim Est. Proj.", "Final Proj.", "Início Prod.", "Fim Est. Prod.", "Final Prod.", "Medição", "Início Inst."];
@@ -382,6 +524,131 @@ export default function Projects() {
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV
           </Button>
+          {canEdit && (
+          <Dialog open={isImportOpen} onOpenChange={(open) => { setIsImportOpen(open); if (!open) resetImport(); }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Upload className="mr-2 h-4 w-4" />
+                Importar CSV
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Importar Projetos via CSV</DialogTitle>
+              </DialogHeader>
+
+              {/* Step 1 – no file loaded yet */}
+              {importRows.length === 0 && !importResult && (
+                <div className="space-y-4 py-2">
+                  <p className="text-sm text-muted-foreground">
+                    Baixe o modelo, preencha no Excel, salve como <strong>CSV UTF-8</strong> e faça o upload.
+                  </p>
+                  <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
+                    <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Colunas disponíveis</p>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                      <span><span className="font-medium text-foreground">nome</span> — obrigatório</span>
+                      <span><span className="font-medium text-foreground">status</span> — ex.: a_iniciar</span>
+                      <span><span className="font-medium text-foreground">prioridade</span> — baixa / normal / alta</span>
+                      <span><span className="font-medium text-foreground">data_inicio</span> — AAAA-MM-DD</span>
+                      <span><span className="font-medium text-foreground">prazo_entrega</span> — AAAA-MM-DD</span>
+                      <span><span className="font-medium text-foreground">data_final</span> — AAAA-MM-DD</span>
+                      <span><span className="font-medium text-foreground">material</span> — madeira / aluminio</span>
+                      <span><span className="font-medium text-foreground">descricao</span> — texto livre</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Datas também aceitam DD/MM/AAAA. Campos não preenchidos usam os valores padrão do sistema.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Baixar modelo
+                    </Button>
+                    <Button size="sm" onClick={() => importFileRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Selecionar arquivo CSV
+                    </Button>
+                  </div>
+                  <input ref={importFileRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleImportFileChange} />
+                  {importParseErrors.length > 0 && (
+                    <p className="text-xs text-destructive">{importParseErrors[0]}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Step 2 – preview */}
+              {importRows.length > 0 && !importResult && (
+                <div className="space-y-3 py-2">
+                  <p className="text-sm text-muted-foreground">
+                    {importRows.filter(r => r.name.trim()).length} projeto(s) válido(s) encontrado(s).
+                    {importRows.filter(r => !r.name.trim()).length > 0 && (
+                      <span className="text-destructive ml-1">{importRows.filter(r => !r.name.trim()).length} linha(s) sem nome serão ignoradas.</span>
+                    )}
+                  </p>
+                  <div className="rounded-md border overflow-auto max-h-64">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/60">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium">Nome</th>
+                          <th className="px-3 py-2 text-left font-medium">Status</th>
+                          <th className="px-3 py-2 text-left font-medium">Prioridade</th>
+                          <th className="px-3 py-2 text-left font-medium">Prazo</th>
+                          <th className="px-3 py-2 text-left font-medium">Material</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importRows.map((r, i) => (
+                          <tr key={i} className={cn("border-t", !r.name.trim() && "opacity-40")}>
+                            <td className="px-3 py-1.5 font-medium max-w-[180px] truncate">
+                              {r.name || <span className="text-destructive italic">sem nome</span>}
+                            </td>
+                            <td className="px-3 py-1.5 text-muted-foreground">{r.status ?? "—"}</td>
+                            <td className="px-3 py-1.5 text-muted-foreground">{r.priority ?? "—"}</td>
+                            <td className="px-3 py-1.5 text-muted-foreground">{r.endDate ?? r.finalDate ?? "—"}</td>
+                            <td className="px-3 py-1.5 text-muted-foreground">{r.materialType ?? "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <DialogFooter className="flex-row gap-2 sm:justify-between">
+                    <Button variant="outline" size="sm" onClick={() => { resetImport(); importFileRef.current?.click(); }}>
+                      Trocar arquivo
+                    </Button>
+                    <input ref={importFileRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleImportFileChange} />
+                    <Button
+                      size="sm"
+                      onClick={handleConfirmImport}
+                      disabled={isImporting || importRows.filter(r => r.name.trim()).length === 0}
+                    >
+                      {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                      {isImporting ? "Importando…" : `Importar ${importRows.filter(r => r.name.trim()).length} projeto(s)`}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              )}
+
+              {/* Step 3 – result */}
+              {importResult && (
+                <div className="space-y-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                    <p className="text-sm font-medium">{importResult.imported} projeto(s) importado(s) com sucesso.</p>
+                  </div>
+                  {importResult.errors.length > 0 && (
+                    <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+                      <p className="text-xs font-semibold text-destructive flex items-center gap-1"><XCircle className="h-3.5 w-3.5" /> {importResult.errors.length} linha(s) com erro</p>
+                      {importResult.errors.map((e, i) => (
+                        <p key={i} className="text-xs text-muted-foreground">Linha {e.row} "{e.name}": {e.message}</p>
+                      ))}
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button size="sm" onClick={() => { setIsImportOpen(false); resetImport(); }}>Fechar</Button>
+                  </DialogFooter>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+          )}
           {canEdit && (
           <Dialog open={isCreateOpen} onOpenChange={(open) => { setIsCreateOpen(open); if (!open) setShowAllFields(false); }}>
             <DialogTrigger asChild>
