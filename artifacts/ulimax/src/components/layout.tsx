@@ -27,6 +27,7 @@ import {
   Menu,
   Presentation,
   TrendingUp,
+  HardHat,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useClerk, useUser } from "@clerk/react";
@@ -59,7 +60,7 @@ export function Layout({ children }: LayoutProps) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const { data: me } = useAppUser();
-  const role = me?.role as "gestor" | "executor" | "observador" | undefined;
+  const role = me?.role as "gestor" | "gestor_obras" | "executor" | "observador" | undefined;
   const alertCounts = useAlertCounts();
   const recentProjects = useRecentProjects();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -100,6 +101,34 @@ export function Layout({ children }: LayoutProps) {
             items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
           },
         ]
+      : role === "gestor_obras"
+        ? [
+            {
+              label: "Principal",
+              items: [
+                { href: "/obra", label: "Central da Obra", icon: HardHat, highlight: true },
+                { href: "/meu-dia", label: "Meu Dia", icon: Sun },
+                { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
+                { href: "/projects", label: "Projetos", icon: Briefcase },
+                { href: "/tasks", label: "Tarefas", icon: CheckSquare },
+                { href: "/kanban", label: "Kanban", icon: Columns3 },
+              ],
+            },
+            {
+              label: "Obra",
+              items: [
+                { href: "/checklist", label: "Instalações", icon: ClipboardList },
+                { href: "/calendario", label: "Calendário", icon: CalendarDays },
+                { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
+                { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
+                { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
+              ],
+            },
+            {
+              label: "Sistema",
+              items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
+            },
+          ]
       : role === "observador"
         ? [
             {
@@ -132,6 +161,7 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Obra",
                 items: [
+                  { href: "/obra", label: "Central da Obra", icon: HardHat },
                   { href: "/checklist", label: "Instalações", icon: ClipboardList },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
                   { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { automationRulesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { requireGestor } from "../middlewares/requireAuth";
 
 const VALID_TRIGGERS = [
   "task_completed",
@@ -33,7 +34,7 @@ function formatRule(r: typeof automationRulesTable.$inferSelect) {
 
 const router = Router();
 
-router.get("/automation-rules", async (_req, res) => {
+router.get("/automation-rules", requireGestor, async (_req, res) => {
   const rules = await db
     .select()
     .from(automationRulesTable)
@@ -41,7 +42,7 @@ router.get("/automation-rules", async (_req, res) => {
   return res.json(rules.map(formatRule));
 });
 
-router.post("/automation-rules", async (req, res) => {
+router.post("/automation-rules", requireGestor, async (req, res) => {
   const { name, trigger, actionType, isActive } = req.body as {
     name: string;
     trigger: string;
@@ -65,7 +66,7 @@ router.post("/automation-rules", async (req, res) => {
   return res.status(201).json(formatRule(rule));
 });
 
-router.patch("/automation-rules/:id", async (req, res) => {
+router.patch("/automation-rules/:id", requireGestor, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
 
@@ -98,7 +99,7 @@ router.patch("/automation-rules/:id", async (req, res) => {
   return res.json(formatRule(updated));
 });
 
-router.delete("/automation-rules/:id", async (req, res) => {
+router.delete("/automation-rules/:id", requireGestor, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   await db.delete(automationRulesTable).where(eq(automationRulesTable.id, id));

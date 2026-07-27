@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -160,6 +160,18 @@ export default function AssistenciaTecnica() {
     });
     setIsDialogOpen(true);
   };
+
+  // Abre o diálogo de novo chamado quando a página é chamada com ?create=1 (botão "+ Criar")
+  const autoCreateRef = useRef(false);
+  useEffect(() => {
+    if (autoCreateRef.current) return;
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("create") === "1") {
+      openCreate();
+      autoCreateRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: getListAssistenciaTecnicaQueryKey() });

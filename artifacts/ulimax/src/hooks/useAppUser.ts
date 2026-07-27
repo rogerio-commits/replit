@@ -11,5 +11,5 @@ export function useIsGestor(): boolean {
 
 export function useCanEdit(): boolean {
   const { data } = useAppUser();
-  return data?.role === "gestor" || data?.role === "executor";
+  return data?.role === "gestor" || data?.role === "executor" || data?.role === "gestor_obras";
 }

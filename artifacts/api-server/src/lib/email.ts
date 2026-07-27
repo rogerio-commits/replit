@@ -59,7 +59,7 @@ export async function sendInviteEmail(opts: {
   const signUpUrl = escapeHtml(opts.signUpUrl);
   const { intendedRole } = opts;
   const roleLabel =
-    intendedRole === "gestor" ? "Gestor" : intendedRole === "executor" ? "Executor" : "Observador";
+    intendedRole === "gestor" ? "Gestor" : intendedRole === "gestor_obras" ? "Gestor de Obras" : intendedRole === "executor" ? "Executor" : "Observador";
   const body = `
     <h2 style="margin:0 0 8px;font-size:20px;color:#18181b;">Você foi convidado para o Ulimax</h2>
     <p style="margin:0 0 24px;font-size:14px;color:#71717a;">Olá, <strong>${toName}</strong>. Você recebeu um convite para acessar o Sistema de Controle de Projetos da Ulimax como <strong>${roleLabel}</strong>.</p>

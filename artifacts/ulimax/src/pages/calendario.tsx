@@ -1,4 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { MessageCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { buildAgendaText, openWhatsApp } from "@/lib/whatsapp";
 import {
   DndContext,
   PointerSensor,
@@ -857,6 +865,23 @@ export default function Calendario() {
 
   const { data: events = [], isLoading } = useListInstallationEvents();
   const canEdit = useCanEdit();
+
+  // Abre o diálogo de novo evento quando a página é chamada com ?create=1 (botão "+ Criar")
+  const autoCreateRef = useRef(false);
+  useEffect(() => {
+    if (autoCreateRef.current || !canEdit) return;
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("create") === "1") {
+      openCreate("", isoDate(new Date()));
+      autoCreateRef.current = true;
+    }
+  }, [canEdit]);
+
+  function shareAgenda(daysAhead: number) {
+    const text =
+      buildAgendaText(events, daysAhead) ?? "Nenhum evento de instalação programado no período. ✅";
+    openWhatsApp(text);
+  }
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   /** Drop de uma barra: desloca as datas pelo nº de dias arrastados e/ou troca a equipe */
@@ -1154,6 +1179,18 @@ export default function Calendario() {
             </Button>
           </div>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                <MessageCircle className="mr-1.5 h-3.5 w-3.5" /> WhatsApp
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => shareAgenda(0)}>Agenda de hoje</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => shareAgenda(1)}>Hoje e amanhã</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => shareAgenda(7)}>Próximos 7 dias</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {canEdit && (
             <>
               <Button variant="outline" size="sm" className="h-8" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>

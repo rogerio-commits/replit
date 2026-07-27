@@ -9,6 +9,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/tasks": "Tarefas",
   "/kanban": "Kanban",
   "/members": "Equipe",
+  "/obra": "Central da Obra",
   "/checklist": "Instalações",
   "/calendario": "Calendário",
   "/assistencia-tecnica": "Assistência Técnica",

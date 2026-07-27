@@ -72,13 +72,14 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type SystemRole = "gestor" | "executor" | "observador";
+type SystemRole = "gestor" | "gestor_obras" | "executor" | "observador";
 type MemberTeam = "projetos" | "tecnica";
 
 const ROLE_META: Record<SystemRole, { label: string; icon: React.ElementType; cls: string }> = {
-  gestor:     { label: "Gestor",     icon: ShieldCheck, cls: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700" },
-  executor:   { label: "Executor",   icon: Wrench,      cls: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700" },
-  observador: { label: "Observador", icon: Eye,         cls: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600" },
+  gestor:       { label: "Gestor",          icon: ShieldCheck, cls: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700" },
+  gestor_obras: { label: "Gestor de Obras", icon: HardHat,     cls: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-700" },
+  executor:     { label: "Executor",        icon: Wrench,      cls: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700" },
+  observador:   { label: "Observador",      icon: Eye,         cls: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-600" },
 };
 
 const TEAM_META: Record<MemberTeam, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> = {
@@ -115,13 +116,13 @@ const memberSchema = z.object({
   role:         z.string().min(1, "Cargo obrigatório"),
   email:        z.string().email("E-mail válido obrigatório"),
   team:         z.enum(["projetos", "tecnica"]),
-  intendedRole: z.enum(["gestor", "executor", "observador"]),
+  intendedRole: z.enum(["gestor", "gestor_obras", "executor", "observador"]),
 });
 
 type MemberFormValues = z.infer<typeof memberSchema>;
 
 const inviteRoleSchema = z.object({
-  intendedRole: z.enum(["gestor", "executor", "observador"]),
+  intendedRole: z.enum(["gestor", "gestor_obras", "executor", "observador"]),
 });
 
 type InviteRoleValues = z.infer<typeof inviteRoleSchema>;
@@ -192,6 +193,9 @@ function MemberCard({
               <SelectContent>
                 <SelectItem value="gestor">
                   <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />Gestor</span>
+                </SelectItem>
+                <SelectItem value="gestor_obras">
+                  <span className="flex items-center gap-1.5"><HardHat className="h-3.5 w-3.5 text-amber-600" />Gestor de Obras</span>
                 </SelectItem>
                 <SelectItem value="executor">
                   <span className="flex items-center gap-1.5"><Wrench className="h-3.5 w-3.5 text-blue-600" />Executor</span>
@@ -358,6 +362,12 @@ function RoleSelectItems() {
         <span className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
           <span><span className="font-medium">Gestor</span><span className="text-muted-foreground ml-1 text-xs">— acesso total</span></span>
+        </span>
+      </SelectItem>
+      <SelectItem value="gestor_obras">
+        <span className="flex items-center gap-2">
+          <HardHat className="h-4 w-4 text-amber-600" />
+          <span><span className="font-medium">Gestor de Obras</span><span className="text-muted-foreground ml-1 text-xs">— opera toda a obra</span></span>
         </span>
       </SelectItem>
       <SelectItem value="executor">

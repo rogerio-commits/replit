@@ -59,7 +59,7 @@ router.post("/invitations", requireGestor, async (req, res) => {
     return res.status(400).json({ error: "Nome inválido." });
   }
 
-  const validRoles = ["gestor", "executor", "observador"];
+  const validRoles = ["gestor", "gestor_obras", "executor", "observador"];
   if (!validRoles.includes(intendedRole)) {
     return res.status(400).json({ error: "papel inválido" });
   }
@@ -89,7 +89,7 @@ router.post("/invitations", requireGestor, async (req, res) => {
     .values({
       email: email.toLowerCase(),
       name,
-      intendedRole: intendedRole as "gestor" | "executor" | "observador",
+      intendedRole: intendedRole as "gestor" | "gestor_obras" | "executor" | "observador",
       clerkInvitationId: null,
     })
     .returning();

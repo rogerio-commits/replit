@@ -1,4 +1,4 @@
-import { Plus, CheckSquare, Briefcase } from "lucide-react";
+import { Plus, CheckSquare, Briefcase, Wrench, CalendarPlus } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,21 +7,41 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAppUser } from "@/hooks/useAppUser";
 
 const actions = [
   {
     label: "Nova Tarefa",
     icon: CheckSquare,
     href: "/tasks?create=1",
+    roles: ["gestor", "gestor_obras", "executor"],
   },
   {
     label: "Novo Projeto",
     icon: Briefcase,
     href: "/projects?create=1",
+    roles: ["gestor", "gestor_obras", "executor"],
+  },
+  {
+    label: "Novo Evento de Instalação",
+    icon: CalendarPlus,
+    href: "/calendario?create=1",
+    roles: ["gestor", "gestor_obras", "executor"],
+  },
+  {
+    label: "Nova Assistência Técnica",
+    icon: Wrench,
+    href: "/assistencia-tecnica?create=1",
+    roles: ["gestor", "gestor_obras"],
   },
 ];
 
 export function QuickCreate() {
+  const { data: me } = useAppUser();
+  const role = me?.role;
+  const visible = actions.filter((a) => !role || a.roles.includes(role));
+  if (visible.length === 0) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -30,8 +50,8 @@ export function QuickCreate() {
           <span className="hidden sm:inline">Criar</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
-        {actions.map((action) => {
+      <DropdownMenuContent align="end" className="w-56">
+        {visible.map((action) => {
           const Icon = action.icon;
           return (
             <DropdownMenuItem key={action.href} asChild>

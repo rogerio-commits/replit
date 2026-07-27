@@ -55,6 +55,7 @@ import {
   Sparkles,
   BellRing,
   Smartphone,
+  HardHat,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -1027,6 +1028,43 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "central-obra",
+    title: "Central da Obra",
+    icon: HardHat,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          A <Strong>Central da Obra</Strong> (menu Obra) reúne numa tela só o dia a dia da operação:
+          instalações dos próximos 7 dias, assistências em aberto, amostras a entregar e peças com plano de ação.
+        </p>
+        <Subsection title="O que dá para fazer direto na Central">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Marcar uma assistência como <Strong>Realizada</Strong> sem sair da tela.</li>
+            <li>Marcar amostras como <Strong>Pronta</Strong> e <Strong>Entregue</Strong>.</li>
+            <li>Criar <Strong>Novo Evento</Strong> ou <Strong>Nova Assistência</Strong> pelos botões no topo (ou pelo botão <Strong>+ Criar</Strong> em qualquer tela).</li>
+            <li>Enviar a <Strong>agenda no WhatsApp</Strong> com um clique.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Programação por WhatsApp">
+          <p className="text-sm text-muted-foreground">
+            Na Central da Obra e no <Strong>Calendário</Strong> (botão WhatsApp), o sistema monta a mensagem
+            com os eventos agrupados por equipe — agenda de hoje, hoje e amanhã ou próximos 7 dias.
+            O WhatsApp abre com o texto pronto; você só escolhe o contato (por exemplo, o grupo da equipe) e envia.
+          </p>
+        </Subsection>
+        <Subsection title="Papel Gestor de Obras">
+          <p className="text-sm text-muted-foreground">
+            O papel <Strong>Gestor de Obras</Strong> enxerga e opera tudo da obra em todos os projetos
+            (sem precisar ser participante de cada um), mas não acessa as áreas administrativas
+            (Equipe, Templates, Automação, Auditoria, Aprovação) e não pode excluir projetos.
+            Para usar, convide a pessoa em <Strong>Equipe → Convidar</Strong> escolhendo a função Gestor de Obras.
+          </p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
     id: "equipe",
     title: "Equipe",
     icon: Users,
@@ -1044,6 +1082,7 @@ const sections: Section[] = [
           headers={["Função", "O que pode fazer"]}
           rows={[
             ["Gestor", "Acesso total: criar, editar e excluir qualquer item"],
+            ["Gestor de Obras", "Opera tudo da obra em todos os projetos (Central da Obra, calendário, assistência, amostras, tarefas) — sem áreas administrativas e sem excluir projetos"],
             ["Executor", "Editar apenas projetos e tarefas em que é participante"],
             ["Observador", "Somente visualização — não pode criar ou editar"],
           ]}

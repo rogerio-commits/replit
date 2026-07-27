@@ -184,7 +184,7 @@ export async function runDailyReminders(log: Logger): Promise<DailyRemindersResu
   }
 
   // 2) Resumo geral para gestores
-  const gestores = users.filter((u) => u.role === "gestor" && u.email);
+  const gestores = users.filter((u) => (u.role === "gestor" || u.role === "gestor_obras") && u.email);
   const porPessoa = [...bucketsByMember.entries()]
     .map(([memberId, b]) => ({
       name: membersById.get(memberId)?.name ?? "—",

@@ -7,3 +7,4 @@
 - [Composite libs & one-off scripts](composite-libs-typecheck.md) — after lib/db schema edits run `tsc -b lib/db` or api-server typecheck sees stale dist; no tsx/python3 — esbuild-bundle one-off TS scripts.
 - [Adoption state](adoption-state.md) — as of 2026-07-25 both DBs nearly empty, team adoption not started; "feature missing in prod" = stale published build, republish first (reminder in text only).
 - [Farol single source](farol-single-source.md) — health/urgency UIs must derive from lib/project-health + lib/project-status; attention order is severity-first (variable score capped below level step).
+- [Gestor de Obras role](gestor-obras-role.md) — operational writes in all projects, no admin routes/project delete; enum synced in db, openapi.yaml (codegen) and UI literals.

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Briefcase, CheckSquare, Users, LayoutDashboard, Search, Loader2 } from "lucide-react";
+import { Briefcase, CheckSquare, Users, LayoutDashboard, Search, Loader2, HardHat, Wrench, CalendarPlus } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -100,10 +100,16 @@ export function CommandPalette() {
       <CommandList>
         {!searching && (
           <CommandGroup heading="Páginas">
-            {role !== "executor" && (
+            {(role === "gestor" || role === "observador" || !role) && (
               <CommandItem onSelect={() => go("/dashboard")} className="gap-2">
                 <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                 Dashboard
+              </CommandItem>
+            )}
+            {(role === "gestor" || role === "gestor_obras") && (
+              <CommandItem onSelect={() => go("/obra")} className="gap-2">
+                <HardHat className="h-4 w-4 text-muted-foreground" />
+                Central da Obra
               </CommandItem>
             )}
             <CommandItem onSelect={() => go("/projects")} className="gap-2">
@@ -120,6 +126,21 @@ export function CommandPalette() {
               <CommandItem onSelect={() => go("/members")} className="gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 Equipe
+              </CommandItem>
+            )}
+          </CommandGroup>
+        )}
+
+        {!searching && role !== "observador" && (
+          <CommandGroup heading="Criar">
+            <CommandItem onSelect={() => go("/calendario?create=1")} className="gap-2">
+              <CalendarPlus className="h-4 w-4 text-muted-foreground" />
+              Novo evento de instalação
+            </CommandItem>
+            {(role === "gestor" || role === "gestor_obras" || !role) && (
+              <CommandItem onSelect={() => go("/assistencia-tecnica?create=1")} className="gap-2">
+                <Wrench className="h-4 w-4 text-muted-foreground" />
+                Nova assistência técnica
               </CommandItem>
             )}
           </CommandGroup>

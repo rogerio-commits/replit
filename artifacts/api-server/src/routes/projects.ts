@@ -378,6 +378,11 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
   const params = DeleteProjectParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 
+  // Gestor de Obras opera em todos os projetos, mas não pode excluí-los.
+  if (req.appUser!.role === "gestor_obras") {
+    return res.status(403).json({ error: "Gestor de Obras não pode excluir projetos" });
+  }
+
   if (req.appUser!.role === "executor") {
     const ok = await isExecutorParticipant(req.appUser!.email, params.data.id);
     if (!ok) return res.status(403).json({ error: "Você não é participante deste projeto" });

@@ -30,6 +30,7 @@ import MeuDia from "@/pages/meu-dia";
 import Templates from "@/pages/templates";
 import Automacao from "@/pages/automacao";
 import Portfolio from "@/pages/portfolio";
+import CentralObra from "@/pages/central-obra";
 import CamposPersonalizados from "@/pages/campos-personalizados";
 import Reuniao from "@/pages/reuniao";
 import Desempenho from "@/pages/desempenho";
@@ -247,6 +248,7 @@ function ProtectedRoutes() {
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/automacao" component={Automacao} />
             <Route path="/portfolio" component={Portfolio} />
+            <Route path="/obra" component={CentralObra} />
             <Route path="/reuniao" component={Reuniao} />
             <Route path="/desempenho" component={Desempenho} />
             <Route path="/assistente" component={Assistente} />

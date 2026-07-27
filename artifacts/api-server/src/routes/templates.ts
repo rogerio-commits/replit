@@ -15,7 +15,7 @@ import {
 
 const router = Router();
 
-router.get("/templates", async (_req, res) => {
+router.get("/templates", requireGestor, async (_req, res) => {
   const templates = await db.select().from(projectTemplatesTable).orderBy(projectTemplatesTable.createdAt);
 
   const taskCounts = await db
@@ -47,7 +47,7 @@ router.post("/templates", requireGestor, async (req, res) => {
   return res.status(201).json({ ...template, taskCount: 0, createdAt: template.createdAt.toISOString() });
 });
 
-router.get("/templates/:id", async (req, res) => {
+router.get("/templates/:id", requireGestor, async (req, res) => {
   const params = GetTemplateParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) return res.status(400).json({ error: "Invalid id" });
 

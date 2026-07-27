@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { db, auditLogsTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
+import { requireGestor } from "../middlewares/requireAuth";
 
 const router = Router();
 
-router.get("/audit-logs", async (req, res) => {
+router.get("/audit-logs", requireGestor, async (req, res) => {
   const entityType = typeof req.query.entityType === "string" ? req.query.entityType : undefined;
   const entityId = req.query.entityId ? Number(req.query.entityId) : undefined;
   const limit = Math.min(Number(req.query.limit ?? 100), 200);
