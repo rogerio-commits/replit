@@ -12,8 +12,8 @@ const ROUTE_LABELS: Record<string, string> = {
   "/obra": "Central da Obra",
   "/checklist": "Instalações",
   "/calendario": "Calendário",
-  "/assistencia-tecnica": "Assistência Técnica",
-  "/controle-amostras": "Amostras",
+  "/assistencia-tecnica": "Assistência Técnica",  // redireciona → /obra
+  "/controle-amostras": "Amostras",              // redireciona → /obra
   "/gantt": "Gantt",
   "/portfolio": "Painel de Projetos",
   "/templates": "Templates",

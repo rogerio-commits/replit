@@ -21,8 +21,6 @@ import Members from "@/pages/members";
 import Kanban from "@/pages/kanban";
 import Calendario from "@/pages/calendario";
 import Checklist from "@/pages/checklist";
-import AssistenciaTecnica from "@/pages/assistencia-tecnica";
-import SampleControls from "@/pages/sample-controls";
 import Ajuda from "@/pages/ajuda";
 import Gantt from "@/pages/gantt";
 import Audit from "@/pages/audit";
@@ -238,8 +236,8 @@ function ProtectedRoutes() {
             <Route path="/calendario" component={Calendario} />
             <Route path="/alertas"><Redirect to="/dashboard" replace /></Route>
             <Route path="/checklist" component={Checklist} />
-            <Route path="/assistencia-tecnica" component={AssistenciaTecnica} />
-            <Route path="/controle-amostras" component={SampleControls} />
+            <Route path="/assistencia-tecnica"><Redirect to="/obra" replace /></Route>
+            <Route path="/controle-amostras"><Redirect to="/obra" replace /></Route>
             <Route path="/produtividade"><Redirect to="/portfolio" replace /></Route>
             <Route path="/gantt" component={Gantt} />
             <Route path="/auditoria" component={Audit} />

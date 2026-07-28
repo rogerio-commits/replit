@@ -108,7 +108,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function SampleControls() {
+export default function SampleControls({ asTab = false }: { asTab?: boolean } = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -248,23 +248,32 @@ export default function SampleControls() {
   const soonItems = (items ?? []).filter((i) => deadlineStatus(i.deadline, i.delivered ?? false) === "soon");
 
   return (
-    <div className="space-y-6">
-      <ObraNav />
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <FlaskConical className="h-6 w-6 text-violet-600" />
-            Amostras
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Gerencie amostras, prazos e requisições por projeto.
-          </p>
+    <div className={asTab ? "space-y-4" : "space-y-6"}>
+      {!asTab && <ObraNav />}
+      {!asTab ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <FlaskConical className="h-6 w-6 text-violet-600" />
+              Amostras
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Gerencie amostras, prazos e requisições por projeto.
+            </p>
+          </div>
+          <Button onClick={openCreate} className="gap-2 shrink-0">
+            <Plus className="h-4 w-4" />
+            Nova Amostra
+          </Button>
         </div>
-        <Button onClick={openCreate} className="gap-2 shrink-0">
-          <Plus className="h-4 w-4" />
-          Nova Amostra
-        </Button>
-      </div>
+      ) : (
+        <div className="flex justify-end">
+          <Button onClick={openCreate} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Amostra
+          </Button>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">

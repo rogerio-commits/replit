@@ -48,7 +48,9 @@ const OBSERVADOR_PREFIXES = [
 
 // Caminhos antigos que redirecionam imediatamente — sempre liberados para o
 // redirect poder rodar (o destino é validado de novo pelo guard).
-const LEGACY_PATHS = ["/alertas", "/produtividade", "/access"];
+// URLs antigos de AT/Amostras agora redirecionam para /obra — sempre liberar
+// para o <Redirect> poder rodar antes de qualquer RoleGate.
+const LEGACY_PATHS = ["/alertas", "/produtividade", "/access", "/assistencia-tecnica", "/controle-amostras"];
 
 function matchesAny(prefixes: string[], path: string): boolean {
   return prefixes.some((p) => path === p || path.startsWith(p + "/"));

@@ -35,7 +35,9 @@ import { useCanEdit } from "@/hooks/useAppUser";
 import { daysFromToday, parseLocalDate } from "@/lib/project-health";
 import { buildAgendaText, openWhatsApp } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
-import { ObraNav } from "@/components/obra-nav";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AssistenciaTecnicaPage from "./assistencia-tecnica";
+import SampleControlsPage from "./sample-controls";
 
 function prazoChip(dateStr?: string | null): { text: string; cls: string } | null {
   if (!dateStr) return null;
@@ -209,7 +211,6 @@ export default function CentralObra() {
 
   return (
     <div className="space-y-6">
-      <ObraNav />
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -226,30 +227,50 @@ export default function CentralObra() {
             <MessageCircle className="h-4 w-4" /> Agenda no WhatsApp
           </Button>
           {canEdit && (
-            <>
-              <Button variant="outline" size="sm" className="gap-1.5" asChild>
-                <Link href="/calendario?create=1">
-                  <Plus className="h-4 w-4" /> Novo Evento
-                </Link>
-              </Button>
-              <Button size="sm" className="gap-1.5" asChild>
-                <Link href="/assistencia-tecnica?create=1">
-                  <Plus className="h-4 w-4" /> Nova Assistência
-                </Link>
-              </Button>
-            </>
+            <Button variant="outline" size="sm" className="gap-1.5" asChild>
+              <Link href="/calendario?create=1">
+                <Plus className="h-4 w-4" /> Novo Evento
+              </Link>
+            </Button>
           )}
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-56 rounded-xl" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Tabs defaultValue="visao-geral">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="visao-geral" className="gap-1.5 text-xs sm:text-sm">
+            <HardHat className="h-3.5 w-3.5 shrink-0" />
+            Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="assistencia" className="gap-1.5 text-xs sm:text-sm">
+            <Wrench className="h-3.5 w-3.5 shrink-0" />
+            Assistência
+            {openAT.length > 0 && (
+              <span className="ml-1 rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold px-1.5 leading-5 shrink-0">
+                {openAT.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="amostras" className="gap-1.5 text-xs sm:text-sm">
+            <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+            Amostras
+            {pendingSamples.length > 0 && (
+              <span className="ml-1 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold px-1.5 leading-5 shrink-0">
+                {pendingSamples.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="visao-geral" className="mt-4">
+          {isLoading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-56 rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Instalações próximas */}
           <SectionCard
             title="Instalações — próximos 7 dias"
@@ -293,7 +314,7 @@ export default function CentralObra() {
             title="Assistências em aberto"
             icon={Wrench}
             count={openAT.length}
-            href="/assistencia-tecnica"
+            href="/obra"
             hrefLabel="Ver todas"
           >
             {openAT.length === 0 ? (
@@ -332,7 +353,7 @@ export default function CentralObra() {
             title="Amostras a entregar"
             icon={FlaskConical}
             count={pendingSamples.length}
-            href="/controle-amostras"
+            href="/obra"
             hrefLabel="Ver todas"
           >
             {pendingSamples.length === 0 ? (
@@ -419,8 +440,18 @@ export default function CentralObra() {
               </p>
             )}
           </SectionCard>
-        </div>
-      )}
+          </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="assistencia" className="mt-4">
+          <AssistenciaTecnicaPage asTab />
+        </TabsContent>
+
+        <TabsContent value="amostras" className="mt-4">
+          <SampleControlsPage asTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

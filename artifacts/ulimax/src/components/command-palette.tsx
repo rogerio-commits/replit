@@ -138,7 +138,7 @@ export function CommandPalette() {
               Novo evento de instalação
             </CommandItem>
             {(role === "gestor" || role === "gestor_obras" || !role) && (
-              <CommandItem onSelect={() => go("/assistencia-tecnica?create=1")} className="gap-2">
+              <CommandItem onSelect={() => go("/obra")} className="gap-2">
                 <Wrench className="h-4 w-4 text-muted-foreground" />
                 Nova assistência técnica
               </CommandItem>

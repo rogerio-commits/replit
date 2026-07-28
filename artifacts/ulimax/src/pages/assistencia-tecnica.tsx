@@ -97,7 +97,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function AssistenciaTecnica() {
+export default function AssistenciaTecnica({ asTab = false }: { asTab?: boolean } = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const isGestor = useIsGestor();
@@ -165,7 +165,7 @@ export default function AssistenciaTecnica() {
   // Abre o diálogo de novo chamado quando a página é chamada com ?create=1 (botão "+ Criar")
   const autoCreateRef = useRef(false);
   useEffect(() => {
-    if (autoCreateRef.current) return;
+    if (asTab || autoCreateRef.current) return;
     const p = new URLSearchParams(window.location.search);
     if (p.get("create") === "1") {
       openCreate();
@@ -251,24 +251,32 @@ export default function AssistenciaTecnica() {
   };
 
   return (
-    <div className="space-y-6">
-      <ObraNav />
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-            <Wrench className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+    <div className={asTab ? "space-y-4" : "space-y-6"}>
+      {!asTab && <ObraNav />}
+      {!asTab ? (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <Wrench className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Assistência Técnica</h1>
+              <p className="text-sm text-muted-foreground">Chamados de clientes</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Assistência Técnica</h1>
-            <p className="text-sm text-muted-foreground">Chamados de clientes</p>
-          </div>
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Novo Chamado
+          </Button>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Novo Chamado
-        </Button>
-      </div>
+      ) : (
+        <div className="flex justify-end">
+          <Button onClick={openCreate} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Novo Chamado
+          </Button>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

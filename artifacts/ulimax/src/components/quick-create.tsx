@@ -31,7 +31,7 @@ const actions = [
   {
     label: "Nova Assistência Técnica",
     icon: Wrench,
-    href: "/assistencia-tecnica?create=1",
+    href: "/obra",
     roles: ["gestor", "gestor_obras"],
   },
 ];

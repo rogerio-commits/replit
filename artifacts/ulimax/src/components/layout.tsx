@@ -119,8 +119,6 @@ export function Layout({ children }: LayoutProps) {
               items: [
                 { href: "/checklist", label: "Instalações", icon: ClipboardList },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
-                { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
-                { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
                 { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
               ],
             },
@@ -164,8 +162,6 @@ export function Layout({ children }: LayoutProps) {
                   { href: "/obra", label: "Central da Obra", icon: HardHat },
                   { href: "/checklist", label: "Instalações", icon: ClipboardList },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
-                  { href: "/assistencia-tecnica", label: "Assistência Técnica", icon: Wrench },
-                  { href: "/controle-amostras", label: "Amostras", icon: FlaskConical },
                   { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
                 ],
               },
