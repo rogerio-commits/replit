@@ -24,6 +24,8 @@ import {
   useCreateProjectObservation,
   useListProjectPhaseHistory,
   useApproveProject,
+  useArchiveProject,
+  useUnarchiveProject,
   getGetProjectQueryKey,
   getListTasksQueryKey,
   getGetProjectStatsQueryKey,
@@ -103,6 +105,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Copy,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -212,6 +216,8 @@ export default function ProjectDetail() {
   const [togglingTaskId, setTogglingTaskId] = useState<number | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   const { data: project, isLoading: isProjectLoading } = useGetProject(projectId, {
     query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) },
@@ -265,6 +271,8 @@ export default function ProjectDetail() {
 
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+  const archiveProject = useArchiveProject();
+  const unarchiveProject = useUnarchiveProject();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const addProjectMember = useAddProjectMember();
@@ -379,6 +387,28 @@ export default function ProjectDetail() {
         setLocation("/projects");
       },
       onError: () => toast({ title: "Erro ao excluir projeto", variant: "destructive" }),
+    });
+  };
+
+  const onArchiveProject = () => {
+    archiveProject.mutate({ id: projectId }, {
+      onSuccess: () => {
+        toast({ title: "Projeto arquivado" });
+        queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+        queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+      },
+      onError: () => toast({ title: "Erro ao arquivar projeto", variant: "destructive" }),
+    });
+  };
+
+  const onUnarchiveProject = () => {
+    unarchiveProject.mutate({ id: projectId }, {
+      onSuccess: () => {
+        toast({ title: "Projeto reativado" });
+        queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
+        queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+      },
+      onError: () => toast({ title: "Erro ao reativar projeto", variant: "destructive" }),
     });
   };
 
@@ -555,6 +585,25 @@ export default function ProjectDetail() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Archived banner */}
+      {project.archived && (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300">
+          <Archive className="h-4 w-4 shrink-0" />
+          <p className="text-sm font-medium">Este projeto está arquivado e não aparece na lista padrão de projetos.</p>
+          {(me?.role === "gestor" || me?.role === "gestor_obras") && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto border-amber-400 text-amber-800 hover:bg-amber-100 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/40"
+              onClick={onUnarchiveProject}
+              disabled={unarchiveProject.isPending}
+            >
+              <ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />
+              Reativar
+            </Button>
+          )}
+        </div>
+      )}
       {/* Header */}
       <div>
         <Button variant="ghost" size="sm" className="mb-4 -ml-3 text-muted-foreground" onClick={() => setLocation("/projects")}>
@@ -745,7 +794,32 @@ export default function ProjectDetail() {
                 <Button variant="outline" size="icon" onClick={onDuplicateProject} disabled={createProject.isPending} title="Duplicar projeto">
                   <Copy className="h-4 w-4" />
                 </Button>
-                <Dialog>
+                {(me?.role === "gestor" || me?.role === "gestor_obras") && (
+                  project.archived ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onUnarchiveProject}
+                      disabled={unarchiveProject.isPending}
+                      title="Reativar projeto"
+                    >
+                      <ArchiveRestore className="mr-2 h-4 w-4" />
+                      {unarchiveProject.isPending ? "Reativando..." : "Reativar"}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onArchiveProject}
+                      disabled={archiveProject.isPending}
+                      title="Arquivar projeto"
+                    >
+                      <Archive className="mr-2 h-4 w-4" />
+                      {archiveProject.isPending ? "Arquivando..." : "Arquivar"}
+                    </Button>
+                  )
+                )}
+                <Dialog open={isDeleteOpen} onOpenChange={(open) => { setIsDeleteOpen(open); if (!open) setDeleteConfirmName(""); }}>
                   <DialogTrigger asChild>
                     <Button variant="destructive" size="icon">
                       <Trash2 className="h-4 w-4" />
@@ -755,14 +829,29 @@ export default function ProjectDetail() {
                     <DialogHeader>
                       <DialogTitle>Excluir Projeto</DialogTitle>
                     </DialogHeader>
-                    <div className="py-4">
-                      Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita e removerá todas as tarefas associadas.
+                    <div className="py-4 space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Esta ação é <span className="font-semibold text-destructive">irreversível</span> e removerá todas as tarefas associadas. Para confirmar, digite o nome do projeto:
+                      </p>
+                      <p className="text-sm font-medium text-foreground bg-muted rounded px-3 py-1.5 break-all">
+                        {project.name}
+                      </p>
+                      <Input
+                        placeholder="Digite o nome do projeto para confirmar"
+                        value={deleteConfirmName}
+                        onChange={(e) => setDeleteConfirmName(e.target.value)}
+                        autoComplete="off"
+                      />
                     </div>
                     <DialogFooter>
                       <DialogClose asChild>
                         <Button variant="outline">Cancelar</Button>
                       </DialogClose>
-                      <Button variant="destructive" onClick={onDeleteProject} disabled={deleteProject.isPending}>
+                      <Button
+                        variant="destructive"
+                        onClick={onDeleteProject}
+                        disabled={deleteProject.isPending || deleteConfirmName !== project.name}
+                      >
                         {deleteProject.isPending ? "Excluindo..." : "Excluir Projeto"}
                       </Button>
                     </DialogFooter>

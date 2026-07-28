@@ -63,6 +63,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  Archive,
 } from "lucide-react";
 import Papa from "papaparse";
 import { useToast } from "@/hooks/use-toast";
@@ -324,7 +325,9 @@ export default function Projects() {
     }
   }, [searchStr, canEdit]);
 
-  const { data: projects, isLoading } = useListProjects();
+  const [showArchived, setShowArchived] = useState(false);
+
+  const { data: projects, isLoading } = useListProjects(showArchived ? { archived: true } : undefined);
   const { data: allMembers } = useListMembers();
   const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
 
@@ -520,6 +523,14 @@ export default function Projects() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowArchived((v) => !v)}
+          >
+            <Archive className="mr-2 h-4 w-4" />
+            {showArchived ? "Ver ativos" : "Ver arquivados"}
+          </Button>
           <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filtered.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             Exportar CSV

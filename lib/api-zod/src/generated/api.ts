@@ -22,7 +22,8 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListProjectsQueryParams = zod.object({
   "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']).optional(),
-  "priority": zod.enum(['low', 'medium', 'high']).optional()
+  "priority": zod.enum(['low', 'medium', 'high']).optional(),
+  "archived": zod.coerce.boolean().optional()
 })
 
 export const ListProjectsResponseItem = zod.object({
@@ -47,6 +48,7 @@ export const ListProjectsResponseItem = zod.object({
   "approvalAt": zod.string().nullish(),
   "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
+  "archived": zod.boolean().optional(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
   "memberName": zod.string(),
@@ -108,6 +110,7 @@ export const GetProjectResponse = zod.object({
   "approvalAt": zod.string().nullish(),
   "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
+  "archived": zod.boolean().optional(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
   "memberName": zod.string(),
@@ -164,6 +167,7 @@ export const UpdateProjectResponse = zod.object({
   "approvalAt": zod.string().nullish(),
   "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
+  "archived": zod.boolean().optional(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
   "memberName": zod.string(),
@@ -177,6 +181,82 @@ export const UpdateProjectResponse = zod.object({
  */
 export const DeleteProjectParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Archive a project (gestor / gestor_obras only)
+ */
+export const ArchiveProjectParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ArchiveProjectResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "taskTotal": zod.number(),
+  "taskDone": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "finalDate": zod.string().nullish(),
+  "producaoStartDate": zod.string().nullish(),
+  "producaoEndDate": zod.string().nullish(),
+  "producaoFinalDate": zod.string().nullish(),
+  "medicaoDate": zod.string().nullish(),
+  "instalacaoStartDate": zod.string().nullish(),
+  "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
+  "approvalStatus": zod.enum(['pending', 'approved', 'rejected']).nullish(),
+  "approvalNote": zod.string().nullish(),
+  "approvalAt": zod.string().nullish(),
+  "approvalBy": zod.number().nullish(),
+  "createdAt": zod.string(),
+  "archived": zod.boolean().optional(),
+  "participants": zod.array(zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberAvatarUrl": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Unarchive a project (gestor / gestor_obras only)
+ */
+export const UnarchiveProjectParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UnarchiveProjectResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "status": zod.enum(['a_iniciar', 'em_projeto', 'em_aprovacao', 'em_producao', 'aguardando_instalacao', 'em_instalacao']),
+  "priority": zod.enum(['low', 'medium', 'high']),
+  "taskTotal": zod.number(),
+  "taskDone": zod.number(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
+  "finalDate": zod.string().nullish(),
+  "producaoStartDate": zod.string().nullish(),
+  "producaoEndDate": zod.string().nullish(),
+  "producaoFinalDate": zod.string().nullish(),
+  "medicaoDate": zod.string().nullish(),
+  "instalacaoStartDate": zod.string().nullish(),
+  "materialType": zod.enum(['madeira', 'aluminio']).nullish(),
+  "approvalStatus": zod.enum(['pending', 'approved', 'rejected']).nullish(),
+  "approvalNote": zod.string().nullish(),
+  "approvalAt": zod.string().nullish(),
+  "approvalBy": zod.number().nullish(),
+  "createdAt": zod.string(),
+  "archived": zod.boolean().optional(),
+  "participants": zod.array(zod.object({
+  "memberId": zod.number(),
+  "memberName": zod.string(),
+  "memberAvatarUrl": zod.string().nullish()
+}))
 })
 
 
@@ -214,6 +294,7 @@ export const ApproveProjectResponse = zod.object({
   "approvalAt": zod.string().nullish(),
   "approvalBy": zod.number().nullish(),
   "createdAt": zod.string(),
+  "archived": zod.boolean().optional(),
   "participants": zod.array(zod.object({
   "memberId": zod.number(),
   "memberName": zod.string(),

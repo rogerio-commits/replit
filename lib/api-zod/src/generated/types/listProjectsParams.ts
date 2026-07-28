@@ -11,4 +11,5 @@ import type { ListProjectsStatus } from './listProjectsStatus';
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;
+archived?: boolean;
 };

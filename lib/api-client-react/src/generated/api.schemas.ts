@@ -133,6 +133,7 @@ export interface Project {
   /** @nullable */
   approvalBy?: number | null;
   createdAt: string;
+  archived?: boolean;
   participants: ProjectParticipantSummary[];
 }
 
@@ -1412,6 +1413,7 @@ export interface BurndownPoint {
 export type ListProjectsParams = {
 status?: ListProjectsStatus;
 priority?: ListProjectsPriority;
+archived?: boolean;
 };
 
 export type ListProjectsStatus = typeof ListProjectsStatus[keyof typeof ListProjectsStatus];

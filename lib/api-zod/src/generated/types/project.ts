@@ -47,5 +47,6 @@ export interface Project {
   /** @nullable */
   approvalBy?: number | null;
   createdAt: string;
+  archived?: boolean;
   participants: ProjectParticipantSummary[];
 }

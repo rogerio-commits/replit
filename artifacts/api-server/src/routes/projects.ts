@@ -33,6 +33,8 @@ import {
   ListProjectPhaseHistoryParams,
   ApproveProjectParams,
   ApproveProjectBody,
+  ArchiveProjectParams,
+  UnarchiveProjectParams,
 } from "@workspace/api-zod";
 
 const router = Router();
@@ -63,6 +65,7 @@ function projectRow(
     approvalAt: p.approvalAt ? p.approvalAt.toISOString() : null,
     approvalBy: p.approvalBy ?? null,
     createdAt: p.createdAt.toISOString(),
+    archived: p.archived,
     participants,
     taskTotal,
     taskDone,
@@ -204,7 +207,10 @@ router.get("/projects", async (req, res) => {
     return res.status(400).json({ error: "Invalid query params" });
   }
 
-  let rows = await db.select().from(projectsTable).orderBy(projectsTable.createdAt);
+  const showArchived = query.data.archived === true;
+  let rows = await db.select().from(projectsTable)
+    .where(eq(projectsTable.archived, showArchived))
+    .orderBy(projectsTable.createdAt);
 
   if (query.data.status) {
     rows = rows.filter((p) => p.status === query.data.status);
@@ -457,6 +463,50 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     logAudit({ entityType: "project", entityId: params.data.id, entityName: projToDelete.name, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
   }
   return res.status(204).send();
+});
+
+router.post("/projects/:id/archive", requireExecutorOrGestor, async (req, res) => {
+  const params = ArchiveProjectParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  if (req.appUser!.role === "executor") {
+    return res.status(403).json({ error: "Executores não podem arquivar projetos" });
+  }
+
+  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, params.data.id)).limit(1);
+  if (!project) return res.status(404).json({ error: "Projeto não encontrado" });
+
+  const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
+
+  const [updated] = await db.update(projectsTable).set({ archived: true }).where(eq(projectsTable.id, params.data.id)).returning();
+  logAudit({ entityType: "project", entityId: params.data.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email }, req.log);
+
+  const participantsMap = await fetchParticipantsByProject([params.data.id]);
+  const taskCounts = await fetchTaskCountsByProject([params.data.id]);
+  return res.json(projectRow(updated, participantsMap.get(params.data.id) ?? [], taskCounts.total.get(params.data.id) ?? 0, taskCounts.done.get(params.data.id) ?? 0));
+});
+
+router.post("/projects/:id/unarchive", requireExecutorOrGestor, async (req, res) => {
+  const params = UnarchiveProjectParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid id" });
+
+  if (req.appUser!.role === "executor") {
+    return res.status(403).json({ error: "Executores não podem desarquivar projetos" });
+  }
+
+  const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, params.data.id)).limit(1);
+  if (!project) return res.status(404).json({ error: "Projeto não encontrado" });
+
+  const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+  const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
+
+  const [updated] = await db.update(projectsTable).set({ archived: false }).where(eq(projectsTable.id, params.data.id)).returning();
+  logAudit({ entityType: "project", entityId: params.data.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email }, req.log);
+
+  const participantsMap = await fetchParticipantsByProject([params.data.id]);
+  const taskCounts = await fetchTaskCountsByProject([params.data.id]);
+  return res.json(projectRow(updated, participantsMap.get(params.data.id) ?? [], taskCounts.total.get(params.data.id) ?? 0, taskCounts.done.get(params.data.id) ?? 0));
 });
 
 router.post("/projects/:id/approve", requireGestor, async (req, res) => {

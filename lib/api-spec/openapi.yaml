@@ -91,6 +91,10 @@ paths:
           schema:
             type: string
             enum: [low, medium, high]
+        - name: archived
+          in: query
+          schema:
+            type: boolean
       responses:
         "200":
           description: List of projects
@@ -174,6 +178,52 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  /projects/{id}/archive:
+    post:
+      operationId: archiveProject
+      tags: [projects]
+      summary: Archive a project (gestor / gestor_obras only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Archived project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  /projects/{id}/unarchive:
+    post:
+      operationId: unarchiveProject
+      tags: [projects]
+      summary: Unarchive a project (gestor / gestor_obras only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unarchived project
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
 
   /projects/{id}/approve:
     post:
@@ -2422,6 +2472,8 @@ components:
           type: ["integer", "null"]
         createdAt:
           type: string
+        archived:
+          type: boolean
         participants:
           type: array
           items:
