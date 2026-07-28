@@ -923,20 +923,31 @@ const sections: Section[] = [
     icon: Columns3,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Quadro visual para acompanhar projetos ou tarefas por fase.</p>
-        <Subsection title="Modos de visualização">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Tarefas</Strong>: A Fazer · Em Andamento · Revisão · Concluída</li>
-            <li><Strong>Projetos</Strong>: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação</li>
-          </ul>
+        <p className="text-sm text-muted-foreground">Quadro visual com três abas — gerencie tarefas, projetos e linha do tempo num só lugar.</p>
+        <Subsection title="As três abas">
+          <Table
+            headers={["Aba", "O que exibe"]}
+            rows={[
+              ["Tarefas", "Board por status: A Fazer · Em Andamento · Revisão · Concluída. Arraste os cards para atualizar o status."],
+              ["Projetos", "Board por fase: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação. Arraste os projetos entre colunas."],
+              ["Linha do Tempo", "Gantt com todos os projetos e tarefas. Navegue por Semana / Mês / Trimestre com as setas e o botão Hoje."],
+            ]}
+          />
         </Subsection>
-        <Subsection title="Como usar">
+        <Subsection title="Como usar o board">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li>Arraste e solte cards entre colunas para atualizar o status automaticamente.</li>
             <li>Clique no <Strong>+</Strong> no cabeçalho de uma coluna para criar um item já naquela fase.</li>
           </ul>
         </Subsection>
-        <Tip>Cards com data vencida são destacados em vermelho automaticamente.</Tip>
+        <Subsection title="Como usar a Linha do Tempo">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique no chevron ao lado do nome do projeto para expandir as tarefas.</li>
+            <li>Use <Strong>Semana / Mês / Trimestre</Strong> para ajustar a escala e <Strong>‹ ›</Strong> para navegar no tempo.</li>
+            <li>A linha vermelha vertical marca o dia de hoje.</li>
+          </ul>
+        </Subsection>
+        <Tip>Cards com data vencida são destacados em vermelho. Tarefas sem datas não aparecem na Linha do Tempo — cadastre início e prazo para que a barra seja exibida.</Tip>
       </div>
     ),
   },
