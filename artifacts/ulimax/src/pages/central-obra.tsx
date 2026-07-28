@@ -35,6 +35,7 @@ import { useCanEdit } from "@/hooks/useAppUser";
 import { daysFromToday, parseLocalDate } from "@/lib/project-health";
 import { buildAgendaText, openWhatsApp } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
+import { ObraNav } from "@/components/obra-nav";
 
 function prazoChip(dateStr?: string | null): { text: string; cls: string } | null {
   if (!dateStr) return null;
@@ -208,6 +209,7 @@ export default function CentralObra() {
 
   return (
     <div className="space-y-6">
+      <ObraNav />
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

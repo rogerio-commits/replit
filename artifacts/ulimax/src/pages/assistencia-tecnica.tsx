@@ -70,6 +70,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
+import { ObraNav } from "@/components/obra-nav";
 
 const STATUS_LABELS: Record<string, string> = {
   aberto: "Aberto",
@@ -251,6 +252,7 @@ export default function AssistenciaTecnica() {
 
   return (
     <div className="space-y-6">
+      <ObraNav />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -71,6 +71,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ObraNav } from "@/components/obra-nav";
 
 const APPROACHING_DAYS = 5;
 
@@ -248,6 +249,7 @@ export default function SampleControls() {
 
   return (
     <div className="space-y-6">
+      <ObraNav />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
