@@ -116,7 +116,7 @@ function TodayLine({ viewStart, viewEnd }: { viewStart: Date; viewEnd: Date }) {
   );
 }
 
-export default function Gantt() {
+export default function Gantt({ asTab = false }: { asTab?: boolean } = {}) {
   const [, setLocation] = useLocation();
   const [zoom, setZoom] = useState<ZoomLevel>("month");
   const [offset, setOffset] = useState(0);
@@ -169,31 +169,39 @@ export default function Gantt() {
   const zoomLevels: ZoomLevel[] = ["week", "month", "quarter"];
   const zoomLabels: Record<ZoomLevel, string> = { week: "Semana", month: "Mês", quarter: "Trimestre" };
 
-  return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-500">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Gantt</h1>
-          <p className="text-muted-foreground mt-1">Linha do tempo de projetos e tarefas.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center rounded-md border border-border overflow-hidden text-sm">
-            {zoomLevels.map(z => (
-              <button key={z} onClick={() => { setZoom(z); setOffset(0); }} className={cn("px-3 py-1.5 transition-colors", zoom === z ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted")}>
-                {zoomLabels[z]}
-              </button>
-            ))}
-          </div>
-          <Button variant="outline" size="icon" onClick={() => setOffset(o => o - 1)} title="Anterior">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setOffset(0)}>Hoje</Button>
-          <Button variant="outline" size="icon" onClick={() => setOffset(o => o + 1)} title="Próximo">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+  const zoomControls = (
+    <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center rounded-md border border-border overflow-hidden text-sm">
+        {zoomLevels.map(z => (
+          <button key={z} onClick={() => { setZoom(z); setOffset(0); }} className={cn("px-3 py-1.5 transition-colors", zoom === z ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted")}>
+            {zoomLabels[z]}
+          </button>
+        ))}
       </div>
+      <Button variant="outline" size="icon" onClick={() => setOffset(o => o - 1)} title="Anterior">
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => setOffset(0)}>Hoje</Button>
+      <Button variant="outline" size="icon" onClick={() => setOffset(o => o + 1)} title="Próximo">
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className={cn("flex flex-col animate-in fade-in duration-500", asTab ? "h-full" : "h-[calc(100vh-8rem)]")}>
+      {/* Page Header */}
+      {asTab ? (
+        <div className="flex justify-end mb-3 shrink-0">{zoomControls}</div>
+      ) : (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 shrink-0">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Gantt</h1>
+            <p className="text-muted-foreground mt-1">Linha do tempo de projetos e tarefas.</p>
+          </div>
+          {zoomControls}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-2">

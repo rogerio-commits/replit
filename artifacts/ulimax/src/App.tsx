@@ -22,7 +22,6 @@ import Kanban from "@/pages/kanban";
 import Calendario from "@/pages/calendario";
 import Checklist from "@/pages/checklist";
 import Ajuda from "@/pages/ajuda";
-import Gantt from "@/pages/gantt";
 import Audit from "@/pages/audit";
 import MeuDia from "@/pages/meu-dia";
 import Templates from "@/pages/templates";
@@ -239,7 +238,7 @@ function ProtectedRoutes() {
             <Route path="/assistencia-tecnica"><Redirect to="/obra" replace /></Route>
             <Route path="/controle-amostras"><Redirect to="/obra" replace /></Route>
             <Route path="/produtividade"><Redirect to="/portfolio" replace /></Route>
-            <Route path="/gantt" component={Gantt} />
+            <Route path="/gantt"><Redirect to="/kanban" replace /></Route>
             <Route path="/auditoria" component={Audit} />
             <Route path="/meu-dia" component={MeuDia} />
             <Route path="/templates" component={Templates} />

@@ -635,29 +635,38 @@ const sections: Section[] = [
     icon: GanttChart,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Cada projeto possui uma aba de <Strong>Linha do Tempo</Strong> que exibe as tarefas em formato Gantt, com barras coloridas representando início, duração e prazo de cada item.</p>
+        <p className="text-sm text-muted-foreground">
+          A visualização em Gantt está integrada ao <Strong>Kanban</Strong> como a aba <Strong>Linha do Tempo</Strong>.
+          Exibe todos os projetos e suas tarefas numa grade de tempo — navegue por semana, mês ou trimestre.
+        </p>
         <Subsection title="Como acessar">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Abra o detalhe de um projeto clicando no seu nome.</li>
-            <li>Na área de tarefas, clique na aba <Strong>Linha do Tempo</Strong>.</li>
+            <li>Clique em <Strong>Kanban</Strong> no menu lateral.</li>
+            <li>Selecione a aba <Strong>Linha do Tempo</Strong>.</li>
           </ol>
         </Subsection>
-        <Subsection title="Leitura do gráfico">
+        <Subsection title="Controles de navegação">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Semana / Mês / Trimestre</Strong> — altera a escala horizontal do gráfico.</li>
+            <li><Strong>‹ ›</Strong> — avança ou recua o período exibido.</li>
+            <li><Strong>Hoje</Strong> — recentra a visualização no dia atual (linha vermelha).</li>
+            <li>Clique no chevron ao lado do projeto para expandir as tarefas individuais.</li>
+          </ul>
+        </Subsection>
+        <Subsection title="Legenda de cores">
           <Table
-            headers={["Elemento", "Significado"]}
+            headers={["Cor", "Significado"]}
             rows={[
-              ["Barra azul", "Tarefa em aberto — a largura representa a duração planejada"],
-              ["Barra verde", "Tarefa concluída"],
-              ["Barra vermelha", "Tarefa com prazo vencido"],
-              ["Linha vertical pontilhada", "Dia de hoje"],
-              ["Número ao lado da barra", "Dias restantes (ou dias de atraso se negativo)"],
+              ["Verde", "Tarefa concluída"],
+              ["Azul", "Em Andamento"],
+              ["Amarelo", "Em Revisão"],
+              ["Cinza", "A Fazer"],
+              ["Diamante âmbar", "Prazo da tarefa"],
+              ["Linha vermelha", "Hoje"],
             ]}
           />
         </Subsection>
-        <Subsection title="Filtrar por status">
-          <p className="text-sm text-muted-foreground">Use os botões de filtro acima do gráfico (Todas · A Fazer · Em Andamento · Revisão · Concluídas) para focar nas tarefas desejadas sem sair da visualização Gantt.</p>
-        </Subsection>
-        <Tip>Tarefas sem data de início ou prazo não aparecem na linha do tempo — cadastre as datas na tarefa para que ela seja exibida no gráfico.</Tip>
+        <Tip>Tarefas sem datas cadastradas não aparecem no gráfico — preencha início e prazo na tarefa para que a barra seja exibida.</Tip>
       </div>
     ),
   },

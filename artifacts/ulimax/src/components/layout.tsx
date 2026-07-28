@@ -119,7 +119,6 @@ export function Layout({ children }: LayoutProps) {
               items: [
                 { href: "/checklist", label: "Instalações", icon: ClipboardList },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
-                { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
               ],
             },
             {
@@ -162,7 +161,6 @@ export function Layout({ children }: LayoutProps) {
                   { href: "/obra", label: "Central da Obra", icon: HardHat },
                   { href: "/checklist", label: "Instalações", icon: ClipboardList },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
-                  { href: "/gantt", label: "Gantt", icon: GanttChartSquare },
                 ],
               },
               {

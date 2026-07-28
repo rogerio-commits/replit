@@ -39,9 +39,11 @@ import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, daysFromToday, type FarolLevel } from "@/lib/project-health";
 import {
   CalendarDays, GripVertical, Plus, User, AlertCircle,
-  Loader2, CheckSquare, Briefcase,
+  Loader2, CheckSquare, Briefcase, GanttChartSquare,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import GanttView from "./gantt";
 
 // ── Types & Constants ─────────────────────────────────────────────────────────
 
@@ -542,42 +544,34 @@ function BoardSkeleton() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Kanban() {
-  const [view, setView] = useState<"tarefas" | "projetos">("tarefas");
   return (
-    <div className="flex flex-col gap-5 h-full">
-      <div className="shrink-0 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Arraste os cards para atualizar o status.</p>
-        </div>
-        <div className="inline-flex items-center rounded-lg border bg-muted/40 p-0.5">
-          <button
-            onClick={() => setView("tarefas")}
-            data-testid="button-kanban-tarefas"
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-              view === "tarefas"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <CheckSquare className="h-4 w-4" /> Tarefas
-          </button>
-          <button
-            onClick={() => setView("projetos")}
-            data-testid="button-kanban-projetos"
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-              view === "projetos"
-                ? "bg-background text-foreground shadow-sm border"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Briefcase className="h-4 w-4" /> Projetos
-          </button>
-        </div>
+    <div className="flex flex-col gap-3 h-full">
+      <div className="shrink-0">
+        <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Arraste os cards para atualizar o status.</p>
       </div>
-      {view === "tarefas" ? <TasksBoard /> : <ProjectsBoard />}
+      <Tabs defaultValue="tarefas" className="flex flex-col flex-1 min-h-0">
+        <TabsList className="grid w-full grid-cols-3 shrink-0">
+          <TabsTrigger value="tarefas" className="gap-1.5" data-testid="button-kanban-tarefas">
+            <CheckSquare className="h-3.5 w-3.5" /> Tarefas
+          </TabsTrigger>
+          <TabsTrigger value="projetos" className="gap-1.5" data-testid="button-kanban-projetos">
+            <Briefcase className="h-3.5 w-3.5" /> Projetos
+          </TabsTrigger>
+          <TabsTrigger value="linha-do-tempo" className="gap-1.5">
+            <GanttChartSquare className="h-3.5 w-3.5" /> Linha do Tempo
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="tarefas" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
+          <TasksBoard />
+        </TabsContent>
+        <TabsContent value="projetos" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
+          <ProjectsBoard />
+        </TabsContent>
+        <TabsContent value="linha-do-tempo" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
+          <GanttView asTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
