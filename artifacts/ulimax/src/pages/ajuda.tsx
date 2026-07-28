@@ -1003,9 +1003,13 @@ const sections: Section[] = [
     icon: Wrench,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Abertura e acompanhamento de chamados de suporte pós-entrega.</p>
+        <p className="text-sm text-muted-foreground">
+          Abertura e acompanhamento de chamados de suporte pós-entrega.
+          O módulo fica na aba <Strong>Assistência</Strong> dentro da <Strong>Central da Obra</Strong>.
+        </p>
         <Subsection title="Abrir um chamado">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Acesse <Strong>Central da Obra → aba Assistência</Strong>.</li>
             <li>Clique em <Strong>+ Novo Chamado</Strong>.</li>
             <li>Preencha: cliente, contato, descrição do problema, data agendada e responsável técnico.</li>
             <li>Clique em <Strong>Salvar</Strong>.</li>
@@ -1019,7 +1023,7 @@ const sections: Section[] = [
             <ChevronRight className="h-3 w-3" />
             <Badge label="Concluído" color="green" />
           </div>
-          <p className="text-sm text-muted-foreground mt-2">Marque o checkbox <Strong>Realizado</Strong> para concluir rapidamente um chamado.</p>
+          <p className="text-sm text-muted-foreground mt-2">Marque o botão <Strong>Realizado</Strong> para concluir rapidamente um chamado sem abrir o formulário completo.</p>
         </Subsection>
       </div>
     ),
@@ -1060,23 +1064,30 @@ const sections: Section[] = [
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          A <Strong>Central da Obra</Strong> (menu Obra) reúne numa tela só o dia a dia da operação:
-          instalações dos próximos 7 dias, assistências em aberto, amostras a entregar e peças com plano de ação.
+          A <Strong>Central da Obra</Strong> é o hub operacional do sistema — três abas numa única tela,
+          sem precisar navegar entre páginas diferentes.
         </p>
-        <Subsection title="O que dá para fazer direto na Central">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Marcar uma assistência como <Strong>Realizada</Strong> sem sair da tela.</li>
-            <li>Marcar amostras como <Strong>Pronta</Strong> e <Strong>Entregue</Strong>.</li>
-            <li>Criar <Strong>Novo Evento</Strong> ou <Strong>Nova Assistência</Strong> pelos botões no topo (ou pelo botão <Strong>+ Criar</Strong> em qualquer tela).</li>
-            <li>Enviar a <Strong>agenda no WhatsApp</Strong> com um clique.</li>
-          </ul>
+        <Subsection title="As três abas">
+          <Table
+            headers={["Aba", "O que contém"]}
+            rows={[
+              ["Visão Geral", "Resumo com 4 cards: instalações dos próximos 7 dias, assistências em aberto, amostras a entregar e peças com plano de ação. Ações rápidas (Realizado / Pronta / Entregue) sem abrir formulário."],
+              ["Assistência", "Lista completa de chamados de suporte pós-entrega. Botão '+ Novo Chamado' no canto direito. Filtros por status, projeto e busca livre."],
+              ["Amostras", "Controle de amostras por projeto. Botão '+ Nova Amostra' no canto direito. Filtros por status, projeto e busca livre."],
+            ]}
+          />
         </Subsection>
-        <Subsection title="Programação por WhatsApp">
+        <Subsection title="Badges de contagem">
           <p className="text-sm text-muted-foreground">
-            Na Central da Obra e no <Strong>Calendário</Strong> (botão WhatsApp), o sistema monta a mensagem
-            com os eventos agrupados por equipe — agenda de hoje, hoje e amanhã ou próximos 7 dias.
-            O WhatsApp abre com o texto pronto; você só escolhe o contato (por exemplo, o grupo da equipe) e envia.
+            As abas <Strong>Assistência</Strong> e <Strong>Amostras</Strong> exibem um número em destaque
+            quando há itens pendentes — assim você vê de relance o que precisa de atenção sem nem clicar.
           </p>
+        </Subsection>
+        <Subsection title="Ações disponíveis no topo">
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li><Strong>Agenda no WhatsApp</Strong> — monta a mensagem com os eventos dos próximos 7 dias agrupados por equipe e abre o WhatsApp com o texto pronto.</li>
+            <li><Strong>Novo Evento</Strong> — atalho para criar um evento no Calendário.</li>
+          </ul>
         </Subsection>
         <Subsection title="Papel Gestor de Obras">
           <p className="text-sm text-muted-foreground">
