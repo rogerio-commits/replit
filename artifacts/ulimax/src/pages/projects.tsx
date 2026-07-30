@@ -971,43 +971,43 @@ export default function Projects() {
               <table className="w-full text-sm border-collapse">
                 <thead className="border-b bg-muted/30 sticky top-0">
                   <tr>
-                    <th className={cn(thCls, "pl-4 w-8")}>#</th>
-                    <th className={cn(thCls, "w-12 text-center")}>Farol</th>
-                    <th className={thCls} onClick={() => handleSort("name")}>
+                    <th className={cn(thCls, "pl-4 w-8")} title="Número de ordem na lista filtrada atual">#</th>
+                    <th className={cn(thCls, "w-12 text-center")} title="Farol de saúde do projeto: Verde = no prazo, Amarelo = atenção (tarefas atrasadas ou prazo próximo), Vermelho = crítico. Clique nos botões de farol acima para filtrar por cor.">Farol</th>
+                    <th className={thCls} title="Nome e descrição do projeto. Clique para ordenar." onClick={() => handleSort("name")}>
                       <div className={thInner}>Projeto <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "min-w-[90px]")}>Tarefas</th>
-                    <th className={thCls} onClick={() => handleSort("status")}>
+                    <th className={cn(thCls, "min-w-[90px]")} title="Progresso das tarefas: barra mostra % concluídas. O número indica tarefas feitas / total.">Tarefas</th>
+                    <th className={thCls} title="Fase atual do projeto: A Iniciar → Em Projeto → Em Aprovação → Em Produção → Aguardando Instalação → Em Instalação. Clique para ordenar." onClick={() => handleSort("status")}>
                       <div className={thInner}>Status <SortIcon col="status" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} onClick={() => handleSort("priority")}>
+                    <th className={thCls} title="Prioridade do projeto: Alta (ponto vermelho) ou Normal (ponto âmbar). Clique para ordenar." onClick={() => handleSort("priority")}>
                       <div className={thInner}>Prior. <SortIcon col="priority" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} onClick={() => handleSort("materialType")}>
+                    <th className={thCls} title="Tipo de material principal: Madeira ou Alumínio. Clique para ordenar." onClick={() => handleSort("materialType")}>
                       <div className={thInner}>Material <SortIcon col="materialType" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-l-2 border-violet-300")} onClick={() => handleSort("startDate")}>
+                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-l-2 border-violet-300")} title="Data de início da fase de projeto (elaboração do projeto). Clique para ordenar." onClick={() => handleSort("startDate")}>
                       <div className={thInner}>Início Proj. <SortIcon col="startDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-200 text-violet-800")} onClick={() => handleSort("endDate")}>
+                    <th className={cn(thCls, "bg-violet-200 text-violet-800")} title="Prazo estimado para conclusão da fase de projeto. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("endDate")}>
                       <div className={thInner}>Fim Est. Proj. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-r-2 border-violet-300")} onClick={() => handleSort("finalDate")}>
+                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-r-2 border-violet-300")} title="Data real de encerramento da fase de projeto (quando efetivamente concluída). Clique para ordenar." onClick={() => handleSort("finalDate")}>
                       <div className={thInner}>Final Proj. <SortIcon col="finalDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-l-2 border-blue-300")} onClick={() => handleSort("producaoStartDate")}>
+                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-l-2 border-blue-300")} title="Data de início da fase de produção (fabricação). Clique para ordenar." onClick={() => handleSort("producaoStartDate")}>
                       <div className={thInner}>Início Prod. <SortIcon col="producaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-blue-200 text-blue-800")} onClick={() => handleSort("producaoEndDate")}>
+                    <th className={cn(thCls, "bg-blue-200 text-blue-800")} title="Prazo estimado para conclusão da produção. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("producaoEndDate")}>
                       <div className={thInner}>Fim Est. Prod. <SortIcon col="producaoEndDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-r-2 border-blue-300")} onClick={() => handleSort("producaoFinalDate")}>
+                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-r-2 border-blue-300")} title="Data real de encerramento da produção. Clique para ordenar." onClick={() => handleSort("producaoFinalDate")}>
                       <div className={thInner}>Final Prod. <SortIcon col="producaoFinalDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-amber-200 text-amber-800 border-l-2 border-r-2 border-amber-300")} onClick={() => handleSort("medicaoDate")}>
+                    <th className={cn(thCls, "bg-amber-200 text-amber-800 border-l-2 border-r-2 border-amber-300")} title="Data de medição na obra (vistoria para liberação da instalação). Fica amarelo/vermelho conforme proximidade. Clique para ordenar." onClick={() => handleSort("medicaoDate")}>
                       <div className={thInner}>Medição <SortIcon col="medicaoDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-emerald-200 text-emerald-800 border-l-2 border-r-2 border-emerald-300")} onClick={() => handleSort("instalacaoStartDate")}>
+                    <th className={cn(thCls, "bg-emerald-200 text-emerald-800 border-l-2 border-r-2 border-emerald-300")} title="Data prevista de início da instalação na obra. Clique para ordenar." onClick={() => handleSort("instalacaoStartDate")}>
                       <div className={thInner}>Início Inst. <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
                   </tr>
