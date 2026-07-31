@@ -43,4 +43,3 @@ externalPort = 3000
 [userenv.production]
 
 [userenv.shared]
-RESEND_API_KEY = "re_Td347vf3_BKqnggaNHNdqBouQeCsL4CJd"
