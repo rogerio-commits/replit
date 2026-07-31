@@ -6,11 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ProjectActionItemInput {
+export interface ProjectActionPlanInput {
   /** @minLength 1 */
-  description: string;
-  responsibleId?: number;
-  responsibleExternal?: string;
-  dueDate?: string;
-  notes?: string;
+  title: string;
 }

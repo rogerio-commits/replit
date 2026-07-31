@@ -26,4 +26,5 @@ export * from "./custom-field-definitions";
 export * from "./custom-field-values";
 export * from "./milestones";
 export * from "./scheduler-state";
+export * from "./project-action-plans";
 export * from "./project-action-items";

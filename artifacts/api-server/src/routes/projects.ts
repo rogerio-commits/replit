@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, visitActionItemsTable, projectActionItemsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, visitActionItemsTable, projectActionItemsTable, projectActionPlansTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { logAudit, diffObjects } from "../lib/audit";
 import { runAutomations } from "../lib/automation-engine";
@@ -34,6 +34,10 @@ import {
   CreateVisitActionItemBody,
   ToggleVisitActionItemParams,
   DeleteVisitActionItemParams,
+  ListProjectActionPlansParams,
+  CreateProjectActionPlanParams,
+  CreateProjectActionPlanBody,
+  DeleteProjectActionPlanParams,
   ListProjectActionItemsParams,
   CreateProjectActionItemParams,
   CreateProjectActionItemBody,
@@ -1102,7 +1106,7 @@ router.delete("/visit-action-items/:itemId", requireExecutorOrGestor, async (req
   return res.status(204).send();
 });
 
-// ── Project action items ──────────────────────────────────────────────────────
+// ── Project action plans ──────────────────────────────────────────────────────
 
 function projectActionItemRow(
   item: typeof projectActionItemsTable.$inferSelect,
@@ -1110,42 +1114,104 @@ function projectActionItemRow(
 ) {
   return {
     id: item.id,
-    projectId: item.projectId,
+    planId: item.planId,
     description: item.description,
-    responsibleId: item.responsibleId,
+    responsibleId: item.responsibleId ?? null,
     responsibleName,
+    responsibleExternal: item.responsibleExternal ?? null,
     dueDate: item.dueDate ?? null,
+    notes: item.notes ?? null,
     completedAt: item.completedAt ? item.completedAt.toISOString() : null,
     createdAt: item.createdAt.toISOString(),
   };
 }
 
-router.get("/projects/:id/action-items", async (req, res) => {
-  const params = ListProjectActionItemsParams.safeParse({ id: Number(req.params.id) });
+async function loadPlanWithItems(planId: number) {
+  const [plan] = await db
+    .select()
+    .from(projectActionPlansTable)
+    .where(eq(projectActionPlansTable.id, planId))
+    .limit(1);
+  if (!plan) return null;
+
+  const rows = await db
+    .select({ item: projectActionItemsTable, memberName: membersTable.name })
+    .from(projectActionItemsTable)
+    .leftJoin(membersTable, eq(projectActionItemsTable.responsibleId, membersTable.id))
+    .where(eq(projectActionItemsTable.planId, planId))
+    .orderBy(projectActionItemsTable.createdAt);
+
+  return {
+    id: plan.id,
+    projectId: plan.projectId,
+    title: plan.title,
+    createdAt: plan.createdAt.toISOString(),
+    items: rows.map(({ item, memberName }) => projectActionItemRow(item, memberName ?? null)),
+  };
+}
+
+router.get("/projects/:id/action-plans", async (req, res) => {
+  const params = ListProjectActionPlansParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const plans = await db
+    .select()
+    .from(projectActionPlansTable)
+    .where(eq(projectActionPlansTable.projectId, params.data.id))
+    .orderBy(projectActionPlansTable.createdAt);
+
+  const results = await Promise.all(plans.map((p) => loadPlanWithItems(p.id)));
+  return res.json(results.filter(Boolean));
+});
+
+router.post("/projects/:id/action-plans", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateProjectActionPlanParams.safeParse({ id: Number(req.params.id) });
+  const body = CreateProjectActionPlanBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [plan] = await db
+    .insert(projectActionPlansTable)
+    .values({ projectId: params.data.id, title: body.data.title })
+    .returning();
+
+  return res.status(201).json({ ...plan, createdAt: plan.createdAt.toISOString(), items: [] });
+});
+
+router.delete("/project-action-plans/:planId", requireExecutorOrGestor, async (req, res) => {
+  const params = DeleteProjectActionPlanParams.safeParse({ planId: Number(req.params.planId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+  await db.delete(projectActionPlansTable).where(eq(projectActionPlansTable.id, params.data.planId));
+  return res.status(204).send();
+});
+
+router.get("/project-action-plans/:planId/items", async (req, res) => {
+  const params = ListProjectActionItemsParams.safeParse({ planId: Number(req.params.planId) });
   if (!params.success) return res.status(400).json({ error: "Invalid params" });
 
   const rows = await db
     .select({ item: projectActionItemsTable, memberName: membersTable.name })
     .from(projectActionItemsTable)
     .leftJoin(membersTable, eq(projectActionItemsTable.responsibleId, membersTable.id))
-    .where(eq(projectActionItemsTable.projectId, params.data.id))
+    .where(eq(projectActionItemsTable.planId, params.data.planId))
     .orderBy(projectActionItemsTable.createdAt);
 
   return res.json(rows.map(({ item, memberName }) => projectActionItemRow(item, memberName ?? null)));
 });
 
-router.post("/projects/:id/action-items", requireExecutorOrGestor, async (req, res) => {
-  const params = CreateProjectActionItemParams.safeParse({ id: Number(req.params.id) });
+router.post("/project-action-plans/:planId/items", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateProjectActionItemParams.safeParse({ planId: Number(req.params.planId) });
   const body = CreateProjectActionItemBody.safeParse(req.body);
   if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
 
   const [item] = await db
     .insert(projectActionItemsTable)
     .values({
-      projectId: params.data.id,
+      planId: params.data.planId,
       description: body.data.description,
       responsibleId: body.data.responsibleId ?? null,
+      responsibleExternal: body.data.responsibleExternal ?? null,
       dueDate: body.data.dueDate ?? null,
+      notes: body.data.notes ?? null,
     })
     .returning();
 

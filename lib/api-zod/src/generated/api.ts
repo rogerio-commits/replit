@@ -630,19 +630,72 @@ export const DeleteVisitActionItemParams = zod.object({
 
 
 /**
- * @summary List action items for a project
+ * @summary List action plans for a project
+ */
+export const ListProjectActionPlansParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectActionPlansResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "title": zod.string(),
+  "createdAt": zod.string(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "planId": zod.number(),
+  "description": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "responsibleExternal": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+}))
+})
+export const ListProjectActionPlansResponse = zod.array(ListProjectActionPlansResponseItem)
+
+
+/**
+ * @summary Create an action plan for a project
+ */
+export const CreateProjectActionPlanParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateProjectActionPlanBody = zod.object({
+  "title": zod.string().min(1)
+})
+
+
+/**
+ * @summary Delete an action plan
+ */
+export const DeleteProjectActionPlanParams = zod.object({
+  "planId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List items for an action plan
  */
 export const ListProjectActionItemsParams = zod.object({
-  "id": zod.coerce.number()
+  "planId": zod.coerce.number()
 })
 
 export const ListProjectActionItemsResponseItem = zod.object({
   "id": zod.number(),
-  "projectId": zod.number(),
+  "planId": zod.number(),
   "description": zod.string(),
   "responsibleId": zod.number().nullish(),
   "responsibleName": zod.string().nullish(),
+  "responsibleExternal": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "notes": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -650,10 +703,10 @@ export const ListProjectActionItemsResponse = zod.array(ListProjectActionItemsRe
 
 
 /**
- * @summary Create an action item for a project
+ * @summary Create an item in an action plan
  */
 export const CreateProjectActionItemParams = zod.object({
-  "id": zod.coerce.number()
+  "planId": zod.coerce.number()
 })
 
 
@@ -662,7 +715,9 @@ export const CreateProjectActionItemParams = zod.object({
 export const CreateProjectActionItemBody = zod.object({
   "description": zod.string().min(1),
   "responsibleId": zod.number().optional(),
-  "dueDate": zod.string().optional()
+  "responsibleExternal": zod.string().optional(),
+  "dueDate": zod.string().optional(),
+  "notes": zod.string().optional()
 })
 
 
@@ -675,11 +730,13 @@ export const ToggleProjectActionItemParams = zod.object({
 
 export const ToggleProjectActionItemResponse = zod.object({
   "id": zod.number(),
-  "projectId": zod.number(),
+  "planId": zod.number(),
   "description": zod.string(),
   "responsibleId": zod.number().nullish(),
   "responsibleName": zod.string().nullish(),
+  "responsibleExternal": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "notes": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "createdAt": zod.string()
 })

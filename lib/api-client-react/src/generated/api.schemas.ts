@@ -804,8 +804,6 @@ export interface SiteVisit {
   /** @nullable */
   reportFileKey?: string | null;
   createdAt: string;
-  pendingActionItemsCount: number;
-  totalActionItemsCount: number;
 }
 
 export interface SiteVisitWithProject {
@@ -832,24 +830,43 @@ export interface AttachVisitReportInput {
 
 export interface ProjectActionItem {
   id: number;
-  projectId: number;
+  planId: number;
   description: string;
   /** @nullable */
   responsibleId?: number | null;
   /** @nullable */
   responsibleName?: string | null;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   dueDate?: string | null;
+  /** @nullable */
+  notes?: string | null;
   /** @nullable */
   completedAt?: string | null;
   createdAt: string;
+}
+
+export interface ProjectActionPlan {
+  id: number;
+  projectId: number;
+  title: string;
+  createdAt: string;
+  items: ProjectActionItem[];
+}
+
+export interface ProjectActionPlanInput {
+  /** @minLength 1 */
+  title: string;
 }
 
 export interface ProjectActionItemInput {
   /** @minLength 1 */
   description: string;
   responsibleId?: number;
+  responsibleExternal?: string;
   dueDate?: string;
+  notes?: string;
 }
 
 export interface VisitActionItem {

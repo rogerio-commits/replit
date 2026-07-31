@@ -649,13 +649,72 @@ paths:
         "204":
           description: Deleted
 
-  /projects/{id}/action-items:
+  /projects/{id}/action-plans:
+    get:
+      operationId: listProjectActionPlans
+      tags: [projects]
+      summary: List action plans for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of action plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectActionPlan"
+    post:
+      operationId: createProjectActionPlan
+      tags: [projects]
+      summary: Create an action plan for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectActionPlanInput"
+      responses:
+        "201":
+          description: Created action plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectActionPlan"
+
+  /project-action-plans/{planId}:
+    delete:
+      operationId: deleteProjectActionPlan
+      tags: [projects]
+      summary: Delete an action plan
+      parameters:
+        - name: planId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /project-action-plans/{planId}/items:
     get:
       operationId: listProjectActionItems
       tags: [projects]
-      summary: List action items for a project
+      summary: List items for an action plan
       parameters:
-        - name: id
+        - name: planId
           in: path
           required: true
           schema:
@@ -672,9 +731,9 @@ paths:
     post:
       operationId: createProjectActionItem
       tags: [projects]
-      summary: Create an action item for a project
+      summary: Create an item in an action plan
       parameters:
-        - name: id
+        - name: planId
           in: path
           required: true
           schema:
@@ -3444,13 +3503,38 @@ components:
           type: string
           nullable: true
 
-    ProjectActionItem:
+    ProjectActionPlan:
       type: object
-      required: [id, projectId, description, createdAt]
+      required: [id, projectId, title, createdAt, items]
       properties:
         id:
           type: integer
         projectId:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProjectActionItem"
+
+    ProjectActionPlanInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+
+    ProjectActionItem:
+      type: object
+      required: [id, planId, description, createdAt]
+      properties:
+        id:
+          type: integer
+        planId:
           type: integer
         description:
           type: string
@@ -3458,7 +3542,11 @@ components:
           type: ["integer", "null"]
         responsibleName:
           type: ["string", "null"]
+        responsibleExternal:
+          type: ["string", "null"]
         dueDate:
+          type: ["string", "null"]
+        notes:
           type: ["string", "null"]
         completedAt:
           type: ["string", "null"]
@@ -3474,7 +3562,11 @@ components:
           minLength: 1
         responsibleId:
           type: integer
+        responsibleExternal:
+          type: string
         dueDate:
+          type: string
+        notes:
           type: string
 
     VisitActionItem:

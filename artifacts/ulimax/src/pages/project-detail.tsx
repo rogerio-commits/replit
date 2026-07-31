@@ -1038,6 +1038,7 @@ export default function ProjectDetail() {
       {/* Plano de Ação da Obra */}
       <ProjectActionPlan
         projectId={projectId}
+        projectName={project?.name ?? "Projeto"}
         members={(allMembers ?? []).map((m) => ({ id: m.id, name: m.name }))}
         canEdit={canEdit}
       />

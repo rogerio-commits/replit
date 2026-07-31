@@ -8,14 +8,18 @@
 
 export interface ProjectActionItem {
   id: number;
-  projectId: number;
+  planId: number;
   description: string;
   /** @nullable */
   responsibleId?: number | null;
   /** @nullable */
   responsibleName?: string | null;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   dueDate?: string | null;
+  /** @nullable */
+  notes?: string | null;
   /** @nullable */
   completedAt?: string | null;
   createdAt: string;

@@ -100,6 +100,8 @@ export * from './obraDiaryEntryInput';
 export * from './project';
 export * from './projectActionItem';
 export * from './projectActionItemInput';
+export * from './projectActionPlan';
+export * from './projectActionPlanInput';
 export * from './projectApprovalInput';
 export * from './projectApprovalInputAction';
 export * from './projectApprovalStatus';

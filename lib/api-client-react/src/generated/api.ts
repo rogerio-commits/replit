@@ -75,6 +75,8 @@ import type {
   Project,
   ProjectActionItem,
   ProjectActionItemInput,
+  ProjectActionPlan,
+  ProjectActionPlanInput,
   ProjectApprovalInput,
   ProjectInput,
   ProjectMaterial,
@@ -2132,20 +2134,20 @@ export const useDeleteVisitActionItem = <TError = ErrorType<unknown>,
       return useMutation(getDeleteVisitActionItemMutationOptions(options));
     }
 
-export const getListProjectActionItemsUrl = (id: number,) => {
+export const getListProjectActionPlansUrl = (id: number,) => {
 
 
 
 
-  return `/api/projects/${id}/action-items`
+  return `/api/projects/${id}/action-plans`
 }
 
 /**
- * @summary List action items for a project
+ * @summary List action plans for a project
  */
-export const listProjectActionItems = async (id: number, options?: RequestInit): Promise<ProjectActionItem[]> => {
+export const listProjectActionPlans = async (id: number, options?: RequestInit): Promise<ProjectActionPlan[]> => {
 
-  return customFetch<ProjectActionItem[]>(getListProjectActionItemsUrl(id),
+  return customFetch<ProjectActionPlan[]>(getListProjectActionPlansUrl(id),
   {
     ...options,
     method: 'GET'
@@ -2158,45 +2160,45 @@ export const listProjectActionItems = async (id: number, options?: RequestInit):
 
 
 
-export const getListProjectActionItemsQueryKey = (id: number,) => {
+export const getListProjectActionPlansQueryKey = (id: number,) => {
     return [
-    `/api/projects/${id}/action-items`
+    `/api/projects/${id}/action-plans`
     ] as const;
     }
 
 
-export const getListProjectActionItemsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectActionItems>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListProjectActionPlansQueryOptions = <TData = Awaited<ReturnType<typeof listProjectActionPlans>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionPlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListProjectActionItemsQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getListProjectActionPlansQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectActionItems>>> = ({ signal }) => listProjectActionItems(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectActionPlans>>> = ({ signal }) => listProjectActionPlans(id, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectActionPlans>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type ListProjectActionItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectActionItems>>>
-export type ListProjectActionItemsQueryError = ErrorType<unknown>
+export type ListProjectActionPlansQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectActionPlans>>>
+export type ListProjectActionPlansQueryError = ErrorType<unknown>
 
 
 /**
- * @summary List action items for a project
+ * @summary List action plans for a project
  */
 
-export function useListProjectActionItems<TData = Awaited<ReturnType<typeof listProjectActionItems>>, TError = ErrorType<unknown>>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useListProjectActionPlans<TData = Awaited<ReturnType<typeof listProjectActionPlans>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionPlans>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListProjectActionItemsQueryOptions(id,options)
+  const queryOptions = getListProjectActionPlansQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -2209,21 +2211,240 @@ export function useListProjectActionItems<TData = Awaited<ReturnType<typeof list
 
 
 
-export const getCreateProjectActionItemUrl = (id: number,) => {
+export const getCreateProjectActionPlanUrl = (id: number,) => {
 
 
 
 
-  return `/api/projects/${id}/action-items`
+  return `/api/projects/${id}/action-plans`
 }
 
 /**
- * @summary Create an action item for a project
+ * @summary Create an action plan for a project
  */
-export const createProjectActionItem = async (id: number,
+export const createProjectActionPlan = async (id: number,
+    projectActionPlanInput: ProjectActionPlanInput, options?: RequestInit): Promise<ProjectActionPlan> => {
+
+  return customFetch<ProjectActionPlan>(getCreateProjectActionPlanUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectActionPlanInput,)
+  }
+);}
+
+
+
+
+export const getCreateProjectActionPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionPlan>>, TError,{id: number;data: BodyType<ProjectActionPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectActionPlan>>, TError,{id: number;data: BodyType<ProjectActionPlanInput>}, TContext> => {
+
+const mutationKey = ['createProjectActionPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectActionPlan>>, {id: number;data: BodyType<ProjectActionPlanInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createProjectActionPlan(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectActionPlanMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectActionPlan>>>
+    export type CreateProjectActionPlanMutationBody = BodyType<ProjectActionPlanInput>
+    export type CreateProjectActionPlanMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an action plan for a project
+ */
+export const useCreateProjectActionPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionPlan>>, TError,{id: number;data: BodyType<ProjectActionPlanInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectActionPlan>>,
+        TError,
+        {id: number;data: BodyType<ProjectActionPlanInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectActionPlanMutationOptions(options));
+    }
+
+export const getDeleteProjectActionPlanUrl = (planId: number,) => {
+
+
+
+
+  return `/api/project-action-plans/${planId}`
+}
+
+/**
+ * @summary Delete an action plan
+ */
+export const deleteProjectActionPlan = async (planId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteProjectActionPlanUrl(planId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteProjectActionPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectActionPlan>>, TError,{planId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectActionPlan>>, TError,{planId: number}, TContext> => {
+
+const mutationKey = ['deleteProjectActionPlan'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectActionPlan>>, {planId: number}> = (props) => {
+          const {planId} = props ?? {};
+
+          return  deleteProjectActionPlan(planId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProjectActionPlanMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectActionPlan>>>
+
+    export type DeleteProjectActionPlanMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an action plan
+ */
+export const useDeleteProjectActionPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectActionPlan>>, TError,{planId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProjectActionPlan>>,
+        TError,
+        {planId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteProjectActionPlanMutationOptions(options));
+    }
+
+export const getListProjectActionItemsUrl = (planId: number,) => {
+
+
+
+
+  return `/api/project-action-plans/${planId}/items`
+}
+
+/**
+ * @summary List items for an action plan
+ */
+export const listProjectActionItems = async (planId: number, options?: RequestInit): Promise<ProjectActionItem[]> => {
+
+  return customFetch<ProjectActionItem[]>(getListProjectActionItemsUrl(planId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectActionItemsQueryKey = (planId: number,) => {
+    return [
+    `/api/project-action-plans/${planId}/items`
+    ] as const;
+    }
+
+
+export const getListProjectActionItemsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectActionItems>>, TError = ErrorType<unknown>>(planId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectActionItemsQueryKey(planId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectActionItems>>> = ({ signal }) => listProjectActionItems(planId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(planId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectActionItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectActionItems>>>
+export type ListProjectActionItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List items for an action plan
+ */
+
+export function useListProjectActionItems<TData = Awaited<ReturnType<typeof listProjectActionItems>>, TError = ErrorType<unknown>>(
+ planId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectActionItemsQueryOptions(planId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateProjectActionItemUrl = (planId: number,) => {
+
+
+
+
+  return `/api/project-action-plans/${planId}/items`
+}
+
+/**
+ * @summary Create an item in an action plan
+ */
+export const createProjectActionItem = async (planId: number,
     projectActionItemInput: ProjectActionItemInput, options?: RequestInit): Promise<ProjectActionItem> => {
 
-  return customFetch<ProjectActionItem>(getCreateProjectActionItemUrl(id),
+  return customFetch<ProjectActionItem>(getCreateProjectActionItemUrl(planId),
   {
     ...options,
     method: 'POST',
@@ -2237,8 +2458,8 @@ export const createProjectActionItem = async (id: number,
 
 
 export const getCreateProjectActionItemMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{id: number;data: BodyType<ProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{id: number;data: BodyType<ProjectActionItemInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{planId: number;data: BodyType<ProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{planId: number;data: BodyType<ProjectActionItemInput>}, TContext> => {
 
 const mutationKey = ['createProjectActionItem'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2250,10 +2471,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectActionItem>>, {id: number;data: BodyType<ProjectActionItemInput>}> = (props) => {
-          const {id,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectActionItem>>, {planId: number;data: BodyType<ProjectActionItemInput>}> = (props) => {
+          const {planId,data} = props ?? {};
 
-          return  createProjectActionItem(id,data,requestOptions)
+          return  createProjectActionItem(planId,data,requestOptions)
         }
 
 
@@ -2268,14 +2489,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateProjectActionItemMutationError = ErrorType<unknown>
 
     /**
- * @summary Create an action item for a project
+ * @summary Create an item in an action plan
  */
 export const useCreateProjectActionItem = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{id: number;data: BodyType<ProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{planId: number;data: BodyType<ProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createProjectActionItem>>,
         TError,
-        {id: number;data: BodyType<ProjectActionItemInput>},
+        {planId: number;data: BodyType<ProjectActionItemInput>},
         TContext
       > => {
       return useMutation(getCreateProjectActionItemMutationOptions(options));

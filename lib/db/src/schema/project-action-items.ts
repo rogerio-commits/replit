@@ -1,17 +1,19 @@
 import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
-import { projectsTable } from "./projects";
+import { projectActionPlansTable } from "./project-action-plans";
 import { membersTable } from "./members";
 
 export const projectActionItemsTable = pgTable("project_action_items", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id")
+  planId: integer("plan_id")
     .notNull()
-    .references(() => projectsTable.id, { onDelete: "cascade" }),
+    .references(() => projectActionPlansTable.id, { onDelete: "cascade" }),
   description: text("description").notNull(),
   responsibleId: integer("responsible_id").references(() => membersTable.id, {
     onDelete: "set null",
   }),
+  responsibleExternal: text("responsible_external"),
   dueDate: text("due_date"),
+  notes: text("notes"),
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
