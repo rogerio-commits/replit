@@ -869,6 +869,19 @@ export interface ProjectActionItemInput {
   notes?: string;
 }
 
+export interface UpdateProjectActionItemBody {
+  /** @minLength 1 */
+  description?: string;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
 export interface VisitActionItem {
   id: number;
   visitId: number;

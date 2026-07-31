@@ -743,6 +743,38 @@ export const ToggleProjectActionItemResponse = zod.object({
 
 
 /**
+ * @summary Update a project action item
+ */
+export const UpdateProjectActionItemParams = zod.object({
+  "itemId": zod.coerce.number()
+})
+
+
+
+
+export const UpdateProjectActionItemBody = zod.object({
+  "description": zod.string().min(1).optional(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleExternal": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdateProjectActionItemResponse = zod.object({
+  "id": zod.number(),
+  "planId": zod.number(),
+  "description": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "responsibleExternal": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Delete a project action item
  */
 export const DeleteProjectActionItemParams = zod.object({

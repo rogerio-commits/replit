@@ -112,6 +112,7 @@ import type {
   TaskUpdate,
   TimeEntry,
   TimeEntryInput,
+  UpdateProjectActionItemBody,
   UploadUrlRequest,
   UploadUrlResponse,
   UserRoleUpdate,
@@ -2570,6 +2571,78 @@ export const useToggleProjectActionItem = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getToggleProjectActionItemMutationOptions(options));
+    }
+
+export const getUpdateProjectActionItemUrl = (itemId: number,) => {
+
+
+
+
+  return `/api/project-action-items/${itemId}`
+}
+
+/**
+ * @summary Update a project action item
+ */
+export const updateProjectActionItem = async (itemId: number,
+    updateProjectActionItemBody: UpdateProjectActionItemBody, options?: RequestInit): Promise<ProjectActionItem> => {
+
+  return customFetch<ProjectActionItem>(getUpdateProjectActionItemUrl(itemId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateProjectActionItemBody,)
+  }
+);}
+
+
+
+
+export const getUpdateProjectActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemBody>}, TContext> => {
+
+const mutationKey = ['updateProjectActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectActionItem>>, {itemId: number;data: BodyType<UpdateProjectActionItemBody>}> = (props) => {
+          const {itemId,data} = props ?? {};
+
+          return  updateProjectActionItem(itemId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProjectActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectActionItem>>>
+    export type UpdateProjectActionItemMutationBody = BodyType<UpdateProjectActionItemBody>
+    export type UpdateProjectActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a project action item
+ */
+export const useUpdateProjectActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateProjectActionItem>>,
+        TError,
+        {itemId: number;data: BodyType<UpdateProjectActionItemBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateProjectActionItemMutationOptions(options));
     }
 
 export const getDeleteProjectActionItemUrl = (itemId: number,) => {

@@ -166,6 +166,7 @@ export * from './taskUpdateRecurrence';
 export * from './taskUpdateStatus';
 export * from './timeEntry';
 export * from './timeEntryInput';
+export * from './updateProjectActionItemBody';
 export * from './uploadUrlRequest';
 export * from './uploadUrlResponse';
 export * from './userRole';

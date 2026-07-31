@@ -772,6 +772,29 @@ paths:
                 $ref: "#/components/schemas/ProjectActionItem"
 
   /project-action-items/{itemId}:
+    patch:
+      operationId: updateProjectActionItem
+      tags: [projects]
+      summary: Update a project action item
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectActionItemBody"
+      responses:
+        "200":
+          description: Updated action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectActionItem"
     delete:
       operationId: deleteProjectActionItem
       tags: [projects]
@@ -3568,6 +3591,21 @@ components:
           type: string
         notes:
           type: string
+
+    UpdateProjectActionItemBody:
+      type: object
+      properties:
+        description:
+          type: string
+          minLength: 1
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleExternal:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
 
     VisitActionItem:
       type: object
