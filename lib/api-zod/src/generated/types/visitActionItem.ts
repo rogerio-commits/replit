@@ -6,20 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface SiteVisitWithProject {
+export interface VisitActionItem {
   id: number;
-  projectId: number;
-  projectName: string;
-  date: string;
+  visitId: number;
+  description: string;
   /** @nullable */
   responsibleId?: number | null;
   /** @nullable */
   responsibleName?: string | null;
-  visitors: string;
-  objective: string;
   /** @nullable */
-  notes?: string | null;
+  dueDate?: string | null;
   /** @nullable */
-  reportFileKey?: string | null;
+  completedAt?: string | null;
   createdAt: string;
 }

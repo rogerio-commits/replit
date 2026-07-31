@@ -31,6 +31,7 @@ import type {
   AssistenciaTecnica,
   AssistenciaTecnicaInput,
   AssistenciaTecnicaUpdate,
+  AttachVisitReportInput,
   Attachment,
   AttachmentInput,
   AuditLog,
@@ -110,6 +111,8 @@ import type {
   UploadUrlRequest,
   UploadUrlResponse,
   UserRoleUpdate,
+  VisitActionItem,
+  VisitActionItemInput,
   YesterdaySummary
 } from './api.schemas';
 
@@ -1685,6 +1688,80 @@ export const useCreateSiteVisit = <TError = ErrorType<unknown>,
       return useMutation(getCreateSiteVisitMutationOptions(options));
     }
 
+export const getAttachVisitReportUrl = (id: number,
+    visitId: number,) => {
+
+
+
+
+  return `/api/projects/${id}/visits/${visitId}`
+}
+
+/**
+ * @summary Attach or remove report file from a site visit
+ */
+export const attachVisitReport = async (id: number,
+    visitId: number,
+    attachVisitReportInput: AttachVisitReportInput, options?: RequestInit): Promise<SiteVisit> => {
+
+  return customFetch<SiteVisit>(getAttachVisitReportUrl(id,visitId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      attachVisitReportInput,)
+  }
+);}
+
+
+
+
+export const getAttachVisitReportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof attachVisitReport>>, TError,{id: number;visitId: number;data: BodyType<AttachVisitReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof attachVisitReport>>, TError,{id: number;visitId: number;data: BodyType<AttachVisitReportInput>}, TContext> => {
+
+const mutationKey = ['attachVisitReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof attachVisitReport>>, {id: number;visitId: number;data: BodyType<AttachVisitReportInput>}> = (props) => {
+          const {id,visitId,data} = props ?? {};
+
+          return  attachVisitReport(id,visitId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AttachVisitReportMutationResult = NonNullable<Awaited<ReturnType<typeof attachVisitReport>>>
+    export type AttachVisitReportMutationBody = BodyType<AttachVisitReportInput>
+    export type AttachVisitReportMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Attach or remove report file from a site visit
+ */
+export const useAttachVisitReport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof attachVisitReport>>, TError,{id: number;visitId: number;data: BodyType<AttachVisitReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof attachVisitReport>>,
+        TError,
+        {id: number;visitId: number;data: BodyType<AttachVisitReportInput>},
+        TContext
+      > => {
+      return useMutation(getAttachVisitReportMutationOptions(options));
+    }
+
 export const getDeleteSiteVisitUrl = (id: number,
     visitId: number,) => {
 
@@ -1755,6 +1832,302 @@ export const useDeleteSiteVisit = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteSiteVisitMutationOptions(options));
+    }
+
+export const getListVisitActionItemsUrl = (id: number,
+    visitId: number,) => {
+
+
+
+
+  return `/api/projects/${id}/visits/${visitId}/action-items`
+}
+
+/**
+ * @summary List action items for a visit
+ */
+export const listVisitActionItems = async (id: number,
+    visitId: number, options?: RequestInit): Promise<VisitActionItem[]> => {
+
+  return customFetch<VisitActionItem[]>(getListVisitActionItemsUrl(id,visitId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVisitActionItemsQueryKey = (id: number,
+    visitId: number,) => {
+    return [
+    `/api/projects/${id}/visits/${visitId}/action-items`
+    ] as const;
+    }
+
+
+export const getListVisitActionItemsQueryOptions = <TData = Awaited<ReturnType<typeof listVisitActionItems>>, TError = ErrorType<unknown>>(id: number,
+    visitId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVisitActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVisitActionItemsQueryKey(id,visitId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVisitActionItems>>> = ({ signal }) => listVisitActionItems(id,visitId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id && visitId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVisitActionItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVisitActionItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listVisitActionItems>>>
+export type ListVisitActionItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List action items for a visit
+ */
+
+export function useListVisitActionItems<TData = Awaited<ReturnType<typeof listVisitActionItems>>, TError = ErrorType<unknown>>(
+ id: number,
+    visitId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVisitActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVisitActionItemsQueryOptions(id,visitId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateVisitActionItemUrl = (id: number,
+    visitId: number,) => {
+
+
+
+
+  return `/api/projects/${id}/visits/${visitId}/action-items`
+}
+
+/**
+ * @summary Create an action item for a visit
+ */
+export const createVisitActionItem = async (id: number,
+    visitId: number,
+    visitActionItemInput: VisitActionItemInput, options?: RequestInit): Promise<VisitActionItem> => {
+
+  return customFetch<VisitActionItem>(getCreateVisitActionItemUrl(id,visitId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      visitActionItemInput,)
+  }
+);}
+
+
+
+
+export const getCreateVisitActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVisitActionItem>>, TError,{id: number;visitId: number;data: BodyType<VisitActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createVisitActionItem>>, TError,{id: number;visitId: number;data: BodyType<VisitActionItemInput>}, TContext> => {
+
+const mutationKey = ['createVisitActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createVisitActionItem>>, {id: number;visitId: number;data: BodyType<VisitActionItemInput>}> = (props) => {
+          const {id,visitId,data} = props ?? {};
+
+          return  createVisitActionItem(id,visitId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateVisitActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof createVisitActionItem>>>
+    export type CreateVisitActionItemMutationBody = BodyType<VisitActionItemInput>
+    export type CreateVisitActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an action item for a visit
+ */
+export const useCreateVisitActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createVisitActionItem>>, TError,{id: number;visitId: number;data: BodyType<VisitActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createVisitActionItem>>,
+        TError,
+        {id: number;visitId: number;data: BodyType<VisitActionItemInput>},
+        TContext
+      > => {
+      return useMutation(getCreateVisitActionItemMutationOptions(options));
+    }
+
+export const getToggleVisitActionItemUrl = (itemId: number,) => {
+
+
+
+
+  return `/api/visit-action-items/${itemId}/toggle`
+}
+
+/**
+ * @summary Toggle completion of a visit action item
+ */
+export const toggleVisitActionItem = async (itemId: number, options?: RequestInit): Promise<VisitActionItem> => {
+
+  return customFetch<VisitActionItem>(getToggleVisitActionItemUrl(itemId),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+export const getToggleVisitActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toggleVisitActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof toggleVisitActionItem>>, TError,{itemId: number}, TContext> => {
+
+const mutationKey = ['toggleVisitActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toggleVisitActionItem>>, {itemId: number}> = (props) => {
+          const {itemId} = props ?? {};
+
+          return  toggleVisitActionItem(itemId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToggleVisitActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof toggleVisitActionItem>>>
+
+    export type ToggleVisitActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Toggle completion of a visit action item
+ */
+export const useToggleVisitActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toggleVisitActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof toggleVisitActionItem>>,
+        TError,
+        {itemId: number},
+        TContext
+      > => {
+      return useMutation(getToggleVisitActionItemMutationOptions(options));
+    }
+
+export const getDeleteVisitActionItemUrl = (itemId: number,) => {
+
+
+
+
+  return `/api/visit-action-items/${itemId}`
+}
+
+/**
+ * @summary Delete a visit action item
+ */
+export const deleteVisitActionItem = async (itemId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteVisitActionItemUrl(itemId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteVisitActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVisitActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteVisitActionItem>>, TError,{itemId: number}, TContext> => {
+
+const mutationKey = ['deleteVisitActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteVisitActionItem>>, {itemId: number}> = (props) => {
+          const {itemId} = props ?? {};
+
+          return  deleteVisitActionItem(itemId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteVisitActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof deleteVisitActionItem>>>
+
+    export type DeleteVisitActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a visit action item
+ */
+export const useDeleteVisitActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteVisitActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteVisitActionItem>>,
+        TError,
+        {itemId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteVisitActionItemMutationOptions(options));
     }
 
 export const getListProjectObservationsUrl = (id: number,) => {

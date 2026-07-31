@@ -40,6 +40,7 @@ import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectMilestones } from "@/components/project-milestones";
 import { ProjectBurndown } from "@/components/project-burndown";
 import { ProjectDates } from "@/components/project-dates";
+import { VisitDetailDialog } from "@/components/visit-detail-dialog";
 import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -216,6 +217,7 @@ export default function ProjectDetail() {
   const [togglingTaskId, setTogglingTaskId] = useState<number | null>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
+  const [selectedVisitId, setSelectedVisitId] = useState<number | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
@@ -1235,7 +1237,7 @@ export default function ProjectDetail() {
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Responsável</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Objetivo</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Observações</th>
-                    {canEdit && <th className="px-3 py-2" />}
+                    <th className="px-3 py-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -1268,18 +1270,28 @@ export default function ProjectDetail() {
                       <td className="px-3 py-3 max-w-[180px]">
                         <span className="text-muted-foreground text-xs">{visit.notes || "—"}</span>
                       </td>
-                      {canEdit && (
-                        <td className="px-3 py-3">
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-1">
                           <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => onDeleteVisit(visit.id)}
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs"
+                            onClick={() => setSelectedVisitId(visit.id)}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            Abrir
                           </Button>
-                        </td>
-                      )}
+                          {canEdit && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                              onClick={() => onDeleteVisit(visit.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1299,6 +1311,16 @@ export default function ProjectDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Visit detail dialog */}
+      <VisitDetailDialog
+        visit={siteVisits?.find((v) => v.id === selectedVisitId) ?? null}
+        projectId={projectId}
+        members={(allMembers ?? []).map((m) => ({ id: m.id, name: m.name }))}
+        canEdit={canEdit}
+        open={selectedVisitId !== null}
+        onClose={() => setSelectedVisitId(null)}
+      />
 
       {/* Checklist */}
 

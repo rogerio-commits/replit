@@ -514,6 +514,34 @@ paths:
                 $ref: "#/components/schemas/SiteVisit"
 
   /projects/{id}/visits/{visitId}:
+    patch:
+      operationId: attachVisitReport
+      tags: [projects]
+      summary: Attach or remove report file from a site visit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: visitId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttachVisitReportInput"
+      responses:
+        "200":
+          description: Updated site visit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteVisit"
     delete:
       operationId: deleteSiteVisit
       tags: [projects]
@@ -525,6 +553,94 @@ paths:
           schema:
             type: integer
         - name: visitId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /projects/{id}/visits/{visitId}/action-items:
+    get:
+      operationId: listVisitActionItems
+      tags: [projects]
+      summary: List action items for a visit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: visitId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of action items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VisitActionItem"
+    post:
+      operationId: createVisitActionItem
+      tags: [projects]
+      summary: Create an action item for a visit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: visitId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VisitActionItemInput"
+      responses:
+        "201":
+          description: Created action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitActionItem"
+
+  /visit-action-items/{itemId}/toggle:
+    patch:
+      operationId: toggleVisitActionItem
+      tags: [projects]
+      summary: Toggle completion of a visit action item
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisitActionItem"
+
+  /visit-action-items/{itemId}:
+    delete:
+      operationId: deleteVisitActionItem
+      tags: [projects]
+      summary: Delete a visit action item
+      parameters:
+        - name: itemId
           in: path
           required: true
           schema:
@@ -3211,6 +3327,8 @@ components:
           type: string
         notes:
           type: ["string", "null"]
+        reportFileKey:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -3236,7 +3354,49 @@ components:
           type: string
         notes:
           type: ["string", "null"]
+        reportFileKey:
+          type: ["string", "null"]
         createdAt:
+          type: string
+
+    AttachVisitReportInput:
+      type: object
+      properties:
+        reportFileKey:
+          type: string
+          nullable: true
+
+    VisitActionItem:
+      type: object
+      required: [id, visitId, description, createdAt]
+      properties:
+        id:
+          type: integer
+        visitId:
+          type: integer
+        description:
+          type: string
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleName:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    VisitActionItemInput:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+          minLength: 1
+        responsibleId:
+          type: integer
+        dueDate:
           type: string
 
     SiteVisitInput:

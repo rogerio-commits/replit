@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, visitActionItemsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { logAudit, diffObjects } from "../lib/audit";
 import { runAutomations } from "../lib/automation-engine";
@@ -27,6 +27,13 @@ import {
   CreateSiteVisitParams,
   CreateSiteVisitBody,
   DeleteSiteVisitParams,
+  AttachVisitReportParams,
+  AttachVisitReportBody,
+  ListVisitActionItemsParams,
+  CreateVisitActionItemParams,
+  CreateVisitActionItemBody,
+  ToggleVisitActionItemParams,
+  DeleteVisitActionItemParams,
   ListProjectObservationsParams,
   CreateProjectObservationParams,
   CreateProjectObservationBody,
@@ -878,6 +885,7 @@ function siteVisitRow(
     visitors: visit.visitors,
     objective: visit.objective,
     notes: visit.notes,
+    reportFileKey: visit.reportFileKey ?? null,
     createdAt: visit.createdAt.toISOString(),
   };
 }
@@ -948,6 +956,113 @@ router.delete("/projects/:id/visits/:visitId", requireExecutorOrGestor, async (r
       )
     );
 
+  return res.status(204).send();
+});
+
+// ── Attach report to visit ────────────────────────────────────────────────────
+
+router.patch("/projects/:id/visits/:visitId", requireExecutorOrGestor, async (req, res) => {
+  const params = AttachVisitReportParams.safeParse({ id: Number(req.params.id), visitId: Number(req.params.visitId) });
+  const body = AttachVisitReportBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [visit] = await db
+    .update(siteVisitsTable)
+    .set({ reportFileKey: body.data.reportFileKey ?? null })
+    .where(and(eq(siteVisitsTable.id, params.data.visitId), eq(siteVisitsTable.projectId, params.data.id)))
+    .returning();
+
+  if (!visit) return res.status(404).json({ error: "Visit not found" });
+
+  let responsibleName: string | null = null;
+  if (visit.responsibleId) {
+    const [m] = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.id, visit.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+  return res.json(siteVisitRow(visit, responsibleName));
+});
+
+// ── Visit action items ────────────────────────────────────────────────────────
+
+function actionItemRow(
+  item: typeof visitActionItemsTable.$inferSelect,
+  responsibleName: string | null
+) {
+  return {
+    id: item.id,
+    visitId: item.visitId,
+    description: item.description,
+    responsibleId: item.responsibleId,
+    responsibleName,
+    dueDate: item.dueDate ?? null,
+    completedAt: item.completedAt ? item.completedAt.toISOString() : null,
+    createdAt: item.createdAt.toISOString(),
+  };
+}
+
+router.get("/projects/:id/visits/:visitId/action-items", async (req, res) => {
+  const params = ListVisitActionItemsParams.safeParse({ id: Number(req.params.id), visitId: Number(req.params.visitId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const rows = await db
+    .select({ item: visitActionItemsTable, memberName: membersTable.name })
+    .from(visitActionItemsTable)
+    .leftJoin(membersTable, eq(visitActionItemsTable.responsibleId, membersTable.id))
+    .where(eq(visitActionItemsTable.visitId, params.data.visitId))
+    .orderBy(visitActionItemsTable.createdAt);
+
+  return res.json(rows.map(({ item, memberName }) => actionItemRow(item, memberName ?? null)));
+});
+
+router.post("/projects/:id/visits/:visitId/action-items", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateVisitActionItemParams.safeParse({ id: Number(req.params.id), visitId: Number(req.params.visitId) });
+  const body = CreateVisitActionItemBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [item] = await db
+    .insert(visitActionItemsTable)
+    .values({
+      visitId: params.data.visitId,
+      description: body.data.description,
+      responsibleId: body.data.responsibleId ?? null,
+      dueDate: body.data.dueDate ?? null,
+    })
+    .returning();
+
+  let responsibleName: string | null = null;
+  if (item.responsibleId) {
+    const [m] = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.id, item.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+  return res.status(201).json(actionItemRow(item, responsibleName));
+});
+
+router.patch("/visit-action-items/:itemId/toggle", requireExecutorOrGestor, async (req, res) => {
+  const params = ToggleVisitActionItemParams.safeParse({ itemId: Number(req.params.itemId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const [current] = await db.select().from(visitActionItemsTable).where(eq(visitActionItemsTable.id, params.data.itemId)).limit(1);
+  if (!current) return res.status(404).json({ error: "Not found" });
+
+  const completedAt = current.completedAt ? null : new Date();
+  const [updated] = await db
+    .update(visitActionItemsTable)
+    .set({ completedAt })
+    .where(eq(visitActionItemsTable.id, params.data.itemId))
+    .returning();
+
+  let responsibleName: string | null = null;
+  if (updated.responsibleId) {
+    const [m] = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.id, updated.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+  return res.json(actionItemRow(updated, responsibleName));
+});
+
+router.delete("/visit-action-items/:itemId", requireExecutorOrGestor, async (req, res) => {
+  const params = DeleteVisitActionItemParams.safeParse({ itemId: Number(req.params.itemId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+  await db.delete(visitActionItemsTable).where(eq(visitActionItemsTable.id, params.data.itemId));
   return res.status(204).send();
 });
 

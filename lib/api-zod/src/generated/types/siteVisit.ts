@@ -18,5 +18,7 @@ export interface SiteVisit {
   objective: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  reportFileKey?: string | null;
   createdAt: string;
 }

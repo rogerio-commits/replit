@@ -801,6 +801,8 @@ export interface SiteVisit {
   objective: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  reportFileKey?: string | null;
   createdAt: string;
 }
 
@@ -817,7 +819,35 @@ export interface SiteVisitWithProject {
   objective: string;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  reportFileKey?: string | null;
   createdAt: string;
+}
+
+export interface AttachVisitReportInput {
+  reportFileKey?: string | null;
+}
+
+export interface VisitActionItem {
+  id: number;
+  visitId: number;
+  description: string;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface VisitActionItemInput {
+  /** @minLength 1 */
+  description: string;
+  responsibleId?: number;
+  dueDate?: string;
 }
 
 export interface SiteVisitInput {

@@ -501,6 +501,7 @@ export const ListSiteVisitsResponseItem = zod.object({
   "visitors": zod.string(),
   "objective": zod.string(),
   "notes": zod.string().nullish(),
+  "reportFileKey": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListSiteVisitsResponse = zod.array(ListSiteVisitsResponseItem)
@@ -528,11 +529,103 @@ export const CreateSiteVisitBody = zod.object({
 
 
 /**
+ * @summary Attach or remove report file from a site visit
+ */
+export const AttachVisitReportParams = zod.object({
+  "id": zod.coerce.number(),
+  "visitId": zod.coerce.number()
+})
+
+export const AttachVisitReportBody = zod.object({
+  "reportFileKey": zod.string().nullish()
+})
+
+export const AttachVisitReportResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "date": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "visitors": zod.string(),
+  "objective": zod.string(),
+  "notes": zod.string().nullish(),
+  "reportFileKey": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Delete a site visit
  */
 export const DeleteSiteVisitParams = zod.object({
   "id": zod.coerce.number(),
   "visitId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List action items for a visit
+ */
+export const ListVisitActionItemsParams = zod.object({
+  "id": zod.coerce.number(),
+  "visitId": zod.coerce.number()
+})
+
+export const ListVisitActionItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "visitId": zod.number(),
+  "description": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListVisitActionItemsResponse = zod.array(ListVisitActionItemsResponseItem)
+
+
+/**
+ * @summary Create an action item for a visit
+ */
+export const CreateVisitActionItemParams = zod.object({
+  "id": zod.coerce.number(),
+  "visitId": zod.coerce.number()
+})
+
+
+
+
+export const CreateVisitActionItemBody = zod.object({
+  "description": zod.string().min(1),
+  "responsibleId": zod.number().optional(),
+  "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Toggle completion of a visit action item
+ */
+export const ToggleVisitActionItemParams = zod.object({
+  "itemId": zod.coerce.number()
+})
+
+export const ToggleVisitActionItemResponse = zod.object({
+  "id": zod.number(),
+  "visitId": zod.number(),
+  "description": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a visit action item
+ */
+export const DeleteVisitActionItemParams = zod.object({
+  "itemId": zod.coerce.number()
 })
 
 
@@ -1339,6 +1432,7 @@ export const ListAllSiteVisitsResponseItem = zod.object({
   "visitors": zod.string(),
   "objective": zod.string(),
   "notes": zod.string().nullish(),
+  "reportFileKey": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListAllSiteVisitsResponse = zod.array(ListAllSiteVisitsResponseItem)
