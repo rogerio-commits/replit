@@ -108,6 +108,7 @@ import {
   Copy,
   Archive,
   ArchiveRestore,
+  ListFilter,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
@@ -220,6 +221,7 @@ export default function ProjectDetail() {
   const [selectedVisitId, setSelectedVisitId] = useState<number | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [visitFilter, setVisitFilter] = useState<"all" | "pending" | "completed" | "no_plan">("all");
 
   const { data: project, isLoading: isProjectLoading } = useGetProject(projectId, {
     query: { enabled: !!projectId, queryKey: getGetProjectQueryKey(projectId) },
@@ -1236,21 +1238,67 @@ export default function ProjectDetail() {
         </CardHeader>
         <CardContent>
           {siteVisits && siteVisits.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/30">
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Quem foi</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Responsável</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Objetivo</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Observações</th>
-                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Plano de Ação</th>
-                    <th className="px-3 py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {siteVisits.map((visit) => (
+            <>
+              {/* Filter bar */}
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <ListFilter className="h-4 w-4 text-muted-foreground shrink-0" />
+                {(
+                  [
+                    { value: "all", label: "Todas" },
+                    { value: "pending", label: "Com pendências" },
+                    { value: "completed", label: "Concluídas" },
+                    { value: "no_plan", label: "Sem plano de ação" },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setVisitFilter(opt.value)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-medium border transition-colors",
+                      visitFilter === opt.value
+                        ? "bg-orange-500 text-white border-orange-500"
+                        : "bg-background text-muted-foreground border-border hover:border-orange-300 hover:text-orange-600"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              {(() => {
+                const filteredVisits = (siteVisits ?? []).filter((v) => {
+                  if (visitFilter === "all") return true;
+                  if (visitFilter === "pending") return v.pendingActionItemsCount > 0;
+                  if (visitFilter === "completed") return v.totalActionItemsCount > 0 && v.pendingActionItemsCount === 0;
+                  if (visitFilter === "no_plan") return v.totalActionItemsCount === 0;
+                  return true;
+                });
+
+                if (filteredVisits.length === 0) {
+                  return (
+                    <div className="py-10 text-center flex flex-col items-center">
+                      <ListFilter className="h-8 w-8 text-muted-foreground mb-2 opacity-20" />
+                      <p className="text-muted-foreground text-sm">Nenhuma visita corresponde ao filtro selecionado.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/30">
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Data</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Quem foi</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Responsável</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Objetivo</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Observações</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Plano de Ação</th>
+                          <th className="px-3 py-2" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredVisits.map((visit) => (
                     <tr key={visit.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="px-3 py-3 whitespace-nowrap font-medium">
                         <div className="flex items-center gap-1.5">
@@ -1324,10 +1372,13 @@ export default function ProjectDetail() {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </>
           ) : (
             <div className="py-12 text-center flex flex-col items-center">
               <MapPin className="h-10 w-10 text-muted-foreground mb-3 opacity-20" />
