@@ -98,6 +98,8 @@ export * from './milestoneInput';
 export * from './obraDiaryEntry';
 export * from './obraDiaryEntryInput';
 export * from './project';
+export * from './projectActionItem';
+export * from './projectActionItemInput';
 export * from './projectApprovalInput';
 export * from './projectApprovalInputAction';
 export * from './projectApprovalStatus';

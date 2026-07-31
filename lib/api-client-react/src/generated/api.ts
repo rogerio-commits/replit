@@ -73,6 +73,8 @@ import type {
   ObraDiaryEntry,
   ObraDiaryEntryInput,
   Project,
+  ProjectActionItem,
+  ProjectActionItemInput,
   ProjectApprovalInput,
   ProjectInput,
   ProjectMaterial,
@@ -2128,6 +2130,295 @@ export const useDeleteVisitActionItem = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteVisitActionItemMutationOptions(options));
+    }
+
+export const getListProjectActionItemsUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/action-items`
+}
+
+/**
+ * @summary List action items for a project
+ */
+export const listProjectActionItems = async (id: number, options?: RequestInit): Promise<ProjectActionItem[]> => {
+
+  return customFetch<ProjectActionItem[]>(getListProjectActionItemsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectActionItemsQueryKey = (id: number,) => {
+    return [
+    `/api/projects/${id}/action-items`
+    ] as const;
+    }
+
+
+export const getListProjectActionItemsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectActionItems>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectActionItemsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectActionItems>>> = ({ signal }) => listProjectActionItems(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectActionItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectActionItems>>>
+export type ListProjectActionItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List action items for a project
+ */
+
+export function useListProjectActionItems<TData = Awaited<ReturnType<typeof listProjectActionItems>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectActionItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectActionItemsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateProjectActionItemUrl = (id: number,) => {
+
+
+
+
+  return `/api/projects/${id}/action-items`
+}
+
+/**
+ * @summary Create an action item for a project
+ */
+export const createProjectActionItem = async (id: number,
+    projectActionItemInput: ProjectActionItemInput, options?: RequestInit): Promise<ProjectActionItem> => {
+
+  return customFetch<ProjectActionItem>(getCreateProjectActionItemUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectActionItemInput,)
+  }
+);}
+
+
+
+
+export const getCreateProjectActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{id: number;data: BodyType<ProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{id: number;data: BodyType<ProjectActionItemInput>}, TContext> => {
+
+const mutationKey = ['createProjectActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectActionItem>>, {id: number;data: BodyType<ProjectActionItemInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createProjectActionItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectActionItem>>>
+    export type CreateProjectActionItemMutationBody = BodyType<ProjectActionItemInput>
+    export type CreateProjectActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an action item for a project
+ */
+export const useCreateProjectActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectActionItem>>, TError,{id: number;data: BodyType<ProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectActionItem>>,
+        TError,
+        {id: number;data: BodyType<ProjectActionItemInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectActionItemMutationOptions(options));
+    }
+
+export const getToggleProjectActionItemUrl = (itemId: number,) => {
+
+
+
+
+  return `/api/project-action-items/${itemId}/toggle`
+}
+
+/**
+ * @summary Toggle completion of a project action item
+ */
+export const toggleProjectActionItem = async (itemId: number, options?: RequestInit): Promise<ProjectActionItem> => {
+
+  return customFetch<ProjectActionItem>(getToggleProjectActionItemUrl(itemId),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+export const getToggleProjectActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toggleProjectActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof toggleProjectActionItem>>, TError,{itemId: number}, TContext> => {
+
+const mutationKey = ['toggleProjectActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof toggleProjectActionItem>>, {itemId: number}> = (props) => {
+          const {itemId} = props ?? {};
+
+          return  toggleProjectActionItem(itemId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ToggleProjectActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof toggleProjectActionItem>>>
+
+    export type ToggleProjectActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Toggle completion of a project action item
+ */
+export const useToggleProjectActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof toggleProjectActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof toggleProjectActionItem>>,
+        TError,
+        {itemId: number},
+        TContext
+      > => {
+      return useMutation(getToggleProjectActionItemMutationOptions(options));
+    }
+
+export const getDeleteProjectActionItemUrl = (itemId: number,) => {
+
+
+
+
+  return `/api/project-action-items/${itemId}`
+}
+
+/**
+ * @summary Delete a project action item
+ */
+export const deleteProjectActionItem = async (itemId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteProjectActionItemUrl(itemId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteProjectActionItemMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectActionItem>>, TError,{itemId: number}, TContext> => {
+
+const mutationKey = ['deleteProjectActionItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectActionItem>>, {itemId: number}> = (props) => {
+          const {itemId} = props ?? {};
+
+          return  deleteProjectActionItem(itemId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProjectActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectActionItem>>>
+
+    export type DeleteProjectActionItemMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a project action item
+ */
+export const useDeleteProjectActionItem = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectActionItem>>, TError,{itemId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProjectActionItem>>,
+        TError,
+        {itemId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteProjectActionItemMutationOptions(options));
     }
 
 export const getListProjectObservationsUrl = (id: number,) => {

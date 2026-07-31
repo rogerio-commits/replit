@@ -828,6 +828,28 @@ export interface AttachVisitReportInput {
   reportFileKey?: string | null;
 }
 
+export interface ProjectActionItem {
+  id: number;
+  projectId: number;
+  description: string;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface ProjectActionItemInput {
+  /** @minLength 1 */
+  description: string;
+  responsibleId?: number;
+  dueDate?: string;
+}
+
 export interface VisitActionItem {
   id: number;
   visitId: number;

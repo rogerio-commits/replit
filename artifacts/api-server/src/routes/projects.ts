@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, visitActionItemsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
+import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, siteVisitsTable, visitActionItemsTable, projectActionItemsTable, projectObservationsTable, tasksTable, projectPhaseHistoryTable, notificationsTable, usersTable } from "@workspace/db";
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { logAudit, diffObjects } from "../lib/audit";
 import { runAutomations } from "../lib/automation-engine";
@@ -34,6 +34,11 @@ import {
   CreateVisitActionItemBody,
   ToggleVisitActionItemParams,
   DeleteVisitActionItemParams,
+  ListProjectActionItemsParams,
+  CreateProjectActionItemParams,
+  CreateProjectActionItemBody,
+  ToggleProjectActionItemParams,
+  DeleteProjectActionItemParams,
   ListProjectObservationsParams,
   CreateProjectObservationParams,
   CreateProjectObservationBody,
@@ -1063,6 +1068,90 @@ router.delete("/visit-action-items/:itemId", requireExecutorOrGestor, async (req
   const params = DeleteVisitActionItemParams.safeParse({ itemId: Number(req.params.itemId) });
   if (!params.success) return res.status(400).json({ error: "Invalid params" });
   await db.delete(visitActionItemsTable).where(eq(visitActionItemsTable.id, params.data.itemId));
+  return res.status(204).send();
+});
+
+// ── Project action items ──────────────────────────────────────────────────────
+
+function projectActionItemRow(
+  item: typeof projectActionItemsTable.$inferSelect,
+  responsibleName: string | null
+) {
+  return {
+    id: item.id,
+    projectId: item.projectId,
+    description: item.description,
+    responsibleId: item.responsibleId,
+    responsibleName,
+    dueDate: item.dueDate ?? null,
+    completedAt: item.completedAt ? item.completedAt.toISOString() : null,
+    createdAt: item.createdAt.toISOString(),
+  };
+}
+
+router.get("/projects/:id/action-items", async (req, res) => {
+  const params = ListProjectActionItemsParams.safeParse({ id: Number(req.params.id) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const rows = await db
+    .select({ item: projectActionItemsTable, memberName: membersTable.name })
+    .from(projectActionItemsTable)
+    .leftJoin(membersTable, eq(projectActionItemsTable.responsibleId, membersTable.id))
+    .where(eq(projectActionItemsTable.projectId, params.data.id))
+    .orderBy(projectActionItemsTable.createdAt);
+
+  return res.json(rows.map(({ item, memberName }) => projectActionItemRow(item, memberName ?? null)));
+});
+
+router.post("/projects/:id/action-items", requireExecutorOrGestor, async (req, res) => {
+  const params = CreateProjectActionItemParams.safeParse({ id: Number(req.params.id) });
+  const body = CreateProjectActionItemBody.safeParse(req.body);
+  if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
+
+  const [item] = await db
+    .insert(projectActionItemsTable)
+    .values({
+      projectId: params.data.id,
+      description: body.data.description,
+      responsibleId: body.data.responsibleId ?? null,
+      dueDate: body.data.dueDate ?? null,
+    })
+    .returning();
+
+  let responsibleName: string | null = null;
+  if (item.responsibleId) {
+    const [m] = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.id, item.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+  return res.status(201).json(projectActionItemRow(item, responsibleName));
+});
+
+router.patch("/project-action-items/:itemId/toggle", requireExecutorOrGestor, async (req, res) => {
+  const params = ToggleProjectActionItemParams.safeParse({ itemId: Number(req.params.itemId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+
+  const [current] = await db.select().from(projectActionItemsTable).where(eq(projectActionItemsTable.id, params.data.itemId)).limit(1);
+  if (!current) return res.status(404).json({ error: "Not found" });
+
+  const completedAt = current.completedAt ? null : new Date();
+  const [updated] = await db
+    .update(projectActionItemsTable)
+    .set({ completedAt })
+    .where(eq(projectActionItemsTable.id, params.data.itemId))
+    .returning();
+
+  let responsibleName: string | null = null;
+  if (updated.responsibleId) {
+    const [m] = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.id, updated.responsibleId));
+    responsibleName = m?.name ?? null;
+  }
+  return res.json(projectActionItemRow(updated, responsibleName));
+});
+
+router.delete("/project-action-items/:itemId", requireExecutorOrGestor, async (req, res) => {
+  const params = DeleteProjectActionItemParams.safeParse({ itemId: Number(req.params.itemId) });
+  if (!params.success) return res.status(400).json({ error: "Invalid params" });
+  await db.delete(projectActionItemsTable).where(eq(projectActionItemsTable.id, params.data.itemId));
   return res.status(204).send();
 });
 

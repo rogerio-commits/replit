@@ -35,8 +35,8 @@ import {
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { ProjectFiles } from "@/components/project-files";
-import { ProjectObraDiary } from "@/components/project-obra-diary";
 import { ProjectMaterials } from "@/components/project-materials";
+import { ProjectActionPlan } from "@/components/project-action-plan";
 import { ProjectMilestones } from "@/components/project-milestones";
 import { ProjectBurndown } from "@/components/project-burndown";
 import { ProjectDates } from "@/components/project-dates";
@@ -989,7 +989,7 @@ export default function ProjectDetail() {
       )}
 
       {/* Stats */}
-      <h2 className="text-lg font-semibold">Tarefas</h2>
+      <h2 className="text-lg font-semibold">Atividades da Equipe</h2>
       {isStatsLoading ? (
         <div className="grid gap-4 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
@@ -1034,6 +1034,13 @@ export default function ProjectDetail() {
           </Card>
         </div>
       ) : null}
+
+      {/* Plano de Ação da Obra */}
+      <ProjectActionPlan
+        projectId={projectId}
+        members={(allMembers ?? []).map((m) => ({ id: m.id, name: m.name }))}
+        canEdit={canEdit}
+      />
 
       {/* Participants */}
       <Card>
@@ -1328,8 +1335,8 @@ export default function ProjectDetail() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
           <div className="mr-auto">
-            <CardTitle>Tarefas do Projeto</CardTitle>
-            <CardDescription>Todas as tarefas vinculadas a este projeto.</CardDescription>
+            <CardTitle>Atividades da Equipe</CardTitle>
+            <CardDescription>Atividades internas da equipe vinculadas a este projeto.</CardDescription>
           </div>
           {canEdit && project && (
             <BatchCreateTasks projects={[{ id: project.id, name: project.name }]} defaultProjectId={project.id} />
@@ -1342,18 +1349,18 @@ export default function ProjectDetail() {
               <DialogTrigger asChild>
                 <Button size="sm">
                   <Plus className="mr-2 h-4 w-4" />
-                  Nova Tarefa
+                  Nova Atividade
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                  <DialogTitle>{editingTaskId ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle>
+                  <DialogTitle>{editingTaskId ? "Editar Atividade" : "Nova Atividade"}</DialogTitle>
                 </DialogHeader>
                 <Form {...taskForm}>
                   <form key={editingTaskId ?? "new"} onSubmit={taskForm.handleSubmit(onCreateTask)} className="space-y-4">
                     <FormField control={taskForm.control} name="title" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Título da Tarefa</FormLabel>
+                        <FormLabel>Título da Atividade</FormLabel>
                         <FormControl><Input placeholder="Ex.: Concretagem fase 1" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1408,7 +1415,7 @@ export default function ProjectDetail() {
                     )} />
                     <DialogFooter>
                       <Button type="submit" disabled={createTask.isPending || updateTask.isPending}>
-                        {createTask.isPending || updateTask.isPending ? "Salvando..." : editingTaskId ? "Salvar Alterações" : "Criar Tarefa"}
+                        {createTask.isPending || updateTask.isPending ? "Salvando..." : editingTaskId ? "Salvar Alterações" : "Criar Atividade"}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -1561,13 +1568,6 @@ export default function ProjectDetail() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Diário de Obra */}
-      <Card>
-        <CardContent className="p-4">
-          <ProjectObraDiary projectId={projectId} />
-        </CardContent>
-      </Card>
 
       {/* Controle de Materiais */}
       <Card>

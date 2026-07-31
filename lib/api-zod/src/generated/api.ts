@@ -630,6 +630,70 @@ export const DeleteVisitActionItemParams = zod.object({
 
 
 /**
+ * @summary List action items for a project
+ */
+export const ListProjectActionItemsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListProjectActionItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "description": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListProjectActionItemsResponse = zod.array(ListProjectActionItemsResponseItem)
+
+
+/**
+ * @summary Create an action item for a project
+ */
+export const CreateProjectActionItemParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateProjectActionItemBody = zod.object({
+  "description": zod.string().min(1),
+  "responsibleId": zod.number().optional(),
+  "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Toggle completion of a project action item
+ */
+export const ToggleProjectActionItemParams = zod.object({
+  "itemId": zod.coerce.number()
+})
+
+export const ToggleProjectActionItemResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "description": zod.string(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "completedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a project action item
+ */
+export const DeleteProjectActionItemParams = zod.object({
+  "itemId": zod.coerce.number()
+})
+
+
+/**
  * @summary List observations for a project
  */
 export const ListProjectObservationsParams = zod.object({

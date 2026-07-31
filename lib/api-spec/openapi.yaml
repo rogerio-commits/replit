@@ -649,6 +649,84 @@ paths:
         "204":
           description: Deleted
 
+  /projects/{id}/action-items:
+    get:
+      operationId: listProjectActionItems
+      tags: [projects]
+      summary: List action items for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of action items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectActionItem"
+    post:
+      operationId: createProjectActionItem
+      tags: [projects]
+      summary: Create an action item for a project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectActionItemInput"
+      responses:
+        "201":
+          description: Created action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectActionItem"
+
+  /project-action-items/{itemId}/toggle:
+    patch:
+      operationId: toggleProjectActionItem
+      tags: [projects]
+      summary: Toggle completion of a project action item
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated action item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectActionItem"
+
+  /project-action-items/{itemId}:
+    delete:
+      operationId: deleteProjectActionItem
+      tags: [projects]
+      summary: Delete a project action item
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /projects/{id}/observations:
     get:
       operationId: listProjectObservations
@@ -3365,6 +3443,39 @@ components:
         reportFileKey:
           type: string
           nullable: true
+
+    ProjectActionItem:
+      type: object
+      required: [id, projectId, description, createdAt]
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        description:
+          type: string
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleName:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ProjectActionItemInput:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+          minLength: 1
+        responsibleId:
+          type: integer
+        dueDate:
+          type: string
 
     VisitActionItem:
       type: object
