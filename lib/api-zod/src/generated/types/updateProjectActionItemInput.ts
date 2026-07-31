@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UpdateProjectActionItemBody {
+export interface UpdateProjectActionItemInput {
   /** @minLength 1 */
   description?: string;
   /** @nullable */

@@ -787,7 +787,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateProjectActionItemBody"
+              $ref: "#/components/schemas/UpdateProjectActionItemInput"
       responses:
         "200":
           description: Updated action item
@@ -3469,7 +3469,17 @@ components:
 
     SiteVisit:
       type: object
-      required: [id, projectId, date, visitors, objective, createdAt]
+      required:
+        [
+          id,
+          projectId,
+          date,
+          visitors,
+          objective,
+          createdAt,
+          pendingActionItemsCount,
+          totalActionItemsCount,
+        ]
       properties:
         id:
           type: integer
@@ -3491,10 +3501,25 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+        pendingActionItemsCount:
+          type: integer
+        totalActionItemsCount:
+          type: integer
 
     SiteVisitWithProject:
       type: object
-      required: [id, projectId, projectName, date, visitors, objective, createdAt]
+      required:
+        [
+          id,
+          projectId,
+          projectName,
+          date,
+          visitors,
+          objective,
+          createdAt,
+          pendingActionItemsCount,
+          totalActionItemsCount,
+        ]
       properties:
         id:
           type: integer
@@ -3518,6 +3543,10 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+        pendingActionItemsCount:
+          type: integer
+        totalActionItemsCount:
+          type: integer
 
     AttachVisitReportInput:
       type: object
@@ -3592,7 +3621,7 @@ components:
         notes:
           type: string
 
-    UpdateProjectActionItemBody:
+    UpdateProjectActionItemInput:
       type: object
       properties:
         description:

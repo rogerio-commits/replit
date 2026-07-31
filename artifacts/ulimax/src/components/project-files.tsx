@@ -218,21 +218,21 @@ export function ProjectFiles({ projectId, mode = "all" }: ProjectFilesProps) {
           {displayed.map((a) => (
             <div key={a.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted/20">
               <img
-                src={`${BASE}/api/storage/objects${a.filename}`}
+                src={`${BASE}/api/storage${a.filename}`}
                 alt={a.originalName}
                 className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => setLightboxSrc(`${BASE}/api/storage/objects${a.filename}`)}
+                onClick={() => setLightboxSrc(`${BASE}/api/storage${a.filename}`)}
                 onError={(e) => { (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3C/svg%3E"; }}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                 <button
                   className="p-1.5 bg-white/90 rounded-full text-foreground hover:bg-white"
-                  onClick={() => setLightboxSrc(`${BASE}/api/storage/objects${a.filename}`)}
+                  onClick={() => setLightboxSrc(`${BASE}/api/storage${a.filename}`)}
                 >
                   <ZoomIn className="h-3.5 w-3.5" />
                 </button>
                 <a
-                  href={`${BASE}/api/storage/objects${a.filename}`}
+                  href={`${BASE}/api/storage${a.filename}`}
                   download={a.originalName}
                   className="p-1.5 bg-white/90 rounded-full text-foreground hover:bg-white"
                   onClick={(e) => e.stopPropagation()}
@@ -268,7 +268,7 @@ export function ProjectFiles({ projectId, mode = "all" }: ProjectFilesProps) {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <a
-                  href={`${BASE}/api/storage/objects${a.filename}`}
+                  href={`${BASE}/api/storage${a.filename}`}
                   download={a.originalName}
                   className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                   title="Baixar"

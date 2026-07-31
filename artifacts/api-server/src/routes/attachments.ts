@@ -79,10 +79,9 @@ router.delete("/attachments/:id", async (req, res) => {
   if (!isGestor && existing.uploadedBy !== dbUser.id) return res.status(403).json({ error: "Forbidden" });
 
   try {
-    const file = await storage.getObjectEntityFile(existing.filename);
-    await file.delete();
+    await storage.deleteObject(existing.filename);
   } catch {
-    // file may already be gone from storage, continue
+    // o arquivo pode já ter sumido do storage; segue e remove o registro
   }
 
   await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id));

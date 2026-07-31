@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Build artifact da função serverless (gerado por artifacts/api-server/build.mjs)
+/api/
