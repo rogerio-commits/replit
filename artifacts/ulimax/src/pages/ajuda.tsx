@@ -1134,6 +1134,46 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "visitas",
+    title: "Visitas na Obra",
+    icon: Calendar,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Cada visita registrada no projeto pode ter um <Strong>relatório em PDF</Strong> anexado e um <Strong>plano de ação</Strong> com os pontos levantados durante a vistoria. Abra o detalhe de qualquer visita clicando nela na lista do projeto.
+        </p>
+        <Subsection title="Anexar relatório PDF">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique na visita desejada para abrir o painel de detalhes.</li>
+            <li>Na seção <Strong>Relatório de Visita (PDF)</Strong>, clique em <Strong>Anexar PDF</Strong>.</li>
+            <li>Selecione o arquivo gerado no seu aplicativo de vistoria — formatos aceitos: <Strong>PDF, DOC e DOCX</Strong>.</li>
+            <li>O envio ocorre automaticamente; ao concluir, o link <em>Abrir relatório</em> aparece para toda a equipe.</li>
+          </ol>
+          <p className="text-sm text-muted-foreground mt-2">Para remover o arquivo, clique no ícone <Strong>✕</Strong> que aparece ao lado do link do relatório. O botão de remoção é visível apenas para Gestor e Gestor de Obras.</p>
+        </Subsection>
+        <Subsection title="Plano de ação">
+          <p className="text-sm text-muted-foreground mb-2">Registre pontos levantados na visita que precisam de acompanhamento, atribuindo responsável e prazo para cada um.</p>
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>No painel da visita, vá até a seção <Strong>Plano de Ação</Strong>.</li>
+            <li>No campo <em>Descreva o ponto de ação...</em>, escreva o que precisa ser resolvido.</li>
+            <li>Selecione o <Strong>responsável</Strong> (opcional) e informe o <Strong>prazo</Strong> (opcional).</li>
+            <li>Clique em <Strong>Adicionar item</Strong> — ou pressione Enter — para salvar.</li>
+          </ol>
+          <Table
+            headers={["Ação", "Como fazer"]}
+            rows={[
+              ["Marcar como concluído", "Clique no círculo à esquerda do item — ele fica riscado e move para a lista de concluídos"],
+              ["Reabrir um item", "Clique novamente no círculo preenchido para desfazer a conclusão"],
+              ["Excluir um item", "Passe o mouse sobre o item e clique no ícone de lixeira que aparece à direita"],
+            ]}
+          />
+        </Subsection>
+        <Tip>Os itens concluídos ficam recolhidos por padrão — clique em <em>N item(s) concluído(s)</em> para exibi-los. O contador ao lado do título mostra quantos já foram resolvidos em relação ao total.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "equipe",
     title: "Equipe",
     icon: Users,
