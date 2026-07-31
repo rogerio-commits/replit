@@ -129,7 +129,10 @@ export function ProjectMaterials({ projectId }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" />
-          <span className="font-semibold text-foreground">Controle de Materiais</span>
+          <div>
+            <span className="font-semibold text-foreground">Controle de Materiais</span>
+            <p className="text-xs text-muted-foreground font-normal">Entradas, saídas e estoque de materiais utilizados no projeto</p>
+          </div>
           {materials && (
             <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
               {materials.length}

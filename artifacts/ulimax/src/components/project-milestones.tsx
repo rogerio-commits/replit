@@ -86,12 +86,13 @@ export function ProjectMilestones({ projectId }: Props) {
         className="flex items-center gap-2 text-sm font-semibold text-foreground w-full text-left"
       >
         <Flag className="h-4 w-4 text-primary" />
-        Marcos do Projeto
+        <span>Marcos do Projeto</span>
         <span className="text-xs font-normal text-muted-foreground ml-1">
           ({milestones?.length ?? 0})
         </span>
         {open ? <ChevronDown className="h-3.5 w-3.5 ml-auto text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 ml-auto text-muted-foreground" />}
       </button>
+      <p className="text-xs text-muted-foreground pl-6 -mt-1">Datas-chave e entregas importantes que definem o avanço do projeto</p>
 
       {open && (
         <div className="space-y-2 pl-2">

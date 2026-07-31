@@ -1038,7 +1038,10 @@ export default function ProjectDetail() {
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Participantes</CardTitle>
+            <div>
+              <CardTitle className="text-base">Participantes</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal">Membros da equipe com acesso e responsabilidade neste projeto</p>
+            </div>
             {projectMembers && (
               <span className="text-xs text-muted-foreground font-normal">({projectMembers.length})</span>
             )}
@@ -1496,7 +1499,10 @@ export default function ProjectDetail() {
         <CardHeader className="py-3 px-4 border-b">
           <div className="flex items-center gap-2">
             <Camera className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Fotos</CardTitle>
+            <div>
+              <CardTitle className="text-base">Fotos</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal">Registro fotográfico do projeto e da obra</p>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-4">
@@ -1509,7 +1515,10 @@ export default function ProjectDetail() {
         <CardHeader className="py-3 px-4 border-b">
           <div className="flex items-center gap-2">
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-base">Arquivos</CardTitle>
+            <div>
+              <CardTitle className="text-base">Arquivos</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal">Documentos, plantas, contratos e outros anexos do projeto</p>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-4">
@@ -1608,7 +1617,10 @@ export default function ProjectDetail() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-base">Observações</CardTitle>
+                  <div>
+                    <CardTitle className="text-base">Observações</CardTitle>
+                    <p className="text-xs text-muted-foreground font-normal">Anotações livres da equipe sobre o andamento do projeto</p>
+                  </div>
                   {userObs.length > 0 && (
                     <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
                       {userObs.length}
@@ -1659,7 +1671,10 @@ export default function ProjectDetail() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-base">Histórico de Fases</CardTitle>
+              <div>
+                <CardTitle className="text-base">Histórico de Fases</CardTitle>
+                <p className="text-xs text-muted-foreground font-normal">Registro de todas as mudanças de status do projeto ao longo do tempo</p>
+              </div>
               <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
                 {phaseHistory.length}
               </span>
@@ -1699,7 +1714,10 @@ export default function ProjectDetail() {
           <CardHeader className="py-3 px-4 border-b">
             <div className="flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />
-              <CardTitle className="text-sm font-semibold">Histórico de Atividades</CardTitle>
+              <div>
+                <CardTitle className="text-sm font-semibold">Histórico de Atividades</CardTitle>
+                <p className="text-xs text-muted-foreground font-normal">Linha do tempo de todas as ações realizadas neste projeto</p>
+              </div>
               <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
                 {activityItems.length}
               </span>

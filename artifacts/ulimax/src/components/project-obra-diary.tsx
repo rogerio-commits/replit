@@ -110,7 +110,10 @@ export function ProjectObraDiary({ projectId }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-primary" />
-          <span className="font-semibold text-foreground">Diário de Obra</span>
+          <div>
+            <span className="font-semibold text-foreground">Diário de Obra</span>
+            <p className="text-xs text-muted-foreground font-normal">Registros diários de progresso, ocorrências e condições na obra</p>
+          </div>
           {entries && (
             <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
               {entries.length}
