@@ -85,6 +85,7 @@ function DateRow({ item }: { item: DateItem }) {
 
 interface DateGroup {
   title: string;
+  subtitle: string;
   icon: LucideIcon;
   items: DateItem[];
 }
@@ -94,6 +95,7 @@ export function ProjectDates({ project, emptyHint }: { project: ProjectDatesProj
   const groups: DateGroup[] = [
     {
       title: "Projeto",
+      subtitle: "Elaboração e design",
       icon: CalendarRange,
       items: [
         { label: "Início", value: project.startDate, mode: "start" },
@@ -103,11 +105,13 @@ export function ProjectDates({ project, emptyHint }: { project: ProjectDatesProj
     },
     {
       title: "Medição",
+      subtitle: "Visita técnica na obra",
       icon: Ruler,
       items: [{ label: "Data da medição", value: project.medicaoDate, mode: "event" }],
     },
     {
       title: "Produção",
+      subtitle: "Fabricação do produto",
       icon: Factory,
       items: [
         { label: "Início", value: project.producaoStartDate, mode: "start" },
@@ -117,6 +121,7 @@ export function ProjectDates({ project, emptyHint }: { project: ProjectDatesProj
     },
     {
       title: "Instalação",
+      subtitle: "Montagem na obra",
       icon: Wrench,
       items: [{ label: "Início estimado", value: project.instalacaoStartDate, mode: "event" }],
     },
@@ -129,9 +134,12 @@ export function ProjectDates({ project, emptyHint }: { project: ProjectDatesProj
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         {groups.map((group) => (
           <div key={group.title} className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5">
-            <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              <group.icon className="h-3.5 w-3.5" />
-              {group.title}
+            <div className="mb-2">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <group.icon className="h-3.5 w-3.5" />
+                {group.title}
+              </div>
+              <p className="text-[11px] text-muted-foreground/70 mt-0.5 pl-5">{group.subtitle}</p>
             </div>
             <div className="space-y-1.5">
               {group.items.map((item) => (

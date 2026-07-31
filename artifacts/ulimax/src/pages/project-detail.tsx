@@ -1000,6 +1000,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.todo}</div>
+              <p className="text-xs text-muted-foreground mt-1">Tarefas ainda não iniciadas</p>
             </CardContent>
           </Card>
           <Card className="bg-blue-50 dark:bg-blue-900/10">
@@ -1008,6 +1009,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.inProgress}</div>
+              <p className="text-xs text-muted-foreground mt-1">Sendo executadas agora</p>
             </CardContent>
           </Card>
           <Card className="bg-amber-50 dark:bg-amber-900/10">
@@ -1016,6 +1018,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">{stats.review}</div>
+              <p className="text-xs text-muted-foreground mt-1">Aguardando verificação</p>
             </CardContent>
           </Card>
           <Card className="bg-emerald-50 dark:bg-emerald-900/10">
@@ -1024,6 +1027,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{stats.done}</div>
+              <p className="text-xs text-muted-foreground mt-1">Tarefas finalizadas</p>
             </CardContent>
           </Card>
         </div>
