@@ -64,6 +64,7 @@ import {
   XCircle,
   Loader2,
   Archive,
+  HelpCircle,
 } from "lucide-react";
 import Papa from "papaparse";
 import { useToast } from "@/hooks/use-toast";
@@ -326,6 +327,7 @@ export default function Projects() {
   }, [searchStr, canEdit]);
 
   const [showArchived, setShowArchived] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const { data: projects, isLoading } = useListProjects(showArchived ? { archived: true } : undefined);
   const { data: allMembers } = useListMembers();
@@ -936,8 +938,104 @@ export default function Projects() {
                 Limpar filtros
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("h-9 ml-auto gap-1.5", showLegend ? "text-primary" : "text-muted-foreground")}
+              onClick={() => setShowLegend((v) => !v)}
+            >
+              <HelpCircle className="h-4 w-4" />
+              Legenda
+            </Button>
           </div>
         </CardHeader>
+
+        {/* Legend panel */}
+        {showLegend && (
+          <div className="border-b px-4 py-4 bg-muted/30 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que significa cada coluna</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3">
+              {/* Farol */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="flex gap-1">
+                    <span className="h-2.5 w-2.5 rounded-full bg-red-500 inline-block" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-yellow-400 inline-block" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-500 inline-block" />
+                  </span>
+                  Farol
+                </p>
+                <p className="text-xs text-muted-foreground">Indicador de saúde automático. <span className="text-green-700 font-medium">Verde</span> = no prazo. <span className="text-yellow-700 font-medium">Amarelo</span> = atenção (prazo próximo ou tarefas paradas). <span className="text-red-700 font-medium">Vermelho</span> = crítico. Clique nas bolinhas acima para filtrar por cor.</p>
+              </div>
+
+              {/* Tarefas */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground">Tarefas</p>
+                <p className="text-xs text-muted-foreground">Progresso das tarefas do projeto. A barra mostra o percentual concluído; o número indica <em>feitas / total</em>. Tarefas sem data ou responsável não são contadas no farol.</p>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground">Status</p>
+                <p className="text-xs text-muted-foreground">Fase atual do projeto. Sequência esperada: <span className="font-medium">A Iniciar → Em Projeto → Em Aprovação → Em Produção → Aguard. Instalação → Em Instalação</span>.</p>
+              </div>
+
+              {/* Prioridade */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground">Prioridade</p>
+                <p className="text-xs text-muted-foreground"><span className="text-red-600 font-medium">Alta</span> (ponto vermelho) = projetos urgentes que devem receber atenção primeiro. <span className="text-amber-600 font-medium">Normal</span> = fluxo padrão.</p>
+              </div>
+
+              {/* Material */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground">Material</p>
+                <p className="text-xs text-muted-foreground">Tipo de material principal: <span className="font-medium">Madeira</span> ou <span className="font-medium">Alumínio</span>. Usado para organizar a produção e filtrar relatórios.</p>
+              </div>
+
+              {/* Datas – separador */}
+              <div className="sm:col-span-2 lg:col-span-3 pt-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Datas</p>
+              </div>
+
+              {/* Bloco Projeto */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-violet-700 flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-sm bg-violet-300 inline-block" /> Bloco Projeto (roxo)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">Início Proj.</span> — quando o projeto começou a ser elaborado.<br />
+                  <span className="font-medium">Fim Est. Proj.</span> — prazo planejado para concluir a elaboração. Fica <span className="text-amber-600 font-medium">amarelo</span> se faltam ≤ 7 dias e <span className="text-red-600 font-medium">vermelho</span> se já passou.<br />
+                  <span className="font-medium">Final Proj.</span> — data real em que a elaboração foi encerrada.
+                </p>
+              </div>
+
+              {/* Bloco Produção */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-sm bg-blue-300 inline-block" /> Bloco Produção (azul)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">Início Prod.</span> — quando a fabricação começou.<br />
+                  <span className="font-medium">Fim Est. Prod.</span> — prazo planejado para concluir a produção. Sinaliza atraso com cor.<br />
+                  <span className="font-medium">Final Prod.</span> — data real de término da fabricação.
+                </p>
+              </div>
+
+              {/* Medição e Instalação */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-2">
+                  <span className="text-amber-700 flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-amber-300 inline-block" /> Medição</span>
+                  <span className="text-emerald-700 flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-emerald-300 inline-block" /> Início Inst.</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-medium">Medição</span> — data da vistoria na obra para liberar a instalação. Sinaliza atraso com cor.<br />
+                  <span className="font-medium">Início Inst.</span> — data prevista para começar a instalação no local.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-2">
