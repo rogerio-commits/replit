@@ -4,7 +4,7 @@ import { projectsTable, membersTable, projectMembersTable, checklistItemsTable, 
 import { requireGestor, requireExecutorOrGestor } from "../middlewares/requireAuth";
 import { logAudit, diffObjects } from "../lib/audit";
 import { runAutomations } from "../lib/automation-engine";
-import { and, eq, inArray, count } from "drizzle-orm";
+import { and, eq, inArray, count, isNull, sql } from "drizzle-orm";
 import {
   ListProjectsQueryParams,
   CreateProjectBody,
@@ -879,7 +879,9 @@ router.delete("/projects/:id/checklist/:itemId", requireExecutorOrGestor, async 
 
 function siteVisitRow(
   visit: typeof siteVisitsTable.$inferSelect,
-  responsibleName: string | null
+  responsibleName: string | null,
+  pendingActionItemsCount = 0,
+  totalActionItemsCount = 0
 ) {
   return {
     id: visit.id,
@@ -892,6 +894,8 @@ function siteVisitRow(
     notes: visit.notes,
     reportFileKey: visit.reportFileKey ?? null,
     createdAt: visit.createdAt.toISOString(),
+    pendingActionItemsCount,
+    totalActionItemsCount,
   };
 }
 
@@ -906,7 +910,34 @@ router.get("/projects/:id/visits", async (req, res) => {
     .where(eq(siteVisitsTable.projectId, params.data.id))
     .orderBy(siteVisitsTable.date);
 
-  return res.json(rows.map(({ visit, memberName }) => siteVisitRow(visit, memberName ?? null)));
+  if (rows.length === 0) return res.json([]);
+
+  const visitIds = rows.map(({ visit }) => visit.id);
+
+  // Count total and pending action items per visit in one query
+  const itemCounts = await db
+    .select({
+      visitId: visitActionItemsTable.visitId,
+      total: count(),
+      pending: sql<number>`count(*) filter (where ${visitActionItemsTable.completedAt} is null)`,
+    })
+    .from(visitActionItemsTable)
+    .where(inArray(visitActionItemsTable.visitId, visitIds))
+    .groupBy(visitActionItemsTable.visitId);
+
+  const countsByVisitId = new Map(itemCounts.map((r) => [r.visitId, r]));
+
+  return res.json(
+    rows.map(({ visit, memberName }) => {
+      const counts = countsByVisitId.get(visit.id);
+      return siteVisitRow(
+        visit,
+        memberName ?? null,
+        counts ? Number(counts.pending) : 0,
+        counts ? Number(counts.total) : 0
+      );
+    })
+  );
 });
 
 router.post("/projects/:id/visits", requireExecutorOrGestor, async (req, res) => {

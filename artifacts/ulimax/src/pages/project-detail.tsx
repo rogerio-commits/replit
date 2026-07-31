@@ -1244,6 +1244,7 @@ export default function ProjectDetail() {
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Responsável</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Objetivo</th>
                     <th className="px-3 py-2 text-left font-medium text-muted-foreground">Observações</th>
+                    <th className="px-3 py-2 text-left font-medium text-muted-foreground">Plano de Ação</th>
                     <th className="px-3 py-2" />
                   </tr>
                 </thead>
@@ -1278,7 +1279,29 @@ export default function ProjectDetail() {
                         <span className="text-muted-foreground text-xs">{visit.notes || "—"}</span>
                       </td>
                       <td className="px-3 py-3">
+                        {visit.totalActionItemsCount > 0 ? (
+                          visit.pendingActionItemsCount === 0 ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 border border-green-200">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Concluído
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 border border-orange-200">
+                              <Clock className="h-3 w-3" />
+                              {visit.pendingActionItemsCount} pendente{visit.pendingActionItemsCount !== 1 ? "s" : ""}
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3">
                         <div className="flex items-center gap-1">
+                          {visit.reportFileKey && (
+                            <span title="Relatório anexado" className="text-muted-foreground">
+                              <Camera className="h-3.5 w-3.5" />
+                            </span>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"

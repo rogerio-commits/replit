@@ -804,6 +804,8 @@ export interface SiteVisit {
   /** @nullable */
   reportFileKey?: string | null;
   createdAt: string;
+  pendingActionItemsCount: number;
+  totalActionItemsCount: number;
 }
 
 export interface SiteVisitWithProject {
