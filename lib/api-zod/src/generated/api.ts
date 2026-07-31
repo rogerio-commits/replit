@@ -1586,7 +1586,9 @@ export const ListAllSiteVisitsResponseItem = zod.object({
   "objective": zod.string(),
   "notes": zod.string().nullish(),
   "reportFileKey": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "pendingActionItemsCount": zod.number(),
+  "totalActionItemsCount": zod.number()
 })
 export const ListAllSiteVisitsResponse = zod.array(ListAllSiteVisitsResponseItem)
 

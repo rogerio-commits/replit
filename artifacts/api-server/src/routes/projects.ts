@@ -1266,18 +1266,40 @@ router.get("/site-visits", async (_req, res) => {
     .leftJoin(membersTable, eq(siteVisitsTable.responsibleId, membersTable.id))
     .orderBy(siteVisitsTable.date);
 
-  return res.json(rows.map(({ visit, projectName, memberName }) => ({
-    id: visit.id,
-    projectId: visit.projectId,
-    projectName,
-    date: visit.date,
-    responsibleId: visit.responsibleId,
-    responsibleName: memberName ?? null,
-    visitors: visit.visitors,
-    objective: visit.objective,
-    notes: visit.notes,
-    createdAt: visit.createdAt.toISOString(),
-  })));
+  if (rows.length === 0) return res.json([]);
+
+  const visitIds = rows.map(({ visit }) => visit.id);
+
+  const itemCounts = await db
+    .select({
+      visitId: visitActionItemsTable.visitId,
+      total: count(),
+      pending: sql<number>`count(*) filter (where ${visitActionItemsTable.completedAt} is null)`,
+    })
+    .from(visitActionItemsTable)
+    .where(inArray(visitActionItemsTable.visitId, visitIds))
+    .groupBy(visitActionItemsTable.visitId);
+
+  const countsByVisitId = new Map(itemCounts.map((r) => [r.visitId, r]));
+
+  return res.json(rows.map(({ visit, projectName, memberName }) => {
+    const counts = countsByVisitId.get(visit.id);
+    return {
+      id: visit.id,
+      projectId: visit.projectId,
+      projectName,
+      date: visit.date,
+      responsibleId: visit.responsibleId,
+      responsibleName: memberName ?? null,
+      visitors: visit.visitors,
+      objective: visit.objective,
+      notes: visit.notes,
+      reportFileKey: visit.reportFileKey ?? null,
+      createdAt: visit.createdAt.toISOString(),
+      pendingActionItemsCount: counts ? Number(counts.pending) : 0,
+      totalActionItemsCount: counts ? Number(counts.total) : 0,
+    };
+  }));
 });
 
 // ── Observations ──────────────────────────────────────────────────────────────

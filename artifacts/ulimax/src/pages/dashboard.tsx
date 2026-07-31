@@ -1123,6 +1123,19 @@ export default function Dashboard() {
                         <Users className="w-2.5 h-2.5 shrink-0" />{v.visitors}
                       </p>
                     </div>
+                    {v.totalActionItemsCount > 0 && (
+                      v.pendingActionItemsCount === 0 ? (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-medium text-green-700 border border-green-200 shrink-0">
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          OK
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 border border-orange-200 shrink-0">
+                          <Clock className="h-2.5 w-2.5" />
+                          {v.pendingActionItemsCount}
+                        </span>
+                      )
+                    )}
                   </div>
                 );
               })}

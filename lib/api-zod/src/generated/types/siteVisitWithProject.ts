@@ -22,4 +22,6 @@ export interface SiteVisitWithProject {
   /** @nullable */
   reportFileKey?: string | null;
   createdAt: string;
+  pendingActionItemsCount: number;
+  totalActionItemsCount: number;
 }
