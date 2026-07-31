@@ -1143,6 +1143,34 @@ const sections: Section[] = [
         <p className="text-sm text-muted-foreground">
           Cada visita registrada no projeto pode ter um <Strong>relatório em PDF</Strong> anexado e um <Strong>plano de ação</Strong> com os pontos levantados durante a vistoria. Abra o detalhe de qualquer visita clicando nela na lista do projeto.
         </p>
+        <Subsection title="Agendar uma visita">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Na página do projeto, localize o cartão <Strong>Visitas na Obra</Strong> e clique em <Strong>+ Registrar Visita</Strong> (botão visível apenas para quem tem permissão de edição).</li>
+            <li>Preencha os campos obrigatórios: <Strong>Data da Visita</Strong>, <Strong>Quem foi à obra</Strong> e <Strong>Objetivo da visita</Strong>.</li>
+            <li>Opcionalmente, selecione um <Strong>Responsável</Strong> (membro do projeto) e adicione <Strong>Observações</Strong> com detalhes adicionais.</li>
+            <li>Clique em <Strong>Registrar Visita</Strong> para salvar — a visita aparece imediatamente na lista do projeto.</li>
+          </ol>
+          <Table
+            headers={["Campo", "Obrigatório", "Descrição"]}
+            rows={[
+              ["Data da Visita", "Sim", "Data em que a visita aconteceu ou está agendada"],
+              ["Quem foi à obra", "Sim", "Nome(s) dos visitantes, separados por vírgula"],
+              ["Objetivo da visita", "Sim", "Finalidade da vistoria (ex.: medição, acompanhamento de obra)"],
+              ["Responsável", "Não", "Membro do projeto designado como responsável pela visita"],
+              ["Observações", "Não", "Informações complementares ou contexto adicional"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Editar ou excluir uma visita">
+          <p className="text-sm text-muted-foreground mb-2">Os dados principais de uma visita (data, visitantes e objetivo) não podem ser alterados após o registro. Caso precise corrigir uma informação, exclua a visita e registre uma nova com os dados corretos.</p>
+          <p className="text-sm text-muted-foreground mb-2">Para <Strong>excluir uma visita</Strong>:</p>
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Na lista de visitas do projeto, localize a visita desejada.</li>
+            <li>Clique no ícone de <Strong>lixeira</Strong> que aparece na última coluna da linha.</li>
+            <li>A exclusão é imediata e permanente — todos os itens do plano de ação vinculados também são removidos.</li>
+          </ol>
+          <Tip>O ícone de lixeira é visível apenas para <Strong>Gestor</Strong>, <Strong>Gestor de Obras</Strong> e <Strong>Executor</Strong> que seja participante do projeto. Observadores não podem excluir visitas.</Tip>
+        </Subsection>
         <Subsection title="Anexar relatório PDF">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Clique na visita desejada para abrir o painel de detalhes.</li>
