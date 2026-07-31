@@ -217,6 +217,19 @@ const sections: Section[] = [
         <Subsection title="Duplicar um projeto">
           <p className="text-sm text-muted-foreground">Dentro de qualquer projeto, clique no botão <Strong>Duplicar Projeto</Strong> no cabeçalho da página de detalhe. Uma cópia é criada com o mesmo nome (prefixada com "Cópia de"), mesmas configurações e todas as tarefas — o status do novo projeto volta para <em>A Iniciar</em>.</p>
         </Subsection>
+        <Subsection title="Arquivar e reativar um projeto">
+          <p className="text-sm text-muted-foreground">Projetos concluídos ou pausados podem ser arquivados para não poluir a lista ativa.</p>
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground mt-2">
+            <li>Abra o projeto e clique em <Strong>Arquivar</Strong> no cabeçalho (disponível para Gestor e Gestor de Obras).</li>
+            <li>O projeto desaparece da lista principal e recebe um banner laranja na página de detalhe.</li>
+            <li>Para ver projetos arquivados, vá à lista de projetos e clique em <Strong>Ver arquivados</Strong>.</li>
+            <li>Para reativar, abra o projeto arquivado e clique em <Strong>Reativar</Strong>.</li>
+          </ol>
+          <p className="text-sm text-muted-foreground mt-2">Arquivar não exclui nada — tarefas, datas e histórico ficam preservados.</p>
+        </Subsection>
+        <Subsection title="Excluir um projeto">
+          <p className="text-sm text-muted-foreground">A exclusão é permanente e irreversível. Por segurança, o sistema exige que você <Strong>digite o nome exato do projeto</Strong> antes de confirmar. Somente gestores podem excluir projetos.</p>
+        </Subsection>
         <Subsection title="Criar projeto a partir de um template">
           <p className="text-sm text-muted-foreground">Acesse <Strong>Templates</Strong> no menu lateral, selecione o template desejado e clique em <Strong>Usar Template</Strong>. Informe o nome do projeto e a data de início — as tarefas do template são criadas automaticamente com os prazos calculados.</p>
         </Subsection>
