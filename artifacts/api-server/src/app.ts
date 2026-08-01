@@ -50,4 +50,40 @@ app.use(
 
 app.use("/api", router);
 
+/**
+ * Registra a causa real das falhas.
+ *
+ * Sem isto, o pino-http só anota "failed with status code 500" e o motivo
+ * verdadeiro — erro de conexão com o banco, credencial inválida, TLS — some.
+ * Diagnosticar produção sem essa informação vira adivinhação.
+ */
+app.use(
+  (
+    err: Error & { code?: string; detail?: string },
+    req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    logger.error(
+      {
+        err: {
+          message: err.message,
+          name: err.name,
+          code: err.code,
+          detail: err.detail,
+          stack: err.stack,
+        },
+        method: req.method,
+        url: req.originalUrl,
+      },
+      "Erro não tratado na requisição",
+    );
+
+    if (res.headersSent) {
+      return;
+    }
+    res.status(500).json({ error: "Internal Server Error" });
+  },
+);
+
 export default app;
