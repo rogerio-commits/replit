@@ -22,6 +22,25 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Separa os vendors grandes e estáveis em chunks próprios: mudam pouco,
+        // então o navegador reaproveita o cache entre deploys em vez de rebaixar
+        // o bundle inteiro a cada alteração de código da aplicação.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("@clerk")) return "clerk";
+          if (id.includes("@tanstack")) return "tanstack";
+          if (
+            id.includes("/react-dom/") ||
+            id.includes("/react/") ||
+            id.includes("/scheduler/")
+          ) {
+            return "react-vendor";
+          }
+        },
+      },
+    },
   },
   server: {
     port,
