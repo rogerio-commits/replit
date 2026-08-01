@@ -30,7 +30,9 @@ router.get("/healthz/db", async (_req, res) => {
     });
   } catch (err) {
     const e = err as Error & { code?: string };
-    res.status(500).json({
+    // Responde 200 mesmo em falha: ferramentas de leitura de URL costumam
+    // descartar o corpo em respostas de erro, e é o corpo que interessa aqui.
+    res.status(200).json({
       ok: false,
       name: e.name,
       code: e.code ?? null,

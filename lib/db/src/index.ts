@@ -22,19 +22,36 @@ const isServerless = Boolean(process.env.VERCEL);
 
 /**
  * Provedores gerenciados (Supabase, Neon, RDS) exigem conexão criptografada,
- * mas o node-postgres só liga TLS se a URL trouxer `sslmode` ou se pedirmos
- * explicitamente. Sem isso a conexão fica pendurada até estourar o tempo
- * limite. Só dispensamos TLS quando o banco é local.
+ * mas o node-postgres só liga TLS se pedirmos explicitamente.
+ *
+ * Sobre a verificação do certificado: o pooler do Supabase é assinado por uma
+ * autoridade própria, ausente da lista de confiáveis do Node — daí o erro
+ * SELF_SIGNED_CERT_IN_CHAIN. Há dois caminhos:
+ *
+ * 1. Definir DATABASE_CA_CERT com o certificado da autoridade do provedor
+ *    (Supabase → Settings → Database → SSL Configuration). O tráfego fica
+ *    criptografado E a identidade do servidor é verificada. Preferível.
+ *
+ * 2. Sem essa variável, seguimos sem verificar a identidade do servidor. O
+ *    tráfego continua criptografado, mas em tese alguém posicionado no meio do
+ *    caminho poderia se passar pelo banco. Entre Vercel e Supabase, ambos na
+ *    mesma infraestrutura, o risco é baixo — mas não é zero.
  */
 const connectionString = process.env.DATABASE_URL;
+const caCert = process.env.DATABASE_CA_CERT;
 const isLocalDatabase = /@(localhost|127\.0\.0\.1|::1)[:/]/.test(
   connectionString,
 );
-const declaresSslMode = /[?&]sslmode=/.test(connectionString);
+
+function sslConfig() {
+  if (isLocalDatabase) return {};
+  if (caCert) return { ssl: { ca: caCert, rejectUnauthorized: true } };
+  return { ssl: { rejectUnauthorized: false } };
+}
 
 export const pool = new Pool({
   connectionString,
-  ...(isLocalDatabase || declaresSslMode ? {} : { ssl: true }),
+  ...sslConfig(),
   ...(isServerless ? { max: 1, idleTimeoutMillis: 10_000 } : {}),
 });
 
