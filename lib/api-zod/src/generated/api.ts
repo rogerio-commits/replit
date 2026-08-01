@@ -502,7 +502,9 @@ export const ListSiteVisitsResponseItem = zod.object({
   "objective": zod.string(),
   "notes": zod.string().nullish(),
   "reportFileKey": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "pendingActionItemsCount": zod.number(),
+  "totalActionItemsCount": zod.number()
 })
 export const ListSiteVisitsResponse = zod.array(ListSiteVisitsResponseItem)
 
@@ -550,7 +552,9 @@ export const AttachVisitReportResponse = zod.object({
   "objective": zod.string(),
   "notes": zod.string().nullish(),
   "reportFileKey": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "pendingActionItemsCount": zod.number(),
+  "totalActionItemsCount": zod.number()
 })
 
 

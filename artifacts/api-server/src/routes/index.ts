@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { requireAuth } from "../middlewares/requireAuth";
 import healthRouter from "./health";
+import cronRouter from "./cron";
 import projectsRouter from "./projects";
 import tasksRouter from "./tasks";
 import membersRouter from "./members";
@@ -33,6 +34,9 @@ import burndownRouter from "./burndown";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+// Chamada pelo agendador da plataforma, autenticada por CRON_SECRET — precisa
+// ficar antes do requireAuth, que exige uma sessão de usuário.
+router.use(cronRouter);
 
 router.use(requireAuth);
 

@@ -10,7 +10,21 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+/**
+ * Em ambiente serverless cada invocação vive pouco e pode haver muitas em
+ * paralelo. Um pool grande por instância esgota as conexões do Postgres
+ * rapidamente, então limitamos a uma conexão e derrubamos as ociosas cedo.
+ *
+ * Importante: a DATABASE_URL deve apontar para o pooler em modo transação
+ * (porta 6543 no Supabase), e não para a conexão direta.
+ */
+const isServerless = Boolean(process.env.VERCEL);
+
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ...(isServerless ? { max: 1, idleTimeoutMillis: 10_000 } : {}),
+});
+
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";

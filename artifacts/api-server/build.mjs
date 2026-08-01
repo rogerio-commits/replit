@@ -10,16 +10,44 @@ globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
+const repoRoot = path.resolve(artifactDir, "..", "..");
+
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
+  // 1. Processo próprio (dev local / container): src/index.ts, com listen().
+  await buildBundle({
+    entry: path.resolve(artifactDir, "src/index.ts"),
+    outdir: distDir,
+    // pino usa workers para os transports; o plugin emite os arquivos irmãos.
+    withPinoPlugin: true,
+  });
+
+  // 2. Função serverless (Vercel): src/serverless.ts, sem listen().
+  //
+  // Sai direto em <raiz>/api/index.mjs porque a Vercel trata cada arquivo de
+  // api/ como uma função. O bundle é autocontido — nenhuma resolução de
+  // dependência acontece no deploy.
+  //
+  // Aqui o plugin do pino fica de fora de propósito: ele emitiria arquivos
+  // irmãos em api/, e cada um viraria uma função. Em produção o logger escreve
+  // direto no stdout, sem transport, então nada se perde.
+  await buildBundle({
+    entry: path.resolve(artifactDir, "src/serverless.ts"),
+    outdir: path.resolve(repoRoot, "api"),
+    withPinoPlugin: false,
+    outFileName: "index",
+  });
+}
+
+async function buildBundle({ entry, outdir, withPinoPlugin, outFileName }) {
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    entryPoints: outFileName ? { [outFileName]: entry } : [entry],
     platform: "node",
     bundle: true,
     format: "esm",
-    outdir: distDir,
+    outdir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
     // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
@@ -102,10 +130,12 @@ async function buildAll() {
       "electron",
     ],
     sourcemap: "linked",
-    plugins: [
-      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
-    ],
+    plugins: withPinoPlugin
+      ? [
+          // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
+          esbuildPluginPino({ transports: ["pino-pretty"] }),
+        ]
+      : [],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {
       js: `import { createRequire as __bannerCrReq } from 'node:module';

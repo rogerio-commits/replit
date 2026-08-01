@@ -75,7 +75,7 @@ export function VisitDetailDialog({ visit, projectId, members, canEdit, open, on
   const visitId = visit?.id ?? 0;
 
   const { data: actionItems, isLoading: itemsLoading } = useListVisitActionItems(projectId, visitId, {
-    query: { enabled: !!visit },
+    query: { enabled: !!visit, queryKey: getListVisitActionItemsQueryKey(projectId, visitId) },
   });
 
   const attachReport = useAttachVisitReport();
@@ -163,7 +163,7 @@ export function VisitDetailDialog({ visit, projectId, members, canEdit, open, on
   if (!visit) return null;
 
   const reportUrl = visit.reportFileKey
-    ? `${BASE}/api/storage/objects${visit.reportFileKey}`
+    ? `${BASE}/api/storage${visit.reportFileKey}`
     : null;
 
   const pendingItems = (actionItems ?? []).filter((i) => !i.completedAt);

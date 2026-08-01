@@ -804,6 +804,8 @@ export interface SiteVisit {
   /** @nullable */
   reportFileKey?: string | null;
   createdAt: string;
+  pendingActionItemsCount: number;
+  totalActionItemsCount: number;
 }
 
 export interface SiteVisitWithProject {
@@ -822,6 +824,8 @@ export interface SiteVisitWithProject {
   /** @nullable */
   reportFileKey?: string | null;
   createdAt: string;
+  pendingActionItemsCount: number;
+  totalActionItemsCount: number;
 }
 
 export interface AttachVisitReportInput {
@@ -869,7 +873,7 @@ export interface ProjectActionItemInput {
   notes?: string;
 }
 
-export interface UpdateProjectActionItemBody {
+export interface UpdateProjectActionItemInput {
   /** @minLength 1 */
   description?: string;
   /** @nullable */

@@ -112,7 +112,7 @@ import type {
   TaskUpdate,
   TimeEntry,
   TimeEntryInput,
-  UpdateProjectActionItemBody,
+  UpdateProjectActionItemInput,
   UploadUrlRequest,
   UploadUrlResponse,
   UserRoleUpdate,
@@ -2585,7 +2585,7 @@ export const getUpdateProjectActionItemUrl = (itemId: number,) => {
  * @summary Update a project action item
  */
 export const updateProjectActionItem = async (itemId: number,
-    updateProjectActionItemBody: UpdateProjectActionItemBody, options?: RequestInit): Promise<ProjectActionItem> => {
+    updateProjectActionItemInput: UpdateProjectActionItemInput, options?: RequestInit): Promise<ProjectActionItem> => {
 
   return customFetch<ProjectActionItem>(getUpdateProjectActionItemUrl(itemId),
   {
@@ -2593,7 +2593,7 @@ export const updateProjectActionItem = async (itemId: number,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      updateProjectActionItemBody,)
+      updateProjectActionItemInput,)
   }
 );}
 
@@ -2601,8 +2601,8 @@ export const updateProjectActionItem = async (itemId: number,
 
 
 export const getUpdateProjectActionItemMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemBody>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemInput>}, TContext> => {
 
 const mutationKey = ['updateProjectActionItem'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2614,7 +2614,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectActionItem>>, {itemId: number;data: BodyType<UpdateProjectActionItemBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectActionItem>>, {itemId: number;data: BodyType<UpdateProjectActionItemInput>}> = (props) => {
           const {itemId,data} = props ?? {};
 
           return  updateProjectActionItem(itemId,data,requestOptions)
@@ -2628,18 +2628,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type UpdateProjectActionItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectActionItem>>>
-    export type UpdateProjectActionItemMutationBody = BodyType<UpdateProjectActionItemBody>
+    export type UpdateProjectActionItemMutationBody = BodyType<UpdateProjectActionItemInput>
     export type UpdateProjectActionItemMutationError = ErrorType<unknown>
 
     /**
  * @summary Update a project action item
  */
 export const useUpdateProjectActionItem = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectActionItem>>, TError,{itemId: number;data: BodyType<UpdateProjectActionItemInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof updateProjectActionItem>>,
         TError,
-        {itemId: number;data: BodyType<UpdateProjectActionItemBody>},
+        {itemId: number;data: BodyType<UpdateProjectActionItemInput>},
         TContext
       > => {
       return useMutation(getUpdateProjectActionItemMutationOptions(options));
