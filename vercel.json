@@ -1,22 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "artifacts/ulimax/dist/public",
+  "buildCommand": "pnpm run vercel-build",
   "installCommand": "pnpm install --frozen-lockfile",
-  "framework": null,
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/daily-reminders",
-      "schedule": "0 10 * * *"
-    }
-  ],
-  "functions": {
-    "api/index.mjs": {
-      "maxDuration": 60
-    }
-  }
+  "framework": null
 }

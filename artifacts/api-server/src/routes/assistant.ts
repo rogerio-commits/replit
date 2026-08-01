@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, tasksTable, projectsTable, membersTable } from "@workspace/db";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { getOpenAi } from "@workspace/integrations-openai-ai-server";
 import { AssistantChatBody } from "@workspace/api-zod";
 import { requireGestor } from "../middlewares/requireAuth";
 import { spToday } from "../lib/daily-reminders";
@@ -169,7 +169,7 @@ router.post("/assistant/chat", requireGestor, async (req, res) => {
 
   try {
     const snapshot = await buildSnapshot();
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAi().chat.completions.create({
       model: MODEL,
       max_completion_tokens: 8192,
       messages: [

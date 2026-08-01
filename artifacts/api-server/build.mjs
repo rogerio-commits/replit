@@ -26,16 +26,15 @@ async function buildAll() {
 
   // 2. Função serverless (Vercel): src/serverless.ts, sem listen().
   //
-  // Sai direto em <raiz>/api/index.mjs porque a Vercel trata cada arquivo de
-  // api/ como uma função. O bundle é autocontido — nenhuma resolução de
-  // dependência acontece no deploy.
+  // O bundle é autocontido — nenhuma resolução de dependência acontece no
+  // deploy. O script scripts/build-vercel.mjs o empacota depois no formato da
+  // Build Output API.
   //
   // Aqui o plugin do pino fica de fora de propósito: ele emitiria arquivos
-  // irmãos em api/, e cada um viraria uma função. Em produção o logger escreve
-  // direto no stdout, sem transport, então nada se perde.
+  // irmãos, desnecessários em produção, onde o logger escreve direto no stdout.
   await buildBundle({
     entry: path.resolve(artifactDir, "src/serverless.ts"),
-    outdir: path.resolve(repoRoot, "api"),
+    outdir: path.resolve(distDir, "serverless"),
     withPinoPlugin: false,
     outFileName: "index",
   });
