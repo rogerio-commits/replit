@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, type ReactNode } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
@@ -13,28 +13,35 @@ import { Loader2 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { useAppUser } from "@/hooks/useAppUser";
 import { canAccessRoute, homeForRole } from "@/lib/access";
-import Dashboard from "@/pages/dashboard";
-import Projects from "@/pages/projects";
-import ProjectDetail from "@/pages/project-detail";
-import Tasks from "@/pages/tasks";
-import Members from "@/pages/members";
-import Kanban from "@/pages/kanban";
-import Calendario from "@/pages/calendario";
-import Checklist from "@/pages/checklist";
-import Ajuda from "@/pages/ajuda";
-import Audit from "@/pages/audit";
-import MeuDia from "@/pages/meu-dia";
-import Templates from "@/pages/templates";
-import Automacao from "@/pages/automacao";
-import Portfolio from "@/pages/portfolio";
-import CentralObra from "@/pages/central-obra";
-import CamposPersonalizados from "@/pages/campos-personalizados";
-import Reuniao from "@/pages/reuniao";
-import Desempenho from "@/pages/desempenho";
-import Assistente from "@/pages/assistente";
-import RelatorioProjeto from "@/pages/relatorio-projeto";
+
+// Páginas de entrada (públicas e leves) ficam no bundle inicial.
 import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
+
+// As páginas autenticadas viram chunks sob demanda: cada rota só baixa o seu
+// código quando é visitada. Isso tira do carregamento inicial bibliotecas
+// pesadas e específicas de página (jspdf/html2canvas no relatório, @uppy nos
+// anexos, @dnd-kit no kanban, react-markdown no assistente).
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Projects = lazy(() => import("@/pages/projects"));
+const ProjectDetail = lazy(() => import("@/pages/project-detail"));
+const Tasks = lazy(() => import("@/pages/tasks"));
+const Members = lazy(() => import("@/pages/members"));
+const Kanban = lazy(() => import("@/pages/kanban"));
+const Calendario = lazy(() => import("@/pages/calendario"));
+const Checklist = lazy(() => import("@/pages/checklist"));
+const Ajuda = lazy(() => import("@/pages/ajuda"));
+const Audit = lazy(() => import("@/pages/audit"));
+const MeuDia = lazy(() => import("@/pages/meu-dia"));
+const Templates = lazy(() => import("@/pages/templates"));
+const Automacao = lazy(() => import("@/pages/automacao"));
+const Portfolio = lazy(() => import("@/pages/portfolio"));
+const CentralObra = lazy(() => import("@/pages/central-obra"));
+const CamposPersonalizados = lazy(() => import("@/pages/campos-personalizados"));
+const Reuniao = lazy(() => import("@/pages/reuniao"));
+const Desempenho = lazy(() => import("@/pages/desempenho"));
+const Assistente = lazy(() => import("@/pages/assistente"));
+const RelatorioProjeto = lazy(() => import("@/pages/relatorio-projeto"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -224,6 +231,7 @@ function ProtectedRoutes() {
       <Show when="signed-in">
         <Layout>
           <RoleGate>
+          <Suspense fallback={<RoleLoading />}>
           <Switch>
             <Route path="/dashboard" component={Dashboard} />
             <Route path="/projects" component={Projects} />
@@ -253,6 +261,7 @@ function ProtectedRoutes() {
             <Route path="/access"><Redirect to="/members" /></Route>
             <Route component={NotFound} />
           </Switch>
+          </Suspense>
           </RoleGate>
         </Layout>
       </Show>
