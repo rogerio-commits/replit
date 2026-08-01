@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
 import { requireAuth } from "../middlewares/requireAuth";
-import healthRouter from "./health";
 import cronRouter from "./cron";
 import projectsRouter from "./projects";
 import tasksRouter from "./tasks";
@@ -33,7 +32,8 @@ import burndownRouter from "./burndown";
 
 const router: IRouter = Router();
 
-router.use(healthRouter);
+// O health check é montado direto no app, antes do clerkMiddleware (ver app.ts),
+// para responder mesmo quando a autenticação está indisponível.
 // Chamada pelo agendador da plataforma, autenticada por CRON_SECRET — precisa
 // ficar antes do requireAuth, que exige uma sessão de usuário.
 router.use(cronRouter);

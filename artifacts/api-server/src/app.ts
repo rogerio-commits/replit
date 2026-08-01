@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import router from "./routes";
+import healthRouter from "./routes/health";
 import { logger } from "./lib/logger";
 import {
   CLERK_PROXY_PATH,
@@ -38,6 +39,16 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+/**
+ * Health check público — montado antes do clerkMiddleware de propósito.
+ *
+ * Se ficar depois da autenticação, uma chave da Clerk inválida ou ausente faz
+ * o middleware lançar e o endpoint responde 500, derrubando o monitor de uptime
+ * justamente quando mais se precisa dele. A checagem de saúde não depende de
+ * sessão de usuário, então roda fora da cadeia autenticada.
+ */
+app.use("/api", healthRouter);
 
 app.use(
   clerkMiddleware((req) => ({
