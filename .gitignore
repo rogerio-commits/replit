@@ -48,5 +48,5 @@ Thumbs.db
 .cache/
 .local/
 
-# Build artifact da função serverless (gerado por artifacts/api-server/build.mjs)
-/api/
+# Saída de build da Vercel (Build Output API)
+/.vercel
