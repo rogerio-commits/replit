@@ -79,6 +79,7 @@ import type {
   ProjectActionItemInput,
   ProjectActionPlan,
   ProjectActionPlanInput,
+  ProjectActionPlanSummary,
   ProjectApprovalInput,
   ProjectInput,
   ProjectMaterial,
@@ -5376,6 +5377,83 @@ export function useListChaseItems<TData = Awaited<ReturnType<typeof listChaseIte
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListChaseItemsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListActionPlanSummariesUrl = () => {
+
+
+
+
+  return `/api/action-plans/by-project`
+}
+
+/**
+ * @summary Action plans consolidated per project (progress, open, overdue, next due)
+ */
+export const listActionPlanSummaries = async ( options?: RequestInit): Promise<ProjectActionPlanSummary[]> => {
+
+  return customFetch<ProjectActionPlanSummary[]>(getListActionPlanSummariesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListActionPlanSummariesQueryKey = () => {
+    return [
+    `/api/action-plans/by-project`
+    ] as const;
+    }
+
+
+export const getListActionPlanSummariesQueryOptions = <TData = Awaited<ReturnType<typeof listActionPlanSummaries>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActionPlanSummaries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListActionPlanSummariesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listActionPlanSummaries>>> = ({ signal }) => listActionPlanSummaries({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listActionPlanSummaries>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListActionPlanSummariesQueryResult = NonNullable<Awaited<ReturnType<typeof listActionPlanSummaries>>>
+export type ListActionPlanSummariesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Action plans consolidated per project (progress, open, overdue, next due)
+ */
+
+export function useListActionPlanSummaries<TData = Awaited<ReturnType<typeof listActionPlanSummaries>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listActionPlanSummaries>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListActionPlanSummariesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

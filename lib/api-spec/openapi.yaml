@@ -1494,6 +1494,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/ChaseItem"
 
+  /action-plans/by-project:
+    get:
+      operationId: listActionPlanSummaries
+      tags: [dashboard]
+      summary: Action plans consolidated per project (progress, open, overdue, next due)
+      responses:
+        "200":
+          description: Per-project action plan summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectActionPlanSummary"
+
   /me:
     get:
       operationId: getMe
@@ -3235,6 +3250,32 @@ components:
               type: integer
             activeProjects:
               type: integer
+
+    PlanBreakdown:
+      type: object
+      required: [id, title, total, done, open]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        total: { type: integer }
+        done: { type: integer }
+        open: { type: integer }
+
+    ProjectActionPlanSummary:
+      type: object
+      required: [projectId, totalItems, doneItems, openItems, overdueItems, plans]
+      properties:
+        projectId: { type: integer }
+        projectName: { type: ["string", "null"] }
+        totalItems: { type: integer }
+        doneItems: { type: integer }
+        openItems: { type: integer }
+        overdueItems: { type: integer }
+        nextDueDate: { type: ["string", "null"] }
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanBreakdown"
 
     ChaseItem:
       type: object

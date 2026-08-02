@@ -583,6 +583,27 @@ export interface MetricsTrends {
   current: MetricsTrendsCurrent;
 }
 
+export interface PlanBreakdown {
+  id: number;
+  title: string;
+  total: number;
+  done: number;
+  open: number;
+}
+
+export interface ProjectActionPlanSummary {
+  projectId: number;
+  /** @nullable */
+  projectName?: string | null;
+  totalItems: number;
+  doneItems: number;
+  openItems: number;
+  overdueItems: number;
+  /** @nullable */
+  nextDueDate?: string | null;
+  plans: PlanBreakdown[];
+}
+
 export type ChaseItemSource = typeof ChaseItemSource[keyof typeof ChaseItemSource];
 
 
