@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   useListChaseItems,
   useListAllSiteVisits,
@@ -9,8 +9,10 @@ import type { ChaseItem, Project } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   MapPinned, ClipboardList, CalendarClock, AlertTriangle,
-  CheckSquare, ChevronRight, HardHat,
+  CheckSquare, ChevronRight, HardHat, CalendarPlus,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { NewVisitDialog } from "@/components/new-visit-dialog";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 import { overdueObraDates } from "@/lib/obra-dates";
@@ -31,6 +33,7 @@ function fmtBr(iso: string): string {
 }
 
 export default function PainelObra() {
+  const [, navigate] = useLocation();
   const { data: chase, isLoading: l1 } = useListChaseItems();
   const { data: visits, isLoading: l2 } = useListAllSiteVisits();
   const { data: projects, isLoading: l3 } = useListProjects();
@@ -145,12 +148,23 @@ export default function PainelObra() {
               empty="Todas as obras em instalação têm visita em dia. 👏"
             >
               {data.precisamVisita.slice(0, 6).map(({ p, since }) => (
-                <Row key={p.id} href={`/projects/${p.id}`}
-                  title={p.name}
-                  sub={`${projectStatusLabel(p.status)} · ${since === undefined ? "nunca visitada" : `última visita há ${since}d`}`}
-                  badge={since === undefined ? "agendar" : `${since}d`}
-                  badgeTone="amber"
-                />
+                <div key={p.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
+                  <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/projects/${p.id}`)}>
+                    <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {projectStatusLabel(p.status)} · {since === undefined ? "nunca visitada" : `última visita há ${since}d`}
+                    </p>
+                  </div>
+                  <NewVisitDialog
+                    projectId={p.id}
+                    projectName={p.name}
+                    trigger={
+                      <Button size="sm" variant="outline" className="shrink-0 h-7 gap-1 text-xs">
+                        <CalendarPlus className="h-3.5 w-3.5" /> Agendar
+                      </Button>
+                    }
+                  />
+                </div>
               ))}
             </Panel>
 
