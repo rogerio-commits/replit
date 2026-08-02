@@ -3,7 +3,9 @@ import { Link } from "wouter";
 import { useListAllSiteVisits, useListProjects } from "@workspace/api-client-react";
 import type { Project } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarClock, MapPin, ChevronRight, HardHat, AlertTriangle } from "lucide-react";
+import { CalendarClock, MapPin, ChevronRight, HardHat, AlertTriangle, CalendarPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { NewVisitDialog } from "@/components/new-visit-dialog";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 import { overdueObraDates } from "@/lib/obra-dates";
@@ -77,14 +79,23 @@ export default function Agenda() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <CalendarClock className="h-7 w-7 text-primary" />
-          Agenda de Obra
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Próximas visitas e datas-chave de todas as obras, em ordem.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <CalendarClock className="h-7 w-7 text-primary" />
+            Agenda de Obra
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Próximas visitas e datas-chave de todas as obras, em ordem.
+          </p>
+        </div>
+        <NewVisitDialog
+          trigger={
+            <Button className="shrink-0 gap-1.5">
+              <CalendarPlus className="h-4 w-4" /> Nova visita
+            </Button>
+          }
+        />
       </div>
 
       {loading ? (
