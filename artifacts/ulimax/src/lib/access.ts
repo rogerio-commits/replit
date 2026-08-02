@@ -26,6 +26,7 @@ const EXECUTOR_PREFIXES = [
 const GESTOR_OBRAS_PREFIXES = [
   "/obra",
   "/cobrancas",
+  "/agenda",
   "/meu-dia",
   "/tasks",
   "/kanban",

@@ -29,6 +29,7 @@ import {
   TrendingUp,
   HardHat,
   ClipboardCheck,
+  CalendarClock,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useClerk, useUser } from "@clerk/react";
@@ -109,6 +110,7 @@ export function Layout({ children }: LayoutProps) {
               items: [
                 { href: "/obra", label: "Central da Obra", icon: HardHat, highlight: true },
                 { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
+                { href: "/agenda", label: "Agenda de Obra", icon: CalendarClock },
                 { href: "/meu-dia", label: "Meu Dia", icon: Sun },
                 { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
@@ -162,6 +164,7 @@ export function Layout({ children }: LayoutProps) {
                 items: [
                   { href: "/obra", label: "Central da Obra", icon: HardHat },
                   { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
+                  { href: "/agenda", label: "Agenda de Obra", icon: CalendarClock },
                   { href: "/checklist", label: "Instalações", icon: ClipboardList },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
                 ],
