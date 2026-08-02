@@ -38,6 +38,8 @@ import {
   projectStatusLabel,
   projectStatusChip,
 } from "@/lib/project-status";
+import { ActionPlanBadge } from "@/components/action-plan-badge";
+import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 
 type Project = ListProjectsQueryResult[number];
 type TaskItem = ListTasksQueryResult[number];
@@ -137,6 +139,7 @@ function Th({ col, label, sortCol, sortDir, onSort, className }: {
 
 export default function Portfolio() {
   const [, navigate] = useLocation();
+  const planMap = useActionPlanMap();
   const { data: projects, isLoading: loadingProjects } = useListProjects();
   const { data: tasks, isLoading: loadingTasks } = useListTasks();
   const { data: members } = useListMembers();
@@ -436,6 +439,9 @@ export default function Portfolio() {
                                 {r.project.materialType === "aluminio" ? "Alumínio" : "Madeira"}
                               </span>
                             )}
+                            <div className="mt-1">
+                              <ActionPlanBadge projectId={r.project.id} projectName={r.project.name} summary={planMap.get(r.project.id)} />
+                            </div>
                           </td>
                           <td className="px-4 py-3">
                             <span

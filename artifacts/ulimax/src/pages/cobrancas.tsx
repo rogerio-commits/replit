@@ -9,6 +9,8 @@ import {
 import { ClipboardCheck, MapPin, ClipboardList, User, ChevronRight, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
+import { ActionPlanBadge } from "@/components/action-plan-badge";
+import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 
 // Monta a mensagem de cobrança para o WhatsApp. Sem número salvo, usamos
 // wa.me sem destinatário: o gestor escolhe o contato e envia o texto pronto.
@@ -63,6 +65,7 @@ function fmtDue(dueDate: string | null | undefined): string {
 
 export default function Cobrancas() {
   const [, navigate] = useLocation();
+  const planMap = useActionPlanMap();
   const { data: items, isLoading } = useListChaseItems();
   const [prazo, setPrazo] = useState<string>("abertas");
   const [responsavel, setResponsavel] = useState<string>("all");
@@ -265,7 +268,9 @@ export default function Cobrancas() {
                 className="flex items-center gap-3 px-4 py-2.5 bg-muted/30 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => navigate(`/projects/${g.projectId}`)}
               >
-                <p className="text-sm font-semibold text-foreground truncate flex-1">{g.projectName}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{g.projectName}</p>
+                <ActionPlanBadge projectId={g.projectId} projectName={g.projectName} summary={planMap.get(g.projectId)} />
+                <div className="flex-1" />
                 {g.vencidas > 0 && (
                   <span className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40">
                     {g.vencidas} vencida{g.vencidas > 1 ? "s" : ""}
