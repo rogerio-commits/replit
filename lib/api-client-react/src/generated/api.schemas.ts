@@ -562,6 +562,25 @@ export interface DashboardSummary {
   tasksByPriority: DashboardSummaryTasksByPriority;
 }
 
+export interface MetricsTrendPoint {
+  date: string;
+  openTasks: number;
+  overdueTasks: number;
+  tasksCompleted: number;
+  activeProjects: number;
+}
+
+export type MetricsTrendsCurrent = {
+  openTasks: number;
+  overdueTasks: number;
+  activeProjects: number;
+};
+
+export interface MetricsTrends {
+  points: MetricsTrendPoint[];
+  current: MetricsTrendsCurrent;
+}
+
 export type ActivityItemType = typeof ActivityItemType[keyof typeof ActivityItemType];
 
 

@@ -68,6 +68,7 @@ import type {
   MemberInput,
   MemberProductivity,
   MemberUpdate,
+  MetricsTrends,
   Milestone,
   MilestoneInput,
   ObraDiaryEntry,
@@ -5220,6 +5221,83 @@ export function useGetYesterdaySummary<TData = Awaited<ReturnType<typeof getYest
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetYesterdaySummaryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMetricsTrendsUrl = () => {
+
+
+
+
+  return `/api/dashboard/trends`
+}
+
+/**
+ * @summary Get historical metric snapshots plus current values for trend deltas
+ */
+export const getMetricsTrends = async ( options?: RequestInit): Promise<MetricsTrends> => {
+
+  return customFetch<MetricsTrends>(getGetMetricsTrendsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMetricsTrendsQueryKey = () => {
+    return [
+    `/api/dashboard/trends`
+    ] as const;
+    }
+
+
+export const getGetMetricsTrendsQueryOptions = <TData = Awaited<ReturnType<typeof getMetricsTrends>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMetricsTrends>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMetricsTrendsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMetricsTrends>>> = ({ signal }) => getMetricsTrends({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMetricsTrends>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMetricsTrendsQueryResult = NonNullable<Awaited<ReturnType<typeof getMetricsTrends>>>
+export type GetMetricsTrendsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get historical metric snapshots plus current values for trend deltas
+ */
+
+export function useGetMetricsTrends<TData = Awaited<ReturnType<typeof getMetricsTrends>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMetricsTrends>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMetricsTrendsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -1466,6 +1466,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/YesterdaySummary"
 
+  /dashboard/trends:
+    get:
+      operationId: getMetricsTrends
+      tags: [dashboard]
+      summary: Get historical metric snapshots plus current values for trend deltas
+      responses:
+        "200":
+          description: Metric trends
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsTrends"
+
   /me:
     get:
       operationId: getMe
@@ -3171,6 +3184,40 @@ components:
             medium: { type: integer }
             high: { type: integer }
           required: [low, medium, high]
+
+    MetricsTrendPoint:
+      type: object
+      required: [date, openTasks, overdueTasks, tasksCompleted, activeProjects]
+      properties:
+        date:
+          type: string
+        openTasks:
+          type: integer
+        overdueTasks:
+          type: integer
+        tasksCompleted:
+          type: integer
+        activeProjects:
+          type: integer
+
+    MetricsTrends:
+      type: object
+      required: [points, current]
+      properties:
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricsTrendPoint"
+        current:
+          type: object
+          required: [openTasks, overdueTasks, activeProjects]
+          properties:
+            openTasks:
+              type: integer
+            overdueTasks:
+              type: integer
+            activeProjects:
+              type: integer
 
     ActivityItem:
       type: object

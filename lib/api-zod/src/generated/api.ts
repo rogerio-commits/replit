@@ -1406,6 +1406,25 @@ export const GetYesterdaySummaryResponse = zod.object({
 
 
 /**
+ * @summary Get historical metric snapshots plus current values for trend deltas
+ */
+export const GetMetricsTrendsResponse = zod.object({
+  "points": zod.array(zod.object({
+  "date": zod.string(),
+  "openTasks": zod.number(),
+  "overdueTasks": zod.number(),
+  "tasksCompleted": zod.number(),
+  "activeProjects": zod.number()
+})),
+  "current": zod.object({
+  "openTasks": zod.number(),
+  "overdueTasks": zod.number(),
+  "activeProjects": zod.number()
+})
+})
+
+
+/**
  * @summary Get current authenticated user
  */
 export const GetMeResponse = zod.object({

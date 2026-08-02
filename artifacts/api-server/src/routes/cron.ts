@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { runDailyRemindersIfDue } from "../lib/scheduler";
+import { recordDailyMetricsSnapshot } from "../lib/metrics-snapshot";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -30,6 +31,14 @@ router.get("/cron/daily-reminders", async (req, res) => {
   if (req.headers.authorization !== `Bearer ${secret}`) {
     res.status(401).json({ error: "Unauthorized" });
     return;
+  }
+
+  // Snapshot de métricas do dia — independente da cobrança: se um falhar, o
+  // outro ainda roda. Idempotente pela data, então repetir é inofensivo.
+  try {
+    await recordDailyMetricsSnapshot(logger);
+  } catch (err) {
+    logger.error({ err }, "Cron: falha ao gravar snapshot de métricas");
   }
 
   try {

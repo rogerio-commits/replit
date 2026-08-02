@@ -35,6 +35,7 @@ import { projectStatusLabel } from "@/lib/project-status";
 import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
 import { useToast } from "@/hooks/use-toast";
 import { OnboardingBanner } from "@/components/onboarding-banner";
+import { TrendsStrip } from "@/components/trends-strip";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
@@ -574,6 +575,9 @@ export default function Dashboard() {
           </Link>
         </div>
       )}
+
+      {/* ── Tendência da semana ── */}
+      {!loading && <TrendsStrip />}
 
       {/* ── Onde focar agora ── */}
       {!loading && !isTasksLoading && (projects?.length ?? 0) > 0 && (
