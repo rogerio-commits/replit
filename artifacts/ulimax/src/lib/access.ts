@@ -25,6 +25,7 @@ const EXECUTOR_PREFIXES = [
 // administrativas (equipe, templates, automações, auditoria etc.).
 const GESTOR_OBRAS_PREFIXES = [
   "/obra",
+  "/cobrancas",
   "/meu-dia",
   "/tasks",
   "/kanban",
