@@ -110,12 +110,21 @@ export default function PainelObra() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          <HardHat className="h-7 w-7 text-primary" />
-          Painel da Obra
-        </h1>
-        <p className="text-muted-foreground mt-1">O que precisa da sua atenção hoje — num olhar.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <HardHat className="h-7 w-7 text-primary" />
+            Painel da Obra
+          </h1>
+          <p className="text-muted-foreground mt-1">O que precisa da sua atenção hoje — num olhar.</p>
+        </div>
+        <NewVisitDialog
+          trigger={
+            <Button className="shrink-0 gap-1.5">
+              <CalendarPlus className="h-4 w-4" /> Nova visita
+            </Button>
+          }
+        />
       </div>
 
       {loading ? (

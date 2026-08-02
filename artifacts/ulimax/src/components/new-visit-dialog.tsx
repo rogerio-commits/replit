@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   useCreateSiteVisit,
   useListMembers,
+  useListProjects,
   getListAllSiteVisitsQueryKey,
   getListSiteVisitsQueryKey,
 } from "@workspace/api-client-react";
@@ -42,15 +43,20 @@ export function NewVisitDialog({
   projectName,
   trigger,
 }: {
-  projectId: number;
+  /** Quando ausente, o diálogo mostra um seletor de obra ("Nova visita" geral). */
+  projectId?: number;
   projectName?: string;
   trigger: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [pickedProject, setPickedProject] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: members } = useListMembers();
+  const { data: projects } = useListProjects();
   const createSiteVisit = useCreateSiteVisit();
+
+  const effectiveProjectId = projectId ?? (pickedProject ? Number(pickedProject) : undefined);
 
   const form = useForm<VisitFormValues>({
     resolver: zodResolver(visitSchema),
@@ -58,9 +64,13 @@ export function NewVisitDialog({
   });
 
   const onSubmit = (data: VisitFormValues) => {
+    if (!effectiveProjectId) {
+      toast({ title: "Escolha a obra", variant: "destructive" });
+      return;
+    }
     createSiteVisit.mutate(
       {
-        id: projectId,
+        id: effectiveProjectId,
         data: {
           date: data.date,
           visitors: data.visitors,
@@ -76,9 +86,10 @@ export function NewVisitDialog({
         onSuccess: () => {
           toast({ title: "Visita agendada" });
           queryClient.invalidateQueries({ queryKey: getListAllSiteVisitsQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListSiteVisitsQueryKey(projectId) });
+          queryClient.invalidateQueries({ queryKey: getListSiteVisitsQueryKey(effectiveProjectId) });
           setOpen(false);
           form.reset({ date: "", responsibleId: "none", visitors: "", objective: "", notes: "" });
+          setPickedProject("");
         },
         onError: () => toast({ title: "Erro ao agendar visita", variant: "destructive" }),
       },
@@ -90,10 +101,25 @@ export function NewVisitDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>Agendar visita{projectName ? ` — ${projectName}` : ""}</DialogTitle>
+          <DialogTitle>{projectName ? `Agendar visita — ${projectName}` : "Nova visita"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {!projectId && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Obra</label>
+                <Select value={pickedProject} onValueChange={setPickedProject}>
+                  <SelectTrigger><SelectValue placeholder="Escolha a obra" /></SelectTrigger>
+                  <SelectContent>
+                    {(projects ?? [])
+                      .filter((p) => !p.archived)
+                      .map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <FormField control={form.control} name="date" render={({ field }) => (
               <FormItem>
                 <FormLabel>Data</FormLabel>
