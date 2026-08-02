@@ -16,6 +16,7 @@ export const tasksTable = pgTable("tasks", {
   priority: taskPriorityEnum("priority").notNull().default("medium"),
   assignedTo: integer("assigned_to"),
   dueDate: text("due_date"),
+  startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
   recurrence: taskRecurrenceEnum("recurrence").notNull().default("none"),
   recurrenceEndDate: text("recurrence_end_date"),

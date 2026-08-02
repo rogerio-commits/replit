@@ -357,6 +357,8 @@ export interface Task {
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */
+  startedAt?: string | null;
+  /** @nullable */
   completedAt?: string | null;
   recurrence?: TaskRecurrence;
   /** @nullable */

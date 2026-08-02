@@ -101,6 +101,7 @@ function taskRow(
     assigneeName: row.memberName ?? null,
     projectName: row.projectName ?? null,
     dueDate: row.task.dueDate ?? null,
+    startedAt: row.task.startedAt ? row.task.startedAt.toISOString() : null,
     completedAt: row.task.completedAt ? row.task.completedAt.toISOString() : null,
     recurrence: row.task.recurrence ?? "none",
     recurrenceEndDate: row.task.recurrenceEndDate ?? null,
@@ -251,6 +252,10 @@ router.post("/tasks/bulk-update", requireExecutorOrGestor, async (req, res) => {
     updateData.status = status;
     if (status === "done") updateData.completedAt = new Date();
     else updateData.completedAt = null;
+    // Registra o início na primeira saída de "todo", sem sobrescrever o já marcado.
+    if (status !== "todo") {
+      updateData.startedAt = sql`COALESCE(${tasksTable.startedAt}, now())`;
+    }
   }
   if (priority !== undefined) updateData.priority = priority;
   if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
@@ -331,6 +336,16 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
     .limit(1);
   if (!previousTask) return res.status(404).json({ error: "Not found" });
   const previousAssignee = previousTask.assignedTo;
+
+  // Marca o início real do trabalho na primeira vez que a tarefa sai de "todo".
+  // Preserva o valor original em reaberturas — o tempo de ciclo conta do começo.
+  if (
+    body.data.status !== undefined &&
+    body.data.status !== "todo" &&
+    previousTask.startedAt == null
+  ) {
+    updateData.startedAt = new Date();
+  }
 
   const [task] = await db
     .update(tasksTable)

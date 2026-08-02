@@ -2965,6 +2965,8 @@ components:
           type: ["string", "null"]
         dueDate:
           type: ["string", "null"]
+        startedAt:
+          type: ["string", "null"]
         completedAt:
           type: ["string", "null"]
         recurrence:
