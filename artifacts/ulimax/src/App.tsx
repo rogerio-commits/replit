@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 
 import { Layout } from "@/components/layout";
 import { useAppUser } from "@/hooks/useAppUser";
+import { useEffectiveRole } from "@/hooks/useViewAs";
 import { canAccessRoute, homeForRole } from "@/lib/access";
 
 // Páginas de entrada (públicas e leves) ficam no bundle inicial.
@@ -196,18 +197,20 @@ function RoleLoading() {
 }
 
 function RoleHome() {
-  const { data: me, isLoading } = useAppUser();
+  const { isLoading } = useAppUser();
+  const role = useEffectiveRole();
   if (isLoading) return <RoleLoading />;
   // Se o perfil não carregar (erro), cai no dashboard — os dados continuam protegidos pelo servidor
-  return <Redirect to={homeForRole(me?.role ?? "gestor")} replace />;
+  return <Redirect to={homeForRole(role ?? "gestor")} replace />;
 }
 
 function RoleGate({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { data: me, isLoading } = useAppUser();
+  const role = useEffectiveRole();
   if (isLoading) return <RoleLoading />;
-  if (me && !canAccessRoute(me.role, location)) {
-    return <Redirect to={homeForRole(me.role)} replace />;
+  if (me && !canAccessRoute(role, location)) {
+    return <Redirect to={homeForRole(role)} replace />;
   }
   return <>{children}</>;
 }
