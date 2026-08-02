@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { fetchOpenChaseItems } from "../lib/chase-items";
+import { fetchActionPlanSummaryByProject } from "../lib/action-plan-summary";
 
 const router: IRouter = Router();
 
@@ -15,6 +16,17 @@ router.get("/chase-items", async (_req, res) => {
   const items = await fetchOpenChaseItems();
   const sanitized = items.map(({ responsibleEmail: _drop, ...rest }) => rest);
   return res.json(sanitized);
+});
+
+/**
+ * GET /action-plans/by-project
+ *
+ * Planos de ação consolidados por projeto: progresso, itens abertos, vencidos e
+ * o próximo vencimento. Serve à visão do gestor de obras de cobrar o plano por
+ * obra, não item por item.
+ */
+router.get("/action-plans/by-project", async (_req, res) => {
+  return res.json(await fetchActionPlanSummaryByProject());
 });
 
 export default router;

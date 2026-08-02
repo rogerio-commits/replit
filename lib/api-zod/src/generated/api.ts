@@ -1448,6 +1448,28 @@ export const ListChaseItemsResponse = zod.array(ListChaseItemsResponseItem)
 
 
 /**
+ * @summary Action plans consolidated per project (progress, open, overdue, next due)
+ */
+export const ListActionPlanSummariesResponseItem = zod.object({
+  "projectId": zod.number(),
+  "projectName": zod.string().nullish(),
+  "totalItems": zod.number(),
+  "doneItems": zod.number(),
+  "openItems": zod.number(),
+  "overdueItems": zod.number(),
+  "nextDueDate": zod.string().nullish(),
+  "plans": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "total": zod.number(),
+  "done": zod.number(),
+  "open": zod.number()
+}))
+})
+export const ListActionPlanSummariesResponse = zod.array(ListActionPlanSummariesResponseItem)
+
+
+/**
  * @summary Get current authenticated user
  */
 export const GetMeResponse = zod.object({

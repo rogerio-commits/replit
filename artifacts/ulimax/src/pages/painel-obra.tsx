@@ -4,6 +4,7 @@ import {
   useListChaseItems,
   useListAllSiteVisits,
   useListProjects,
+  useListActionPlanSummaries,
 } from "@workspace/api-client-react";
 import type { ChaseItem, Project } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,7 +38,10 @@ export default function PainelObra() {
   const { data: chase, isLoading: l1 } = useListChaseItems();
   const { data: visits, isLoading: l2 } = useListAllSiteVisits();
   const { data: projects, isLoading: l3 } = useListProjects();
+  const { data: planSummaries } = useListActionPlanSummaries();
   const loading = l1 || l2 || l3;
+
+  const planosPorProjeto = (planSummaries ?? []).filter((s) => s.openItems > 0);
 
   const data = useMemo(() => {
     const items = (chase ?? []) as ChaseItem[];
@@ -180,25 +184,6 @@ export default function PainelObra() {
             </Panel>
 
             {/* Planos de ação atrasados */}
-            <Panel
-              icon={<ClipboardList className="h-4 w-4 text-red-500" />}
-              title="Planos de ação atrasados"
-              hint="Itens vencidos que você cobra"
-              count={data.planosAtrasados.length}
-              seeAll="/cobrancas"
-              accent="red"
-              empty="Nenhum item de plano atrasado."
-            >
-              {data.planosAtrasados.slice(0, 6).map((it) => (
-                <Row key={`ap-${it.id}`} href={`/projects/${it.projectId}`}
-                  title={it.description}
-                  sub={`${it.projectName ?? "Obra"} · ${it.responsibleName ?? it.responsibleExternal ?? "sem responsável"}`}
-                  badge={`há ${-daysFromToday(it.dueDate!)}d`}
-                  badgeTone="red"
-                />
-              ))}
-            </Panel>
-
             {/* Checar in loco (follow-ups de visita) */}
             <Panel
               icon={<CheckSquare className="h-4 w-4 text-blue-500" />}
@@ -218,6 +203,54 @@ export default function PainelObra() {
               ))}
             </Panel>
           </div>
+
+          {/* Planos de ação por projeto — cobra o plano por obra, não item a item */}
+          {(planSummaries ?? []).length > 0 && (
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+                <ClipboardList className="h-4 w-4 text-blue-500" />
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-foreground leading-tight">Planos de ação por projeto</h2>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Cobre o plano por obra — não item a item</p>
+                </div>
+                <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{planosPorProjeto.length} em aberto</span>
+              </div>
+              {planosPorProjeto.length === 0 ? (
+                <p className="px-4 py-6 text-center text-sm text-muted-foreground">Todos os planos de ação concluídos. 👏</p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {planosPorProjeto.map((s) => {
+                    const pct = s.totalItems > 0 ? Math.round((s.doneItems / s.totalItems) * 100) : 0;
+                    return (
+                      <div key={s.projectId}
+                        className="px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/projects/${s.projectId}`)}>
+                        <div className="flex items-center gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground truncate">{s.projectName ?? "Obra"}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {s.openItems} aberto{s.openItems !== 1 ? "s" : ""} de {s.totalItems}
+                              {s.nextDueDate ? ` · próximo ${fmtBr(s.nextDueDate)}` : ""}
+                            </p>
+                          </div>
+                          {s.overdueItems > 0 && (
+                            <span className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40">
+                              {s.overdueItems} vencido{s.overdueItems !== 1 ? "s" : ""}
+                            </span>
+                          )}
+                          <span className="shrink-0 text-xs font-semibold text-muted-foreground tabular-nums">{s.doneItems}/{s.totalItems}</span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                        </div>
+                        <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Datas de obra vencidas — largura total */}
           {data.datasVencidas.length > 0 && (
