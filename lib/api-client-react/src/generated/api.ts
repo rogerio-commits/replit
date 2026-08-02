@@ -40,6 +40,7 @@ import type {
   BulkTaskUpdate,
   BulkUpdateTasks200,
   BurndownPoint,
+  ChaseItem,
   ChecklistItem,
   ChecklistItemInput,
   ChecklistItemUpdate,
@@ -5298,6 +5299,83 @@ export function useGetMetricsTrends<TData = Awaited<ReturnType<typeof getMetrics
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMetricsTrendsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListChaseItemsUrl = () => {
+
+
+
+
+  return `/api/chase-items`
+}
+
+/**
+ * @summary List open action-plan and visit follow-up items to chase, across all projects
+ */
+export const listChaseItems = async ( options?: RequestInit): Promise<ChaseItem[]> => {
+
+  return customFetch<ChaseItem[]>(getListChaseItemsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListChaseItemsQueryKey = () => {
+    return [
+    `/api/chase-items`
+    ] as const;
+    }
+
+
+export const getListChaseItemsQueryOptions = <TData = Awaited<ReturnType<typeof listChaseItems>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listChaseItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListChaseItemsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listChaseItems>>> = ({ signal }) => listChaseItems({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listChaseItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListChaseItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listChaseItems>>>
+export type ListChaseItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List open action-plan and visit follow-up items to chase, across all projects
+ */
+
+export function useListChaseItems<TData = Awaited<ReturnType<typeof listChaseItems>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listChaseItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListChaseItemsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

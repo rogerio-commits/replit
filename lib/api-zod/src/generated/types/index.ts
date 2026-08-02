@@ -43,6 +43,8 @@ export * from './bulkTaskUpdatePriority';
 export * from './bulkTaskUpdateStatus';
 export * from './bulkUpdateTasks200';
 export * from './burndownPoint';
+export * from './chaseItem';
+export * from './chaseItemSource';
 export * from './checklistItem';
 export * from './checklistItemInput';
 export * from './checklistItemInputStatus';

@@ -1479,6 +1479,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/MetricsTrends"
 
+  /chase-items:
+    get:
+      operationId: listChaseItems
+      tags: [dashboard]
+      summary: List open action-plan and visit follow-up items to chase, across all projects
+      responses:
+        "200":
+          description: Open chase items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChaseItem"
+
   /me:
     get:
       operationId: getMe
@@ -3220,6 +3235,34 @@ components:
               type: integer
             activeProjects:
               type: integer
+
+    ChaseItem:
+      type: object
+      required: [id, source, description, projectId, createdAt]
+      properties:
+        id:
+          type: integer
+        source:
+          type: string
+          enum: [action_plan, visit]
+        description:
+          type: string
+        projectId:
+          type: integer
+        projectName:
+          type: ["string", "null"]
+        context:
+          type: ["string", "null"]
+        responsibleId:
+          type: ["integer", "null"]
+        responsibleName:
+          type: ["string", "null"]
+        responsibleExternal:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
 
     ActivityItem:
       type: object
