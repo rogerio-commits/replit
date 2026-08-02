@@ -30,10 +30,12 @@ import {
   HardHat,
   ClipboardCheck,
   CalendarClock,
+  Eye,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useClerk, useUser } from "@clerk/react";
 import { useAppUser } from "@/hooks/useAppUser";
+import { useEffectiveRole, useIsRealGestor, useViewAs, setViewAs, type SystemRole } from "@/hooks/useViewAs";
 import { useAlertCounts } from "@/hooks/useAlerts";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -62,7 +64,18 @@ export function Layout({ children }: LayoutProps) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const { data: me } = useAppUser();
-  const role = me?.role as "gestor" | "gestor_obras" | "executor" | "observador" | undefined;
+  const realRole = me?.role as "gestor" | "gestor_obras" | "executor" | "observador" | undefined;
+  // Papel efetivo: quando um gestor usa "Ver como", o menu e o acesso passam a
+  // ser os do papel escolhido (só apresentação — o servidor não muda).
+  const role = useEffectiveRole() ?? realRole;
+  const isRealGestor = useIsRealGestor();
+  const viewAs = useViewAs();
+  const VIEW_AS_LABELS: Record<SystemRole, string> = {
+    gestor: "Gestor (você)",
+    gestor_obras: "Gestor de Obras",
+    executor: "Projetista",
+    observador: "Observador",
+  };
   const alertCounts = useAlertCounts();
   const recentProjects = useRecentProjects();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -326,6 +339,27 @@ export function Layout({ children }: LayoutProps) {
                   <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
                   <p className="text-xs text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress ?? ""}</p>
                 </div>
+                {isRealGestor && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Ver como (pré-visualização)
+                    </div>
+                    {(["gestor", "gestor_obras", "executor", "observador"] as SystemRole[]).map((r) => {
+                      const active = (viewAs ?? "gestor") === r;
+                      return (
+                        <DropdownMenuItem
+                          key={r}
+                          className="cursor-pointer"
+                          onClick={() => setViewAs(r === "gestor" ? null : r)}
+                        >
+                          <Eye className={cn("mr-2 h-4 w-4", active ? "text-primary" : "text-muted-foreground/50")} />
+                          <span className={cn(active && "font-semibold text-primary")}>{VIEW_AS_LABELS[r]}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive cursor-pointer"
@@ -341,6 +375,20 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col h-full overflow-hidden print:h-auto print:overflow-visible print:block">
+          {isRealGestor && viewAs && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm print:hidden dark:bg-amber-950/30 dark:border-amber-800/40 dark:text-amber-300">
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 flex-1">
+                Pré-visualizando como <strong>{VIEW_AS_LABELS[viewAs]}</strong> — você continua com acesso de gestor; isto muda apenas o menu e as telas visíveis.
+              </span>
+              <button
+                onClick={() => setViewAs(null)}
+                className="shrink-0 font-semibold underline underline-offset-2 hover:no-underline"
+              >
+                Voltar para Gestor
+              </button>
+            </div>
+          )}
           {/* Desktop topbar — breadcrumb + search + quick create */}
           <header className="h-12 border-b bg-card/80 backdrop-blur-sm items-center px-6 shrink-0 hidden md:flex gap-4 print:hidden">
             <div className="flex-1 min-w-0">
