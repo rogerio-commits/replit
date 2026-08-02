@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useListTasks } from "@workspace/api-client-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MaterialSplit } from "@/components/material-split";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -215,6 +216,9 @@ export default function Desempenho() {
               </p>
             </div>
           </div>
+
+          {/* Comparativo por unidade (Madeira × Alumínio) */}
+          <MaterialSplit />
 
           {/* Gráfico por pessoa */}
           <div className="bg-card rounded-xl border border-border p-4">
