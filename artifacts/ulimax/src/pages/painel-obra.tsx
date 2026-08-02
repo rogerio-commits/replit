@@ -9,7 +9,7 @@ import type { ChaseItem, Project } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   MapPinned, ClipboardList, CalendarClock, AlertTriangle,
-  CheckSquare, ChevronRight, HardHat, CalendarPlus,
+  CheckSquare, ChevronRight, CalendarPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
@@ -110,23 +110,6 @@ export default function PainelObra() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <HardHat className="h-7 w-7 text-primary" />
-            Painel da Obra
-          </h1>
-          <p className="text-muted-foreground mt-1">O que precisa da sua atenção hoje — num olhar.</p>
-        </div>
-        <NewVisitDialog
-          trigger={
-            <Button className="shrink-0 gap-1.5">
-              <CalendarPlus className="h-4 w-4" /> Nova visita
-            </Button>
-          }
-        />
-      </div>
-
       {loading ? (
         <div className="space-y-3">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -183,7 +166,7 @@ export default function PainelObra() {
               title="Próximas visitas"
               hint={`Nos próximos ${UPCOMING_VISIT_DAYS} dias`}
               count={data.proximasVisitas.length}
-              seeAll="/agenda"
+              seeAll="/obra?tab=agenda"
               empty="Nenhuma visita agendada para os próximos dias."
             >
               {data.proximasVisitas.slice(0, 6).map(({ v, d }) => (
@@ -243,7 +226,7 @@ export default function PainelObra() {
               title="Datas de obra vencidas"
               hint="Fim do projeto / produção sem data final registrada"
               count={data.datasVencidas.length}
-              seeAll="/agenda"
+              seeAll="/obra?tab=agenda"
               accent="red"
               empty=""
             >

@@ -37,15 +37,13 @@ const MeuDia = lazy(() => import("@/pages/meu-dia"));
 const Templates = lazy(() => import("@/pages/templates"));
 const Automacao = lazy(() => import("@/pages/automacao"));
 const Portfolio = lazy(() => import("@/pages/portfolio"));
-const CentralObra = lazy(() => import("@/pages/central-obra"));
+const Obra = lazy(() => import("@/pages/obra"));
 const CamposPersonalizados = lazy(() => import("@/pages/campos-personalizados"));
 const Reuniao = lazy(() => import("@/pages/reuniao"));
 const Desempenho = lazy(() => import("@/pages/desempenho"));
 const Assistente = lazy(() => import("@/pages/assistente"));
 const RelatorioProjeto = lazy(() => import("@/pages/relatorio-projeto"));
 const Cobrancas = lazy(() => import("@/pages/cobrancas"));
-const Agenda = lazy(() => import("@/pages/agenda"));
-const PainelObra = lazy(() => import("@/pages/painel-obra"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -259,10 +257,10 @@ function ProtectedRoutes() {
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/automacao" component={Automacao} />
             <Route path="/portfolio" component={Portfolio} />
-            <Route path="/obra" component={CentralObra} />
+            <Route path="/obra" component={Obra} />
             <Route path="/cobrancas" component={Cobrancas} />
-            <Route path="/agenda" component={Agenda} />
-            <Route path="/painel-obra" component={PainelObra} />
+            <Route path="/agenda"><Redirect to="/obra?tab=agenda" replace /></Route>
+            <Route path="/painel-obra"><Redirect to="/obra" replace /></Route>
             <Route path="/reuniao" component={Reuniao} />
             <Route path="/desempenho" component={Desempenho} />
             <Route path="/assistente" component={Assistente} />

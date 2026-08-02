@@ -29,7 +29,6 @@ import {
   TrendingUp,
   HardHat,
   ClipboardCheck,
-  CalendarClock,
   Eye,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -121,10 +120,8 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
-                { href: "/painel-obra", label: "Painel da Obra", icon: HardHat, highlight: true },
+                { href: "/obra", label: "Obra", icon: HardHat, highlight: true },
                 { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
-                { href: "/agenda", label: "Agenda de Obra", icon: CalendarClock },
-                { href: "/obra", label: "Central da Obra", icon: ClipboardList },
                 { href: "/meu-dia", label: "Meu Dia", icon: Sun },
                 { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
@@ -176,10 +173,8 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Obra",
                 items: [
-                  { href: "/painel-obra", label: "Painel da Obra", icon: HardHat },
-                  { href: "/obra", label: "Central da Obra", icon: ClipboardList },
+                  { href: "/obra", label: "Obra", icon: HardHat },
                   { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
-                  { href: "/agenda", label: "Agenda de Obra", icon: CalendarClock },
                   { href: "/checklist", label: "Instalações", icon: ClipboardList },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
                 ],
