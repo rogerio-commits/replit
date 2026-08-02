@@ -45,6 +45,7 @@ const Assistente = lazy(() => import("@/pages/assistente"));
 const RelatorioProjeto = lazy(() => import("@/pages/relatorio-projeto"));
 const Cobrancas = lazy(() => import("@/pages/cobrancas"));
 const Agenda = lazy(() => import("@/pages/agenda"));
+const PainelObra = lazy(() => import("@/pages/painel-obra"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -261,6 +262,7 @@ function ProtectedRoutes() {
             <Route path="/obra" component={CentralObra} />
             <Route path="/cobrancas" component={Cobrancas} />
             <Route path="/agenda" component={Agenda} />
+            <Route path="/painel-obra" component={PainelObra} />
             <Route path="/reuniao" component={Reuniao} />
             <Route path="/desempenho" component={Desempenho} />
             <Route path="/assistente" component={Assistente} />

@@ -5,7 +5,7 @@ export type SystemRole = "gestor" | "gestor_obras" | "executor" | "observador";
 
 const HOME_BY_ROLE: Record<SystemRole, string> = {
   gestor: "/meu-dia",
-  gestor_obras: "/obra",
+  gestor_obras: "/painel-obra",
   executor: "/meu-dia",
   observador: "/dashboard",
 };
@@ -24,6 +24,7 @@ const EXECUTOR_PREFIXES = [
 // Gestor de Obras: toda a operação (obra + projetos/tarefas), sem as áreas
 // administrativas (equipe, templates, automações, auditoria etc.).
 const GESTOR_OBRAS_PREFIXES = [
+  "/painel-obra",
   "/obra",
   "/cobrancas",
   "/agenda",
