@@ -351,6 +351,7 @@ function TasksBoard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [filterProject, setFilterProject] = useState<string>("all");
+  const [filterMaterial, setFilterMaterial] = useState<string>("all");
   const [activeTask, setActiveTask] = useState<TaskItem | null>(null);
   const [dialog, setDialog] = useState<{ open: boolean; status: TaskStatus }>({ open: false, status: "todo" });
 
@@ -361,11 +362,21 @@ function TasksBoard() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
+  // Madeira e Alumínio são unidades diferentes — o filtro por material usa o
+  // material do projeto de cada tarefa.
+  const materialByProject = useMemo(
+    () => new Map((projects ?? []).map((p) => [p.id, p.materialType])),
+    [projects],
+  );
+
   const tasksByColumn = useMemo(() => {
     const map: Record<TaskStatus, TaskItem[]> = { todo: [], in_progress: [], review: [], done: [] };
-    tasks?.forEach((t) => { if (map[t.status as TaskStatus]) map[t.status as TaskStatus].push(t); });
+    tasks?.forEach((t) => {
+      if (filterMaterial !== "all" && materialByProject.get(t.projectId) !== filterMaterial) return;
+      if (map[t.status as TaskStatus]) map[t.status as TaskStatus].push(t);
+    });
     return map;
-  }, [tasks]);
+  }, [tasks, filterMaterial, materialByProject]);
 
   function handleDragStart(e: DragStartEvent) {
     const id = Number(String(e.active.id).replace("task-", ""));
@@ -407,6 +418,16 @@ function TasksBoard() {
             {projects?.map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={filterMaterial} onValueChange={setFilterMaterial}>
+          <SelectTrigger className="w-44" data-testid="select-filter-material">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Madeira e Alumínio</SelectItem>
+            <SelectItem value="madeira">Madeira</SelectItem>
+            <SelectItem value="aluminio">Alumínio</SelectItem>
+          </SelectContent>
+        </Select>
         <Button onClick={() => setDialog({ open: true, status: "todo" })} data-testid="button-new-task">
           <Plus className="h-4 w-4 mr-2" />Nova Tarefa
         </Button>
@@ -439,6 +460,7 @@ function ProjectsBoard() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
+  const [filterMaterial, setFilterMaterial] = useState<string>("all");
   // Evita o "clique fantasma" que dispara logo após soltar um cartão arrastado
   const draggedRecentlyRef = useRef(false);
 
@@ -458,9 +480,12 @@ function ProjectsBoard() {
       a_iniciar: [], em_projeto: [], em_aprovacao: [],
       em_producao: [], aguardando_instalacao: [], em_instalacao: [],
     };
-    projects?.forEach((p) => { if (map[p.status as ProjectStatusId]) map[p.status as ProjectStatusId].push(p); });
+    projects?.forEach((p) => {
+      if (filterMaterial !== "all" && p.materialType !== filterMaterial) return;
+      if (map[p.status as ProjectStatusId]) map[p.status as ProjectStatusId].push(p);
+    });
     return map;
-  }, [projects]);
+  }, [projects, filterMaterial]);
 
   function openProject(id: number) {
     if (draggedRecentlyRef.current) return;
@@ -508,6 +533,19 @@ function ProjectsBoard() {
   if (isLoading) return <BoardSkeleton />;
 
   return (
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex items-center gap-3 shrink-0 mb-3">
+        <Select value={filterMaterial} onValueChange={setFilterMaterial}>
+          <SelectTrigger className="w-44" data-testid="select-filter-material-projetos">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Madeira e Alumínio</SelectItem>
+            <SelectItem value="madeira">Madeira</SelectItem>
+            <SelectItem value="aluminio">Alumínio</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
       <div className="flex gap-4 overflow-x-auto pb-6 flex-1">
         {PROJECT_COLUMNS.map((col) => (
@@ -523,6 +561,7 @@ function ProjectsBoard() {
         {activeProject ? <ProjectCard project={activeProject} farol={healthMap.get(activeProject.id)?.level} isDragging /> : null}
       </DragOverlay>
     </DndContext>
+    </div>
   );
 }
 
