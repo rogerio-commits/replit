@@ -29,6 +29,7 @@ import projectMaterialsRouter from "./project-materials";
 import customFieldsRouter from "./custom-fields";
 import milestonesRouter from "./milestones";
 import burndownRouter from "./burndown";
+import chaseRouter from "./chase";
 
 const router: IRouter = Router();
 
@@ -68,5 +69,6 @@ router.use(projectMaterialsRouter);
 router.use(customFieldsRouter);
 router.use(milestonesRouter);
 router.use(burndownRouter);
+router.use(chaseRouter);
 
 export default router;

@@ -583,6 +583,34 @@ export interface MetricsTrends {
   current: MetricsTrendsCurrent;
 }
 
+export type ChaseItemSource = typeof ChaseItemSource[keyof typeof ChaseItemSource];
+
+
+export const ChaseItemSource = {
+  action_plan: 'action_plan',
+  visit: 'visit',
+} as const;
+
+export interface ChaseItem {
+  id: number;
+  source: ChaseItemSource;
+  description: string;
+  projectId: number;
+  /** @nullable */
+  projectName?: string | null;
+  /** @nullable */
+  context?: string | null;
+  /** @nullable */
+  responsibleId?: number | null;
+  /** @nullable */
+  responsibleName?: string | null;
+  /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
+  dueDate?: string | null;
+  createdAt: string;
+}
+
 export type ActivityItemType = typeof ActivityItemType[keyof typeof ActivityItemType];
 
 

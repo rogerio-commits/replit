@@ -13,6 +13,7 @@ import {
   sendGestorDigestEmail,
   type DigestTaskItem,
 } from "./email";
+import { fetchOpenChaseItems } from "./chase-items";
 
 // São Paulo é UTC-3 o ano inteiro (sem horário de verão desde 2019).
 const SP_OFFSET_MS = 3 * 60 * 60 * 1000;
@@ -137,6 +138,28 @@ export async function runDailyReminders(log: Logger): Promise<DailyRemindersResu
       }
       b[key].push({ title: t.title, meta });
     }
+  }
+
+  // Itens de plano de ação e follow-ups de visita entram na mesma cobrança —
+  // são o principal entregável do gestor de obras e antes não eram cobrados.
+  const chaseItems = await fetchOpenChaseItems();
+  for (const ci of chaseItems) {
+    if (!ci.dueDate || ci.responsibleId == null) continue;
+    let key: BucketKey | null = null;
+    if (ci.dueDate < today) key = "atrasadas";
+    else if (ci.dueDate === today) key = "vencemHoje";
+    else if (ci.dueDate <= horizon) key = "proximas";
+    if (!key) continue;
+
+    totals[key]++;
+    const proj = ci.projectName ?? "Obra";
+    const kind = ci.source === "visit" ? "follow-up de visita" : "plano de ação";
+    let b = bucketsByMember.get(ci.responsibleId);
+    if (!b) {
+      b = emptyBuckets();
+      bucketsByMember.set(ci.responsibleId, b);
+    }
+    b[key].push({ title: ci.description, meta: `${proj} · ${kind}` });
   }
 
   const notifications: (typeof notificationsTable.$inferInsert)[] = [];

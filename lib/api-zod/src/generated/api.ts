@@ -1429,6 +1429,25 @@ export const GetMetricsTrendsResponse = zod.object({
 
 
 /**
+ * @summary List open action-plan and visit follow-up items to chase, across all projects
+ */
+export const ListChaseItemsResponseItem = zod.object({
+  "id": zod.number(),
+  "source": zod.enum(['action_plan', 'visit']),
+  "description": zod.string(),
+  "projectId": zod.number(),
+  "projectName": zod.string().nullish(),
+  "context": zod.string().nullish(),
+  "responsibleId": zod.number().nullish(),
+  "responsibleName": zod.string().nullish(),
+  "responsibleExternal": zod.string().nullish(),
+  "dueDate": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListChaseItemsResponse = zod.array(ListChaseItemsResponseItem)
+
+
+/**
  * @summary Get current authenticated user
  */
 export const GetMeResponse = zod.object({

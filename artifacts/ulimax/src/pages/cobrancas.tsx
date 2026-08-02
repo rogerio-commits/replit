@@ -1,0 +1,194 @@
+import { useMemo, useState } from "react";
+import { Link } from "wouter";
+import { useListChaseItems } from "@workspace/api-client-react";
+import type { ChaseItem } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { ClipboardCheck, MapPin, ClipboardList, User, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { daysFromToday } from "@/lib/project-health";
+
+// ── Minhas Cobranças ─────────────────────────────────────────────────────────
+// Tudo que o gestor de obras precisa cobrar, agregado de todas as obras: itens
+// de plano de ação e follow-ups de visita em aberto. Ordenado por urgência.
+
+type Urgency = "vencida" | "hoje" | "proxima" | "futura" | "sem_prazo";
+const PROXIMA_DIAS = 7;
+
+function urgencyOf(dueDate: string | null | undefined): Urgency {
+  if (!dueDate) return "sem_prazo";
+  const d = daysFromToday(dueDate);
+  if (d < 0) return "vencida";
+  if (d === 0) return "hoje";
+  if (d <= PROXIMA_DIAS) return "proxima";
+  return "futura";
+}
+
+const URGENCY_META: Record<Urgency, { label: string; chip: string; rank: number }> = {
+  vencida:   { label: "Vencida",       chip: "bg-red-50 text-red-700 border-red-200",       rank: 0 },
+  hoje:      { label: "Vence hoje",    chip: "bg-amber-50 text-amber-700 border-amber-200", rank: 1 },
+  proxima:   { label: "Próxima",       chip: "bg-blue-50 text-blue-700 border-blue-200",    rank: 2 },
+  futura:    { label: "No prazo",      chip: "bg-muted text-muted-foreground border-border", rank: 3 },
+  sem_prazo: { label: "Sem prazo",     chip: "bg-muted text-muted-foreground border-border", rank: 4 },
+};
+
+function responsibleLabel(item: ChaseItem): string {
+  if (item.responsibleName) return item.responsibleName;
+  if (item.responsibleExternal) return `${item.responsibleExternal} (externo)`;
+  return "Sem responsável";
+}
+
+function fmtDue(dueDate: string | null | undefined): string {
+  if (!dueDate) return "—";
+  const d = daysFromToday(dueDate);
+  const br = dueDate.split("-").length === 3 ? `${dueDate.split("-")[2]}/${dueDate.split("-")[1]}` : dueDate;
+  if (d < 0) return `${br} · atrasada ${Math.abs(d)}d`;
+  if (d === 0) return `${br} · hoje`;
+  return `${br} · em ${d}d`;
+}
+
+export default function Cobrancas() {
+  const { data: items, isLoading } = useListChaseItems();
+  const [prazo, setPrazo] = useState<string>("abertas");
+  const [responsavel, setResponsavel] = useState<string>("all");
+  const [obra, setObra] = useState<string>("all");
+
+  const { rows, counts, responsaveis, obras } = useMemo(() => {
+    const all = (items ?? []) as ChaseItem[];
+
+    const withUrgency = all.map((it) => ({ item: it, urg: urgencyOf(it.dueDate) }));
+
+    const counts = {
+      vencida: withUrgency.filter((r) => r.urg === "vencida").length,
+      hoje: withUrgency.filter((r) => r.urg === "hoje").length,
+      proxima: withUrgency.filter((r) => r.urg === "proxima").length,
+      total: all.length,
+    };
+
+    const responsaveis = Array.from(
+      new Set(all.map((it) => responsibleLabel(it))),
+    ).sort();
+    const obras = Array.from(
+      new Map(all.filter((it) => it.projectName).map((it) => [it.projectId, it.projectName!])).entries(),
+    ).sort((a, b) => a[1].localeCompare(b[1]));
+
+    const rows = withUrgency
+      .filter((r) => {
+        if (prazo === "abertas") return true;
+        if (prazo === "vencidas") return r.urg === "vencida";
+        if (prazo === "hoje") return r.urg === "hoje";
+        if (prazo === "proximas") return r.urg === "proxima";
+        if (prazo === "sem_prazo") return r.urg === "sem_prazo";
+        return true;
+      })
+      .filter((r) => responsavel === "all" || responsibleLabel(r.item) === responsavel)
+      .filter((r) => obra === "all" || String(r.item.projectId) === obra)
+      .sort((a, b) => {
+        const byRank = URGENCY_META[a.urg].rank - URGENCY_META[b.urg].rank;
+        if (byRank !== 0) return byRank;
+        // dentro do mesmo grupo, o prazo mais próximo primeiro
+        const da = a.item.dueDate ? daysFromToday(a.item.dueDate) : Infinity;
+        const db = b.item.dueDate ? daysFromToday(b.item.dueDate) : Infinity;
+        return da - db;
+      });
+
+    return { rows, counts, responsaveis, obras };
+  }, [items, prazo, responsavel, obra]);
+
+  return (
+    <div className="space-y-5 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <ClipboardCheck className="h-7 w-7 text-primary" />
+          Minhas Cobranças
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Itens de plano de ação e follow-ups de visita em aberto, de todas as obras.
+        </p>
+      </div>
+
+      {/* Resumo */}
+      {!isLoading && (
+        <div className="grid grid-cols-3 gap-3">
+          <button onClick={() => setPrazo("vencidas")} className={cn("bg-card rounded-xl border p-4 text-left transition-all hover:shadow-sm", prazo === "vencidas" ? "border-red-300" : "border-border")}>
+            <div className="text-2xl font-bold text-red-600">{counts.vencida}</div>
+            <div className="text-xs font-medium text-muted-foreground">Vencidas</div>
+          </button>
+          <button onClick={() => setPrazo("hoje")} className={cn("bg-card rounded-xl border p-4 text-left transition-all hover:shadow-sm", prazo === "hoje" ? "border-amber-300" : "border-border")}>
+            <div className="text-2xl font-bold text-amber-600">{counts.hoje}</div>
+            <div className="text-xs font-medium text-muted-foreground">Vencem hoje</div>
+          </button>
+          <button onClick={() => setPrazo("proximas")} className={cn("bg-card rounded-xl border p-4 text-left transition-all hover:shadow-sm", prazo === "proximas" ? "border-blue-300" : "border-border")}>
+            <div className="text-2xl font-bold text-blue-600">{counts.proxima}</div>
+            <div className="text-xs font-medium text-muted-foreground">Próximos {PROXIMA_DIAS} dias</div>
+          </button>
+        </div>
+      )}
+
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <Select value={prazo} onValueChange={setPrazo}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="abertas">Todas em aberto</SelectItem>
+            <SelectItem value="vencidas">Vencidas</SelectItem>
+            <SelectItem value="hoje">Vencem hoje</SelectItem>
+            <SelectItem value="proximas">Próximas</SelectItem>
+            <SelectItem value="sem_prazo">Sem prazo</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={responsavel} onValueChange={setResponsavel}>
+          <SelectTrigger className="w-52"><SelectValue placeholder="Responsável" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os responsáveis</SelectItem>
+            {responsaveis.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={obra} onValueChange={setObra}>
+          <SelectTrigger className="w-52"><SelectValue placeholder="Obra" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as obras</SelectItem>
+            {obras.map(([id, name]) => <SelectItem key={id} value={String(id)}>{name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Lista */}
+      {isLoading ? (
+        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+      ) : rows.length === 0 ? (
+        <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground">
+          🎉 Nenhuma cobrança em aberto com esses filtros.
+        </div>
+      ) : (
+        <div className="bg-card rounded-xl border border-border divide-y divide-border overflow-hidden">
+          {rows.map(({ item, urg }) => (
+            <Link key={`${item.source}-${item.id}`} href={`/projects/${item.projectId}`}>
+              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer">
+                <span title={item.source === "visit" ? "Follow-up de visita" : "Plano de ação"} className="shrink-0">
+                  {item.source === "visit"
+                    ? <MapPin className="h-4 w-4 text-violet-500" />
+                    : <ClipboardList className="h-4 w-4 text-blue-500" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{item.description}</p>
+                  <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground mt-0.5">
+                    {item.projectName && <span className="truncate max-w-[180px]">{item.projectName}</span>}
+                    {item.context && <span className="text-muted-foreground/70">· {item.context}</span>}
+                    <span className="flex items-center gap-1"><User className="h-3 w-3" />{responsibleLabel(item)}</span>
+                  </div>
+                </div>
+                <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", URGENCY_META[urg].chip)}>
+                  {fmtDue(item.dueDate)}
+                </span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
