@@ -840,6 +840,7 @@ export const ListTasksResponseItem = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
   "recurrenceEndDate": zod.string().nullish(),
@@ -895,6 +896,7 @@ export const GetTaskResponse = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
   "recurrenceEndDate": zod.string().nullish(),
@@ -944,6 +946,7 @@ export const UpdateTaskResponse = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
   "recurrenceEndDate": zod.string().nullish(),
@@ -1001,6 +1004,7 @@ export const ListSubtasksResponseItem = zod.object({
   "assigneeName": zod.string().nullish(),
   "projectName": zod.string().nullish(),
   "dueDate": zod.string().nullish(),
+  "startedAt": zod.string().nullish(),
   "completedAt": zod.string().nullish(),
   "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
   "recurrenceEndDate": zod.string().nullish(),
@@ -1402,6 +1406,25 @@ export const GetYesterdaySummaryResponse = zod.object({
   "name": zod.string(),
   "count": zod.number()
 }))
+})
+
+
+/**
+ * @summary Get historical metric snapshots plus current values for trend deltas
+ */
+export const GetMetricsTrendsResponse = zod.object({
+  "points": zod.array(zod.object({
+  "date": zod.string(),
+  "openTasks": zod.number(),
+  "overdueTasks": zod.number(),
+  "tasksCompleted": zod.number(),
+  "activeProjects": zod.number()
+})),
+  "current": zod.object({
+  "openTasks": zod.number(),
+  "overdueTasks": zod.number(),
+  "activeProjects": zod.number()
+})
 })
 
 

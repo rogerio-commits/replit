@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, projectsTable, tasksTable, membersTable, auditLogsTable } from "@workspace/db";
-import { eq, gte } from "drizzle-orm";
+import { db, projectsTable, tasksTable, membersTable, auditLogsTable, metricsSnapshotsTable } from "@workspace/db";
+import { eq, gte, asc } from "drizzle-orm";
 
 const router = Router();
 
@@ -157,6 +157,61 @@ router.get("/dashboard/member-productivity", async (_req, res) => {
   });
 
   return res.json(stats);
+});
+
+const ACTIVE_PROJECT_STATUSES = [
+  "em_projeto",
+  "em_aprovacao",
+  "em_producao",
+  "aguardando_instalacao",
+  "em_instalacao",
+];
+const TREND_WINDOW_DAYS = 30;
+
+/**
+ * Série histórica de métricas (últimos 30 dias) + valores atuais ao vivo.
+ *
+ * O histórico vem dos snapshots diários; o `current` é computado na hora para
+ * o dashboard mostrar o valor de agora e comparar com a foto de ~7 dias atrás
+ * ("vencidas: 23, era 15"). O gráfico de vazão usa `tasksCompleted` da série.
+ */
+router.get("/dashboard/trends", async (_req, res) => {
+  const since = new Date(Date.now() - TREND_WINDOW_DAYS * 86400000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [snapshots, projects, tasks] = await Promise.all([
+    db
+      .select()
+      .from(metricsSnapshotsTable)
+      .where(gte(metricsSnapshotsTable.date, since))
+      .orderBy(asc(metricsSnapshotsTable.date)),
+    db.select({ status: projectsTable.status }).from(projectsTable),
+    db
+      .select({ status: tasksTable.status, dueDate: tasksTable.dueDate })
+      .from(tasksTable),
+  ]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const current = {
+    openTasks: tasks.filter((t) => t.status !== "done").length,
+    overdueTasks: tasks.filter(
+      (t) => t.dueDate && t.dueDate < today && t.status !== "done",
+    ).length,
+    activeProjects: projects.filter((p) =>
+      ACTIVE_PROJECT_STATUSES.includes(p.status),
+    ).length,
+  };
+
+  const points = snapshots.map((s) => ({
+    date: s.date,
+    openTasks: s.openTasks,
+    overdueTasks: s.overdueTasks,
+    tasksCompleted: s.tasksCompleted,
+    activeProjects: s.activeProjects,
+  }));
+
+  return res.json({ points, current });
 });
 
 export default router;

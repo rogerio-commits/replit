@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "wouter";
 import { useListTasks } from "@workspace/api-client-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,19 +18,23 @@ type AnyTask = {
   id: number;
   title: string;
   status: string;
+  assignedTo?: number | null;
   assigneeName?: string | null;
   dueDate?: string | null;
   createdAt: string;
+  startedAt?: string | null;
   completedAt?: string | null;
 };
 
 interface PersonStats {
   name: string;
+  memberId: number | null; // id do responsável, para o drill-down em /tasks
   done: number;        // concluídas no período
   onTime: number;      // concluídas até o prazo
   late: number;        // concluídas depois do prazo
   noDue: number;       // concluídas sem prazo definido
   avgDays: number | null; // tempo médio criação → conclusão
+  cycleDays: number | null; // tempo de ciclo real: início → conclusão
   openNow: number;     // abertas hoje
   overdueNow: number;  // atrasadas hoje
 }
@@ -52,11 +57,11 @@ export default function Desempenho() {
     const inPeriod = (t: AnyTask) =>
       t.status === "done" && !!t.completedAt && -daysFromToday(t.completedAt) <= limit;
 
-    const map = new Map<string, PersonStats & { sumDays: number; nDays: number }>();
+    const map = new Map<string, PersonStats & { sumDays: number; nDays: number; sumCycle: number; nCycle: number }>();
     const get = (name: string) => {
       let s = map.get(name);
       if (!s) {
-        s = { name, done: 0, onTime: 0, late: 0, noDue: 0, avgDays: null, openNow: 0, overdueNow: 0, sumDays: 0, nDays: 0 };
+        s = { name, memberId: null, done: 0, onTime: 0, late: 0, noDue: 0, avgDays: null, cycleDays: null, openNow: 0, overdueNow: 0, sumDays: 0, nDays: 0, sumCycle: 0, nCycle: 0 };
         map.set(name, s);
       }
       return s;
@@ -67,6 +72,7 @@ export default function Desempenho() {
       if (!name) continue; // desempenho é por pessoa; sem responsável não conta
 
       const s = get(name);
+      if (s.memberId == null && t.assignedTo != null) s.memberId = t.assignedTo;
       if (t.status !== "done") {
         s.openNow++;
         if (t.dueDate && daysFromToday(t.dueDate) < 0) s.overdueNow++;
@@ -85,11 +91,24 @@ export default function Desempenho() {
         ));
         s.sumDays += days;
         s.nDays++;
+        // Tempo de ciclo real conta do início do trabalho, não da criação.
+        // Só entra quando a tarefa tem `startedAt` (registrado daqui pra frente).
+        if (t.startedAt) {
+          const cyc = Math.max(0, Math.round(
+            (parseLocalDate(t.completedAt!).getTime() - parseLocalDate(t.startedAt).getTime()) / 86_400_000
+          ));
+          s.sumCycle += cyc;
+          s.nCycle++;
+        }
       }
     }
 
     const people = Array.from(map.values())
-      .map((s) => ({ ...s, avgDays: s.nDays > 0 ? Math.round((s.sumDays / s.nDays) * 10) / 10 : null }))
+      .map((s) => ({
+        ...s,
+        avgDays: s.nDays > 0 ? Math.round((s.sumDays / s.nDays) * 10) / 10 : null,
+        cycleDays: s.nCycle > 0 ? Math.round((s.sumCycle / s.nCycle) * 10) / 10 : null,
+      }))
       .filter((s) => s.done > 0 || s.openNow > 0)
       .sort((a, b) => b.done - a.done);
 
@@ -99,11 +118,14 @@ export default function Desempenho() {
     const withDue = totalOnTime + totalLate;
     const sumAll = people.reduce((acc, p) => acc + p.sumDays, 0);
     const nAll = people.reduce((acc, p) => acc + p.nDays, 0);
+    const sumCycleAll = people.reduce((acc, p) => acc + p.sumCycle, 0);
+    const nCycleAll = people.reduce((acc, p) => acc + p.nCycle, 0);
 
     const team = {
       done: totalDone,
       punctuality: withDue > 0 ? Math.round((totalOnTime / withDue) * 100) : null,
       avgDays: nAll > 0 ? Math.round((sumAll / nAll) * 10) / 10 : null,
+      cycleDays: nCycleAll > 0 ? Math.round((sumCycleAll / nCycleAll) * 10) / 10 : null,
       openNow: people.reduce((acc, p) => acc + p.openNow, 0),
       overdueNow: people.reduce((acc, p) => acc + p.overdueNow, 0),
     };
@@ -176,6 +198,11 @@ export default function Desempenho() {
                 {team.avgDays === null ? "—" : `${team.avgDays}d`}
               </div>
               <p className="text-xs text-muted-foreground">da criação à conclusão</p>
+              {team.cycleDays !== null && (
+                <p className="text-xs text-violet-600 font-medium mt-0.5">
+                  ciclo real: {team.cycleDays}d <span className="text-muted-foreground font-normal">(início→conclusão)</span>
+                </p>
+              )}
             </div>
             <div className="bg-card rounded-xl border border-border p-4">
               <div className="flex items-center justify-between">
@@ -235,7 +262,11 @@ export default function Desempenho() {
                     const punct = withDue > 0 ? Math.round((p.onTime / withDue) * 100) : null;
                     return (
                       <tr key={p.name} className={cn("border-b last:border-0", idx % 2 === 1 && "bg-muted/10")}>
-                        <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
+                        <td className="px-4 py-2.5 font-medium text-foreground">
+                          {p.memberId != null ? (
+                            <Link href={`/tasks?responsavel=${p.memberId}`} className="hover:text-primary hover:underline">{p.name}</Link>
+                          ) : p.name}
+                        </td>
                         <td className="px-3 py-2.5 text-center font-semibold tabular-nums">{p.done}</td>
                         <td className="px-3 py-2.5 text-center text-emerald-600 tabular-nums">{p.onTime}</td>
                         <td className={cn("px-3 py-2.5 text-center tabular-nums", p.late > 0 ? "text-red-600 font-medium" : "text-muted-foreground")}>{p.late}</td>
@@ -246,7 +277,11 @@ export default function Desempenho() {
                         </td>
                         <td className="px-3 py-2.5 text-center text-muted-foreground tabular-nums">{p.avgDays === null ? "—" : `${p.avgDays}d`}</td>
                         <td className="px-3 py-2.5 text-center tabular-nums">{p.openNow}</td>
-                        <td className={cn("px-3 py-2.5 text-center tabular-nums", p.overdueNow > 0 ? "text-red-600 font-semibold" : "text-muted-foreground/50")}>{p.overdueNow}</td>
+                        <td className={cn("px-3 py-2.5 text-center tabular-nums", p.overdueNow > 0 ? "text-red-600 font-semibold" : "text-muted-foreground/50")}>
+                          {p.overdueNow > 0 && p.memberId != null ? (
+                            <Link href={`/tasks?responsavel=${p.memberId}&vencidas=1`} className="hover:underline">{p.overdueNow}</Link>
+                          ) : p.overdueNow}
+                        </td>
                       </tr>
                     );
                   })}

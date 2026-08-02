@@ -357,6 +357,8 @@ export interface Task {
   /** @nullable */
   dueDate?: string | null;
   /** @nullable */
+  startedAt?: string | null;
+  /** @nullable */
   completedAt?: string | null;
   recurrence?: TaskRecurrence;
   /** @nullable */
@@ -560,6 +562,25 @@ export interface DashboardSummary {
   projectsByStatus: DashboardSummaryProjectsByStatus;
   tasksByStatus: DashboardSummaryTasksByStatus;
   tasksByPriority: DashboardSummaryTasksByPriority;
+}
+
+export interface MetricsTrendPoint {
+  date: string;
+  openTasks: number;
+  overdueTasks: number;
+  tasksCompleted: number;
+  activeProjects: number;
+}
+
+export type MetricsTrendsCurrent = {
+  openTasks: number;
+  overdueTasks: number;
+  activeProjects: number;
+};
+
+export interface MetricsTrends {
+  points: MetricsTrendPoint[];
+  current: MetricsTrendsCurrent;
 }
 
 export type ActivityItemType = typeof ActivityItemType[keyof typeof ActivityItemType];

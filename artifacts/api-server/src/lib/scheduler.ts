@@ -7,6 +7,7 @@ import {
   spHour,
   type DailyRemindersResult,
 } from "./daily-reminders";
+import { recordDailyMetricsSnapshot } from "./metrics-snapshot";
 
 const KEY = "daily_reminders_last_run";
 const RUN_AFTER_HOUR = 7; // dispara a partir das 07:00 (horário de São Paulo)
@@ -109,6 +110,9 @@ export async function runDailyRemindersIfDue(
 
 export function startScheduler(log: Logger): void {
   const tick = () => {
+    recordDailyMetricsSnapshot(log).catch((err) => {
+      log.error({ err }, "Scheduler: falha ao gravar snapshot de métricas");
+    });
     runDailyRemindersIfDue(log)
       .then((outcome) => {
         if (outcome.ran) {
