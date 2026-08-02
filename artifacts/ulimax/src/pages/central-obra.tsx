@@ -99,7 +99,7 @@ function EmptyNote({ text }: { text: string }) {
 
 const MAX_ROWS = 8;
 
-export default function CentralObra() {
+export default function CentralObra({ embedded = false }: { embedded?: boolean } = {}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const canEdit = useCanEdit();
@@ -213,6 +213,7 @@ export default function CentralObra() {
     <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-start justify-between gap-3">
+        {embedded ? <div /> : (
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <HardHat className="h-6 w-6 text-amber-500" />
@@ -222,6 +223,7 @@ export default function CentralObra() {
             {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })} — a operação inteira numa tela só
           </p>
         </div>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => shareAgenda(7)}>
             <MessageCircle className="h-4 w-4" /> Agenda no WhatsApp

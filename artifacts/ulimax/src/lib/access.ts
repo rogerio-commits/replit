@@ -5,7 +5,7 @@ export type SystemRole = "gestor" | "gestor_obras" | "executor" | "observador";
 
 const HOME_BY_ROLE: Record<SystemRole, string> = {
   gestor: "/meu-dia",
-  gestor_obras: "/painel-obra",
+  gestor_obras: "/obra",
   executor: "/meu-dia",
   observador: "/dashboard",
 };
