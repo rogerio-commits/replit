@@ -1,14 +1,26 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { useListChaseItems } from "@workspace/api-client-react";
 import type { ChaseItem } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ClipboardCheck, MapPin, ClipboardList, User, ChevronRight } from "lucide-react";
+import { ClipboardCheck, MapPin, ClipboardList, User, ChevronRight, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
+
+// Monta a mensagem de cobrança para o WhatsApp. Sem número salvo, usamos
+// wa.me sem destinatário: o gestor escolhe o contato e envia o texto pronto.
+function whatsappUrl(item: ChaseItem): string {
+  const nome = item.responsibleExternal ?? "";
+  const prazo = item.dueDate
+    ? ` Prazo: ${item.dueDate.split("-").reverse().join("/")}.`
+    : "";
+  const obra = item.projectName ? ` (obra: ${item.projectName})` : "";
+  const msg = `Olá${nome ? `, ${nome}` : ""}! Passando para acompanhar: "${item.description}"${obra}.${prazo}`;
+  return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+}
 
 // ── Minhas Cobranças ─────────────────────────────────────────────────────────
 // Tudo que o gestor de obras precisa cobrar, agregado de todas as obras: itens
@@ -50,6 +62,7 @@ function fmtDue(dueDate: string | null | undefined): string {
 }
 
 export default function Cobrancas() {
+  const [, navigate] = useLocation();
   const { data: items, isLoading } = useListChaseItems();
   const [prazo, setPrazo] = useState<string>("abertas");
   const [responsavel, setResponsavel] = useState<string>("all");
@@ -165,7 +178,7 @@ export default function Cobrancas() {
       ) : (
         <div className="bg-card rounded-xl border border-border divide-y divide-border overflow-hidden">
           {rows.map(({ item, urg }) => (
-            <Link key={`${item.source}-${item.id}`} href={`/projects/${item.projectId}`}>
+            <div key={`${item.source}-${item.id}`} onClick={() => navigate(`/projects/${item.projectId}`)}>
               <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer">
                 <span title={item.source === "visit" ? "Follow-up de visita" : "Plano de ação"} className="shrink-0">
                   {item.source === "visit"
@@ -180,12 +193,25 @@ export default function Cobrancas() {
                     <span className="flex items-center gap-1"><User className="h-3 w-3" />{responsibleLabel(item)}</span>
                   </div>
                 </div>
+                {item.responsibleExternal && (
+                  <a
+                    href={whatsappUrl(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Cobrar no WhatsApp"
+                    className="shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Cobrar</span>
+                  </a>
+                )}
                 <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", URGENCY_META[urg].chip)}>
                   {fmtDue(item.dueDate)}
                 </span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
