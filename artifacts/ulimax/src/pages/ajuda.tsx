@@ -1090,6 +1090,107 @@ const sections: Section[] = [
     ),
   },
   {
+    id: "obra-hub",
+    title: "Obra — o dia a dia do gestor",
+    icon: HardHat,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">A tela <Strong>Obra</Strong> reúne tudo da obra num lugar só, em três abas. É a página inicial do gestor de obras.</p>
+        <Subsection title="Aba Hoje — o que precisa de ação agora">
+          <Table
+            headers={["Painel", "O que mostra"]}
+            rows={[
+              ["Precisam de visita", "Obras em instalação sem visita agendada e sem visita recente (7+ dias). Clique em Agendar para marcar uma."],
+              ["Próximas visitas", "Visitas dos próximos 7 dias"],
+              ["Planos de ação por projeto", "Progresso (concluídos/total), itens abertos, vencidos e próximo vencimento — você cobra o plano por obra"],
+              ["Checar in loco", "Follow-ups de visita pendentes para verificar na obra"],
+              ["Datas de obra vencidas", "Fim do projeto ou da produção vencidos sem a data final registrada"],
+            ]}
+          />
+        </Subsection>
+        <Subsection title="Aba Agenda — o que vem pela frente">
+          <p className="text-sm text-muted-foreground">Próximas visitas e as datas-chave das obras (medição, produção, instalação, prazos) em ordem cronológica, além de uma seção de <Strong>Datas atrasadas</Strong>.</p>
+        </Subsection>
+        <Subsection title="Aba Operação">
+          <p className="text-sm text-muted-foreground">Instalações, assistência técnica e amostras — o acompanhamento operacional da obra.</p>
+        </Subsection>
+        <Tip>Como gestor, use <Strong>Ver como → Gestor de Obras</Strong> (menu do usuário) para enxergar exatamente o que essa pessoa vê.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "cobrancas",
+    title: "Minhas Cobranças",
+    icon: ClipboardList,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Lista tudo que você precisa cobrar — itens de plano de ação e follow-ups de visita <Strong>em aberto</Strong>, de todas as obras.</p>
+        <Subsection title="Agrupado por projeto">
+          <p className="text-sm text-muted-foreground">Por padrão, as cobranças vêm agrupadas por obra (com total, vencidas e próximo vencimento). Use o alternador <Strong>Por projeto / Por item</Strong> para trocar a visão. Os filtros de prazo, responsável e obra funcionam nas duas.</p>
+        </Subsection>
+        <Subsection title="Cobrar um responsável externo por WhatsApp">
+          <p className="text-sm text-muted-foreground">Itens com responsável <Strong>externo</Strong> (fornecedor/terceiro, que não tem e-mail no sistema) mostram o botão <Strong>Cobrar</Strong>, que abre o WhatsApp com a mensagem pronta — você escolhe o contato e envia.</p>
+        </Subsection>
+        <Tip>Esses itens também entram no e-mail diário de cobrança e na Central de Alertas do Dashboard.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "planos-acao",
+    title: "Planos de ação",
+    icon: ClipboardPaste,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Um plano de ação é um <Strong>conjunto de tarefas</Strong> que a obra precisa realizar. Você cobra o plano por projeto, não item a item.</p>
+        <Subsection title="Ver se a obra tem plano ativo">
+          <p className="text-sm text-muted-foreground">O <Strong>selo de plano</Strong> aparece na Lista de Projetos, no Painel de Projetos, no cabeçalho do projeto e no cartão de Minhas Cobranças: <em>"Plano: N"</em> (vermelho se houver itens vencidos) quando há itens em aberto, ou <em>"Plano ✓"</em> quando tudo foi concluído.</p>
+        </Subsection>
+        <Subsection title="Criar um plano">
+          <p className="text-sm text-muted-foreground">Onde a obra ainda não tem plano, o selo vira o botão <Strong>+ Plano de ação</Strong>: informe o título e a primeira tarefa (o plano já nasce ativo). Para gerenciar o plano completo — adicionar itens, marcar como feito, exportar em PDF — abra a página do projeto.</p>
+        </Subsection>
+      </div>
+    ),
+  },
+  {
+    id: "agendar-visita",
+    title: "Agendar visitas",
+    icon: CalendarDays,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Durante a instalação, a frequência de visitas precisa subir. Há três formas de registrar uma visita:</p>
+        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+          <li>No Painel (aba <Strong>Hoje</Strong>), no bloco <Strong>Precisam de visita</Strong>, clique em <Strong>Agendar</Strong> — a obra já vem preenchida.</li>
+          <li>Botão <Strong>Nova visita</Strong> no topo da tela Obra (abas Hoje e Agenda) — escolha a obra no diálogo.</li>
+          <li>Dentro da página do projeto, na seção de visitas.</li>
+        </ul>
+        <p className="text-sm text-muted-foreground">Cada visita registra data, responsável, quem foi, objetivo e observações. Os follow-ups da visita viram itens a <Strong>checar in loco</Strong> na próxima ida à obra.</p>
+      </div>
+    ),
+  },
+  {
+    id: "ver-como",
+    title: "Ver como (pré-visualização de papéis)",
+    icon: SlidersHorizontal,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">Recurso só para <Strong>gestores</Strong>. Permite ver o app com o menu e o acesso de outro papel (Gestor de Obras, Projetista, Observador) sem trocar de conta.</p>
+        <Subsection title="Como usar">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>Clique no seu nome/e-mail no canto inferior esquerdo.</li>
+            <li>Em <Strong>Ver como (pré-visualização)</Strong>, escolha o papel.</li>
+            <li>Um aviso aparece no topo; clique em <Strong>Voltar para Gestor</Strong> (ou escolha "Gestor (você)") para sair.</li>
+          </ol>
+        </Subsection>
+        <Tip>É apenas apresentação: suas permissões reais no servidor não mudam — você continua com acesso total.</Tip>
+      </div>
+    ),
+  },
+  {
     id: "central-obra",
     title: "Central da Obra",
     icon: HardHat,
