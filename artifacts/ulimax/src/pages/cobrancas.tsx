@@ -67,6 +67,7 @@ export default function Cobrancas() {
   const [prazo, setPrazo] = useState<string>("abertas");
   const [responsavel, setResponsavel] = useState<string>("all");
   const [obra, setObra] = useState<string>("all");
+  const [agrupar, setAgrupar] = useState<"projeto" | "item">("projeto");
 
   const { rows, counts, responsaveis, obras } = useMemo(() => {
     const all = (items ?? []) as ChaseItem[];
@@ -109,6 +110,68 @@ export default function Cobrancas() {
 
     return { rows, counts, responsaveis, obras };
   }, [items, prazo, responsavel, obra]);
+
+  // Agrupamento por obra: o gestor cobra o plano por projeto, não item a item.
+  const grupos = useMemo(() => {
+    const map = new Map<
+      number,
+      { projectId: number; projectName: string; items: typeof rows; vencidas: number; nextDue: string | null }
+    >();
+    for (const r of rows) {
+      const pid = r.item.projectId;
+      let g = map.get(pid);
+      if (!g) {
+        g = { projectId: pid, projectName: r.item.projectName ?? "Obra", items: [], vencidas: 0, nextDue: null };
+        map.set(pid, g);
+      }
+      g.items.push(r);
+      if (r.urg === "vencida") g.vencidas++;
+      if (r.item.dueDate && (!g.nextDue || r.item.dueDate < g.nextDue)) g.nextDue = r.item.dueDate;
+    }
+    return [...map.values()].sort(
+      (a, b) => b.vencidas - a.vencidas || (a.nextDue ?? "9999").localeCompare(b.nextDue ?? "9999"),
+    );
+  }, [rows]);
+
+  const itemRow = (r: (typeof rows)[number]) => {
+    const { item, urg } = r;
+    return (
+      <div key={`${item.source}-${item.id}`} onClick={() => navigate(`/projects/${item.projectId}`)}>
+        <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer">
+          <span title={item.source === "visit" ? "Follow-up de visita" : "Plano de ação"} className="shrink-0">
+            {item.source === "visit"
+              ? <MapPin className="h-4 w-4 text-violet-500" />
+              : <ClipboardList className="h-4 w-4 text-blue-500" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground truncate">{item.description}</p>
+            <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground mt-0.5">
+              {agrupar === "item" && item.projectName && <span className="truncate max-w-[180px]">{item.projectName}</span>}
+              {item.context && <span className="text-muted-foreground/70">{agrupar === "item" ? "· " : ""}{item.context}</span>}
+              <span className="flex items-center gap-1"><User className="h-3 w-3" />{responsibleLabel(item)}</span>
+            </div>
+          </div>
+          {item.responsibleExternal && (
+            <a
+              href={whatsappUrl(item)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title="Cobrar no WhatsApp"
+              className="shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Cobrar</span>
+            </a>
+          )}
+          <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", URGENCY_META[urg].chip)}>
+            {fmtDue(item.dueDate)}
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -166,6 +229,21 @@ export default function Cobrancas() {
             {obras.map(([id, name]) => <SelectItem key={id} value={String(id)}>{name}</SelectItem>)}
           </SelectContent>
         </Select>
+
+        <div className="ml-auto inline-flex rounded-md border border-border overflow-hidden text-xs font-medium">
+          <button
+            onClick={() => setAgrupar("projeto")}
+            className={cn("px-3 py-1.5 transition-colors", agrupar === "projeto" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted/50")}
+          >
+            Por projeto
+          </button>
+          <button
+            onClick={() => setAgrupar("item")}
+            className={cn("px-3 py-1.5 transition-colors border-l border-border", agrupar === "item" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted/50")}
+          >
+            Por item
+          </button>
+        </div>
       </div>
 
       {/* Lista */}
@@ -175,42 +253,31 @@ export default function Cobrancas() {
         <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground">
           🎉 Nenhuma cobrança em aberto com esses filtros.
         </div>
-      ) : (
+      ) : agrupar === "item" ? (
         <div className="bg-card rounded-xl border border-border divide-y divide-border overflow-hidden">
-          {rows.map(({ item, urg }) => (
-            <div key={`${item.source}-${item.id}`} onClick={() => navigate(`/projects/${item.projectId}`)}>
-              <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer">
-                <span title={item.source === "visit" ? "Follow-up de visita" : "Plano de ação"} className="shrink-0">
-                  {item.source === "visit"
-                    ? <MapPin className="h-4 w-4 text-violet-500" />
-                    : <ClipboardList className="h-4 w-4 text-blue-500" />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{item.description}</p>
-                  <div className="flex items-center gap-2 flex-wrap text-xs text-muted-foreground mt-0.5">
-                    {item.projectName && <span className="truncate max-w-[180px]">{item.projectName}</span>}
-                    {item.context && <span className="text-muted-foreground/70">· {item.context}</span>}
-                    <span className="flex items-center gap-1"><User className="h-3 w-3" />{responsibleLabel(item)}</span>
-                  </div>
-                </div>
-                {item.responsibleExternal && (
-                  <a
-                    href={whatsappUrl(item)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    title="Cobrar no WhatsApp"
-                    className="shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Cobrar</span>
-                  </a>
+          {rows.map(itemRow)}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {grupos.map((g) => (
+            <div key={g.projectId} className="bg-card rounded-xl border border-border overflow-hidden">
+              <div
+                className="flex items-center gap-3 px-4 py-2.5 bg-muted/30 border-b border-border cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => navigate(`/projects/${g.projectId}`)}
+              >
+                <p className="text-sm font-semibold text-foreground truncate flex-1">{g.projectName}</p>
+                {g.vencidas > 0 && (
+                  <span className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40">
+                    {g.vencidas} vencida{g.vencidas > 1 ? "s" : ""}
+                  </span>
                 )}
-                <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", URGENCY_META[urg].chip)}>
-                  {fmtDue(item.dueDate)}
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {g.items.length} cobrança{g.items.length > 1 ? "s" : ""}
+                  {g.nextDue ? ` · próx. ${g.nextDue.split("-").slice(1).reverse().join("/")}` : ""}
                 </span>
                 <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
               </div>
+              <div className="divide-y divide-border">{g.items.map(itemRow)}</div>
             </div>
           ))}
         </div>
