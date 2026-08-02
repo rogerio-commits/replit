@@ -71,6 +71,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
+import { ActionPlanBadge } from "@/components/action-plan-badge";
+import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 
 // ── CSV Import helpers ───────────────────────────────────────────────────────
 const TEMPLATE_CSV = [
@@ -333,6 +335,7 @@ export default function Projects() {
   const { data: allMembers } = useListMembers();
   const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
 
+  const planMap = useActionPlanMap();
   const healthMap = useMemo(
     () => computeHealthMap(projects ?? [], allTasks ?? []),
     [projects, allTasks]
@@ -1145,6 +1148,9 @@ export default function Projects() {
                             <p className="text-xs text-muted-foreground truncate mt-0.5">{project.description}</p>
                           )}
                         </Link>
+                        <div className="mt-1">
+                          <ActionPlanBadge projectId={project.id} projectName={project.name} summary={planMap.get(project.id)} />
+                        </div>
                       </td>
                       <td className="px-3 py-2.5 min-w-[90px]">
                         <Link href={`/projects/${project.id}`} className="block">

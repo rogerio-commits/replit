@@ -41,6 +41,8 @@ import { ProjectMilestones } from "@/components/project-milestones";
 import { ProjectBurndown } from "@/components/project-burndown";
 import { ProjectDates } from "@/components/project-dates";
 import { VisitDetailDialog } from "@/components/visit-detail-dialog";
+import { ActionPlanBadge } from "@/components/action-plan-badge";
+import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -206,6 +208,7 @@ function getPriorityColor(priority: string) {
 export default function ProjectDetail() {
   const { id } = useParams();
   const projectId = parseInt(id || "0", 10);
+  const planMap = useActionPlanMap();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -621,6 +624,7 @@ export default function ProjectDetail() {
               <Badge variant="outline" className={getStatusColor(project.status)}>
                 {STATUS_LABELS[project.status] ?? project.status}
               </Badge>
+              <ActionPlanBadge projectId={projectId} projectName={project.name} summary={planMap.get(projectId)} />
               {isExecutor && !isGestor && (
                 <Badge variant="outline" className={cn(
                   "text-xs",
