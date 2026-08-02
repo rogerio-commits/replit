@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "wouter";
 import { useListTasks } from "@workspace/api-client-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +18,7 @@ type AnyTask = {
   id: number;
   title: string;
   status: string;
+  assignedTo?: number | null;
   assigneeName?: string | null;
   dueDate?: string | null;
   createdAt: string;
@@ -26,6 +28,7 @@ type AnyTask = {
 
 interface PersonStats {
   name: string;
+  memberId: number | null; // id do responsável, para o drill-down em /tasks
   done: number;        // concluídas no período
   onTime: number;      // concluídas até o prazo
   late: number;        // concluídas depois do prazo
@@ -58,7 +61,7 @@ export default function Desempenho() {
     const get = (name: string) => {
       let s = map.get(name);
       if (!s) {
-        s = { name, done: 0, onTime: 0, late: 0, noDue: 0, avgDays: null, cycleDays: null, openNow: 0, overdueNow: 0, sumDays: 0, nDays: 0, sumCycle: 0, nCycle: 0 };
+        s = { name, memberId: null, done: 0, onTime: 0, late: 0, noDue: 0, avgDays: null, cycleDays: null, openNow: 0, overdueNow: 0, sumDays: 0, nDays: 0, sumCycle: 0, nCycle: 0 };
         map.set(name, s);
       }
       return s;
@@ -69,6 +72,7 @@ export default function Desempenho() {
       if (!name) continue; // desempenho é por pessoa; sem responsável não conta
 
       const s = get(name);
+      if (s.memberId == null && t.assignedTo != null) s.memberId = t.assignedTo;
       if (t.status !== "done") {
         s.openNow++;
         if (t.dueDate && daysFromToday(t.dueDate) < 0) s.overdueNow++;
@@ -258,7 +262,11 @@ export default function Desempenho() {
                     const punct = withDue > 0 ? Math.round((p.onTime / withDue) * 100) : null;
                     return (
                       <tr key={p.name} className={cn("border-b last:border-0", idx % 2 === 1 && "bg-muted/10")}>
-                        <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
+                        <td className="px-4 py-2.5 font-medium text-foreground">
+                          {p.memberId != null ? (
+                            <Link href={`/tasks?responsavel=${p.memberId}`} className="hover:text-primary hover:underline">{p.name}</Link>
+                          ) : p.name}
+                        </td>
                         <td className="px-3 py-2.5 text-center font-semibold tabular-nums">{p.done}</td>
                         <td className="px-3 py-2.5 text-center text-emerald-600 tabular-nums">{p.onTime}</td>
                         <td className={cn("px-3 py-2.5 text-center tabular-nums", p.late > 0 ? "text-red-600 font-medium" : "text-muted-foreground")}>{p.late}</td>
@@ -269,7 +277,11 @@ export default function Desempenho() {
                         </td>
                         <td className="px-3 py-2.5 text-center text-muted-foreground tabular-nums">{p.avgDays === null ? "—" : `${p.avgDays}d`}</td>
                         <td className="px-3 py-2.5 text-center tabular-nums">{p.openNow}</td>
-                        <td className={cn("px-3 py-2.5 text-center tabular-nums", p.overdueNow > 0 ? "text-red-600 font-semibold" : "text-muted-foreground/50")}>{p.overdueNow}</td>
+                        <td className={cn("px-3 py-2.5 text-center tabular-nums", p.overdueNow > 0 ? "text-red-600 font-semibold" : "text-muted-foreground/50")}>
+                          {p.overdueNow > 0 && p.memberId != null ? (
+                            <Link href={`/tasks?responsavel=${p.memberId}&vencidas=1`} className="hover:underline">{p.overdueNow}</Link>
+                          ) : p.overdueNow}
+                        </td>
                       </tr>
                     );
                   })}

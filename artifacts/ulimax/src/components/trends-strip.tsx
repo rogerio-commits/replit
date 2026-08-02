@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "wouter";
 import { useGetMetricsTrends } from "@workspace/api-client-react";
 import type { MetricsTrendPoint } from "@workspace/api-client-react";
 import { BarChart, Bar, ResponsiveContainer, Cell } from "recharts";
@@ -25,10 +26,12 @@ function DeltaStat({
   label,
   current,
   past,
+  href,
 }: {
   label: string;
   current: number;
   past: number | null;
+  href?: string;
 }) {
   const diff = past == null ? null : current - past;
   // Menos é melhor (vencidas/em aberto): queda = verde, alta = vermelho.
@@ -40,11 +43,14 @@ function DeltaStat({
         : "text-red-600";
   const Icon = diff == null || diff === 0 ? Minus : diff < 0 ? TrendingDown : TrendingUp;
 
+  const value = <span className="text-2xl font-bold text-foreground">{current}</span>;
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-foreground">{current}</span>
+        {href ? (
+          <Link href={href} className="hover:underline">{value}</Link>
+        ) : value}
         <span className={cn("flex items-center gap-0.5 text-xs font-semibold", tone)}>
           <Icon className="h-3.5 w-3.5" />
           {diff == null
@@ -89,7 +95,7 @@ export function TrendsStrip() {
         <h2 className="text-sm font-semibold text-foreground">📈 Tendência da semana</h2>
       </div>
       <div className="grid gap-4 sm:grid-cols-[auto_auto_1fr] sm:items-center">
-        <DeltaStat label="Vencidas" current={data.current.overdueTasks} past={past?.overdueTasks ?? null} />
+        <DeltaStat label="Vencidas" current={data.current.overdueTasks} past={past?.overdueTasks ?? null} href="/tasks?vencidas=1" />
         <DeltaStat label="Em aberto" current={data.current.openTasks} past={past?.openTasks ?? null} />
         <div className="min-w-0">
           <div className="flex items-baseline justify-between mb-1">
