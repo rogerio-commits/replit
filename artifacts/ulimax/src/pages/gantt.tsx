@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Briefcase, CheckSquare } fr
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -121,11 +122,18 @@ export default function Gantt({ asTab = false }: { asTab?: boolean } = {}) {
   const [zoom, setZoom] = useState<ZoomLevel>("month");
   const [offset, setOffset] = useState(0);
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
+  const [filterMaterial, setFilterMaterial] = useState<string>("all");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: projects, isLoading: isProjectsLoading } = useListProjects();
+  const { data: projectsAll, isLoading: isProjectsLoading } = useListProjects();
   const { data: tasks, isLoading: isTasksLoading } = useListTasks();
   const isLoading = isProjectsLoading || isTasksLoading;
+
+  // Madeira e Alumínio são unidades diferentes — filtra a linha do tempo por unidade.
+  const projects = useMemo(
+    () => (projectsAll ?? []).filter((p) => filterMaterial === "all" || p.materialType === filterMaterial),
+    [projectsAll, filterMaterial],
+  );
 
   const { viewStart, viewEnd } = useMemo(() => {
     const base = new Date();
@@ -171,6 +179,16 @@ export default function Gantt({ asTab = false }: { asTab?: boolean } = {}) {
 
   const zoomControls = (
     <div className="flex items-center gap-2 shrink-0">
+      <Select value={filterMaterial} onValueChange={setFilterMaterial}>
+        <SelectTrigger className="w-40" data-testid="select-filter-material-gantt">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Madeira e Alumínio</SelectItem>
+          <SelectItem value="madeira">Madeira</SelectItem>
+          <SelectItem value="aluminio">Alumínio</SelectItem>
+        </SelectContent>
+      </Select>
       <div className="flex items-center rounded-md border border-border overflow-hidden text-sm">
         {zoomLevels.map(z => (
           <button key={z} onClick={() => { setZoom(z); setOffset(0); }} className={cn("px-3 py-1.5 transition-colors", zoom === z ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted")}>
