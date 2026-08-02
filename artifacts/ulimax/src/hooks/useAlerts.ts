@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useListProjects, useListTasks, useListMembers, useGetMe, useListSampleControls, useListChaseItems } from "@workspace/api-client-react";
 import type { Project, Task, SampleControl, ChaseItem } from "@workspace/api-client-react";
+import { overdueObraDates } from "@/lib/obra-dates";
 
 export type AlertSeverity = "danger" | "warning" | "info";
 
@@ -16,7 +17,8 @@ export type AlertType =
   | "overdue_sample"
   | "approaching_sample"
   | "overdue_chase_item"
-  | "approaching_chase_item";
+  | "approaching_chase_item"
+  | "overdue_obra_date";
 
 export interface Alert {
   id: string;
@@ -96,6 +98,20 @@ export function computeAlerts(
         severity: "info",
         title: `Sem data de instalação: ${p.name}`,
         description: "Nenhuma data estimada de instalação cadastrada.",
+        href: `/projects/${p.id}`,
+        projectId: p.id,
+      });
+    }
+
+    // Datas-chave estimadas vencidas sem a data final registrada (fim do projeto,
+    // fim da produção). Preencher a data final tira do radar.
+    for (const od of overdueObraDates(p)) {
+      alerts.push({
+        id: `overdue-obra-${od.label}-${p.id}`,
+        type: "overdue_obra_date",
+        severity: "danger",
+        title: `${od.label} vencido: ${p.name}`,
+        description: `Previsto ${fmtDate(od.date)} · há ${-od.days} dia${-od.days > 1 ? "s" : ""}, sem data final registrada.`,
         href: `/projects/${p.id}`,
         projectId: p.id,
       });
