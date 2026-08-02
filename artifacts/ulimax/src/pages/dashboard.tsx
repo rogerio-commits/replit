@@ -36,6 +36,7 @@ import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
 import { useToast } from "@/hooks/use-toast";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { TrendsStrip } from "@/components/trends-strip";
+import { MaterialSplit } from "@/components/material-split";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
@@ -578,6 +579,9 @@ export default function Dashboard() {
 
       {/* ── Tendência da semana ── */}
       {!loading && <TrendsStrip />}
+
+      {/* ── Comparativo por unidade (Madeira × Alumínio) ── */}
+      {!loading && <MaterialSplit />}
 
       {/* ── Onde focar agora ── */}
       {!loading && !isTasksLoading && (projects?.length ?? 0) > 0 && (
