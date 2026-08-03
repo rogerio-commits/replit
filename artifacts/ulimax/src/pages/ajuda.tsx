@@ -104,15 +104,17 @@ const sections: Section[] = [
         <Table
           headers={["Componente", "Descrição"]}
           rows={[
-            ["KPIs", "Total de projetos, projetos ativos, alertas de prazo e percentual de tarefas concluídas"],
-            ["Farol de Projetos", "Contadores 🟢🟡🔴 e os projetos que precisam de atenção, com o motivo"],
-            ["Fases dos Projetos", "Quantidade de projetos em cada etapa (A Iniciar → Em Instalação)"],
-            ["Visitas em Obras", "Agenda de visitas: data, responsável e objetivo"],
-            ["Alertas de Prazo", "Projetos com datas vencidas ou próximas do vencimento"],
-            ["Material", "Proporção entre projetos em madeira e alumínio"],
+            ["KPIs", "Total de projetos, projetos ativos, alertas e tarefas concluídas"],
+            ["🚦 Onde focar agora", "Farol 🟢🟡🔴 com os projetos que precisam de atenção e o motivo"],
+            ["Por unidade", "Comparativo Madeira × Alumínio: ativos, em aberto, vencidas, concluídas"],
+            ["Central de Alertas", "Tudo que precisa de ação: atrasos, instalações, cobranças, datas de obra"],
+            ["Atrasadas por Responsável", "Quem está devendo tarefa vencida"],
+            ["Próximos 7 Dias", "Mini-calendário com os prazos da semana (arraste para remarcar)"],
+            ["Status das Tarefas + Próximas Visitas", "Distribuição das tarefas e as visitas agendadas"],
+            ["Atividade Recente", "Últimas movimentações em tarefas e projetos"],
           ]}
         />
-        <Tip>Clique em qualquer fase (ex: <em>Em Produção</em>) para acessar a lista de projetos filtrada. Os alertas de prazo são clicáveis e abrem diretamente o projeto correspondente.</Tip>
+        <Tip>Quase tudo é clicável: os números levam às listas já filtradas e os alertas abrem direto o projeto ou a tarefa.</Tip>
       </div>
     ),
   },
@@ -269,7 +271,7 @@ const sections: Section[] = [
     icon: CheckSquare,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Lista global de todas as tarefas de todos os projetos, com visão consolidada.</p>
+        <p className="text-sm text-muted-foreground">Lista global de todas as tarefas de todos os projetos — é a aba <Strong>Lista</Strong> da tela <Strong>Trabalho</Strong>.</p>
         <Subsection title="Criar uma tarefa">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Clique em <Strong>+ Nova Tarefa</Strong>.</li>
@@ -649,12 +651,12 @@ const sections: Section[] = [
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          A visualização em Gantt está integrada ao <Strong>Kanban</Strong> como a aba <Strong>Linha do Tempo</Strong>.
+          A visualização em Gantt é a aba <Strong>Linha do Tempo</Strong> da tela <Strong>Trabalho</Strong>.
           Exibe todos os projetos e suas tarefas numa grade de tempo — navegue por semana, mês ou trimestre.
         </p>
         <Subsection title="Como acessar">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique em <Strong>Kanban</Strong> no menu lateral.</li>
+            <li>Clique em <Strong>Trabalho</Strong> no menu lateral.</li>
             <li>Selecione a aba <Strong>Linha do Tempo</Strong>.</li>
           </ol>
         </Subsection>
@@ -726,7 +728,7 @@ const sections: Section[] = [
         <p className="text-sm text-muted-foreground">Quando um projeto avança para a fase <Strong>Em Aprovação</Strong>, um painel de revisão é exibido no topo da página de detalhe para que gestores tomem a decisão de aprovar ou rejeitar.</p>
         <Subsection title="Como funciona o fluxo">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Altere o status do projeto para <Strong>Em Aprovação</Strong> (via edição ou Kanban).</li>
+            <li>Altere o status do projeto para <Strong>Em Aprovação</Strong> (via edição ou arrastando na aba Fases dos Projetos, em Trabalho).</li>
             <li>Todos os membros do projeto e os gestores recebem uma notificação automática.</li>
             <li>O painel âmbar <em>Aguardando Aprovação</em> aparece no detalhe do projeto.</li>
             <li>Um gestor clica em <Strong>Revisar e Decidir</Strong>, adiciona uma nota opcional e escolhe <Strong>Aprovar</Strong> ou <Strong>Rejeitar</Strong>.</li>
@@ -761,7 +763,7 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A análise de produtividade mostra o desempenho individual de cada membro da equipe, com base nas tarefas atribuídas e concluídas.</p>
         <Subsection title="Acessar">
-          <p className="text-sm text-muted-foreground">Abra <Strong>Painel de Projetos</Strong> no menu lateral (seção <Strong>Principal</Strong>) e veja a seção <Strong>Carga da Equipe</Strong> no fim da página.</p>
+          <p className="text-sm text-muted-foreground">Abra <Strong>Desempenho</Strong> no menu Análises: a tabela por pessoa mostra abertas e atrasadas de cada membro.</p>
         </Subsection>
         <Subsection title="O que você vê">
           <Table
@@ -932,25 +934,29 @@ const sections: Section[] = [
   },
   {
     id: "kanban",
-    title: "Kanban",
+    title: "Trabalho",
     icon: Columns3,
+    isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Quadro visual com três abas — gerencie tarefas, projetos e linha do tempo num só lugar.</p>
-        <Subsection title="As três abas">
+        <p className="text-sm text-muted-foreground">A tela <Strong>Trabalho</Strong> reúne tarefas e projetos em quatro visões — antes eram duas páginas (Tarefas e Kanban).</p>
+        <Subsection title="As quatro abas">
           <Table
             headers={["Aba", "O que exibe"]}
             rows={[
-              ["Tarefas", "Board por status: A Fazer · Em Andamento · Revisão · Concluída. Arraste os cards para atualizar o status."],
-              ["Projetos", "Board por fase: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação. Arraste os projetos entre colunas."],
-              ["Linha do Tempo", "Gantt com todos os projetos e tarefas. Navegue por Semana / Mês / Trimestre com as setas e o botão Hoje."],
+              ["Lista", "Todas as tarefas com filtros, busca, ações em lote e exportação CSV"],
+              ["Tarefas", "Colunas por status: A Fazer · Em Andamento · Revisão · Concluída. Arraste para mudar o status; clique num cartão para abrir o detalhe."],
+              ["Fases dos Projetos", "Colunas por fase: A Iniciar → Em Instalação. Arraste os projetos entre fases."],
+              ["Linha do Tempo", "Gantt com todos os projetos e tarefas. Navegue por Semana / Mês / Trimestre."],
             ]}
           />
         </Subsection>
-        <Subsection title="Como usar o board">
+        <Subsection title="Como usar as colunas">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li>Arraste e solte cards entre colunas para atualizar o status automaticamente.</li>
+            <li>Clique num cartão de tarefa para abrir o detalhe (comentários, anexos, subtarefas).</li>
             <li>Clique no <Strong>+</Strong> no cabeçalho de uma coluna para criar um item já naquela fase.</li>
+            <li>Use o filtro <Strong>Madeira / Alumínio</Strong> para ver o esforço de cada unidade.</li>
           </ul>
         </Subsection>
         <Subsection title="Como usar a Linha do Tempo">
@@ -1146,7 +1152,7 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Um plano de ação é um <Strong>conjunto de tarefas</Strong> que a obra precisa realizar. Você cobra o plano por projeto, não item a item.</p>
         <Subsection title="Ver se a obra tem plano ativo">
-          <p className="text-sm text-muted-foreground">O <Strong>selo de plano</Strong> aparece na Lista de Projetos, no Painel de Projetos, no cabeçalho do projeto e no cartão de Minhas Cobranças: <em>"Plano: N"</em> (vermelho se houver itens vencidos) quando há itens em aberto, ou <em>"Plano ✓"</em> quando tudo foi concluído.</p>
+          <p className="text-sm text-muted-foreground">O <Strong>selo de plano</Strong> aparece na Lista de Projetos, no cabeçalho do projeto e no cartão de Minhas Cobranças: <em>"Plano: N"</em> (vermelho se houver itens vencidos) quando há itens em aberto, ou <em>"Plano ✓"</em> quando tudo foi concluído.</p>
         </Subsection>
         <Subsection title="Criar um plano">
           <p className="text-sm text-muted-foreground">Onde a obra ainda não tem plano, o selo vira o botão <Strong>+ Plano de ação</Strong>: informe o título e a primeira tarefa (o plano já nasce ativo). Para gerenciar o plano completo — adicionar itens, marcar como feito, exportar em PDF — abra a página do projeto.</p>
@@ -1338,7 +1344,7 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Pauta de reunião montada automaticamente com o que importa na semana — abra na segunda-feira e conduza a reunião sem preparar nada.</p>
         <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">Menu lateral → seção <Strong>Análises</Strong> → <Strong>Reunião Semanal</Strong> (visível somente para Gestores).</p>
+          <p className="text-sm text-muted-foreground">Abra <Strong>Desempenho</Strong> (menu Análises) e clique no botão <Strong>Modo reunião</Strong> (visível somente para Gestores).</p>
         </Subsection>
         <Subsection title="O que aparece na pauta">
           <Table
@@ -1504,67 +1510,6 @@ const sections: Section[] = [
           </ul>
         </Subsection>
         <Tip>Peça para a equipe de instalação anexar uma foto ao concluir cada esquadria — o histórico da obra fica registrado sem esforço.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "portfolio",
-    title: "Painel de Projetos",
-    icon: BarChart3,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          A visão rápida do gestor: o status de todos os projetos em um só lugar e uma lista clara de onde focar sua atenção — sempre com o mesmo farol 🔴🟡🟢 do Dashboard e do Kanban.
-        </p>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">
-            Clique em <Strong>Painel de Projetos</Strong> no menu lateral, na seção <Strong>Principal</Strong>.
-          </p>
-        </Subsection>
-        <Subsection title="Farol do projeto">
-          <p className="text-sm text-muted-foreground mb-2">
-            Calculado automaticamente a partir das tarefas e do prazo final de cada projeto:
-          </p>
-          <Table
-            headers={["Cor", "Quando acontece"]}
-            rows={[
-              ["🔴 Crítico", "Alguma tarefa atrasada ou o prazo final do projeto já venceu"],
-              ["🟡 Atenção", "Tarefa vencendo em até 3 dias, tarefa parada há 7+ dias, ou fim do projeto em até 7 dias com menos de 70% concluído"],
-              ["🟢 Em dia", "Nenhuma pendência crítica"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Onde focar agora">
-          <p className="text-sm text-muted-foreground">
-            Lista só os projetos em 🔴 ou 🟡, do mais urgente para o menos urgente, cada um com o motivo escrito por extenso (ex.: <em>"2 tarefas atrasadas · prazo do projeto vencido há 3d"</em>). Clique em qualquer item para abrir o projeto.
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Projetos <Strong>sem nenhuma tarefa cadastrada</Strong> aparecem em um aviso separado — sem tarefas, o farol não tem o que avaliar.
-          </p>
-        </Subsection>
-        <Subsection title="Filtros e busca">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Busca por nome</Strong> — campo acima da tabela filtra projetos em tempo real.</li>
-            <li><Strong>Filtro de farol</Strong> — clique nos cartões de resumo (Críticos / Atenção / Em dia) para filtrar a tabela.</li>
-            <li><Strong>Filtro de fase</Strong> — clique nas pílulas de fase (A Iniciar, Em Produção…) para ver só os projetos daquela fase; cada pílula mostra a contagem.</li>
-          </ul>
-        </Subsection>
-        <Subsection title="Ordenação de colunas">
-          <p className="text-sm text-muted-foreground">
-            Clique no cabeçalho de qualquer coluna (Projeto, Farol, Fase, Progresso, Prazo) para ordenar de forma crescente ou decrescente. Sem ordenação escolhida, a tabela já vem do mais urgente para o menos urgente.
-          </p>
-        </Subsection>
-        <Subsection title="Exportar para CSV">
-          <p className="text-sm text-muted-foreground">
-            Clique em <Strong>Exportar CSV</Strong> no canto superior direito. O arquivo inclui os projetos <em>filtrados no momento</em>, com fase, prioridade, farol, motivos, progresso e prazo — pronto para abrir no Excel.
-          </p>
-        </Subsection>
-        <Subsection title="Carga da Equipe">
-          <p className="text-sm text-muted-foreground">
-            Abaixo da tabela de projetos, a seção <Strong>Carga da Equipe</Strong> lista todos os membros com tarefas atribuídas, mostrando: tarefas abertas, tarefas vencidas e uma barra de conclusão. Quem tem mais tarefas vencidas aparece primeiro.
-          </p>
-        </Subsection>
-        <Tip>Clique em qualquer linha da tabela para ir direto ao detalhe do projeto.</Tip>
       </div>
     ),
   },
@@ -1793,9 +1738,9 @@ const sections: Section[] = [
           </p>
         </Subsection>
         <Tip>Use o card <Strong>Alertas de Prazo</Strong> (existente) para ver todas as datas próximas, e o novo card <Strong>Projetos com Prazo Vencido</Strong> para focar exclusivamente no que já passou da data.</Tip>
-        <Subsection title="Complemento: Painel de Projetos">
+        <Subsection title="Complemento: Desempenho">
           <p className="text-sm text-muted-foreground">
-            Para uma análise mais completa por membro, acesse a página <Strong>Painel de Projetos</Strong> — a seção <Strong>Carga da Equipe</Strong> lá mostra o mesmo dado com barras de progresso individuais para cada membro.
+            Para uma análise mais completa por membro, acesse <Strong>Desempenho</Strong> (menu Análises) — a tabela por pessoa mostra concluídas, pontualidade, abertas e atrasadas de cada membro.
           </p>
         </Subsection>
       </div>
