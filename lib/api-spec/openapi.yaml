@@ -4019,6 +4019,8 @@ components:
           type: string
         sizeBytes:
           type: integer
+        category:
+          type: ["string", "null"]
         uploadedBy:
           type: integer
         uploaderName:
@@ -4046,6 +4048,8 @@ components:
           minLength: 1
         sizeBytes:
           type: integer
+        category:
+          type: ["string", "null"]
 
     UploadUrlRequest:
       type: object

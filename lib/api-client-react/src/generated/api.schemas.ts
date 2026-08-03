@@ -1141,6 +1141,8 @@ export interface Attachment {
   originalName: string;
   mimeType: string;
   sizeBytes: number;
+  /** @nullable */
+  category?: string | null;
   uploadedBy: number;
   uploaderName: string;
   createdAt: string;
@@ -1164,6 +1166,8 @@ export interface AttachmentInput {
   /** @minLength 1 */
   mimeType: string;
   sizeBytes: number;
+  /** @nullable */
+  category?: string | null;
 }
 
 export interface UploadUrlRequest {

@@ -35,6 +35,7 @@ import {
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { ProjectFiles } from "@/components/project-files";
+import { ObraDocuments } from "@/components/obra-documents";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
 import { ProjectMilestones } from "@/components/project-milestones";
@@ -1633,6 +1634,9 @@ export default function ProjectDetail() {
           <ProjectFiles projectId={projectId} mode="files" />
         </CardContent>
       </Card>
+
+      {/* RDO e Documentos da Obra */}
+      <ObraDocuments projectId={projectId} />
 
       {/* Marcos + Burndown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

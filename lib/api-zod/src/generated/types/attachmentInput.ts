@@ -17,4 +17,6 @@ export interface AttachmentInput {
   /** @minLength 1 */
   mimeType: string;
   sizeBytes: number;
+  /** @nullable */
+  category?: string | null;
 }

@@ -69,10 +69,13 @@ export function ProjectFiles({ projectId, mode = "all" }: ProjectFilesProps) {
   const createAttachment = useCreateAttachment();
   const deleteAttachment = useDeleteAttachment();
 
-  const photos = (attachments ?? []).filter((a) => a.mimeType.startsWith("image/"));
-  const docs = (attachments ?? []).filter((a) => !a.mimeType.startsWith("image/"));
+  // Documentos categorizados (RDO/diário/visita) vivem no arquivo da obra —
+  // aqui ficam só fotos e arquivos comuns (sem categoria).
+  const base = (attachments ?? []).filter((a) => !a.category);
+  const photos = base.filter((a) => a.mimeType.startsWith("image/"));
+  const docs = base.filter((a) => !a.mimeType.startsWith("image/"));
 
-  const displayed = mode === "photos" ? photos : mode === "files" ? docs : attachments ?? [];
+  const displayed = mode === "photos" ? photos : mode === "files" ? docs : base;
 
   const invalidate = () =>
     qc.invalidateQueries({ queryKey: getListAttachmentsQueryKey({ entityType: "project", entityId: projectId }) });

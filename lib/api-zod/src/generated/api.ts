@@ -2099,6 +2099,7 @@ export const ListAttachmentsResponseItem = zod.object({
   "originalName": zod.string(),
   "mimeType": zod.string(),
   "sizeBytes": zod.number(),
+  "category": zod.string().nullish(),
   "uploadedBy": zod.number(),
   "uploaderName": zod.string(),
   "createdAt": zod.string()
@@ -2120,7 +2121,8 @@ export const CreateAttachmentBody = zod.object({
   "filename": zod.string().min(1),
   "originalName": zod.string().min(1),
   "mimeType": zod.string().min(1),
-  "sizeBytes": zod.number()
+  "sizeBytes": zod.number(),
+  "category": zod.string().nullish()
 })
 
 

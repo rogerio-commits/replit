@@ -12,6 +12,9 @@ export const attachmentsTable = pgTable("attachments", {
   originalName: text("original_name").notNull(),
   mimeType: text("mime_type").notNull(),
   sizeBytes: integer("size_bytes").notNull(),
+  // Categoria opcional do documento: "rdo" | "diario" | "visita" | "outro".
+  // Nulo = anexo comum (foto/arquivo). Separa o arquivo de documentos da obra.
+  category: text("category"),
   uploadedBy: integer("uploaded_by").notNull(),
   uploaderName: text("uploader_name").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
