@@ -26,9 +26,8 @@ import NotFound from "@/pages/not-found";
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const Projects = lazy(() => import("@/pages/projects"));
 const ProjectDetail = lazy(() => import("@/pages/project-detail"));
-const Tasks = lazy(() => import("@/pages/tasks"));
 const Members = lazy(() => import("@/pages/members"));
-const Kanban = lazy(() => import("@/pages/kanban"));
+const Trabalho = lazy(() => import("@/pages/kanban"));
 const Calendario = lazy(() => import("@/pages/calendario"));
 const Checklist = lazy(() => import("@/pages/checklist"));
 const Ajuda = lazy(() => import("@/pages/ajuda"));
@@ -36,7 +35,6 @@ const Audit = lazy(() => import("@/pages/audit"));
 const MeuDia = lazy(() => import("@/pages/meu-dia"));
 const Templates = lazy(() => import("@/pages/templates"));
 const Automacao = lazy(() => import("@/pages/automacao"));
-const Portfolio = lazy(() => import("@/pages/portfolio"));
 const Obra = lazy(() => import("@/pages/obra"));
 const CamposPersonalizados = lazy(() => import("@/pages/campos-personalizados"));
 const Reuniao = lazy(() => import("@/pages/reuniao"));
@@ -241,22 +239,22 @@ function ProtectedRoutes() {
             <Route path="/projects" component={Projects} />
             <Route path="/projects/:id/relatorio" component={RelatorioProjeto} />
             <Route path="/projects/:id" component={ProjectDetail} />
-            <Route path="/tasks" component={Tasks} />
-            <Route path="/kanban" component={Kanban} />
+            <Route path="/tasks" component={Trabalho} />
+            <Route path="/kanban"><Redirect to="/tasks?tab=quadro" replace /></Route>
             <Route path="/members" component={Members} />
             <Route path="/calendario" component={Calendario} />
             <Route path="/alertas"><Redirect to="/dashboard" replace /></Route>
             <Route path="/checklist" component={Checklist} />
             <Route path="/assistencia-tecnica"><Redirect to="/obra" replace /></Route>
             <Route path="/controle-amostras"><Redirect to="/obra" replace /></Route>
-            <Route path="/produtividade"><Redirect to="/portfolio" replace /></Route>
-            <Route path="/gantt"><Redirect to="/kanban" replace /></Route>
+            <Route path="/produtividade"><Redirect to="/projects" replace /></Route>
+            <Route path="/gantt"><Redirect to="/tasks?tab=linha" replace /></Route>
             <Route path="/auditoria" component={Audit} />
             <Route path="/meu-dia" component={MeuDia} />
             <Route path="/templates" component={Templates} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/automacao" component={Automacao} />
-            <Route path="/portfolio" component={Portfolio} />
+            <Route path="/portfolio"><Redirect to="/projects" replace /></Route>
             <Route path="/obra" component={Obra} />
             <Route path="/cobrancas" component={Cobrancas} />
             <Route path="/agenda"><Redirect to="/obra?tab=agenda" replace /></Route>

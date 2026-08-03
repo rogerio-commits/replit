@@ -21,8 +21,6 @@ import {
   useListTasks,
   useListMembers,
   useUpdateTask,
-  useGetYesterdaySummary,
-  getGetYesterdaySummaryQueryKey,
   getListTasksQueryKey,
 } from "@workspace/api-client-react";
 import type {
@@ -58,40 +56,9 @@ type ActivityItem = GetRecentActivityQueryResult[number];
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const PHASE_CONFIG = [
-  { id: "a_iniciar",             label: "A Iniciar",      labelShort: "A Iniciar",      color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",   bar: "bg-slate-400",   flow: "bg-slate-200" },
-  { id: "em_projeto",            label: "Em Projeto",     labelShort: "Em Proj.",       color: "text-violet-700",  bg: "bg-violet-100",  border: "border-violet-300",  bar: "bg-violet-500",  flow: "bg-violet-200" },
-  { id: "em_aprovacao",          label: "Em Aprovação",   labelShort: "Em Aprov.",      color: "text-purple-700",  bg: "bg-purple-100",  border: "border-purple-300",  bar: "bg-purple-500",  flow: "bg-purple-200" },
-  { id: "em_producao",           label: "Em Produção",    labelShort: "Em Prod.",       color: "text-blue-700",    bg: "bg-blue-100",    border: "border-blue-300",    bar: "bg-blue-500",    flow: "bg-blue-200" },
-  { id: "aguardando_instalacao", label: "Ag. Instalação", labelShort: "Ag. Inst.",      color: "text-amber-700",   bg: "bg-amber-100",   border: "border-amber-300",   bar: "bg-amber-500",   flow: "bg-amber-200" },
-  { id: "em_instalacao",         label: "Em Instalação",  labelShort: "Em Inst.",       color: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-300", bar: "bg-emerald-500", flow: "bg-emerald-200" },
-];
-
-const DEADLINE_FIELDS: { key: keyof Project; label: string }[] = [
-  { key: "endDate",           label: "Fim Est. Proj." },
-  { key: "finalDate",         label: "Final Proj." },
-  { key: "producaoEndDate",   label: "Fim Est. Prod." },
-  { key: "producaoFinalDate", label: "Final Prod." },
-  { key: "medicaoDate",       label: "Medição" },
-];
-
 const ACTIVE_STATUSES = new Set([
   "em_projeto", "em_aprovacao", "em_producao", "aguardando_instalacao", "em_instalacao",
 ]);
-
-const STATUS_PILL: Record<string, string> = {
-  a_iniciar:             "bg-slate-100 text-slate-700 border-slate-200",
-  em_projeto:            "bg-violet-100 text-violet-700 border-violet-200",
-  em_aprovacao:          "bg-purple-100 text-purple-700 border-purple-200",
-  em_producao:           "bg-blue-100 text-blue-700 border-blue-200",
-  aguardando_instalacao: "bg-amber-100 text-amber-700 border-amber-200",
-  em_instalacao:         "bg-emerald-100 text-emerald-700 border-emerald-200",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  a_iniciar: "A Iniciar", em_projeto: "Em Projeto", em_aprovacao: "Em Aprovação",
-  em_producao: "Em Produção", aguardando_instalacao: "Ag. Instalação", em_instalacao: "Em Instalação",
-};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -137,112 +104,7 @@ function timeAgo(dateStr: string): string {
   } catch { return "—"; }
 }
 
-type AlertLevel = "overdue" | "soon";
-interface DateAlert { project: Project; fieldLabel: string; date: string; level: AlertLevel; daysLeft: number; }
-
-function buildAlerts(projects: Project[]): DateAlert[] {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const alerts: DateAlert[] = [];
-  for (const p of projects) {
-    for (const { key, label } of DEADLINE_FIELDS) {
-      const val = p[key] as string | null | undefined;
-      if (!val) continue;
-      try {
-        const diff = Math.floor((parseISO(val).getTime() - today.getTime()) / 86_400_000);
-        if (diff < 0)       alerts.push({ project: p, fieldLabel: label, date: val, level: "overdue", daysLeft: diff });
-        else if (diff <= 7) alerts.push({ project: p, fieldLabel: label, date: val, level: "soon",    daysLeft: diff });
-      } catch { /* skip */ }
-    }
-  }
-  return alerts.sort((a, b) => a.daysLeft - b.daysLeft);
-}
-
-interface UpcomingDeadline { project: Project; fieldLabel: string; date: string; daysLeft: number; }
-
-/** All deadlines in the next 1–15 days across all projects, sorted ascending */
-function buildUpcoming15(projects: Project[]): UpcomingDeadline[] {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const items: UpcomingDeadline[] = [];
-  for (const p of projects) {
-    for (const { key, label } of DEADLINE_FIELDS) {
-      const val = p[key] as string | null | undefined;
-      if (!val) continue;
-      try {
-        const diff = Math.floor((parseISO(val).getTime() - today.getTime()) / 86_400_000);
-        if (diff >= 0 && diff <= 15) items.push({ project: p, fieldLabel: label, date: val, daysLeft: diff });
-      } catch { /* skip */ }
-    }
-  }
-  return items.sort((a, b) => a.daysLeft - b.daysLeft);
-}
-
-/** Nearest upcoming deadline across all DEADLINE_FIELDS */
-function nearestDeadline(p: Project): { label: string; date: string; overdue: boolean } | null {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  let best: { label: string; date: string; diff: number } | null = null;
-  for (const { key, label } of DEADLINE_FIELDS) {
-    const val = p[key] as string | null | undefined;
-    if (!val) continue;
-    try {
-      const diff = Math.floor((parseISO(val).getTime() - today.getTime()) / 86_400_000);
-      if (!best || Math.abs(diff) < Math.abs(best.diff)) best = { label, date: val, diff };
-    } catch { /* skip */ }
-  }
-  if (!best) return null;
-  return { label: best.label, date: best.date, overdue: best.diff < 0 };
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function PipelineChart({
-  title,
-  flowColor,
-  barColor,
-  textColor,
-  data,
-}: {
-  title: string;
-  flowColor: string;
-  barColor: string;
-  textColor: string;
-  data: { id: string; label: string; labelShort: string; count: number }[];
-}) {
-  const maxCount = Math.max(...data.map(d => d.count), 1);
-  const total = data.reduce((s, d) => s + d.count, 0);
-  return (
-    <div className="bg-card rounded-xl border border-border p-5 flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
-        <span className={cn("w-3 h-3 rounded-sm shrink-0", barColor)} />
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        <span className={cn("ml-auto text-xs font-bold", textColor)}>{total} projetos</span>
-      </div>
-      <div className="flex gap-2 items-end" style={{ height: 88 }}>
-        {data.map((phase) => {
-          const barH = maxCount > 0 ? Math.round((phase.count / maxCount) * 64) : 0;
-          return (
-            <Link key={phase.id} href={`/projects?status=${phase.id}`} className="flex-1">
-              <div className="flex flex-col items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
-                <div className="w-full flex flex-col-reverse rounded overflow-hidden" style={{ height: 64 }}>
-                  <div className={cn("w-full shrink-0", barColor)} style={{ height: barH }} />
-                </div>
-                <div className={cn("text-[11px] font-bold", textColor)}>{phase.count}</div>
-                <div className="text-[9px] text-center leading-tight text-muted-foreground font-medium">{phase.labelShort}</div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-      <div className="mt-2 flex items-center gap-0.5">
-        {data.map((phase, i) => (
-          <div key={phase.id} className="flex-1 flex items-center">
-            <div className={cn("h-1 flex-1 rounded-sm", flowColor)} />
-            {i < data.length - 1 && <span className="text-muted-foreground text-[9px] px-0.5">▶</span>}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 const SEVERITY_META = {
   danger:  { label: "Críticos",     icon: AlertCircle, row: "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30",       iconColor: "text-red-500",   chip: "bg-red-100 text-red-700" },
@@ -340,9 +202,6 @@ export default function Dashboard() {
   const allAlerts = useAlerts();
   const canEdit = useCanEdit();
   const isGestor = useIsGestor();
-  const { data: yesterday } = useGetYesterdaySummary({
-    query: { enabled: isGestor, queryKey: getGetYesterdaySummaryQueryKey() },
-  });
   const qc = useQueryClient();
   const { toast } = useToast();
   const updateTask = useUpdateTask();
@@ -400,32 +259,6 @@ export default function Dashboard() {
     const unassignedOverdue = tasks.filter(t => !t.assignedTo && isTaskOverdue(t)).length;
     return { rows, unassignedOverdue };
   }, [members, allTasks]);
-
-  // Pipeline counts broken out by material
-  const pipelineData = useMemo(() => {
-    const byStatusMaterial = new Map<string, { madeira: number; aluminio: number }>();
-    for (const p of PHASE_CONFIG) byStatusMaterial.set(p.id, { madeira: 0, aluminio: 0 });
-    for (const p of projects ?? []) {
-      const entry = byStatusMaterial.get(p.status);
-      if (!entry) continue;
-      if (p.materialType === "madeira") entry.madeira++;
-      else if (p.materialType === "aluminio") entry.aluminio++;
-    }
-    return PHASE_CONFIG.map(ph => {
-      const counts = byStatusMaterial.get(ph.id) ?? { madeira: 0, aluminio: 0 };
-      return { ...ph, madeira: counts.madeira, aluminio: counts.aluminio };
-    });
-  }, [projects]);
-
-  const madeiraPipeline = pipelineData.map(p => ({ ...p, count: p.madeira }));
-  const aluminioPipeline = pipelineData.map(p => ({ ...p, count: p.aluminio }));
-
-  const dateAlerts = useMemo(() => buildAlerts(projects ?? []), [projects]);
-  const upcoming15 = useMemo(() => buildUpcoming15(projects ?? []), [projects]);
-  const activeProjects = useMemo(
-    () => (projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).slice(0, 6),
-    [projects],
-  );
 
   const materialCounts = useMemo(() => {
     const m = { madeira: 0, aluminio: 0 };
@@ -626,38 +459,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Resumo de ontem (gestores) ── */}
-      {isGestor && yesterday && (
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-sm font-semibold text-foreground">🕗 Resumo de ontem</h2>
-            <span className="text-[11px] text-muted-foreground capitalize">
-              {format(parseISO(yesterday.date), "EEEE, dd/MM", { locale: ptBR })}
-            </span>
-          </div>
-          {yesterday.tasksCompleted === 0 && yesterday.tasksCreated === 0 && yesterday.projectsChanged === 0 ? (
-            <p className="text-xs text-muted-foreground mt-2">Sem movimento ontem. Que tal combinar as prioridades de hoje com a equipe?</p>
-          ) : (
-            <div className="flex items-center gap-1.5 flex-wrap mt-2">
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✔ {yesterday.tasksCompleted} concluída(s)
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                + {yesterday.tasksCreated} criada(s)
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-violet-50 text-violet-700 border border-violet-200">
-                {yesterday.projectsChanged} projeto(s) movimentado(s)
-              </span>
-              {yesterday.completedByPerson.map((p) => (
-                <span key={p.name} className="px-2 py-0.5 rounded-full text-[11px] bg-muted text-muted-foreground">
-                  {p.name}: {p.count} ✔
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* ── Central de Alertas + Atrasadas por Responsável ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Central de Alertas */}
@@ -831,32 +632,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* ── Pipelines Madeira | Alumínio ── */}
-      {loading ? (
-        <div className="grid grid-cols-2 gap-4">
-          <Skeleton className="h-44 rounded-xl" />
-          <Skeleton className="h-44 rounded-xl" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4">
-          <PipelineChart
-            title="Pipeline — Madeira"
-            barColor="bg-amber-400"
-            flowColor="bg-amber-200"
-            textColor="text-amber-600"
-            data={madeiraPipeline}
-          />
-          <PipelineChart
-            title="Pipeline — Alumínio"
-            barColor="bg-blue-400"
-            flowColor="bg-blue-200"
-            textColor="text-blue-600"
-            data={aluminioPipeline}
-          />
-        </div>
-      )}
-
-      {/* ── Analytics: Status das Tarefas + Projetos Vencidos ── */}
+      {/* ── Status das Tarefas + Próximas Visitas ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Task status donut — legenda clicável */}
         <div className="bg-card rounded-xl border border-border p-4">
@@ -905,194 +681,8 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Projetos com Prazo Vencido */}
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 rounded-full bg-red-500" />
-            <h2 className="text-sm font-semibold text-foreground">Projetos com Prazo Vencido</h2>
-            {dateAlerts.filter(a => a.level === "overdue").length > 0 && (
-              <span className="ml-auto text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium">
-                {dateAlerts.filter(a => a.level === "overdue").length}
-              </span>
-            )}
-          </div>
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-            </div>
-          ) : (() => {
-            const overdueAlerts = dateAlerts.filter(a => a.level === "overdue");
-            if (overdueAlerts.length === 0) return (
-              <div className="py-8 text-center flex flex-col items-center gap-2">
-                <CheckCircle2 className="h-7 w-7 text-emerald-500 opacity-60" />
-                <p className="text-sm text-muted-foreground">Nenhum projeto com prazo vencido.</p>
-              </div>
-            );
-            const byProject = new Map<number, typeof overdueAlerts>();
-            for (const a of overdueAlerts) {
-              const id = a.project.id;
-              if (!byProject.has(id)) byProject.set(id, []);
-              byProject.get(id)!.push(a);
-            }
-            return (
-              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-                {[...byProject.entries()].map(([pid, projectAlerts]) => {
-                  const proj = projectAlerts[0].project;
-                  const maxDelay = Math.max(...projectAlerts.map(a => Math.abs(a.daysLeft)));
-                  return (
-                    <Link key={pid} href={`/projects/${pid}`}>
-                      <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900 cursor-pointer hover:opacity-80 transition-opacity">
-                        <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-foreground truncate">{proj.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{projectAlerts.length} prazo(s) vencido(s)</p>
-                        </div>
-                        <span className="text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded font-medium shrink-0">
-                          {maxDelay}d atraso
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* ── Próximos Vencimentos — 15 dias ── */}
-      <div className="bg-card rounded-xl border border-border p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarDays className="h-4 w-4 text-blue-500" />
-          <h2 className="text-sm font-semibold text-foreground">Próximos Vencimentos</h2>
-          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">próximos 15 dias</span>
-          {!isProjectsLoading && upcoming15.length > 0 && (
-            <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
-              {upcoming15.length}
-            </span>
-          )}
-        </div>
-        {isProjectsLoading ? (
-          <div className="flex gap-3 overflow-hidden">
-            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-48 shrink-0 rounded-lg" />)}
-          </div>
-        ) : upcoming15.length === 0 ? (
-          <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">Nenhum vencimento nos próximos 15 dias.</p>
-          </div>
-        ) : (
-          <div className="flex gap-3 overflow-x-auto pb-1 -mb-1">
-            {upcoming15.map((item, i) => {
-              const urgency =
-                item.daysLeft === 0 ? "today" :
-                item.daysLeft <= 3  ? "urgent" :
-                item.daysLeft <= 7  ? "soon" : "normal";
-              return (
-                <Link key={i} href={`/projects/${item.project.id}`} className="shrink-0">
-                  <div className={cn(
-                    "w-52 rounded-lg border p-3 cursor-pointer hover:opacity-80 transition-opacity space-y-2",
-                    urgency === "today"  ? "bg-red-50 border-red-200" :
-                    urgency === "urgent" ? "bg-orange-50 border-orange-200" :
-                    urgency === "soon"   ? "bg-amber-50 border-amber-200" :
-                                          "bg-muted/40 border-border",
-                  )}>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={cn(
-                        "text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0",
-                        urgency === "today"  ? "bg-red-100 text-red-700" :
-                        urgency === "urgent" ? "bg-orange-100 text-orange-700" :
-                        urgency === "soon"   ? "bg-amber-100 text-amber-700" :
-                                              "bg-blue-100 text-blue-700",
-                      )}>
-                        {urgency === "today" ? "Hoje" : `${item.daysLeft}d`}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {fmtDate(item.date)}
-                      </span>
-                    </div>
-                    <p className="text-xs font-medium text-foreground leading-tight line-clamp-2">
-                      {item.project.name}
-                    </p>
-                    <p className={cn(
-                      "text-[10px] font-medium",
-                      urgency === "today"  ? "text-red-600" :
-                      urgency === "urgent" ? "text-orange-600" :
-                      urgency === "soon"   ? "text-amber-600" :
-                                            "text-muted-foreground",
-                    )}>
-                      {item.fieldLabel}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ── Projetos em Andamento + Próximas Visitas ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Tabela de projetos ativos */}
-        <div className="lg:col-span-3 bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">Projetos em Andamento</h2>
-            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {activeProjects.length} projetos
-            </span>
-          </div>
-          {isProjectsLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
-            </div>
-          ) : activeProjects.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">Nenhum projeto em andamento.</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {activeProjects.map((p) => {
-                const deadline = nearestDeadline(p);
-                return (
-                  <Link key={p.id} href={`/projects/${p.id}`}>
-                    <div className="flex items-center gap-2 py-1.5 border-b last:border-0 cursor-pointer hover:bg-muted/30 -mx-1 px-1 rounded transition-colors">
-                      <span className={cn(
-                        "text-[10px] font-medium px-1.5 py-0.5 rounded border shrink-0",
-                        STATUS_PILL[p.status],
-                      )}>
-                        {STATUS_LABEL[p.status]}
-                      </span>
-                      <span className="text-sm font-medium text-foreground flex-1 truncate">{p.name}</span>
-                      {p.materialType && (
-                        <span className={cn(
-                          "text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0",
-                          p.materialType === "madeira"
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-blue-50 text-blue-700",
-                        )}>
-                          {p.materialType === "madeira" ? "Mad." : "Alum."}
-                        </span>
-                      )}
-                      {deadline && (
-                        <span className={cn(
-                          "text-[10px] border rounded px-1 py-0.5 shrink-0",
-                          deadline.overdue
-                            ? "border-red-200 text-red-600 bg-red-50"
-                            : "text-muted-foreground border-border",
-                        )}>
-                          {fmtDate(deadline.date)}
-                        </span>
-                      )}
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         {/* Próximas Visitas */}
-        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-4">
+        <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="h-4 w-4 text-emerald-600" />
             <h2 className="text-sm font-semibold text-foreground">Próximas Visitas</h2>

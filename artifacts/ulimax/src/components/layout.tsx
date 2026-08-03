@@ -98,8 +98,7 @@ export function Layout({ children }: LayoutProps) {
             label: "Principal",
             items: [
               { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
-              { href: "/tasks", label: "Tarefas", icon: CheckSquare },
-              { href: "/kanban", label: "Kanban", icon: Columns3 },
+              { href: "/tasks", label: "Trabalho", icon: CheckSquare },
               { href: "/projects", label: "Projetos", icon: Briefcase },
             ],
           },
@@ -123,10 +122,8 @@ export function Layout({ children }: LayoutProps) {
                 { href: "/obra", label: "Obra", icon: HardHat, highlight: true },
                 { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
                 { href: "/meu-dia", label: "Meu Dia", icon: Sun },
-                { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
-                { href: "/tasks", label: "Tarefas", icon: CheckSquare },
-                { href: "/kanban", label: "Kanban", icon: Columns3 },
+                { href: "/tasks", label: "Trabalho", icon: CheckSquare },
               ],
             },
             {
@@ -147,7 +144,6 @@ export function Layout({ children }: LayoutProps) {
               label: "Principal",
               items: [
                 dashboardItem,
-                { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
@@ -164,10 +160,8 @@ export function Layout({ children }: LayoutProps) {
                 items: [
                   { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
                   dashboardItem,
-                  { href: "/portfolio", label: "Painel de Projetos", icon: BarChart3 },
-                  { href: "/projects", label: "Projetos", icon: Briefcase },
-                  { href: "/tasks", label: "Tarefas", icon: CheckSquare },
-                  { href: "/kanban", label: "Kanban", icon: Columns3 },
+                    { href: "/projects", label: "Projetos", icon: Briefcase },
+                  { href: "/tasks", label: "Trabalho", icon: CheckSquare },
                 ],
               },
               {
