@@ -6,8 +6,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/meu-dia": "Meu Dia",
   "/dashboard": "Dashboard",
   "/projects": "Projetos",
-  "/tasks": "Tarefas",
-  "/kanban": "Kanban",
+  "/tasks": "Trabalho",
   "/members": "Equipe",
   "/obra": "Central da Obra",
   "/checklist": "Instalações",
@@ -15,7 +14,6 @@ const ROUTE_LABELS: Record<string, string> = {
   "/assistencia-tecnica": "Assistência Técnica",  // redireciona → /obra
   "/controle-amostras": "Amostras",              // redireciona → /obra
   "/gantt": "Gantt",
-  "/portfolio": "Painel de Projetos",
   "/templates": "Templates",
   "/campos-personalizados": "Campos Personalizados",
   "/automacao": "Automações",

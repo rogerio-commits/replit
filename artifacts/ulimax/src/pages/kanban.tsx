@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import {
   DndContext,
   DragOverlay,
@@ -39,11 +39,12 @@ import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, daysFromToday, type FarolLevel } from "@/lib/project-health";
 import {
   CalendarDays, GripVertical, Plus, User, AlertCircle,
-  Loader2, CheckSquare, Briefcase, GanttChartSquare,
+  Loader2, CheckSquare, Briefcase, GanttChartSquare, Columns3,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GanttView from "./gantt";
+import Tasks from "./tasks";
 
 // ── Types & Constants ─────────────────────────────────────────────────────────
 
@@ -581,33 +582,55 @@ function BoardSkeleton() {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
+// Hub "Trabalho": lista, quadro e linha do tempo numa tela só — antes eram duas
+// páginas de menu (Tarefas e Kanban) para os mesmos dados. A aba ativa vem da
+// URL (?tab=), então deep-links como /tasks?vencidas=1 caem na Lista filtrada.
 
-export default function Kanban() {
+const TRABALHO_TABS = ["lista", "quadro", "fases", "linha"];
+
+export default function Trabalho() {
+  const search = useSearch();
+  const [, navigate] = useLocation();
+  const params = new URLSearchParams(search);
+  const raw = params.get("tab") ?? "lista";
+  const tab = TRABALHO_TABS.includes(raw) ? raw : "lista";
+
+  function goTab(v: string) {
+    params.set("tab", v);
+    navigate(`/tasks?${params.toString()}`);
+  }
+
   return (
     <div className="flex flex-col gap-3 h-full">
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold tracking-tight">Kanban</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Arraste os cards para atualizar o status.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Trabalho</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Tarefas e projetos — em lista, quadro ou linha do tempo.</p>
       </div>
-      <Tabs defaultValue="tarefas" className="flex flex-col flex-1 min-h-0">
-        <TabsList className="grid w-full grid-cols-3 shrink-0">
-          <TabsTrigger value="tarefas" className="gap-1.5" data-testid="button-kanban-tarefas">
-            <CheckSquare className="h-3.5 w-3.5" /> Tarefas
+      <Tabs value={tab} onValueChange={goTab} className="flex flex-col flex-1 min-h-0">
+        <TabsList className="grid w-full grid-cols-4 shrink-0">
+          <TabsTrigger value="lista" className="gap-1.5" data-testid="button-trabalho-lista">
+            <CheckSquare className="h-3.5 w-3.5" /> Lista
           </TabsTrigger>
-          <TabsTrigger value="projetos" className="gap-1.5" data-testid="button-kanban-projetos">
-            <Briefcase className="h-3.5 w-3.5" /> Projetos
+          <TabsTrigger value="quadro" className="gap-1.5" data-testid="button-kanban-tarefas">
+            <Columns3 className="h-3.5 w-3.5" /> Quadro
           </TabsTrigger>
-          <TabsTrigger value="linha-do-tempo" className="gap-1.5">
+          <TabsTrigger value="fases" className="gap-1.5" data-testid="button-kanban-projetos">
+            <Briefcase className="h-3.5 w-3.5" /> Fases dos Projetos
+          </TabsTrigger>
+          <TabsTrigger value="linha" className="gap-1.5">
             <GanttChartSquare className="h-3.5 w-3.5" /> Linha do Tempo
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="tarefas" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
+        <TabsContent value="lista" className="flex-1 min-h-0 mt-3 overflow-y-auto">
+          <Tasks embedded />
+        </TabsContent>
+        <TabsContent value="quadro" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
           <TasksBoard />
         </TabsContent>
-        <TabsContent value="projetos" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
+        <TabsContent value="fases" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
           <ProjectsBoard />
         </TabsContent>
-        <TabsContent value="linha-do-tempo" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
+        <TabsContent value="linha" className="flex-1 min-h-0 mt-3 data-[state=active]:flex data-[state=active]:flex-col">
           <GanttView asTab />
         </TabsContent>
       </Tabs>

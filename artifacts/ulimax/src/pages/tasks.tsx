@@ -139,7 +139,7 @@ function getPriorityColor(priority: string) {
   }
 }
 
-export default function Tasks() {
+export default function Tasks({ embedded = false }: { embedded?: boolean } = {}) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
@@ -486,10 +486,12 @@ export default function Tasks() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {embedded ? <div /> : (
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Tarefas</h1>
           <p className="text-muted-foreground mt-1">Gerencie entregas em todos os projetos.</p>
         </div>
+        )}
 
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={!filteredTasks || filteredTasks.length === 0}>
