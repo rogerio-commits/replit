@@ -124,12 +124,6 @@ export function Layout({ children }: LayoutProps) {
                 { href: "/meu-dia", label: "Meu Dia", icon: Sun },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/tasks", label: "Trabalho", icon: CheckSquare },
-              ],
-            },
-            {
-              label: "Obra",
-              items: [
-                { href: "/checklist", label: "Instalações", icon: ClipboardList },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
             },
@@ -177,7 +171,6 @@ export function Layout({ children }: LayoutProps) {
                 label: "Análises",
                 items: [
                   { href: "/assistente", label: "Assistente", icon: Sparkles },
-                  { href: "/reuniao", label: "Reunião Semanal", icon: Presentation },
                   { href: "/desempenho", label: "Desempenho", icon: TrendingUp },
                 ],
               },

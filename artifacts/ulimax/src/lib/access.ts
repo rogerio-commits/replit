@@ -37,7 +37,6 @@ const GESTOR_OBRAS_PREFIXES = [
   "/assistencia-tecnica",
   "/controle-amostras",
   "/gantt",
-  "/portfolio",
   "/ajuda",
 ];
 
@@ -45,7 +44,6 @@ const OBSERVADOR_PREFIXES = [
   "/dashboard",
   "/projects",
   "/calendario",
-  "/portfolio",
   "/ajuda",
 ];
 
@@ -53,7 +51,7 @@ const OBSERVADOR_PREFIXES = [
 // redirect poder rodar (o destino é validado de novo pelo guard).
 // URLs antigos de AT/Amostras agora redirecionam para /obra — sempre liberar
 // para o <Redirect> poder rodar antes de qualquer RoleGate.
-const LEGACY_PATHS = ["/alertas", "/produtividade", "/access", "/assistencia-tecnica", "/controle-amostras", "/gantt"];
+const LEGACY_PATHS = ["/alertas", "/produtividade", "/access", "/portfolio", "/assistencia-tecnica", "/controle-amostras", "/gantt"];
 
 function matchesAny(prefixes: string[], path: string): boolean {
   return prefixes.some((p) => path === p || path.startsWith(p + "/"));

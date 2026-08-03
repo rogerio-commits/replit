@@ -422,7 +422,7 @@ export default function Dashboard() {
               <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">🟡 {farol.yellow}</span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 {farol.green}</span>
             </span>
-            <Link href="/portfolio" className="ml-auto flex items-center gap-0.5 text-xs font-medium text-primary hover:underline">
+            <Link href="/projects" className="ml-auto flex items-center gap-0.5 text-xs font-medium text-primary hover:underline">
               Ver painel completo <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -448,7 +448,7 @@ export default function Dashboard() {
                 );
               })}
               {farol.attention.length > 5 && (
-                <Link href="/portfolio">
+                <Link href="/projects">
                   <p className="text-xs text-muted-foreground pt-2 cursor-pointer hover:text-primary transition-colors">
                     +{farol.attention.length - 5} outro{farol.attention.length - 5 > 1 ? "s" : ""} projeto{farol.attention.length - 5 > 1 ? "s" : ""} precisando de atenção — ver painel completo
                   </p>

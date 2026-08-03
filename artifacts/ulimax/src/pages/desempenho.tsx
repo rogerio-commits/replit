@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Presentation } from "lucide-react";
 import { useListTasks } from "@workspace/api-client-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -151,12 +153,17 @@ export default function Desempenho() {
           </h1>
           <p className="text-muted-foreground mt-1">Concluídas, pontualidade e ritmo — em números simples.</p>
         </div>
+        <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" asChild className="gap-1.5">
+          <Link href="/reuniao"><Presentation className="h-4 w-4" /> Modo reunião</Link>
+        </Button>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             {PERIODS.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        </div>
       </div>
 
       {isLoading ? (
