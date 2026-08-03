@@ -91,7 +91,7 @@ interface DateGroup {
 }
 
 /** Grade com todas as datas do projeto, agrupadas por etapa (Projeto, Medição, Produção, Instalação). */
-export function ProjectDates({ project, emptyHint }: { project: ProjectDatesProject; emptyHint?: string }) {
+export function ProjectDates({ project, emptyHint, hideProducao = false }: { project: ProjectDatesProject; emptyHint?: string; hideProducao?: boolean }) {
   const groups: DateGroup[] = [
     {
       title: "Projeto",
@@ -127,12 +127,16 @@ export function ProjectDates({ project, emptyHint }: { project: ProjectDatesProj
     },
   ];
 
-  const hasAny = groups.some((g) => g.items.some((i) => !!i.value));
+  // Visao de campo: as datas de fabrica saem; o "pronto para instalar" ja vem
+  // do status do projeto no cabecalho.
+  const visibleGroups = hideProducao ? groups.filter((g) => g.title !== "Produção") : groups;
+
+  const hasAny = visibleGroups.some((g) => g.items.some((i) => !!i.value));
 
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        {groups.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.title} className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2.5">
             <div className="mb-2">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

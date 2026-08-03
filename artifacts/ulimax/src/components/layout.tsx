@@ -119,11 +119,8 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
-                { href: "/obra", label: "Obra", icon: HardHat, highlight: true },
+                { href: "/obra", label: "Hoje", icon: HardHat, highlight: true },
                 { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
-                { href: "/meu-dia", label: "Meu Dia", icon: Sun },
-                { href: "/projects", label: "Projetos", icon: Briefcase },
-                { href: "/tasks", label: "Trabalho", icon: CheckSquare },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
             },
