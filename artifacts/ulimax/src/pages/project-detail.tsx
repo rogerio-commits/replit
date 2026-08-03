@@ -35,6 +35,7 @@ import {
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { ObraDocuments } from "@/components/obra-documents";
+import { ChecklistSection } from "@/components/checklist-section";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
 import { ProjectMilestones } from "@/components/project-milestones";
@@ -1410,7 +1411,8 @@ export default function ProjectDetail() {
         onClose={() => setSelectedVisitId(null)}
       />
 
-      {/* Checklist */}
+      {/* Checklist de instalação — o vão como unidade (agrupado por ambiente, 1 toque) */}
+      <ChecklistSection projectId={projectId} canEdit={canEdit} />
 
       {/* Tasks */}
       <Card>
