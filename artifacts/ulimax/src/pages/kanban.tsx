@@ -612,7 +612,7 @@ export default function Trabalho() {
             <CheckSquare className="h-3.5 w-3.5" /> Lista
           </TabsTrigger>
           <TabsTrigger value="quadro" className="gap-1.5" data-testid="button-kanban-tarefas">
-            <Columns3 className="h-3.5 w-3.5" /> Quadro
+            <Columns3 className="h-3.5 w-3.5" /> Tarefas
           </TabsTrigger>
           <TabsTrigger value="fases" className="gap-1.5" data-testid="button-kanban-projetos">
             <Briefcase className="h-3.5 w-3.5" /> Fases dos Projetos
