@@ -45,6 +45,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GanttView from "./gantt";
 import Tasks from "./tasks";
+import { TaskDetailPanel } from "@/components/task-detail-panel";
 
 // ── Types & Constants ─────────────────────────────────────────────────────────
 
@@ -175,10 +176,11 @@ function TaskCard({ task, isDragging = false }: { task: TaskItem; isDragging?: b
   );
 }
 
-function DraggableTaskCard({ task }: { task: TaskItem }) {
+function DraggableTaskCard({ task, onOpen }: { task: TaskItem; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `task-${task.id}` });
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} style={{ opacity: isDragging ? 0 : 1 }}>
+    <div ref={setNodeRef} {...listeners} {...attributes} onClick={onOpen}
+      style={{ opacity: isDragging ? 0 : 1 }} className="cursor-pointer">
       <TaskCard task={task} />
     </div>
   );
@@ -354,7 +356,15 @@ function TasksBoard() {
   const [filterProject, setFilterProject] = useState<string>("all");
   const [filterMaterial, setFilterMaterial] = useState<string>("all");
   const [activeTask, setActiveTask] = useState<TaskItem | null>(null);
+  const [detailTask, setDetailTask] = useState<TaskItem | null>(null);
   const [dialog, setDialog] = useState<{ open: boolean; status: TaskStatus }>({ open: false, status: "todo" });
+  // Evita o "clique fantasma" que dispara logo após soltar um cartão arrastado
+  const draggedRecentlyRef = useRef(false);
+
+  function openTask(t: TaskItem) {
+    if (draggedRecentlyRef.current) return;
+    setDetailTask(t);
+  }
 
   const params = filterProject !== "all" ? { projectId: Number(filterProject) } : undefined;
   const { data: tasks, isLoading } = useListTasks(params, { query: { queryKey: getListTasksQueryKey(params) } });
@@ -380,12 +390,14 @@ function TasksBoard() {
   }, [tasks, filterMaterial, materialByProject]);
 
   function handleDragStart(e: DragStartEvent) {
+    draggedRecentlyRef.current = true;
     const id = Number(String(e.active.id).replace("task-", ""));
     setActiveTask(tasks?.find((t) => t.id === id) ?? null);
   }
 
   function handleDragEnd(e: DragEndEvent) {
     setActiveTask(null);
+    setTimeout(() => { draggedRecentlyRef.current = false; }, 150);
     const { active, over } = e;
     if (!over) return;
     const taskId = Number(String(active.id).replace("task-", ""));
@@ -439,7 +451,7 @@ function TasksBoard() {
           {TASK_COLUMNS.map((col) => (
             <KanbanColumn key={col.id} colId={col.id} label={col.label} color={col.color} bg={col.bg}
               count={tasksByColumn[col.id].length} onAdd={() => setDialog({ open: true, status: col.id })}>
-              {tasksByColumn[col.id].map((t) => <DraggableTaskCard key={t.id} task={t} />)}
+              {tasksByColumn[col.id].map((t) => <DraggableTaskCard key={t.id} task={t} onOpen={() => openTask(t)} />)}
             </KanbanColumn>
           ))}
         </div>
@@ -450,6 +462,7 @@ function TasksBoard() {
 
       <NewTaskDialog open={dialog.open} defaultStatus={dialog.status}
         onOpenChange={(v) => setDialog((s) => ({ ...s, open: v }))} />
+      <TaskDetailPanel task={detailTask} open={detailTask !== null} onClose={() => setDetailTask(null)} />
     </>
   );
 }
