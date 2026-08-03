@@ -15,6 +15,7 @@ function attachRow(a: typeof attachmentsTable.$inferSelect) {
     originalName: a.originalName,
     mimeType: a.mimeType,
     sizeBytes: a.sizeBytes,
+    category: a.category ?? null,
     uploadedBy: a.uploadedBy,
     uploaderName: a.uploaderName,
     createdAt: a.createdAt.toISOString(),
@@ -41,7 +42,7 @@ router.get("/attachments", async (req, res) => {
 });
 
 router.post("/attachments", async (req, res) => {
-  const { entityType, entityId, filename, originalName, mimeType, sizeBytes } = req.body ?? {};
+  const { entityType, entityId, filename, originalName, mimeType, sizeBytes, category } = req.body ?? {};
   if (!entityType || !entityId || !filename || !originalName || !mimeType || !sizeBytes) {
     return res.status(400).json({ error: "Invalid input" });
   }
@@ -57,6 +58,7 @@ router.post("/attachments", async (req, res) => {
     originalName: String(originalName),
     mimeType: String(mimeType),
     sizeBytes: Number(sizeBytes),
+    category: category ? String(category) : null,
     uploadedBy: dbUser.id,
     uploaderName: appUser.email,
   }).returning();

@@ -15,6 +15,8 @@ export interface Attachment {
   originalName: string;
   mimeType: string;
   sizeBytes: number;
+  /** @nullable */
+  category?: string | null;
   uploadedBy: number;
   uploaderName: string;
   createdAt: string;
