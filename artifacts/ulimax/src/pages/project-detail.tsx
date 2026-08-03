@@ -42,6 +42,7 @@ import { ProjectBurndown } from "@/components/project-burndown";
 import { ProjectDates } from "@/components/project-dates";
 import { VisitDetailDialog } from "@/components/visit-detail-dialog";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
+import { useEffectiveRole } from "@/hooks/useViewAs";
 import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { useQueryClient } from "@tanstack/react-query";
@@ -208,6 +209,7 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const projectId = parseInt(id || "0", 10);
   const planMap = useActionPlanMap();
+  const isCampo = useEffectiveRole() === "gestor_obras";
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -875,6 +877,7 @@ export default function ProjectDetail() {
             <span className="font-medium text-foreground">{PRIORITY_LABELS[project.priority] ?? project.priority}</span>
           </div>
           <ProjectDates
+            hideProducao={isCampo}
             project={project}
             emptyHint={isGestor ? "Nenhuma data preenchida ainda — clique em “Editar Projeto” para incluir as datas." : undefined}
           />

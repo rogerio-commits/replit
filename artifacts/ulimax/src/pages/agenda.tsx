@@ -7,6 +7,7 @@ import { MapPin, ChevronRight, HardHat, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 import { overdueObraDates } from "@/lib/obra-dates";
+import { useEffectiveRole } from "@/hooks/useViewAs";
 
 // ── Agenda de Obra ───────────────────────────────────────────────────────────
 // O que vem pela frente em todas as obras: próximas visitas e as datas-chave
@@ -41,6 +42,11 @@ function emDias(d: number): string {
 export default function Agenda() {
   const { data: visits, isLoading: loadingVisits } = useListAllSiteVisits();
   const { data: projects, isLoading: loadingProjects } = useListProjects();
+  // Campo nao acompanha fabrica: as datas de producao ficam fora da agenda dele.
+  const isCampo = useEffectiveRole() === "gestor_obras";
+  const dateFields = isCampo
+    ? DATE_FIELDS.filter((f) => !String(f.key).startsWith("producao"))
+    : DATE_FIELDS;
 
   const proximasVisitas = useMemo(() => {
     return (visits ?? [])
@@ -62,7 +68,7 @@ export default function Agenda() {
   const proximasDatas = useMemo(() => {
     const out: { projectId: number; projectName: string; label: string; date: string; d: number }[] = [];
     for (const p of projects ?? []) {
-      for (const f of DATE_FIELDS) {
+      for (const f of dateFields) {
         const val = p[f.key] as string | null | undefined;
         if (!val) continue;
         const d = daysFromToday(val);
@@ -71,7 +77,7 @@ export default function Agenda() {
       }
     }
     return out.sort((a, b) => a.d - b.d);
-  }, [projects]);
+  }, [projects, dateFields]);
 
   const loading = loadingVisits || loadingProjects;
 

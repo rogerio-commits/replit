@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -58,6 +58,13 @@ const STATUS_LABELS: Record<string, string> = {
   finalizado: "Finalizado",
 };
 
+// Um toque avança o vão no fluxo de instalação; do fim volta ao início.
+const NEXT_STATUS: Record<string, "nao_instalado" | "instalado" | "finalizado"> = {
+  nao_instalado: "instalado",
+  instalado: "finalizado",
+  finalizado: "nao_instalado",
+};
+
 const STATUS_COLORS: Record<string, string> = {
   nao_instalado: "bg-slate-100 text-slate-700 border-slate-200",
   instalado: "bg-blue-50 text-blue-700 border-blue-200",
@@ -86,6 +93,20 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
     query: { queryKey: getListChecklistItemsQueryKey(projectId) },
   });
   const { data: allMembers } = useListMembers();
+
+  // O vão é a unidade de trabalho do campo: agrupamos por local (ambiente).
+  const grupos = useMemo(() => {
+    const map = new Map<string, ChecklistItem[]>();
+    for (const it of items ?? []) {
+      const key = it.local?.trim() || "Sem local";
+      const arr = map.get(key);
+      if (arr) arr.push(it);
+      else map.set(key, [it]);
+    }
+    return [...map.entries()].sort((a, b) =>
+      a[0] === "Sem local" ? 1 : b[0] === "Sem local" ? -1 : a[0].localeCompare(b[0]),
+    );
+  }, [items]);
 
   const createItem = useCreateChecklistItem();
   const updateItem = useUpdateChecklistItem();
@@ -303,8 +324,19 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
             ))}
           </div>
         ) : items && items.length > 0 ? (
-          <div className="space-y-1.5">
-            {items.map((item) => {
+          <div className="space-y-4">
+            {grupos.map(([local, groupItems]) => {
+              const instaladas = groupItems.filter((i) => i.status !== "nao_instalado").length;
+              return (
+              <div key={local} className="space-y-1.5">
+                <div className="flex items-center gap-1.5 px-1">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">{local}</span>
+                  <span className="ml-auto text-[11px] font-semibold tabular-nums text-muted-foreground shrink-0">
+                    {instaladas}/{groupItems.length} instaladas
+                  </span>
+                </div>
+            {groupItems.map((item) => {
               const alert = getAlertInfo(item);
               const isExpanded = expandedIds.has(item.id);
               const hasPlan = !!(item.actionDescription || item.responsibleId || item.actionDueDate);
@@ -324,26 +356,20 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
                   >
                     {/* Main row */}
                     <div className="flex items-center gap-3 px-3 py-2.5">
-                      {/* Status selector */}
-                      <Select
-                        value={item.status}
-                        onValueChange={(v) => canEdit && handleStatusChange(item.id, v)}
-                        disabled={!canEdit}
+                      {/* Status: um toque avança (não instalado → instalado → finalizado) */}
+                      <button
+                        type="button"
+                        disabled={!canEdit || updateItem.isPending}
+                        onClick={() => handleStatusChange(item.id, NEXT_STATUS[item.status])}
+                        title={canEdit ? `Toque para marcar: ${STATUS_LABELS[NEXT_STATUS[item.status]]}` : undefined}
+                        className={cn(
+                          "shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold min-w-[116px] transition-all",
+                          STATUS_COLORS[item.status],
+                          canEdit && "cursor-pointer hover:opacity-80 active:scale-95",
+                        )}
                       >
-                        <SelectTrigger className="h-7 w-auto min-w-[130px] text-xs border-0 bg-transparent p-0 shadow-none focus:ring-0">
-                          <Badge
-                            variant="outline"
-                            className={cn("text-[10px] cursor-pointer", STATUS_COLORS[item.status])}
-                          >
-                            {STATUS_LABELS[item.status]}
-                          </Badge>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="nao_instalado">Não Instalado</SelectItem>
-                          <SelectItem value="instalado">Instalado</SelectItem>
-                          <SelectItem value="finalizado">Finalizado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        {STATUS_LABELS[item.status]}
+                      </button>
 
                       {/* Esquadria name + local */}
                       <div className="flex-1 min-w-0">
@@ -355,12 +381,6 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
                         >
                           {item.peca}
                         </span>
-                        {item.local && (
-                          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground truncate">
-                            <MapPin className="h-2.5 w-2.5 shrink-0" />
-                            {item.local}
-                          </span>
-                        )}
                       </div>
 
                       {/* Alert badge */}
@@ -571,6 +591,9 @@ export function ChecklistSection({ projectId, canEdit }: Props) {
                     </CollapsibleContent>
                   </div>
                 </Collapsible>
+              );
+            })}
+              </div>
               );
             })}
           </div>
