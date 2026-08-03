@@ -34,7 +34,6 @@ import {
   getListSiteVisitsQueryKey,
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
-import { ProjectFiles } from "@/components/project-files";
 import { ObraDocuments } from "@/components/obra-documents";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
@@ -102,7 +101,6 @@ import {
   History,
   ArrowRight,
   Camera,
-  FolderOpen,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -1600,38 +1598,6 @@ export default function ProjectDetail() {
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Fotos */}
-      <Card>
-        <CardHeader className="py-3 px-4 border-b">
-          <div className="flex items-center gap-2">
-            <Camera className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <CardTitle className="text-base">Fotos</CardTitle>
-              <p className="text-xs text-muted-foreground font-normal">Registro fotográfico do projeto e da obra</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          <ProjectFiles projectId={projectId} mode="photos" />
-        </CardContent>
-      </Card>
-
-      {/* Arquivos */}
-      <Card>
-        <CardHeader className="py-3 px-4 border-b">
-          <div className="flex items-center gap-2">
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <CardTitle className="text-base">Arquivos</CardTitle>
-              <p className="text-xs text-muted-foreground font-normal">Documentos, plantas, contratos e outros anexos do projeto</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          <ProjectFiles projectId={projectId} mode="files" />
         </CardContent>
       </Card>
 
