@@ -330,12 +330,15 @@ function PlanCard({
   const toggleItem = useToggleProjectActionItem();
   const deleteItem = useDeleteProjectActionItem();
   const deletePlan = useDeleteProjectActionPlan();
-  const [expanded, setExpanded] = useState(true);
+  // Colapsado por padrão: com vários planos, a página virava um paredão de itens.
+  const [expanded, setExpanded] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const pending = plan.items.filter((i) => !i.completedAt);
   const done = plan.items.filter((i) => i.completedAt);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const overdue = pending.filter((i) => i.dueDate && i.dueDate < todayIso);
 
   async function handleToggle(itemId: number) {
     try {
@@ -368,11 +371,16 @@ function PlanCard({
   return (
     <Card className="overflow-hidden">
       {/* Plan header */}
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 cursor-pointer select-none" onClick={() => setExpanded((v) => !v)}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-base">{plan.title}</CardTitle>
+              {overdue.length > 0 && (
+                <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50 text-xs font-medium">
+                  {overdue.length} vencido{overdue.length > 1 ? "s" : ""}
+                </Badge>
+              )}
               {pending.length > 0 && (
                 <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 text-xs font-medium">
                   {pending.length} pendente{pending.length > 1 ? "s" : ""}
@@ -393,7 +401,7 @@ function PlanCard({
               size="sm"
               variant="outline"
               className="h-8 gap-1.5 text-xs"
-              onClick={() => exportPlanToPdf(plan, projectName)}
+              onClick={(e) => { e.stopPropagation(); exportPlanToPdf(plan, projectName); }}
               title="Baixar PDF"
             >
               <FileDown className="h-3.5 w-3.5" />
@@ -404,7 +412,7 @@ function PlanCard({
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={handleDeletePlan}
+                onClick={(e) => { e.stopPropagation(); handleDeletePlan(); }}
                 title="Excluir plano"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -414,7 +422,7 @@ function PlanCard({
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-muted-foreground"
-              onClick={() => setExpanded((v) => !v)}
+              onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
             >
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
