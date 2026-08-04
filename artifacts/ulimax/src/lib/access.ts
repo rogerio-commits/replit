@@ -6,12 +6,13 @@ export type SystemRole = "gestor" | "gestor_obras" | "executor" | "observador";
 const HOME_BY_ROLE: Record<SystemRole, string> = {
   gestor: "/meu-dia",
   gestor_obras: "/obra",
-  executor: "/meu-dia",
+  executor: "/prancheta",
   observador: "/dashboard",
 };
 
 // Rotas permitidas por papel (gestor tem acesso total).
 const EXECUTOR_PREFIXES = [
+  "/prancheta",
   "/meu-dia",
   "/tasks",
   "/kanban",

@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { useListProjects } from "@workspace/api-client-react";
 
 const ROUTE_LABELS: Record<string, string> = {
+  "/prancheta": "Minha Prancheta",
   "/meu-dia": "Meu Dia",
   "/dashboard": "Dashboard",
   "/projects": "Projetos",

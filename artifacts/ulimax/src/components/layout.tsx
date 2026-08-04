@@ -29,6 +29,7 @@ import {
   TrendingUp,
   HardHat,
   ClipboardCheck,
+  PencilRuler,
   Eye,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -97,7 +98,8 @@ export function Layout({ children }: LayoutProps) {
           {
             label: "Principal",
             items: [
-              { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
+              { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
+              { href: "/meu-dia", label: "Meu Dia", icon: Sun },
               { href: "/tasks", label: "Trabalho", icon: CheckSquare },
               { href: "/projects", label: "Projetos", icon: Briefcase },
             ],
