@@ -1,13 +1,19 @@
 import { Router } from "express";
 import { db, auditLogsTable } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
-import { requireGestor } from "../middlewares/requireAuth";
 
 const router = Router();
 
-router.get("/audit-logs", requireGestor, async (req, res) => {
+router.get("/audit-logs", async (req, res) => {
   const entityType = typeof req.query.entityType === "string" ? req.query.entityType : undefined;
   const entityId = req.query.entityId ? Number(req.query.entityId) : undefined;
+
+  // Consulta escopada a uma entidade (historico do proprio projeto/tarefa) e
+  // liberada a qualquer usuario autenticado; a listagem geral segue so gestor.
+  const scoped = !!entityType && !!entityId && !isNaN(entityId);
+  if (!scoped && req.appUser?.role !== "gestor") {
+    return res.status(403).json({ error: "Proibido: papel de gestor necessário" });
+  }
   const limit = Math.min(Number(req.query.limit ?? 100), 200);
 
   const conditions = [];

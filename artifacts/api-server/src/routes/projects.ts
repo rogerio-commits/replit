@@ -441,7 +441,12 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
 
   const actorMemberPatch = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
   const actorNamePatch = actorMemberPatch[0]?.name ?? req.appUser!.email.split("@")[0];
-  const projPatchChanges = diffObjects(existing as Record<string, unknown>, updateData, ["status", "priority", "name"]);
+  const projPatchChanges = diffObjects(existing as Record<string, unknown>, updateData, [
+    "status", "priority", "name",
+    // Datas sao compromisso: toda insercao/edicao fica no historico (quem/quando/de-para).
+    "medicaoDate", "startDate", "endDate", "finalDate",
+    "producaoStartDate", "producaoEndDate", "producaoFinalDate", "instalacaoStartDate",
+  ]);
   const projPatchAction = body.data.status !== undefined && body.data.status !== existing.status ? "status_changed" as const : "updated" as const;
   logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: projPatchAction, actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: projPatchChanges.length > 0 ? projPatchChanges : undefined }, req.log);
 

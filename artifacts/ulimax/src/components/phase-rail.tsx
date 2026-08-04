@@ -2,18 +2,24 @@ import { useMemo, useRef, useState } from "react";
 import {
   useUpdateProject,
   useListChecklistItems,
+  useListAuditLogs,
   getListChecklistItemsQueryKey,
   getGetProjectQueryKey,
   getListProjectsQueryKey,
+  getListAuditLogsQueryKey,
 } from "@workspace/api-client-react";
 import type { Project } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Check, ChevronDown, ChevronRight, Ruler, PencilRuler, BadgeCheck,
-  Factory, Truck, Wrench, ArrowRight, GripVertical,
+  Factory, Truck, Wrench, ArrowRight, GripVertical, History,
 } from "lucide-react";
 
 // ── Trilho de Fases ──────────────────────────────────────────────────────────
@@ -26,6 +32,17 @@ type DateKey =
   | "medicaoDate" | "startDate" | "endDate" | "finalDate"
   | "producaoStartDate" | "producaoEndDate" | "producaoFinalDate"
   | "instalacaoStartDate";
+
+const DATE_LABELS: Record<string, string> = {
+  medicaoDate: "Medição",
+  startDate: "Início do projeto",
+  endDate: "Entrega (fim estimado)",
+  finalDate: "Projeto concluído em",
+  producaoStartDate: "Início da produção",
+  producaoEndDate: "Fim estimado da produção",
+  producaoFinalDate: "Produção concluída em",
+  instalacaoStartDate: "Instalação prevista",
+};
 
 const STATUS_ORDER = [
   "a_iniciar", "em_projeto", "em_aprovacao", "em_producao",
@@ -268,8 +285,22 @@ export function PhaseRail({
   const instaladas = (checklist ?? []).filter((i) => i.status !== "nao_instalado").length;
   const totalPecas = (checklist ?? []).length;
 
+  const [historyOpen, setHistoryOpen] = useState(false);
+
   return (
     <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="flex items-center px-4 pt-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Fases e datas</span>
+        <button
+          type="button"
+          onClick={() => setHistoryOpen(true)}
+          className="ml-auto flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+          title="Quem inseriu ou alterou cada data, e quando"
+        >
+          <History className="h-3.5 w-3.5" /> Histórico
+        </button>
+      </div>
+      {historyOpen && <DateHistoryDialog projectId={project.id} onClose={() => setHistoryOpen(false)} />}
       <PhaseTimeline project={project} canEdit={canEdit} isCampo={isCampo} onSave={(k, iso) => saveField(k, iso)} />
 
       <div className="divide-y divide-border">
@@ -349,5 +380,67 @@ export function PhaseRail({
         })}
       </div>
     </div>
+  );
+}
+
+// ── Histórico de datas ───────────────────────────────────────────────────────
+// Datas são compromisso: aqui fica o rastro — quem inseriu/alterou, quando e
+// de qual valor para qual. Fonte: audit_logs (o PATCH de projeto grava o diff).
+
+function fmtHistDate(v: unknown): string {
+  if (!v || typeof v !== "string") return "—";
+  const p = v.split("T")[0].split("-");
+  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0].slice(2)}` : String(v);
+}
+
+function DateHistoryDialog({ projectId, onClose }: { projectId: number; onClose: () => void }) {
+  const params = { entityType: "project" as const, entityId: projectId, limit: 200 };
+  const { data: logs, isLoading } = useListAuditLogs(params, {
+    query: { queryKey: getListAuditLogsQueryKey(params) },
+  });
+
+  const rows = (logs ?? []).flatMap((log) =>
+    (log.changes ?? [])
+      .filter((c) => DATE_LABELS[c.field])
+      .map((c) => ({
+        id: `${log.id}-${c.field}`,
+        when: new Date(log.createdAt),
+        actor: log.actorName,
+        label: DATE_LABELS[c.field],
+        from: fmtHistDate(c.from),
+        to: fmtHistDate(c.to),
+      })),
+  );
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-[520px]">
+        <DialogHeader>
+          <DialogTitle>Histórico de datas</DialogTitle>
+        </DialogHeader>
+        {isLoading ? (
+          <Skeleton className="h-40 rounded-lg" />
+        ) : rows.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            Nenhuma alteração de data registrada ainda — o rastro começa a partir de agora, a cada data inserida ou editada.
+          </p>
+        ) : (
+          <div className="max-h-[420px] overflow-y-auto divide-y divide-border -mx-1 px-1">
+            {rows.map((r) => (
+              <div key={r.id} className="py-2.5">
+                <p className="text-sm text-foreground">
+                  <strong>{r.label}</strong>: <span className="text-muted-foreground">{r.from}</span>
+                  {" → "}
+                  <strong>{r.to}</strong>
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {r.actor} · {r.when.toLocaleDateString("pt-BR")} às {r.when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
