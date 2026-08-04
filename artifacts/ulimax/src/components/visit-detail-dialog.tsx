@@ -246,7 +246,7 @@ export function VisitDetailDialog({ visit, projectId, members, canEdit, open, on
                   ) : (
                     <Upload className="h-3.5 w-3.5 mr-1.5" />
                   )}
-                  {uploading ? "Enviando..." : "Anexar PDF"}
+                  {uploading ? "Enviando..." : "Anexar RDO"}
                 </Button>
               </>
             )}
