@@ -42,6 +42,7 @@ const Desempenho = lazy(() => import("@/pages/desempenho"));
 const Assistente = lazy(() => import("@/pages/assistente"));
 const RelatorioProjeto = lazy(() => import("@/pages/relatorio-projeto"));
 const Cobrancas = lazy(() => import("@/pages/cobrancas"));
+const Prancheta = lazy(() => import("@/pages/prancheta"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -251,6 +252,7 @@ function ProtectedRoutes() {
             <Route path="/gantt"><Redirect to="/tasks?tab=linha" replace /></Route>
             <Route path="/auditoria" component={Audit} />
             <Route path="/meu-dia" component={MeuDia} />
+            <Route path="/prancheta" component={Prancheta} />
             <Route path="/templates" component={Templates} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/automacao" component={Automacao} />

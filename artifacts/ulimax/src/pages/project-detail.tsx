@@ -36,11 +36,12 @@ import {
 } from "@workspace/api-client-react";
 import { ObraDocuments } from "@/components/obra-documents";
 import { ChecklistSection } from "@/components/checklist-section";
+import { ProjectDropzone } from "@/components/project-dropzone";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
 import { ProjectMilestones } from "@/components/project-milestones";
 import { ProjectBurndown } from "@/components/project-burndown";
-import { ProjectDates } from "@/components/project-dates";
+import { PhaseRail } from "@/components/phase-rail";
 import { VisitDetailDialog } from "@/components/visit-detail-dialog";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
 import { useEffectiveRole } from "@/hooks/useViewAs";
@@ -593,6 +594,7 @@ export default function ProjectDetail() {
   }
 
   return (
+    <ProjectDropzone projectId={projectId}>
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Archived banner */}
       {project.archived && (
@@ -877,11 +879,7 @@ export default function ProjectDetail() {
             <AlertCircle className={`h-4 w-4 ${getPriorityColor(project.priority)}`} />
             <span className="font-medium text-foreground">{PRIORITY_LABELS[project.priority] ?? project.priority}</span>
           </div>
-          <ProjectDates
-            hideProducao={isCampo}
-            project={project}
-            emptyHint={isGestor ? "Nenhuma data preenchida ainda — clique em “Editar Projeto” para incluir as datas." : undefined}
-          />
+          <PhaseRail project={project} canEdit={canEdit} isCampo={isCampo} />
         </div>
       </div>
 
@@ -1845,5 +1843,6 @@ export default function ProjectDetail() {
         </Card>
       )}
     </div>
+    </ProjectDropzone>
   );
 }
