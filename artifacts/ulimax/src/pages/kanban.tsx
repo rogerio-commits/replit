@@ -469,7 +469,7 @@ function TasksBoard() {
 
 // ── Projects Board ────────────────────────────────────────────────────────────
 
-function ProjectsBoard() {
+export function ProjectsBoard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();

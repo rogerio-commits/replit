@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Link, useSearch } from "wouter";
+import {Link, useSearch, useLocation } from "wouter";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -73,6 +73,7 @@ import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
 import { useActionPlanMap } from "@/hooks/useActionPlanMap";
+import { ProjectsBoard } from "./kanban";
 
 // ── CSV Import helpers ───────────────────────────────────────────────────────
 const TEMPLATE_CSV = [
@@ -336,6 +337,15 @@ export default function Projects() {
   const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
 
   const planMap = useActionPlanMap();
+  const [, navigate] = useLocation();
+  // Visão da lista: tabela (densa), cards (leitura rápida) ou kanban por fase.
+  const [view, setViewState] = useState<"tabela" | "cards" | "kanban">(
+    () => (localStorage.getItem("ulimax:projects-view") as "tabela" | "cards" | "kanban") || "tabela",
+  );
+  const setView = (v: "tabela" | "cards" | "kanban") => {
+    setViewState(v);
+    try { localStorage.setItem("ulimax:projects-view", v); } catch { /* ok */ }
+  };
   const healthMap = useMemo(
     () => computeHealthMap(projects ?? [], allTasks ?? []),
     [projects, allTasks]
@@ -941,15 +951,31 @@ export default function Projects() {
                 Limpar filtros
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("h-9 ml-auto gap-1.5", showLegend ? "text-primary" : "text-muted-foreground")}
-              onClick={() => setShowLegend((v) => !v)}
-            >
-              <HelpCircle className="h-4 w-4" />
-              Legenda
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="inline-flex rounded-md border border-border overflow-hidden text-xs font-medium shrink-0">
+                {([["tabela", "Tabela"], ["cards", "Cards"], ["kanban", "Kanban"]] as const).map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => setView(v)}
+                    className={cn(
+                      "px-3 py-1.5 transition-colors border-l border-border first:border-l-0",
+                      view === v ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn("h-9 gap-1.5", showLegend ? "text-primary" : "text-muted-foreground")}
+                onClick={() => setShowLegend((v) => !v)}
+              >
+                <HelpCircle className="h-4 w-4" />
+                Legenda
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -1040,6 +1066,68 @@ export default function Projects() {
           </div>
         )}
         <CardContent className="p-0">
+          {view === "kanban" ? (
+            <div className="p-4 flex flex-col min-h-[560px]">
+              <ProjectsBoard />
+            </div>
+          ) : view === "cards" ? (
+            filtered.length === 0 ? (
+              <p className="px-4 py-12 text-center text-sm text-muted-foreground">Nenhum projeto com esses filtros.</p>
+            ) : (
+              <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((project) => {
+                  const h = healthMap.get(project.id);
+                  const pct = project.taskTotal > 0 ? Math.round((project.taskDone / project.taskTotal) * 100) : null;
+                  return (
+                    <div
+                      key={project.id}
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      className="h-full rounded-xl border border-border bg-card p-4 space-y-2.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-start gap-2">
+                        {h && (
+                          <span
+                            title={`${FAROL_META[h.level].label}: ${h.reasons.join(" · ")}`}
+                            className={cn("mt-1.5 h-2.5 w-2.5 rounded-full shrink-0", FAROL_META[h.level].dot)}
+                          />
+                        )}
+                        <p className="font-semibold text-foreground leading-snug flex-1 min-w-0 truncate">{project.name}</p>
+                        <span
+                          className={cn("h-2 w-2 rounded-full shrink-0 mt-2", getPriorityDot(project.priority))}
+                          title={PRIORITY_LABELS[project.priority]}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="outline" className={cn("text-[10px]", getStatusColor(project.status))}>
+                          {STATUS_LABELS[project.status] ?? project.status}
+                        </Badge>
+                        {project.materialType && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            {project.materialType === "madeira" ? "Madeira" : "Alumínio"}
+                          </Badge>
+                        )}
+                        <ActionPlanBadge projectId={project.id} projectName={project.name} summary={planMap.get(project.id)} />
+                      </div>
+                      {pct !== null && (
+                        <div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">{project.taskDone}/{project.taskTotal} tarefas</p>
+                        </div>
+                      )}
+                      {project.endDate && (
+                        <p className="text-xs text-muted-foreground">
+                          Entrega: {project.endDate.split("T")[0].split("-").reverse().join("/")}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          ) : (
+          <>
           {isLoading ? (
             <div className="p-4 space-y-2">
               {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
@@ -1208,6 +1296,8 @@ export default function Projects() {
                 </tbody>
               </table>
             </div>
+          )}
+          </>
           )}
         </CardContent>
       </Card>
