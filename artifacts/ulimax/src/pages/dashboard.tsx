@@ -34,6 +34,7 @@ import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
 import { useToast } from "@/hooks/use-toast";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { MaterialSplit } from "@/components/material-split";
+import { FarolLegend } from "@/components/farol-legend";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
@@ -417,6 +418,7 @@ export default function Dashboard() {
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <h2 className="text-sm font-semibold text-foreground">🚦 Onde focar agora</h2>
+            <FarolLegend />
             <span className="flex items-center gap-1.5 text-[11px] font-semibold">
               <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">🔴 {farol.red}</span>
               <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">🟡 {farol.yellow}</span>

@@ -130,9 +130,9 @@ const sections: Section[] = [
           <Table
             headers={["Cor", "Significado"]}
             rows={[
-              ["🟢 Em dia", "Nenhum atraso e nada vencendo nos próximos dias"],
-              ["🟡 Atenção", "Tarefas vencendo em até 3 dias, tarefa parada há 7+ dias ou entrega do projeto próxima com pouco progresso"],
-              ["🔴 Crítico", "Tarefas com prazo vencido ou data de entrega do projeto já ultrapassada"],
+              ["🟢 Em dia", "Nenhuma das situações de atenção ou crítico"],
+              ["🟡 Atenção", "Tarefa vencendo em até 3 dias · tarefa parada em A Fazer há 7+ dias · entrega em até 7 dias com menos de 70% concluído"],
+              ["🔴 Crítico", "Ao menos 1 tarefa com prazo vencido, ou o prazo de entrega do projeto já passou (o vermelho sempre vence o amarelo)"],
             ]}
           />
         </Subsection>

@@ -73,6 +73,7 @@ import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
 import { useActionPlanMap } from "@/hooks/useActionPlanMap";
+import { FarolLegend } from "@/components/farol-legend";
 import { ProjectsBoard } from "./kanban";
 
 // ── CSV Import helpers ───────────────────────────────────────────────────────
@@ -995,7 +996,8 @@ export default function Projects() {
               </SelectContent>
             </Select>
             {!isTasksLoading && (
-              <div className="flex items-center gap-1.5" title="Farol: clique para filtrar">
+              <div className="flex items-center gap-1.5">
+                <FarolLegend />
                 {(["red", "yellow", "green"] as const).map((lvl) => (
                   <button
                     key={lvl}
