@@ -22,6 +22,8 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 // outro app, arquivados por projeto. Reaproveita a infra de anexos (Supabase
 // Storage) com uma categoria.
 const CATEGORIES: { value: string; label: string }[] = [
+  { value: "planta", label: "Planta / desenho" },
+  { value: "aprovacao", label: "Aprovação do cliente" },
   { value: "rdo", label: "RDO" },
   { value: "diario", label: "Diário de obra" },
   { value: "visita", label: "Relatório de visita" },
@@ -30,6 +32,8 @@ const CATEGORIES: { value: string; label: string }[] = [
 const CAT_LABEL: Record<string, string> = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.label]));
 
 const CAT_CHIP: Record<string, string> = {
+  planta: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/40",
+  aprovacao: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/40",
   rdo: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/40",
   diario: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40",
   visita: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/30 dark:text-violet-400 dark:border-violet-800/40",

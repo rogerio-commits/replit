@@ -36,6 +36,7 @@ import {
 } from "@workspace/api-client-react";
 import { ObraDocuments } from "@/components/obra-documents";
 import { ChecklistSection } from "@/components/checklist-section";
+import { ProjectDropzone } from "@/components/project-dropzone";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
 import { ProjectMilestones } from "@/components/project-milestones";
@@ -593,6 +594,7 @@ export default function ProjectDetail() {
   }
 
   return (
+    <ProjectDropzone projectId={projectId}>
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Archived banner */}
       {project.archived && (
@@ -1841,5 +1843,6 @@ export default function ProjectDetail() {
         </Card>
       )}
     </div>
+    </ProjectDropzone>
   );
 }
