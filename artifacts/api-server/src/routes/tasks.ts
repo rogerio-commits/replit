@@ -235,7 +235,7 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
     await notifyTaskAssigned(task.id, task.title, task.assignedTo, req.appUser!.email, projName, actorNamePost, req.log);
   }
 
-  logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: "created", actorName: actorNamePost, actorEmail: req.appUser!.email }, req.log);
+  await logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: "created", actorName: actorNamePost, actorEmail: req.appUser!.email }, req.log);
 
   return res.status(201).json(taskRow(row));
 });
@@ -404,7 +404,7 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   }
 
   const patchChanges = diffObjects(previousTask as unknown as Record<string, unknown>, updateData, ["status", "priority", "assignedTo", "dueDate", "title"]);
-  logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: patchChanges.length === 1 && patchChanges[0].field === "status" ? "status_changed" : "updated", actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: patchChanges.length > 0 ? patchChanges : undefined }, req.log);
+  await logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: patchChanges.length === 1 && patchChanges[0].field === "status" ? "status_changed" : "updated", actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: patchChanges.length > 0 ? patchChanges : undefined }, req.log);
 
   if (body.data.status === "done" && task.recurrence && task.recurrence !== "none" && task.dueDate) {
     const currentDue = new Date(task.dueDate);
@@ -496,7 +496,7 @@ router.post("/tasks/:id/subtasks", requireExecutorOrGestor, async (req, res) => 
 
   const actorMember = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
   const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
-  logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: "created", actorName, actorEmail: req.appUser!.email }, req.log);
+  await logAudit({ entityType: "task", entityId: task.id, entityName: task.title, action: "created", actorName, actorEmail: req.appUser!.email }, req.log);
 
   return res.status(201).json(taskRow(row));
 });
@@ -524,7 +524,7 @@ router.delete("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   await db.delete(tasksTable).where(eq(tasksTable.id, params.data.id));
 
   if (taskToDelete) {
-    logAudit({ entityType: "task", entityId: params.data.id, entityName: taskToDelete.title, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
+    await logAudit({ entityType: "task", entityId: params.data.id, entityName: taskToDelete.title, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
   }
   return res.status(204).send();
 });

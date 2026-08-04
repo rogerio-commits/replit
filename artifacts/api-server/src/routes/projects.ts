@@ -295,7 +295,7 @@ router.post("/projects/import", requireExecutorOrGestor, async (req, res) => {
         finalDate:  typeof row.finalDate === "string"   && row.finalDate  ? row.finalDate  : null,
         materialType,
       }).returning();
-      logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "created", actorName, actorEmail: req.appUser!.email }, req.log);
+      await logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "created", actorName, actorEmail: req.appUser!.email }, req.log);
       importedIds.push(project.id);
     } catch {
       errors.push({ row: i + 1, name, message: "Erro interno ao inserir" });
@@ -333,7 +333,7 @@ router.post("/projects", requireExecutorOrGestor, async (req, res) => {
 
   const actorMemberPost = await db.select({ name: membersTable.name }).from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
   const actorNamePost = actorMemberPost[0]?.name ?? req.appUser!.email.split("@")[0];
-  logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "created", actorName: actorNamePost, actorEmail: req.appUser!.email }, req.log);
+  await logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "created", actorName: actorNamePost, actorEmail: req.appUser!.email }, req.log);
 
   return res.status(201).json(projectRow(project, []));
 });
@@ -372,7 +372,21 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
   }
 
   const [existing] = await db
-    .select({ status: projectsTable.status, name: projectsTable.name })
+    .select({
+      status: projectsTable.status,
+      name: projectsTable.name,
+      priority: projectsTable.priority,
+      // Valores anteriores das datas — sem eles o "de → para" da auditoria
+      // nasce sem o "de".
+      medicaoDate: projectsTable.medicaoDate,
+      startDate: projectsTable.startDate,
+      endDate: projectsTable.endDate,
+      finalDate: projectsTable.finalDate,
+      producaoStartDate: projectsTable.producaoStartDate,
+      producaoEndDate: projectsTable.producaoEndDate,
+      producaoFinalDate: projectsTable.producaoFinalDate,
+      instalacaoStartDate: projectsTable.instalacaoStartDate,
+    })
     .from(projectsTable)
     .where(eq(projectsTable.id, params.data.id));
 
@@ -448,7 +462,7 @@ router.patch("/projects/:id", requireExecutorOrGestor, async (req, res) => {
     "producaoStartDate", "producaoEndDate", "producaoFinalDate", "instalacaoStartDate",
   ]);
   const projPatchAction = body.data.status !== undefined && body.data.status !== existing.status ? "status_changed" as const : "updated" as const;
-  logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: projPatchAction, actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: projPatchChanges.length > 0 ? projPatchChanges : undefined }, req.log);
+  await logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: projPatchAction, actorName: actorNamePatch, actorEmail: req.appUser!.email, changes: projPatchChanges.length > 0 ? projPatchChanges : undefined }, req.log);
 
   const participantsMap = await fetchParticipantsByProject([project.id]);
   const taskCounts = await fetchTaskCountsByProject([project.id]);
@@ -481,7 +495,7 @@ router.delete("/projects/:id", requireExecutorOrGestor, async (req, res) => {
   await db.delete(projectsTable).where(eq(projectsTable.id, params.data.id));
 
   if (projToDelete) {
-    logAudit({ entityType: "project", entityId: params.data.id, entityName: projToDelete.name, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
+    await logAudit({ entityType: "project", entityId: params.data.id, entityName: projToDelete.name, action: "deleted", actorName: actorNameDel, actorEmail: req.appUser!.email }, req.log);
   }
   return res.status(204).send();
 });
@@ -501,7 +515,7 @@ router.post("/projects/:id/archive", requireExecutorOrGestor, async (req, res) =
   const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
 
   const [updated] = await db.update(projectsTable).set({ archived: true }).where(eq(projectsTable.id, params.data.id)).returning();
-  logAudit({ entityType: "project", entityId: params.data.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email }, req.log);
+  await logAudit({ entityType: "project", entityId: params.data.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email }, req.log);
 
   const participantsMap = await fetchParticipantsByProject([params.data.id]);
   const taskCounts = await fetchTaskCountsByProject([params.data.id]);
@@ -523,7 +537,7 @@ router.post("/projects/:id/unarchive", requireExecutorOrGestor, async (req, res)
   const actorName = actorMember[0]?.name ?? req.appUser!.email.split("@")[0];
 
   const [updated] = await db.update(projectsTable).set({ archived: false }).where(eq(projectsTable.id, params.data.id)).returning();
-  logAudit({ entityType: "project", entityId: params.data.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email }, req.log);
+  await logAudit({ entityType: "project", entityId: params.data.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email }, req.log);
 
   const participantsMap = await fetchParticipantsByProject([params.data.id]);
   const taskCounts = await fetchTaskCountsByProject([params.data.id]);
@@ -585,7 +599,7 @@ router.post("/projects/:id/approve", requireGestor, async (req, res) => {
     });
   }
 
-  logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email, changes: [{ field: "approvalStatus", from: null, to: body.data.action }] }, req.log);
+  await logAudit({ entityType: "project", entityId: project.id, entityName: project.name, action: "updated", actorName, actorEmail: req.appUser!.email, changes: [{ field: "approvalStatus", from: null, to: body.data.action }] }, req.log);
 
   const participantsMap = await fetchParticipantsByProject([project.id]);
   const taskCounts = await fetchTaskCountsByProject([project.id]);
