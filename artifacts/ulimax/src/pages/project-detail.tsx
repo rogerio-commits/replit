@@ -994,6 +994,9 @@ export default function ProjectDetail() {
       )}
 
       {/* Stats */}
+      {/* RDO e Documentos da Obra */}
+      <ObraDocuments projectId={projectId} />
+
       <h2 className="text-lg font-semibold">Atividades da Equipe</h2>
       {isStatsLoading ? (
         <div className="grid gap-4 md:grid-cols-4">
@@ -1601,9 +1604,6 @@ export default function ProjectDetail() {
           )}
         </CardContent>
       </Card>
-
-      {/* RDO e Documentos da Obra */}
-      <ObraDocuments projectId={projectId} />
 
       {/* Controle de Materiais */}
       <Card>
