@@ -1246,6 +1246,11 @@ export default function ProjectDetail() {
               )}
             </div>
           )}
+
+          {/* RDO e documentos: o produto documental das visitas (fotos + comentários consolidados) */}
+          <div className="mt-4">
+            <ObraDocuments projectId={projectId} />
+          </div>
         </CardContent>
       </Card>
 
@@ -1260,9 +1265,6 @@ export default function ProjectDetail() {
       />
 
       {/* Stats */}
-      {/* RDO e Documentos da Obra */}
-      <ObraDocuments projectId={projectId} />
-
       <h2 className="text-lg font-semibold">Tarefas da Equipe</h2>
       {isStatsLoading ? (
         <div className="grid gap-4 md:grid-cols-4">
