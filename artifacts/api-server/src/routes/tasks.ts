@@ -33,6 +33,15 @@ async function notifyTaskAssigned(
     const [assigneeMember] = await db.select({ email: membersTable.email, name: membersTable.name })
       .from(membersTable).where(eq(membersTable.id, assignedTo)).limit(1);
     if (!assigneeMember || assigneeMember.email === actorEmail) return;
+    // E-mail vai mesmo sem conta no app; aguardado porque a serverless congela após a resposta.
+    await sendTaskAssignedEmail({
+      toEmail: assigneeMember.email,
+      toName: assigneeMember.name,
+      taskTitle,
+      taskId,
+      projectName,
+      assignedByName: actorName,
+    }).catch((e) => log.warn({ err: e }, "Failed to send task_assigned email"));
     const [assigneeUser] = await db.select({ id: usersTable.id })
       .from(usersTable).where(eq(usersTable.email, assigneeMember.email)).limit(1);
     if (!assigneeUser) return;
@@ -45,15 +54,6 @@ async function notifyTaskAssigned(
       entityId: taskId,
       read: false,
     });
-    // Send email (fire-and-forget — never block the response)
-    sendTaskAssignedEmail({
-      toEmail: assigneeMember.email,
-      toName: assigneeMember.name,
-      taskTitle,
-      taskId,
-      projectName,
-      assignedByName: actorName,
-    }).catch((e) => log.warn({ err: e }, "Failed to send task_assigned email"));
   } catch (e) {
     log.warn({ err: e }, "Failed to create task_assigned notification");
   }
@@ -262,7 +262,27 @@ router.post("/tasks/bulk-update", requireExecutorOrGestor, async (req, res) => {
 
   if (Object.keys(updateData).length === 0) return res.json({ updated: 0 });
 
+  // Estado anterior, para avisar só quem de fato ganhou tarefa nova.
+  const previousRows = assignedTo
+    ? await db
+        .select({ id: tasksTable.id, title: tasksTable.title, assignedTo: tasksTable.assignedTo, projectName: projectsTable.name })
+        .from(tasksTable)
+        .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+        .where(inArray(tasksTable.id, ids))
+    : [];
+
   await db.update(tasksTable).set(updateData).where(inArray(tasksTable.id, ids));
+
+  if (assignedTo) {
+    const [actorMember] = await db.select({ name: membersTable.name })
+      .from(membersTable).where(eq(membersTable.email, req.appUser!.email)).limit(1);
+    const actorName = actorMember?.name ?? req.appUser!.email.split("@")[0];
+    for (const prev of previousRows) {
+      if (prev.assignedTo === assignedTo) continue;
+      await notifyTaskAssigned(prev.id, prev.title, assignedTo, req.appUser!.email, prev.projectName ?? "", actorName, req.log);
+    }
+  }
+
   return res.json({ updated: ids.length });
 });
 
