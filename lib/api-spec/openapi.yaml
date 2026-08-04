@@ -2965,7 +2965,7 @@ components:
           type: string
           enum: [low, medium, high]
         assignedTo:
-          type: integer
+          type: ["integer", "null"]
 
     Task:
       type: object
@@ -3035,7 +3035,7 @@ components:
           type: string
           enum: [low, medium, high]
         assignedTo:
-          type: integer
+          type: ["integer", "null"]
         dueDate:
           type: string
         recurrence:
@@ -3059,7 +3059,7 @@ components:
           type: string
           enum: [low, medium, high]
         assignedTo:
-          type: integer
+          type: ["integer", "null"]
         dueDate:
           type: string
         projectId:

@@ -17,7 +17,8 @@ export interface TaskInput {
   description?: string;
   status: TaskInputStatus;
   priority: TaskInputPriority;
-  assignedTo?: number;
+  /** @nullable */
+  assignedTo?: number | null;
   dueDate?: string;
   recurrence?: TaskInputRecurrence;
   recurrenceEndDate?: string;

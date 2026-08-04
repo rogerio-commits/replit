@@ -870,7 +870,7 @@ export const CreateTaskBody = zod.object({
   "description": zod.string().optional(),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']),
   "priority": zod.enum(['low', 'medium', 'high']),
-  "assignedTo": zod.number().optional(),
+  "assignedTo": zod.number().nullish(),
   "dueDate": zod.string().optional(),
   "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
   "recurrenceEndDate": zod.string().optional()
@@ -927,7 +927,7 @@ export const UpdateTaskBody = zod.object({
   "description": zod.string().optional(),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']).optional(),
   "priority": zod.enum(['low', 'medium', 'high']).optional(),
-  "assignedTo": zod.number().optional(),
+  "assignedTo": zod.number().nullish(),
   "dueDate": zod.string().optional(),
   "projectId": zod.number().optional(),
   "recurrence": zod.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']).optional(),
@@ -977,7 +977,7 @@ export const BulkUpdateTasksBody = zod.object({
   "ids": zod.array(zod.number()),
   "status": zod.enum(['todo', 'in_progress', 'review', 'done']).optional(),
   "priority": zod.enum(['low', 'medium', 'high']).optional(),
-  "assignedTo": zod.number().optional()
+  "assignedTo": zod.number().nullish()
 })
 
 export const BulkUpdateTasksResponse = zod.object({

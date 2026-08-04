@@ -12,5 +12,6 @@ export interface BulkTaskUpdate {
   ids: number[];
   status?: BulkTaskUpdateStatus;
   priority?: BulkTaskUpdatePriority;
-  assignedTo?: number;
+  /** @nullable */
+  assignedTo?: number | null;
 }

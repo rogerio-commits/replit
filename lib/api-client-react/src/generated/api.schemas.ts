@@ -305,7 +305,8 @@ export interface BulkTaskUpdate {
   ids: number[];
   status?: BulkTaskUpdateStatus;
   priority?: BulkTaskUpdatePriority;
-  assignedTo?: number;
+  /** @nullable */
+  assignedTo?: number | null;
 }
 
 export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
@@ -407,7 +408,8 @@ export interface TaskInput {
   description?: string;
   status: TaskInputStatus;
   priority: TaskInputPriority;
-  assignedTo?: number;
+  /** @nullable */
+  assignedTo?: number | null;
   dueDate?: string;
   recurrence?: TaskInputRecurrence;
   recurrenceEndDate?: string;
@@ -449,7 +451,8 @@ export interface TaskUpdate {
   description?: string;
   status?: TaskUpdateStatus;
   priority?: TaskUpdatePriority;
-  assignedTo?: number;
+  /** @nullable */
+  assignedTo?: number | null;
   dueDate?: string;
   projectId?: number;
   recurrence?: TaskUpdateRecurrence;
