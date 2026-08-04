@@ -331,7 +331,6 @@ export default function Projects() {
   }, [searchStr, canEdit]);
 
   const [showArchived, setShowArchived] = useState(false);
-  const [showLegend, setShowLegend] = useState(false);
 
   const { data: projects, isLoading } = useListProjects(showArchived ? { archived: true } : undefined);
   const { data: allMembers } = useListMembers();
@@ -1032,105 +1031,10 @@ export default function Projects() {
                   </button>
                 ))}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn("h-9 gap-1.5", showLegend ? "text-primary" : "text-muted-foreground")}
-                onClick={() => setShowLegend((v) => !v)}
-              >
-                <HelpCircle className="h-4 w-4" />
-                Legenda
-              </Button>
             </div>
           </div>
         </CardHeader>
 
-        {/* Legend panel */}
-        {showLegend && (
-          <div className="border-b px-4 py-4 bg-muted/30 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que significa cada coluna</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3">
-              {/* Farol */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <span className="flex gap-1">
-                    <span className="h-2.5 w-2.5 rounded-full bg-red-500 inline-block" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-yellow-400 inline-block" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500 inline-block" />
-                  </span>
-                  Farol
-                </p>
-                <p className="text-xs text-muted-foreground">Indicador de saúde automático. <span className="text-green-700 font-medium">Verde</span> = no prazo. <span className="text-yellow-700 font-medium">Amarelo</span> = atenção (prazo próximo ou tarefas paradas). <span className="text-red-700 font-medium">Vermelho</span> = crítico. Clique nas bolinhas acima para filtrar por cor.</p>
-              </div>
-
-              {/* Tarefas */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">Tarefas</p>
-                <p className="text-xs text-muted-foreground">Progresso das tarefas do projeto. A barra mostra o percentual concluído; o número indica <em>feitas / total</em>. Tarefas sem data ou responsável não são contadas no farol.</p>
-              </div>
-
-              {/* Status */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">Status</p>
-                <p className="text-xs text-muted-foreground">Fase atual do projeto. Sequência esperada: <span className="font-medium">A Iniciar → Em Projeto → Em Aprovação → Em Produção → Aguard. Instalação → Em Instalação</span>.</p>
-              </div>
-
-              {/* Prioridade */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">Prioridade</p>
-                <p className="text-xs text-muted-foreground"><span className="text-red-600 font-medium">Alta</span> (ponto vermelho) = projetos urgentes que devem receber atenção primeiro. <span className="text-amber-600 font-medium">Normal</span> = fluxo padrão.</p>
-              </div>
-
-              {/* Material */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground">Material</p>
-                <p className="text-xs text-muted-foreground">Tipo de material principal: <span className="font-medium">Madeira</span> ou <span className="font-medium">Alumínio</span>. Usado para organizar a produção e filtrar relatórios.</p>
-              </div>
-
-              {/* Datas – separador */}
-              <div className="sm:col-span-2 lg:col-span-3 pt-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Datas</p>
-              </div>
-
-              {/* Bloco Projeto */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-violet-700 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-sm bg-violet-300 inline-block" /> Bloco Projeto (roxo)
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">Início Proj.</span> — quando o projeto começou a ser elaborado.<br />
-                  <span className="font-medium">Fim Est. Proj.</span> — prazo planejado para concluir a elaboração. Fica <span className="text-amber-600 font-medium">amarelo</span> se faltam ≤ 7 dias e <span className="text-red-600 font-medium">vermelho</span> se já passou.<br />
-                  <span className="font-medium">Final Proj.</span> — data real em que a elaboração foi encerrada.
-                </p>
-              </div>
-
-              {/* Bloco Produção */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-sm bg-blue-300 inline-block" /> Bloco Produção (azul)
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">Início Prod.</span> — quando a fabricação começou.<br />
-                  <span className="font-medium">Fim Est. Prod.</span> — prazo planejado para concluir a produção. Sinaliza atraso com cor.<br />
-                  <span className="font-medium">Final Prod.</span> — data real de término da fabricação.
-                </p>
-              </div>
-
-              {/* Medição e Instalação */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-foreground flex items-center gap-2">
-                  <span className="text-amber-700 flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-amber-300 inline-block" /> Medição</span>
-                  <span className="text-emerald-700 flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-emerald-300 inline-block" /> Início Inst.</span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-medium">Medição</span> — data da vistoria na obra para liberar a instalação. Sinaliza atraso com cor.<br />
-                  <span className="font-medium">Início Inst.</span> — data prevista para começar a instalação no local.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
         <CardContent className="p-0">
           {view === "kanban" ? (
             <div className="p-4 flex flex-col min-h-[560px]">
@@ -1241,29 +1145,11 @@ export default function Projects() {
                     <th className={thCls} title="Tipo de material principal: Madeira ou Alumínio. Clique para ordenar." onClick={() => handleSort("materialType")}>
                       <div className={thInner}>Material <SortIcon col="materialType" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-l-2 border-violet-300")} title="Data de início da fase de projeto (elaboração do projeto). Clique para ordenar." onClick={() => handleSort("startDate")}>
-                      <div className={thInner}>Início Proj. <SortIcon col="startDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    <th className={thCls} title="Prazo de entrega do projeto. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("endDate")}>
+                      <div className={thInner}>Entrega <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={cn(thCls, "bg-violet-200 text-violet-800")} title="Prazo estimado para conclusão da fase de projeto. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("endDate")}>
-                      <div className={thInner}>Fim Est. Proj. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
-                    </th>
-                    <th className={cn(thCls, "bg-violet-200 text-violet-800 border-r-2 border-violet-300")} title="Data real de encerramento da fase de projeto (quando efetivamente concluída). Clique para ordenar." onClick={() => handleSort("finalDate")}>
-                      <div className={thInner}>Final Proj. <SortIcon col="finalDate" sortKey={sortKey} sortDir={sortDir} /></div>
-                    </th>
-                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-l-2 border-blue-300")} title="Data de início da fase de produção (fabricação). Clique para ordenar." onClick={() => handleSort("producaoStartDate")}>
-                      <div className={thInner}>Início Prod. <SortIcon col="producaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
-                    </th>
-                    <th className={cn(thCls, "bg-blue-200 text-blue-800")} title="Prazo estimado para conclusão da produção. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("producaoEndDate")}>
-                      <div className={thInner}>Fim Est. Prod. <SortIcon col="producaoEndDate" sortKey={sortKey} sortDir={sortDir} /></div>
-                    </th>
-                    <th className={cn(thCls, "bg-blue-200 text-blue-800 border-r-2 border-blue-300")} title="Data real de encerramento da produção. Clique para ordenar." onClick={() => handleSort("producaoFinalDate")}>
-                      <div className={thInner}>Final Prod. <SortIcon col="producaoFinalDate" sortKey={sortKey} sortDir={sortDir} /></div>
-                    </th>
-                    <th className={cn(thCls, "bg-amber-200 text-amber-800 border-l-2 border-r-2 border-amber-300")} title="Data de medição na obra (vistoria para liberação da instalação). Fica amarelo/vermelho conforme proximidade. Clique para ordenar." onClick={() => handleSort("medicaoDate")}>
-                      <div className={thInner}>Medição <SortIcon col="medicaoDate" sortKey={sortKey} sortDir={sortDir} /></div>
-                    </th>
-                    <th className={cn(thCls, "bg-emerald-200 text-emerald-800 border-l-2 border-r-2 border-emerald-300")} title="Data prevista de início da instalação na obra. Clique para ordenar." onClick={() => handleSort("instalacaoStartDate")}>
-                      <div className={thInner}>Início Inst. <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    <th className={thCls} title="Data prevista de início da instalação na obra. Clique para ordenar." onClick={() => handleSort("instalacaoStartDate")}>
+                      <div className={thInner}>Instalação <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
                   </tr>
                 </thead>
@@ -1349,14 +1235,8 @@ export default function Projects() {
                           )}
                         </Link>
                       </td>
-                      <DateCell val={project.startDate}         href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-l border-violet-100/60" />
-                      <DateCell val={project.endDate}           href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30" deadline />
-                      <DateCell val={project.finalDate}         href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-violet-50/30 border-r border-violet-100/60" deadline />
-                      <DateCell val={project.producaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-l border-blue-100/60" />
-                      <DateCell val={project.producaoEndDate}   href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30" deadline />
-                      <DateCell val={project.producaoFinalDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-blue-50/30 border-r border-blue-100/60" deadline />
-                      <DateCell val={project.medicaoDate}       href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-amber-50/30 border-l border-amber-100/60 border-r border-amber-100/60" deadline />
-                      <DateCell val={project.instalacaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap bg-emerald-50/30 border-l border-emerald-100/60 border-r border-emerald-100/60" />
+                      <DateCell val={project.endDate}           href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" deadline />
+                      <DateCell val={project.instalacaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" />
                     </tr>
                   ))}
                 </tbody>
