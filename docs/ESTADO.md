@@ -1,20 +1,20 @@
 # Ulimax Projetos — Estado do Produto
 
 > Documento de continuidade: o que o app é hoje, decisões tomadas e pendências.
-> Atualizar junto com entregas grandes. Última atualização: 2026-08-04.
+> Atualizar junto com entregas grandes. Última atualização: 2026-08-04 (fila única em Obras/Hoje).
 
 ## Visão por papel
 
 | Papel | Home | Menu | Ferramentas-chave |
 |---|---|---|---|
 | **gestor** | Meu Dia | Meu Dia, Dashboard, Projetos, Trabalho · Obra: Obras, Instalações, Calendário · Análises: Assistente, Desempenho · Configurações | Dashboard enxuto (7 cartões + FarolLegend), Desempenho (ciclo real + por unidade + Modo reunião), Ver como |
-| **gestor_obras** | Obras (aba Hoje) | Obras, Projetos, Calendário, Ajuda | Hub Obras: **Hoje** (ação: precisam de visita, checar in loco, planos, datas vencidas, Fechar o dia/RDO automático) · **Agenda** (visitas + datas-chave) · **Pendências** (lista completa, WhatsApp p/ externos) · **Operação** (instalações/AT/amostras) |
+| **gestor_obras** | Obras (aba Hoje) | Obras, Projetos, Calendário, Ajuda | Hub Obras: **Hoje** = fila única numerada "Comece por aqui" (visitas de hoje → planos c/ itens vencidos por obra → datas vencidas → checagens vencidas → visitas a agendar c/ botão inline → checagens s/ prazo; item 1 destacado; 8 visíveis + expandir; Fechar o dia/RDO automático abaixo) · **Agenda** (visitas + datas-chave) · **Pendências** (lista completa, WhatsApp p/ externos) · **Operação** (instalações/AT/amostras) |
 | **executor (projetista)** | Minha Prancheta | Prancheta, Meu Dia, Trabalho, Projetos, Instalações, Calendário | Prancheta (reprovado/vencendo/aguardando aprovação), Trilho de Fases com edição inline |
 | **observador** | Dashboard | Dashboard, Projetos, Calendário | leitura |
 
 ## Telas principais
 - **Projetos** (`/projects`): tabela enxuta (Farol, Projeto+selo de plano, Tarefas, Fase, Prior., Material, Entrega, Instalação) | visão **Kanban** (fases, drag). Filtros: busca, fase, prioridade, **material**, farol (+legenda "?"). Exporta **CSV** (todas as datas) e **PDF** (lista filtrada p/ impressão). Datas detalhadas vivem no Trilho/Agenda/CSV/PDF.
-- **Projeto** (`/projects/:id`): **Trilho de Fases** (progressive disclosure; fase ativa expandida; datas com edição inline + autosave; mini-timeline arrastável; botão **Histórico** = auditoria quem/quando/de→para das 8 datas; "Concluir fase→" avança status — SEM gate de anexo, desenho vai por e-mail) → tarefas → participantes → visitas → **checklist por ambiente com status em 1 toque** → RDO e Documentos (upload categorizado + drop-zone global "o que é isto?") → plano de ação → diário. Marcos/Burndown e Fotos/Arquivos foram removidos da tela.
+- **Projeto** (`/projects/:id`): **Trilho de Fases** (progressive disclosure; fase ativa expandida; datas com edição inline + autosave; mini-timeline arrastável; botão **Histórico** = auditoria quem/quando/de→para das 8 datas; "Concluir fase→" avança status — SEM gate de anexo, desenho vai por e-mail) → Plano de Ação (accordions fechados, badge de vencidos) → **Visitas na Obra** (RDO anexado por visita: botão anexar/baixar arquivo na linha) → **Tarefas da Equipe** (form com Responsável interno Ulimax) → Observações → Controle de Materiais → Participantes → Históricos. Removidos da tela: Marcos/Burndown, Fotos/Arquivos, checklist, acervo RDO/Documentos e drop-zone (RDO agora vive na visita).
 - **Trabalho** (`/tasks`): abas Lista | Tarefas (colunas drag, cartão clicável abre detalhe) | Fases dos Projetos | Linha do Tempo. Filtro Madeira/Alumínio. Deep-links `?vencidas=1&responsavel=` caem na Lista.
 - **Obras** (`/obra?tab=`): ver tabela acima. `/cobrancas`, `/agenda`, `/painel-obra`, `/portfolio`, `/kanban`, `/gantt` redirecionam.
 
@@ -27,6 +27,7 @@
 - Snapshots de métricas: `metrics_snapshots` gravada pelo cron; `/dashboard/trends` existe (TrendsStrip fora do Dashboard por decisão).
 - Auditoria: PATCH de projeto grava diff de status/prioridade/nome + 8 datas; `/audit-logs` escopado por entidade liberado a autenticados.
 - `tasks.started_at` = tempo de ciclo real (marcado na 1ª saída de "todo").
+- Atribuição de tarefa notifica o responsável: notificação in-app (sino, p/ quem tem conta) + e-mail via Resend (aguardado — serverless congela após a resposta; sai mesmo sem conta no app). Vale p/ criar, editar e bulk-update; auto-atribuição não notifica. `assignedTo` aceita `null` no contrato (limpar responsável). Depende de `RESEND_API_KEY`/`EMAIL_FROM`/`APP_URL` na Vercel.
 - Anexos: `attachments.category` (planta/aprovacao/rdo/diario/visita/outro).
 - UpdateNotifier: aba avisa "Nova versão disponível" (5min/focus).
 
