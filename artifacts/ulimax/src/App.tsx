@@ -41,7 +41,6 @@ const Reuniao = lazy(() => import("@/pages/reuniao"));
 const Desempenho = lazy(() => import("@/pages/desempenho"));
 const Assistente = lazy(() => import("@/pages/assistente"));
 const RelatorioProjeto = lazy(() => import("@/pages/relatorio-projeto"));
-const Cobrancas = lazy(() => import("@/pages/cobrancas"));
 const Prancheta = lazy(() => import("@/pages/prancheta"));
 
 const queryClient = new QueryClient({
@@ -258,7 +257,7 @@ function ProtectedRoutes() {
             <Route path="/automacao" component={Automacao} />
             <Route path="/portfolio"><Redirect to="/projects" replace /></Route>
             <Route path="/obra" component={Obra} />
-            <Route path="/cobrancas" component={Cobrancas} />
+            <Route path="/cobrancas"><Redirect to="/obra?tab=pendencias" replace /></Route>
             <Route path="/agenda"><Redirect to="/obra?tab=agenda" replace /></Route>
             <Route path="/painel-obra"><Redirect to="/obra" replace /></Route>
             <Route path="/reuniao" component={Reuniao} />

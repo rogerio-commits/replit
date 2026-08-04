@@ -124,7 +124,6 @@ export function Layout({ children }: LayoutProps) {
               items: [
                 { href: "/obra", label: "Obras", icon: HardHat, highlight: true },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
-                { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
             },
@@ -163,8 +162,7 @@ export function Layout({ children }: LayoutProps) {
                 label: "Obra",
                 items: [
                   { href: "/obra", label: "Obra", icon: HardHat },
-                  { href: "/cobrancas", label: "Minhas Cobranças", icon: ClipboardCheck },
-                  { href: "/checklist", label: "Instalações", icon: ClipboardList },
+                    { href: "/checklist", label: "Instalações", icon: ClipboardList },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
                 ],
               },

@@ -166,7 +166,7 @@ export default function PainelObra() {
               title="Checar in loco"
               hint="Follow-ups de visita a verificar na obra"
               count={data.checarInLoco.length}
-              seeAll="/cobrancas"
+              seeAll="/obra?tab=pendencias"
               empty="Nenhum follow-up de visita pendente."
             >
               {data.checarInLoco.slice(0, 6).map((it) => (

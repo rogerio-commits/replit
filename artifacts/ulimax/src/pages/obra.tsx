@@ -6,6 +6,7 @@ import { NewVisitDialog } from "@/components/new-visit-dialog";
 import PainelObra from "./painel-obra";
 import Agenda from "./agenda";
 import CentralObra from "./central-obra";
+import Cobrancas from "./cobrancas";
 
 // ── Obra ─────────────────────────────────────────────────────────────────────
 // Hub único da obra para o gestor de obras, em três abas — antes eram três
@@ -15,7 +16,7 @@ import CentralObra from "./central-obra";
 //   Operação = instalações, assistência técnica e amostras
 // A aba ativa vem da URL (?tab=) para os atalhos "Ver todos" caírem no lugar.
 
-const VALID = ["hoje", "agenda", "operacao"];
+const VALID = ["hoje", "agenda", "pendencias", "operacao"];
 
 export default function Obra() {
   const search = useSearch();
@@ -43,13 +44,15 @@ export default function Obra() {
       </div>
 
       <Tabs value={tab} onValueChange={(v) => navigate(`/obra?tab=${v}`)}>
-        <TabsList className="grid w-full grid-cols-3 sm:max-w-md">
+        <TabsList className="grid w-full grid-cols-4 sm:max-w-xl">
           <TabsTrigger value="hoje">Hoje</TabsTrigger>
           <TabsTrigger value="agenda">Agenda</TabsTrigger>
+          <TabsTrigger value="pendencias">Pendências</TabsTrigger>
           <TabsTrigger value="operacao">Operação</TabsTrigger>
         </TabsList>
         <TabsContent value="hoje" className="mt-4"><PainelObra /></TabsContent>
         <TabsContent value="agenda" className="mt-4"><Agenda /></TabsContent>
+        <TabsContent value="pendencias" className="mt-4"><Cobrancas embedded /></TabsContent>
         <TabsContent value="operacao" className="mt-4"><CentralObra embedded /></TabsContent>
       </Tabs>
     </div>

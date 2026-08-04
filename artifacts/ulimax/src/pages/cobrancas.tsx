@@ -63,7 +63,7 @@ function fmtDue(dueDate: string | null | undefined): string {
   return `${br} · em ${d}d`;
 }
 
-export default function Cobrancas() {
+export default function Cobrancas({ embedded = false }: { embedded?: boolean } = {}) {
   const [, navigate] = useLocation();
   const planMap = useActionPlanMap();
   const { data: items, isLoading } = useListChaseItems();
@@ -178,15 +178,18 @@ export default function Cobrancas() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
+      {!embedded && (
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <ClipboardCheck className="h-7 w-7 text-primary" />
-          Minhas Cobranças
+          Pendências
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Itens de plano de ação e follow-ups de visita em aberto, de todas as obras.
-        </p>
       </div>
+      )}
+      <p className="text-sm text-muted-foreground -mt-1">
+        A lista completa do que está em aberto nas obras — itens de plano de ação e follow-ups de visita.
+        A aba <strong>Hoje</strong> mostra só o recorte urgente; aqui você filtra, acompanha e cobra (inclusive externos, pelo WhatsApp).
+      </p>
 
       {/* Resumo */}
       {!isLoading && (

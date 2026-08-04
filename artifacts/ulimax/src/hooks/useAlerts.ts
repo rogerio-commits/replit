@@ -232,7 +232,7 @@ export function computeAlerts(
         severity: "danger",
         title: `${kind} atrasado: ${ci.description.slice(0, 60)}`,
         description: `Prazo ${fmtDate(ci.dueDate)} expirou · ${ci.projectName ?? "Obra"} · ${who}`,
-        href: "/cobrancas",
+        href: "/obra?tab=pendencias",
         projectId: ci.projectId,
       });
     } else if (diff <= CHASE_APPROACHING_DAYS) {
@@ -243,7 +243,7 @@ export function computeAlerts(
         severity: "warning",
         title: `${kind} vence ${label}: ${ci.description.slice(0, 60)}`,
         description: `Vence ${fmtDate(ci.dueDate)} · ${ci.projectName ?? "Obra"} · ${who}`,
-        href: "/cobrancas",
+        href: "/obra?tab=pendencias",
         projectId: ci.projectId,
       });
     }
