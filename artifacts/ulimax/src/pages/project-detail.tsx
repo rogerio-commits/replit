@@ -39,8 +39,6 @@ import { ChecklistSection } from "@/components/checklist-section";
 import { ProjectDropzone } from "@/components/project-dropzone";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
-import { ProjectMilestones } from "@/components/project-milestones";
-import { ProjectBurndown } from "@/components/project-burndown";
 import { PhaseRail } from "@/components/phase-rail";
 import { VisitDetailDialog } from "@/components/visit-detail-dialog";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
@@ -1606,20 +1604,6 @@ export default function ProjectDetail() {
 
       {/* RDO e Documentos da Obra */}
       <ObraDocuments projectId={projectId} />
-
-      {/* Marcos + Burndown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <ProjectMilestones projectId={projectId} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <ProjectBurndown projectId={projectId} />
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Controle de Materiais */}
       <Card>
