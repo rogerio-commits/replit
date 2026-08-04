@@ -23,7 +23,8 @@ import { overdueObraDates } from "@/lib/obra-dates";
 // A aba Hoje é UMA fila numerada: o que fazer, na ordem. Sem painéis
 // concorrentes — o gestor abre, começa pelo item 1 e desce a lista.
 // Ordem do dia: visitas de hoje → cobranças vencidas (planos, datas,
-// checagens) → visitas a agendar → checagens sem prazo.
+// checagens) → visitas a agendar. O que não é acionável hoje (checagens sem
+// prazo ou futuras, planos sem atraso) mora em Pendências — não repete aqui.
 
 const INSTALL_STATUSES = ["aguardando_instalacao", "em_instalacao"];
 const VISIT_INTERVAL = 7; // dias sem visita, em fase de instalação, já pede visita
@@ -167,27 +168,6 @@ export default function PainelObra() {
         badgeTone: "amber",
         projectId: p.id,
         projectName: p.name,
-      });
-    }
-
-    // 6. Checagens sem prazo ou com prazo futuro — por último.
-    const checarResto = items
-      .filter((it) => it.source === "visit" && (!it.dueDate || daysFromToday(it.dueDate) >= 0))
-      .sort((a, b) => {
-        const da = a.dueDate ? daysFromToday(a.dueDate) : 9999;
-        const db = b.dueDate ? daysFromToday(b.dueDate) : 9999;
-        return da - db;
-      });
-    for (const it of checarResto) {
-      q.push({
-        key: `cr-${it.id}`,
-        kind: "checar",
-        title: `Checar na obra: ${it.description}`,
-        sub: it.projectName ?? "obra",
-        badge: it.dueDate ? fmtBr(it.dueDate) : "sem prazo",
-        badgeTone: "muted",
-        projectId: it.projectId,
-        projectName: it.projectName ?? "",
       });
     }
 
