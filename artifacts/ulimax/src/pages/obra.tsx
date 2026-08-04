@@ -29,9 +29,9 @@ export default function Obra() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <HardHat className="h-7 w-7 text-primary" />
-            Obra
+            Obras
           </h1>
-          <p className="text-muted-foreground mt-1">Tudo da obra num lugar — hoje, agenda e operação.</p>
+          <p className="text-muted-foreground mt-1">Suas obras num lugar — o que fazer hoje, a agenda e a operação.</p>
         </div>
         <NewVisitDialog
           trigger={

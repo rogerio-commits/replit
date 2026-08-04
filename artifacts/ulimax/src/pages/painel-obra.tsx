@@ -76,11 +76,6 @@ export default function PainelObra() {
       .filter(({ since, next }) => !next && (since === undefined || since >= VISIT_INTERVAL))
       .sort((a, b) => (b.since ?? 9999) - (a.since ?? 9999));
 
-    const proximasVisitas = allVisits
-      .map((v) => ({ v, d: daysFromToday(v.date) }))
-      .filter(({ d }) => d >= 0 && d <= UPCOMING_VISIT_DAYS)
-      .sort((a, b) => a.d - b.d);
-
     const planosAtrasados = items
       .filter((it) => it.source === "action_plan" && it.dueDate && daysFromToday(it.dueDate) < 0)
       .sort((a, b) => daysFromToday(a.dueDate!) - daysFromToday(b.dueDate!));
@@ -103,7 +98,7 @@ export default function PainelObra() {
 
     const emInstalacao = projs.filter((p) => !p.archived && INSTALL_STATUSES.includes(p.status)).length;
 
-    return { precisamVisita, proximasVisitas, planosAtrasados, checarInLoco, datasVencidas, emInstalacao };
+    return { precisamVisita, planosAtrasados, checarInLoco, datasVencidas, emInstalacao };
   }, [chase, visits, projects]);
 
   const stats = [
@@ -165,26 +160,6 @@ export default function PainelObra() {
               ))}
             </Panel>
 
-            {/* Próximas visitas */}
-            <Panel
-              icon={<CalendarClock className="h-4 w-4 text-violet-500" />}
-              title="Próximas visitas"
-              hint={`Nos próximos ${UPCOMING_VISIT_DAYS} dias`}
-              count={data.proximasVisitas.length}
-              seeAll="/obra?tab=agenda"
-              empty="Nenhuma visita agendada para os próximos dias."
-            >
-              {data.proximasVisitas.slice(0, 6).map(({ v, d }) => (
-                <Row key={v.id} href={`/projects/${v.projectId}`}
-                  title={v.projectName}
-                  sub={`${fmtBr(v.date)}${v.responsibleName ? ` · ${v.responsibleName}` : ""}`}
-                  badge={d === 0 ? "hoje" : `${d}d`}
-                  badgeTone="violet"
-                />
-              ))}
-            </Panel>
-
-            {/* Planos de ação atrasados */}
             {/* Checar in loco (follow-ups de visita) */}
             <Panel
               icon={<CheckSquare className="h-4 w-4 text-blue-500" />}

@@ -9,7 +9,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "/projects": "Projetos",
   "/tasks": "Trabalho",
   "/members": "Equipe",
-  "/obra": "Central da Obra",
+  "/obra": "Obras",
   "/checklist": "Instalações",
   "/calendario": "Calendário",
   "/assistencia-tecnica": "Assistência Técnica",  // redireciona → /obra
