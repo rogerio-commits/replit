@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { Link, useSearch } from "wouter";
+import {Link, useSearch, useLocation } from "wouter";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -73,6 +73,7 @@ import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
 import { useActionPlanMap } from "@/hooks/useActionPlanMap";
+import { ProjectsBoard } from "./kanban";
 
 // ── CSV Import helpers ───────────────────────────────────────────────────────
 const TEMPLATE_CSV = [
@@ -302,6 +303,7 @@ export default function Projects() {
     setStatusFilter(initialStatus);
   }, [initialStatus]);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [materialFilter, setMaterialFilter] = useState<string>("all");
   const [farolFilter, setFarolFilter] = useState<"all" | FarolLevel>("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -336,6 +338,15 @@ export default function Projects() {
   const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
 
   const planMap = useActionPlanMap();
+  const [, navigate] = useLocation();
+  // Visão da lista: tabela (densa), cards (leitura rápida) ou kanban por fase.
+  const [view, setViewState] = useState<"tabela" | "cards" | "kanban">(
+    () => (localStorage.getItem("ulimax:projects-view") as "tabela" | "cards" | "kanban") || "tabela",
+  );
+  const setView = (v: "tabela" | "cards" | "kanban") => {
+    setViewState(v);
+    try { localStorage.setItem("ulimax:projects-view", v); } catch { /* ok */ }
+  };
   const healthMap = useMemo(
     () => computeHealthMap(projects ?? [], allTasks ?? []),
     [projects, allTasks]
@@ -406,6 +417,7 @@ export default function Projects() {
     }
     if (statusFilter !== "all") list = list.filter(p => p.status === statusFilter);
     if (priorityFilter !== "all") list = list.filter(p => p.priority === priorityFilter);
+    if (materialFilter !== "all") list = list.filter(p => p.materialType === materialFilter);
     if (farolFilter !== "all") list = list.filter(p => healthMap.get(p.id)?.level === farolFilter);
 
     list = [...list].sort((a, b) => {
@@ -434,7 +446,7 @@ export default function Projects() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return list;
-  }, [projects, search, statusFilter, priorityFilter, farolFilter, healthMap, sortKey, sortDir]);
+  }, [projects, search, statusFilter, materialFilter, priorityFilter, farolFilter, healthMap, sortKey, sortDir]);
 
   const thCls = "px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider select-none cursor-pointer hover:text-foreground transition-colors whitespace-nowrap";
   const thInner = "flex items-center gap-1";
@@ -486,6 +498,56 @@ export default function Projects() {
     setIsImporting(false);
   }
 
+  function handleExportPDF() {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    const filtros: string[] = [];
+    if (statusFilter !== "all") filtros.push(`Fase: ${STATUS_LABELS[statusFilter] ?? statusFilter}`);
+    if (materialFilter !== "all") filtros.push(`Material: ${materialFilter === "madeira" ? "Madeira" : "Alumínio"}`);
+    if (priorityFilter !== "all") filtros.push(`Prioridade: ${PRIORITY_LABELS[priorityFilter] ?? priorityFilter}`);
+    if (farolFilter !== "all") filtros.push(`Farol: ${FAROL_META[farolFilter].label}`);
+    if (search) filtros.push(`Busca: "${search}"`);
+
+    const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const fmt = (d?: string | null) => (d ? d.split("T")[0].split("-").reverse().join("/") : "—");
+    const linhas = filtered.map((p) => {
+      const h = healthMap.get(p.id);
+      return `<tr>
+        <td>${h ? FAROL_META[h.level].emoji : ""} ${esc(p.name)}</td>
+        <td>${esc(STATUS_LABELS[p.status] ?? p.status)}</td>
+        <td>${p.materialType === "madeira" ? "Madeira" : p.materialType === "aluminio" ? "Alumínio" : "—"}</td>
+        <td>${esc(PRIORITY_LABELS[p.priority] ?? p.priority)}</td>
+        <td style="text-align:center">${p.taskTotal > 0 ? `${p.taskDone}/${p.taskTotal}` : "—"}</td>
+        <td>${fmt(p.startDate)}</td>
+        <td>${fmt(p.endDate)}</td>
+        <td>${fmt(p.instalacaoStartDate)}</td>
+      </tr>`;
+    }).join("");
+
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Projetos — Ulimax</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:24px}
+  h1{font-size:18px;margin:0 0 2px}
+  .sub{font-size:11px;color:#666;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{text-align:left;border-bottom:2px solid #ccc;padding:6px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#555}
+  td{border-bottom:1px solid #eee;padding:6px 8px}
+  tr:nth-child(even) td{background:#fafafa}
+  @media print{ body{margin:8mm} }
+</style></head><body>
+<h1>Projetos — Ulimax</h1>
+<div class="sub">${hoje} · ${filtered.length} projeto(s)${filtros.length ? " · " + esc(filtros.join(" · ")) : ""}</div>
+<table><thead><tr>
+  <th>Projeto</th><th>Fase</th><th>Material</th><th>Prior.</th><th>Tarefas</th><th>Início</th><th>Entrega</th><th>Instalação</th>
+</tr></thead><tbody>${linhas}</tbody></table>
+<script>window.onload = () => window.print();</script>
+</body></html>`;
+
+    const w = window.open("", "_blank");
+    if (!w) { toast({ title: "Libere pop-ups para exportar o PDF", variant: "destructive" }); return; }
+    w.document.write(html);
+    w.document.close();
+  }
+
   function handleExportCSV() {
     if (!filtered || filtered.length === 0) return;
     const headers = ["#", "Projeto", "Status", "Prioridade", "Material", "Tarefas Concluídas", "Total Tarefas", "Início Proj.", "Fim Est. Proj.", "Final Proj.", "Início Prod.", "Fim Est. Prod.", "Final Prod.", "Medição", "Início Inst."];
@@ -535,6 +597,10 @@ export default function Projects() {
           >
             <Archive className="mr-2 h-4 w-4" />
             {showArchived ? "Ver ativos" : "Ver arquivados"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={filtered.length === 0}>
+            <FileText className="mr-2 h-4 w-4" />
+            PDF
           </Button>
           <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filtered.length === 0}>
             <Download className="mr-2 h-4 w-4" />
@@ -918,6 +984,16 @@ export default function Projects() {
                 <SelectItem value="medium">Normal</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={materialFilter} onValueChange={setMaterialFilter}>
+              <SelectTrigger className="h-9 w-[150px]">
+                <SelectValue placeholder="Material" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Madeira e Alumínio</SelectItem>
+                <SelectItem value="madeira">Madeira</SelectItem>
+                <SelectItem value="aluminio">Alumínio</SelectItem>
+              </SelectContent>
+            </Select>
             {!isTasksLoading && (
               <div className="flex items-center gap-1.5" title="Farol: clique para filtrar">
                 {(["red", "yellow", "green"] as const).map((lvl) => (
@@ -936,20 +1012,36 @@ export default function Projects() {
                 ))}
               </div>
             )}
-            {(search || statusFilter !== "all" || priorityFilter !== "all" || farolFilter !== "all") && (
-              <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); setFarolFilter("all"); }}>
+            {(search || statusFilter !== "all" || priorityFilter !== "all" || farolFilter !== "all" || materialFilter !== "all") && (
+              <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); setFarolFilter("all"); setMaterialFilter("all"); }}>
                 Limpar filtros
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("h-9 ml-auto gap-1.5", showLegend ? "text-primary" : "text-muted-foreground")}
-              onClick={() => setShowLegend((v) => !v)}
-            >
-              <HelpCircle className="h-4 w-4" />
-              Legenda
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="inline-flex rounded-md border border-border overflow-hidden text-xs font-medium shrink-0">
+                {([["tabela", "Tabela"], ["cards", "Cards"], ["kanban", "Kanban"]] as const).map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => setView(v)}
+                    className={cn(
+                      "px-3 py-1.5 transition-colors border-l border-border first:border-l-0",
+                      view === v ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn("h-9 gap-1.5", showLegend ? "text-primary" : "text-muted-foreground")}
+                onClick={() => setShowLegend((v) => !v)}
+              >
+                <HelpCircle className="h-4 w-4" />
+                Legenda
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -1040,6 +1132,68 @@ export default function Projects() {
           </div>
         )}
         <CardContent className="p-0">
+          {view === "kanban" ? (
+            <div className="p-4 flex flex-col min-h-[560px]">
+              <ProjectsBoard />
+            </div>
+          ) : view === "cards" ? (
+            filtered.length === 0 ? (
+              <p className="px-4 py-12 text-center text-sm text-muted-foreground">Nenhum projeto com esses filtros.</p>
+            ) : (
+              <div className="p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((project) => {
+                  const h = healthMap.get(project.id);
+                  const pct = project.taskTotal > 0 ? Math.round((project.taskDone / project.taskTotal) * 100) : null;
+                  return (
+                    <div
+                      key={project.id}
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      className="h-full rounded-xl border border-border bg-card p-4 space-y-2.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-start gap-2">
+                        {h && (
+                          <span
+                            title={`${FAROL_META[h.level].label}: ${h.reasons.join(" · ")}`}
+                            className={cn("mt-1.5 h-2.5 w-2.5 rounded-full shrink-0", FAROL_META[h.level].dot)}
+                          />
+                        )}
+                        <p className="font-semibold text-foreground leading-snug flex-1 min-w-0 truncate">{project.name}</p>
+                        <span
+                          className={cn("h-2 w-2 rounded-full shrink-0 mt-2", getPriorityDot(project.priority))}
+                          title={PRIORITY_LABELS[project.priority]}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="outline" className={cn("text-[10px]", getStatusColor(project.status))}>
+                          {STATUS_LABELS[project.status] ?? project.status}
+                        </Badge>
+                        {project.materialType && (
+                          <Badge variant="secondary" className="text-[10px]">
+                            {project.materialType === "madeira" ? "Madeira" : "Alumínio"}
+                          </Badge>
+                        )}
+                        <ActionPlanBadge projectId={project.id} projectName={project.name} summary={planMap.get(project.id)} />
+                      </div>
+                      {pct !== null && (
+                        <div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">{project.taskDone}/{project.taskTotal} tarefas</p>
+                        </div>
+                      )}
+                      {project.endDate && (
+                        <p className="text-xs text-muted-foreground">
+                          Entrega: {project.endDate.split("T")[0].split("-").reverse().join("/")}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          ) : (
+          <>
           {isLoading ? (
             <div className="p-4 space-y-2">
               {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
@@ -1049,13 +1203,13 @@ export default function Projects() {
               <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-1">
                 <Briefcase className="h-8 w-8 text-muted-foreground opacity-30" />
               </div>
-              {search || statusFilter !== "all" || priorityFilter !== "all" || farolFilter !== "all" ? (
+              {search || statusFilter !== "all" || priorityFilter !== "all" || farolFilter !== "all" || materialFilter !== "all" ? (
                 <>
                   <p className="font-medium text-foreground">Nenhum projeto corresponde aos filtros</p>
                   <p className="text-sm text-muted-foreground">Tente remover ou alterar os filtros aplicados.</p>
                   <button
                     className="mt-1 text-sm text-primary hover:underline"
-                    onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); setFarolFilter("all"); }}
+                    onClick={() => { setSearch(""); setStatusFilter("all"); setPriorityFilter("all"); setFarolFilter("all"); setMaterialFilter("all"); }}
                   >
                     Limpar filtros
                   </button>
@@ -1208,6 +1362,8 @@ export default function Projects() {
                 </tbody>
               </table>
             </div>
+          )}
+          </>
           )}
         </CardContent>
       </Card>
