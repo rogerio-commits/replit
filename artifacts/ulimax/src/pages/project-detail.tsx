@@ -35,7 +35,6 @@ import {
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { ObraDocuments } from "@/components/obra-documents";
-import { ChecklistSection } from "@/components/checklist-section";
 import { ProjectDropzone } from "@/components/project-dropzone";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
@@ -993,56 +992,6 @@ export default function ProjectDetail() {
         </Card>
       )}
 
-      {/* Stats */}
-      {/* RDO e Documentos da Obra */}
-      <ObraDocuments projectId={projectId} />
-
-      <h2 className="text-lg font-semibold">Atividades da Equipe</h2>
-      {isStatsLoading ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
-        </div>
-      ) : stats ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-slate-50 dark:bg-slate-900/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">A Fazer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.todo}</div>
-              <p className="text-xs text-muted-foreground mt-1">Tarefas ainda não iniciadas</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-50 dark:bg-blue-900/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-500 uppercase tracking-wider">Em Andamento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.inProgress}</div>
-              <p className="text-xs text-muted-foreground mt-1">Sendo executadas agora</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-amber-50 dark:bg-amber-900/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-amber-500 uppercase tracking-wider">Em Revisão</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">{stats.review}</div>
-              <p className="text-xs text-muted-foreground mt-1">Aguardando verificação</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-emerald-50 dark:bg-emerald-900/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-emerald-500 uppercase tracking-wider">Concluído</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{stats.done}</div>
-              <p className="text-xs text-muted-foreground mt-1">Tarefas finalizadas</p>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
-
       {/* Plano de Ação da Obra */}
       <ProjectActionPlan
         projectId={projectId}
@@ -1050,106 +999,6 @@ export default function ProjectDetail() {
         members={(allMembers ?? []).map((m) => ({ id: m.id, name: m.name }))}
         canEdit={canEdit}
       />
-
-      {/* Participants */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <div>
-              <CardTitle className="text-base">Participantes</CardTitle>
-              <p className="text-xs text-muted-foreground font-normal">Membros da equipe com acesso e responsabilidade neste projeto</p>
-            </div>
-            {projectMembers && (
-              <span className="text-xs text-muted-foreground font-normal">({projectMembers.length})</span>
-            )}
-          </div>
-          {isGestor && (
-            <Dialog open={isAddMemberOpen} onOpenChange={(open) => { setIsAddMemberOpen(open); if (!open) setSelectedMemberId(""); }}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={availableToAdd.length === 0}>
-                  <UserPlus className="mr-2 h-3.5 w-3.5" />
-                  Adicionar
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[380px]">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Participante</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-2">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Membro da equipe</label>
-                    <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um membro..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableToAdd.map((m) => (
-                          <SelectItem key={m.id} value={String(m.id)}>
-                            <span className="flex flex-col">
-                              <span className="font-medium">{m.name}</span>
-                              <span className="text-xs text-muted-foreground">{m.role}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant="outline">Cancelar</Button>
-                  </DialogClose>
-                  <Button onClick={onAddMember} disabled={!selectedMemberId || addProjectMember.isPending}>
-                    {addProjectMember.isPending ? "Adicionando..." : "Adicionar"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-        </CardHeader>
-        <CardContent>
-          {isMembersLoading ? (
-            <div className="flex gap-3">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-10 rounded-full" />)}
-            </div>
-          ) : projectMembers && projectMembers.length > 0 ? (
-            <div className="flex flex-wrap gap-3">
-              {projectMembers.map((pm) => (
-                <div key={pm.id} className="group relative flex items-center gap-2 rounded-full border bg-background pl-1 pr-3 py-1 text-sm hover:bg-muted/50 transition-colors">
-                  <Avatar className="h-7 w-7 border">
-                    {pm.memberAvatarUrl ? (
-                      <AvatarImage src={pm.memberAvatarUrl} alt={pm.memberName} />
-                    ) : (
-                      <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
-                        {pm.memberName.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div className="leading-tight">
-                    <div className="font-medium text-xs">{pm.memberName}</div>
-                    <div className="text-[10px] text-muted-foreground">{pm.memberRole}</div>
-                  </div>
-                  {isGestor && (
-                    <button
-                      onClick={() => onRemoveMember(pm.memberId, pm.memberName)}
-                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                      title="Remover participante"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-              <Users className="h-4 w-4 opacity-40" />
-              <span>{isGestor ? "Nenhum participante. Clique em Adicionar para incluir membros." : "Nenhum participante definido."}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Visitas na Obra */}
       <Card>
@@ -1410,15 +1259,62 @@ export default function ProjectDetail() {
         onClose={() => setSelectedVisitId(null)}
       />
 
-      {/* Checklist de instalação — o vão como unidade (agrupado por ambiente, 1 toque) */}
-      <ChecklistSection projectId={projectId} canEdit={canEdit} />
+      {/* Stats */}
+      {/* RDO e Documentos da Obra */}
+      <ObraDocuments projectId={projectId} />
+
+      <h2 className="text-lg font-semibold">Tarefas da Equipe</h2>
+      {isStatsLoading ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
+        </div>
+      ) : stats ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="bg-slate-50 dark:bg-slate-900/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">A Fazer</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.todo}</div>
+              <p className="text-xs text-muted-foreground mt-1">Tarefas ainda não iniciadas</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-blue-50 dark:bg-blue-900/10">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-blue-500 uppercase tracking-wider">Em Andamento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.inProgress}</div>
+              <p className="text-xs text-muted-foreground mt-1">Sendo executadas agora</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-amber-50 dark:bg-amber-900/10">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-amber-500 uppercase tracking-wider">Em Revisão</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">{stats.review}</div>
+              <p className="text-xs text-muted-foreground mt-1">Aguardando verificação</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-emerald-50 dark:bg-emerald-900/10">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-emerald-500 uppercase tracking-wider">Concluído</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{stats.done}</div>
+              <p className="text-xs text-muted-foreground mt-1">Tarefas finalizadas</p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
       {/* Tasks */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
           <div className="mr-auto">
-            <CardTitle>Atividades da Equipe</CardTitle>
-            <CardDescription>Atividades internas da equipe vinculadas a este projeto.</CardDescription>
+            <CardTitle>Tarefas da Equipe</CardTitle>
+            <CardDescription>Tarefas internas da equipe vinculadas a este projeto.</CardDescription>
           </div>
           {canEdit && project && (
             <BatchCreateTasks projects={[{ id: project.id, name: project.name }]} defaultProjectId={project.id} />
@@ -1605,13 +1501,6 @@ export default function ProjectDetail() {
         </CardContent>
       </Card>
 
-      {/* Controle de Materiais */}
-      <Card>
-        <CardContent className="p-4">
-          <ProjectMaterials projectId={projectId} />
-        </CardContent>
-      </Card>
-
       {/* Observations */}
       {(() => {
         const userObs = (observations ?? []).filter((o) => !o.text.startsWith("✓ Tarefa concluída:"));
@@ -1722,6 +1611,113 @@ export default function ProjectDetail() {
           </>
         );
       })()}
+
+      {/* Controle de Materiais */}
+      <Card>
+        <CardContent className="p-4">
+          <ProjectMaterials projectId={projectId} />
+        </CardContent>
+      </Card>
+
+      {/* Participants */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <CardTitle className="text-base">Participantes</CardTitle>
+              <p className="text-xs text-muted-foreground font-normal">Membros da equipe com acesso e responsabilidade neste projeto</p>
+            </div>
+            {projectMembers && (
+              <span className="text-xs text-muted-foreground font-normal">({projectMembers.length})</span>
+            )}
+          </div>
+          {isGestor && (
+            <Dialog open={isAddMemberOpen} onOpenChange={(open) => { setIsAddMemberOpen(open); if (!open) setSelectedMemberId(""); }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={availableToAdd.length === 0}>
+                  <UserPlus className="mr-2 h-3.5 w-3.5" />
+                  Adicionar
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[380px]">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Participante</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Membro da equipe</label>
+                    <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um membro..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableToAdd.map((m) => (
+                          <SelectItem key={m.id} value={String(m.id)}>
+                            <span className="flex flex-col">
+                              <span className="font-medium">{m.name}</span>
+                              <span className="text-xs text-muted-foreground">{m.role}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <Button onClick={onAddMember} disabled={!selectedMemberId || addProjectMember.isPending}>
+                    {addProjectMember.isPending ? "Adicionando..." : "Adicionar"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isMembersLoading ? (
+            <div className="flex gap-3">
+              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-10 rounded-full" />)}
+            </div>
+          ) : projectMembers && projectMembers.length > 0 ? (
+            <div className="flex flex-wrap gap-3">
+              {projectMembers.map((pm) => (
+                <div key={pm.id} className="group relative flex items-center gap-2 rounded-full border bg-background pl-1 pr-3 py-1 text-sm hover:bg-muted/50 transition-colors">
+                  <Avatar className="h-7 w-7 border">
+                    {pm.memberAvatarUrl ? (
+                      <AvatarImage src={pm.memberAvatarUrl} alt={pm.memberName} />
+                    ) : (
+                      <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                        {pm.memberName.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="leading-tight">
+                    <div className="font-medium text-xs">{pm.memberName}</div>
+                    <div className="text-[10px] text-muted-foreground">{pm.memberRole}</div>
+                  </div>
+                  {isGestor && (
+                    <button
+                      onClick={() => onRemoveMember(pm.memberId, pm.memberName)}
+                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      title="Remover participante"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+              <Users className="h-4 w-4 opacity-40" />
+              <span>{isGestor ? "Nenhum participante. Clique em Adicionar para incluir membros." : "Nenhum participante definido."}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── Histórico de Fases ── */}
       {phaseHistory && phaseHistory.length > 0 && (

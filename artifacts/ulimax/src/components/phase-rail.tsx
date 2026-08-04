@@ -348,8 +348,8 @@ export function PhaseRail({
                   ) : phase.status === "em_instalacao" ? (
                     <div className="py-1 text-sm text-muted-foreground">
                       {totalPecas > 0
-                        ? <>Instalação: <strong className="text-foreground">{instaladas}/{totalPecas}</strong> esquadrias — marque no checklist abaixo.</>
-                        : "Cadastre as esquadrias no checklist abaixo para acompanhar peça a peça."}
+                        ? <>Instalação: <strong className="text-foreground">{instaladas}/{totalPecas}</strong> esquadrias instaladas — acompanhe na tela Instalações.</>
+                        : "Cadastre as esquadrias na tela Instalações para acompanhar peça a peça."}
                     </div>
                   ) : hideFields ? (
                     <p className="py-1 text-sm text-muted-foreground">Acompanhada pela fábrica.</p>
