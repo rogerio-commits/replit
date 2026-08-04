@@ -49,6 +49,7 @@ import {
 import { NotificationBell } from "@/components/notification-bell";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { CommandPalette } from "@/components/command-palette";
+import { UpdateNotifier } from "@/components/update-notifier";
 import { TourGuide, openTour } from "@/components/tour-guide";
 import { QuickCreate } from "@/components/quick-create";
 import { BreadcrumbNav } from "@/components/breadcrumb-nav";
@@ -303,6 +304,7 @@ export function Layout({ children }: LayoutProps) {
           </button>
           <TourGuide />
           <CommandPalette />
+          <UpdateNotifier />
           <div className="p-3 border-t border-sidebar-border">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
