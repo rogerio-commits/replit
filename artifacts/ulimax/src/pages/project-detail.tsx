@@ -35,8 +35,6 @@ import {
   getListSiteVisitsQueryKey,
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
-import { ObraDocuments } from "@/components/obra-documents";
-import { ProjectDropzone } from "@/components/project-dropzone";
 import { ProjectMaterials } from "@/components/project-materials";
 import { ProjectActionPlan } from "@/components/project-action-plan";
 import { PhaseRail } from "@/components/phase-rail";
@@ -594,7 +592,6 @@ export default function ProjectDetail() {
   }
 
   return (
-    <ProjectDropzone projectId={projectId}>
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Archived banner */}
       {project.archived && (
@@ -1245,11 +1242,6 @@ export default function ProjectDetail() {
               )}
             </div>
           )}
-
-          {/* RDO e documentos: o produto documental das visitas (fotos + comentários consolidados) */}
-          <div className="mt-4">
-            <ObraDocuments projectId={projectId} />
-          </div>
         </CardContent>
       </Card>
 
@@ -1824,7 +1816,6 @@ export default function ProjectDetail() {
         </Card>
       )}
     </div>
-    </ProjectDropzone>
   );
 }
 
