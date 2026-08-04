@@ -137,6 +137,7 @@ const taskSchema = z.object({
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
+  assignedTo: z.string().optional(),
   dueDate: z.string().optional(),
 });
 
@@ -348,7 +349,7 @@ export default function ProjectDetail() {
 
   const taskForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
-    defaultValues: { title: "", description: "", status: "todo", priority: "medium", dueDate: "" },
+    defaultValues: { title: "", description: "", status: "todo", priority: "medium", assignedTo: "none", dueDate: "" },
   });
 
   const visitForm = useForm<VisitFormValues>({
@@ -440,21 +441,26 @@ export default function ProjectDetail() {
     });
   };
 
-  const openEditTask = (task: { id: number; title: string; description?: string | null; status: string; priority: string; dueDate?: string | null }) => {
+  const openEditTask = (task: { id: number; title: string; description?: string | null; status: string; priority: string; assignedTo?: number | null; dueDate?: string | null }) => {
     setEditingTaskId(task.id);
     taskForm.reset({
       title: task.title,
       description: task.description ?? "",
       status: task.status as TaskFormValues["status"],
       priority: task.priority as TaskFormValues["priority"],
+      assignedTo: task.assignedTo ? String(task.assignedTo) : "none",
       dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
     });
     setIsCreateTaskOpen(true);
   };
 
   const onCreateTask = (data: TaskFormValues) => {
+    const payload = {
+      ...data,
+      assignedTo: data.assignedTo && data.assignedTo !== "none" ? Number(data.assignedTo) : null,
+    };
     if (editingTaskId !== null) {
-      updateTask.mutate({ id: editingTaskId, data }, {
+      updateTask.mutate({ id: editingTaskId, data: payload }, {
         onSuccess: () => {
           toast({ title: "Tarefa atualizada com sucesso" });
           queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({ projectId }) });
@@ -467,7 +473,7 @@ export default function ProjectDetail() {
       });
       return;
     }
-    createTask.mutate({ data: { ...data, projectId } }, {
+    createTask.mutate({ data: { ...payload, projectId } }, {
       onSuccess: () => {
         toast({ title: "Tarefa criada com sucesso" });
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey({ projectId }) });
@@ -1377,13 +1383,32 @@ export default function ProjectDetail() {
                         </FormItem>
                       )} />
                     </div>
-                    <FormField control={taskForm.control} name="dueDate" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data de Vencimento</FormLabel>
-                        <FormControl><Input type="date" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={taskForm.control} name="assignedTo" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Responsável (interno Ulimax)</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">Sem responsável</SelectItem>
+                              {(allMembers ?? []).map((m) => (
+                                <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <FormField control={taskForm.control} name="dueDate" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Vencimento</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    </div>
                     <DialogFooter>
                       <Button type="submit" disabled={createTask.isPending || updateTask.isPending}>
                         {createTask.isPending || updateTask.isPending ? "Salvando..." : editingTaskId ? "Salvar Alterações" : "Criar Atividade"}
