@@ -107,7 +107,7 @@ const sections: Section[] = [
             ["KPIs", "Total de projetos, projetos ativos, alertas e tarefas concluídas"],
             ["🚦 Onde focar agora", "Farol 🟢🟡🔴 com os projetos que precisam de atenção e o motivo"],
             ["Por unidade", "Comparativo Madeira × Alumínio: ativos, em aberto, vencidas, concluídas"],
-            ["Central de Alertas", "Tudo que precisa de ação: atrasos, instalações, cobranças, datas de obra"],
+            ["seção “Onde focar agora” do Dashboard", "Tudo que precisa de ação: atrasos, instalações, cobranças, datas de obra"],
             ["Atrasadas por Responsável", "Quem está devendo tarefa vencida"],
             ["Próximos 7 Dias", "Mini-calendário com os prazos da semana (arraste para remarcar)"],
             ["Status das Tarefas + Próximas Visitas", "Distribuição das tarefas e as visitas agendadas"],
@@ -1017,7 +1017,7 @@ const sections: Section[] = [
     icon: Bell,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Os alertas automáticos do sistema aparecem na <Strong>Central de Alertas</Strong> do Dashboard e no sino de notificações.</p>
+        <p className="text-sm text-muted-foreground">Os alertas automáticos do sistema aparecem na <Strong>seção “Onde focar agora” do Dashboard</Strong> do Dashboard e no sino de notificações.</p>
         <Table
           headers={["Nível", "Quando aparece"]}
           rows={[
@@ -1139,7 +1139,7 @@ const sections: Section[] = [
         <Subsection title="Cobrar um responsável externo por WhatsApp">
           <p className="text-sm text-muted-foreground">Itens com responsável <Strong>externo</Strong> (fornecedor/terceiro, que não tem e-mail no sistema) mostram o botão <Strong>Cobrar</Strong>, que abre o WhatsApp com a mensagem pronta — você escolhe o contato e envia.</p>
         </Subsection>
-        <Tip>Esses itens também entram no e-mail diário de cobrança e na Central de Alertas do Dashboard.</Tip>
+        <Tip>Esses itens também entram no e-mail diário de cobrança e na seção “Onde focar agora” do Dashboard do Dashboard.</Tip>
       </div>
     ),
   },

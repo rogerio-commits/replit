@@ -310,10 +310,10 @@ export default function Dashboard() {
       {/* ── Comparativo por unidade (Madeira × Alumínio) ── */}
       {!loading && <MaterialSplit />}
 
-      {/* ── Onde focar agora ── */}
+      {/* ── Onde focar agora: um radar, duas lentes (por obra × por assunto) ── */}
       {!loading && !isTasksLoading && (projects?.length ?? 0) > 0 && (
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <div id="central-alertas" className="bg-card rounded-xl border border-border p-4 scroll-mt-4">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <h2 className="text-sm font-semibold text-foreground">🚦 Onde focar agora</h2>
             <FarolLegend />
             <span className="flex items-center gap-1.5 text-[11px] font-semibold">
@@ -325,93 +325,78 @@ export default function Dashboard() {
               Ver painel completo <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-          {farol.attention.length === 0 ? (
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Todos os projetos em dia — nenhum precisa de atenção especial.
-            </p>
-          ) : (
-            <div className="divide-y divide-border/60">
-              {farol.attention.slice(0, 5).map((p) => {
-                const h = farol.map.get(p.id)!;
-                const meta = FAROL_META[h.level];
-                return (
-                  <Link key={p.id} href={`/projects/${p.id}`}>
-                    <div className="flex items-center gap-2.5 py-2 px-1 -mx-1 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
-                      <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", meta.dot)} />
-                      <span className="text-sm font-medium text-foreground truncate max-w-[240px] shrink-0">{p.name}</span>
-                      <span className="text-[11px] text-muted-foreground shrink-0 hidden md:inline">{projectStatusLabel(p.status)}</span>
-                      <span className="text-xs text-muted-foreground truncate flex-1">{h.reasons.slice(0, 2).join(" · ")}</span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </div>
-                  </Link>
-                );
-              })}
-              {farol.attention.length > 5 && (
-                <Link href="/projects">
-                  <p className="text-xs text-muted-foreground pt-2 cursor-pointer hover:text-primary transition-colors">
-                    +{farol.attention.length - 5} outro{farol.attention.length - 5 > 1 ? "s" : ""} projeto{farol.attention.length - 5 > 1 ? "s" : ""} precisando de atenção — ver painel completo
-                  </p>
-                </Link>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+            {/* Lente 1: quais obras abrir primeiro */}
+            <div>
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Por obra</h3>
+              {farol.attention.length === 0 ? (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Todos os projetos em dia.
+                </p>
+              ) : (
+                <div className="divide-y divide-border/60">
+                  {farol.attention.slice(0, 6).map((p) => {
+                    const h = farol.map.get(p.id)!;
+                    const meta = FAROL_META[h.level];
+                    return (
+                      <Link key={p.id} href={`/projects/${p.id}`}>
+                        <div className="flex items-center gap-2.5 py-2 px-1 -mx-1 rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
+                          <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", meta.dot)} />
+                          <span className="text-sm font-medium text-foreground truncate shrink-0 max-w-[180px]">{p.name}</span>
+                          <span className="text-xs text-muted-foreground truncate flex-1">{h.reasons.slice(0, 2).join(" · ")}</span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                  {farol.attention.length > 6 && (
+                    <Link href="/projects">
+                      <p className="text-xs text-muted-foreground pt-2 cursor-pointer hover:text-primary transition-colors">
+                        +{farol.attention.length - 6} outro{farol.attention.length - 6 > 1 ? "s" : ""} — ver painel completo
+                      </p>
+                    </Link>
+                  )}
+                </div>
               )}
             </div>
-          )}
+            {/* Lente 2: que tipo de pendência atacar/delegar */}
+            <div>
+              <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Por assunto</h3>
+              {alertGroups.length === 0 ? (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Nenhum alerta no momento.
+                </p>
+              ) : (
+                <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                  {alertGroups.map((g) => {
+                    const meta = ALERT_GROUP_META[g.type] ?? { label: g.type, href: "/projects" };
+                    const sev = SEVERITY_META[g.severity];
+                    const Icon = sev.icon;
+                    return (
+                      <Link key={g.type} href={meta.href}>
+                        <div className={cn(
+                          "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
+                          sev.row,
+                        )}>
+                          <Icon className={cn("h-4 w-4 shrink-0", sev.iconColor)} />
+                          <p className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">{meta.label}</p>
+                          <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0", sev.chip)}>
+                            {g.count}
+                          </span>
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── Central de Alertas + Atrasadas por Responsável ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Central de Alertas */}
-        <div id="central-alertas" className="lg:col-span-3 bg-card rounded-xl border border-border p-4 scroll-mt-4">
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <div className="w-1.5 h-4 rounded-full bg-red-500" />
-            <h2 className="text-sm font-semibold text-foreground">Central de Alertas</h2>
-            <div className="ml-auto flex items-center gap-1.5">
-              {(["danger", "warning", "info"] as const).map(sev => (
-                alertCounts[sev] > 0 && (
-                  <span key={sev} className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full", SEVERITY_META[sev].chip)}>
-                    {alertCounts[sev]} {SEVERITY_META[sev].label.toLowerCase()}
-                  </span>
-                )
-              ))}
-            </div>
-          </div>
-          {isTasksLoading || isProjectsLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-11 w-full" />)}
-            </div>
-          ) : alertGroups.length === 0 ? (
-            <div className="py-10 text-center flex flex-col items-center gap-2">
-              <CheckCircle2 className="h-8 w-8 text-emerald-500 opacity-60" />
-              <p className="text-sm text-muted-foreground">Nenhum alerta no momento. Tudo em dia!</p>
-            </div>
-          ) : (
-            <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-              {alertGroups.map((g) => {
-                const meta = ALERT_GROUP_META[g.type] ?? { label: g.type, href: "/projects" };
-                const sev = SEVERITY_META[g.severity];
-                const Icon = sev.icon;
-                return (
-                  <Link key={g.type} href={meta.href}>
-                    <div className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
-                      sev.row,
-                    )}>
-                      <Icon className={cn("h-4 w-4 shrink-0", sev.iconColor)} />
-                      <p className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">{meta.label}</p>
-                      <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0", sev.chip)}>
-                        {g.count}
-                      </span>
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Tarefas Atrasadas por Responsável */}
-        <div className="lg:col-span-2 bg-card rounded-xl border border-border p-4">
+      {/* ── Atrasadas por Responsável ── */}
+      <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1.5 h-4 rounded-full bg-violet-500" />
             <h2 className="text-sm font-semibold text-foreground">Atrasadas por Responsável</h2>
@@ -465,7 +450,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </div>
 
       {/* ── Status das Tarefas + Próximas Visitas ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
