@@ -113,6 +113,7 @@ import {
   ListFilter,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { VisitRdoActions } from "@/components/visit-rdo-actions";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 
@@ -1844,70 +1845,5 @@ export default function ProjectDetail() {
         </Card>
       )}
     </div>
-  );
-}
-
-// ── RDO da visita, direto na linha ───────────────────────────────────────────
-// Cada visita gera um RDO: aqui anexa (upload → reportFileKey) ou baixa sem
-// precisar abrir o diálogo da visita.
-
-function VisitRdoActions({
-  visit, projectId, canEdit,
-}: {
-  visit: { id: number; reportFileKey?: string | null };
-  projectId: number;
-  canEdit: boolean;
-}) {
-  const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const attachReport = useAttachVisitReport();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const urlResp = await fetch(`${BASE}/api/storage/uploads/request-url`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
-      });
-      if (!urlResp.ok) throw new Error("Falha ao obter URL de upload");
-      const { uploadURL, objectPath } = await urlResp.json();
-      const put = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
-      if (!put.ok) throw new Error("Falha ao enviar arquivo");
-      await attachReport.mutateAsync({ id: projectId, visitId: visit.id, data: { reportFileKey: objectPath } });
-      toast({ title: "RDO anexado à visita" });
-      qc.invalidateQueries({ queryKey: getListSiteVisitsQueryKey(projectId) });
-    } catch (err) {
-      toast({ title: "Erro ao anexar RDO", description: String(err), variant: "destructive" });
-    } finally {
-      setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }
-
-  if (visit.reportFileKey) {
-    return (
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" asChild>
-        <a href={`${BASE}/api/storage${visit.reportFileKey}`} target="_blank" rel="noopener noreferrer" title="Baixar o RDO desta visita">
-          <FileText className="h-3.5 w-3.5" /> RDO
-        </a>
-      </Button>
-    );
-  }
-  if (!canEdit) return null;
-  return (
-    <>
-      <input ref={inputRef} type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" className="hidden" onChange={handleUpload} />
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={uploading}
-        onClick={() => inputRef.current?.click()} title="Anexar o RDO desta visita">
-        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-        {uploading ? "Enviando..." : "Anexar RDO"}
-      </Button>
-    </>
   );
 }

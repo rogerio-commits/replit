@@ -1104,16 +1104,17 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A tela <Strong>Obras</Strong> reúne tudo num lugar só, em três abas. É a página inicial do gestor de obras.</p>
         <Subsection title="Aba Visitas — a programação">
-          <p className="text-sm text-muted-foreground"><Strong>Programação do mês</Strong>: todas as visitas confirmadas, dia a dia (as já realizadas ficam esmaecidas), mais as marcadas para depois do mês. Abaixo, <Strong>Visitas sugeridas</Strong>: obras que pedem visita — produção terminando em até <Strong>10 dias</Strong> ou obra em instalação há <Strong>15+ dias</Strong> sem visita — aguardando você confirmar com o botão <Strong>Agendar</Strong>. Cada obra indica quantos itens há para checar lá. O <Strong>RDO</Strong> é o arquivo da visita: anexe pelo botão na linha da visita, na página da obra.</p>
+          <p className="text-sm text-muted-foreground"><Strong>Programação do mês</Strong>: todas as visitas confirmadas, dia a dia (as já realizadas ficam esmaecidas), mais as marcadas para depois do mês. Abaixo, <Strong>Visitas sugeridas</Strong>: obras que pedem visita — produção terminando em até <Strong>10 dias</Strong> ou obra em instalação há <Strong>15+ dias</Strong> sem visita — aguardando você confirmar com o botão <Strong>Agendar</Strong>. <Strong>Toda visita realizada deve ter seu RDO anexado</Strong> — o botão Anexar RDO fica na própria linha da visita, e visitas sem RDO aparecem como pendência na aba Pendências.</p>
         </Subsection>
         <Subsection title="Aba Pendências — onde você precisa atuar">
           <Table
             headers={["Seção", "O que mostra"]}
             rows={[
+              ["RDOs de visita pendentes", "Visitas realizadas sem RDO — anexe o arquivo direto na linha"],
               ["Tarefas da equipe vencidas", "Agrupadas por responsável — clique abre a lista da pessoa, já filtrada"],
               ["Datas vencidas", "Estimada passou sem a data final registrada"],
               ["Datas a vencer", "Datas-chave dos próximos 30 dias, para se antecipar"],
-              ["Planos de ação e checagens", "Lista completa com filtros e cobrança por WhatsApp para externos"],
+              ["Planos de ação", "Lista completa com filtros e cobrança por WhatsApp para externos"],
             ]}
           />
         </Subsection>

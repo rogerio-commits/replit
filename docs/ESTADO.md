@@ -8,7 +8,7 @@
 | Papel | Home | Menu | Ferramentas-chave |
 |---|---|---|---|
 | **gestor** | Meu Dia | Meu Dia, Dashboard, Projetos, Trabalho · Obra: Obras, Instalações, Calendário · Análises: Assistente, Desempenho · Configurações | Dashboard enxuto (7 cartões + FarolLegend), Desempenho (ciclo real + por unidade + Modo reunião), Ver como |
-| **gestor_obras** | Obras (aba Visitas) | Obras, Projetos, Calendário, Ajuda | Hub Obras em 3 abas (Hoje e Agenda EXTINTAS, conteúdo redistribuído): **Visitas** = programação do mês confirmada dia a dia (passadas esmaecidas + "depois deste mês") + painel de sugeridas aguardando confirmação (critério 10d/15d, botão Agendar, nº de itens p/ checar lá) · **Pendências** = dividido: tarefas da equipe vencidas POR RESPONSÁVEL (→ /tasks?responsavel=&vencidas=1) / datas vencidas / datas a vencer (30d) / planos de ação e checagens (Cobrancas embedded, WhatsApp) · **Operação** = instalações/AT/amostras. painel-obra.tsx e agenda.tsx órfãos de propósito |
+| **gestor_obras** | Obras (aba Visitas) | Obras, Projetos, Calendário, Ajuda | Hub Obras em 3 abas (Hoje e Agenda EXTINTAS, conteúdo redistribuído): **Visitas** = programação do mês confirmada dia a dia (passadas esmaecidas + "depois deste mês") + painel de sugeridas aguardando confirmação (critério 10d/15d, botão Agendar, nº de itens p/ checar lá) · **Pendências** = dividido: RDOs de visita pendentes (visita realizada sem arquivo, anexa na linha) / tarefas da equipe vencidas POR RESPONSÁVEL (→ /tasks?responsavel=&vencidas=1) / datas vencidas / datas a vencer (30d) / planos de ação (Cobrancas embedded, WhatsApp) · **Operação** = instalações/AT/amostras. painel-obra.tsx e agenda.tsx órfãos de propósito |
 | **executor (projetista)** | Minha Prancheta | Prancheta, Meu Dia, Trabalho, Projetos, Instalações, Calendário | Prancheta (reprovado/vencendo/aguardando aprovação), Trilho de Fases com edição inline |
 | **observador** | Dashboard | Dashboard, Projetos, Calendário | leitura |
 
@@ -23,7 +23,7 @@
 - Farol (`lib/project-health.ts`): 🔴 tarefa vencida OU endDate passado · 🟡 vence ≤3d / parada 7d+ / entrega ≤7d com <70% · 🟢 resto. FarolLegend espelha esses números.
 - Datas de obra "vencidas" = estimada passou E a final correspondente vazia (`lib/obra-dates.ts`).
 - Critério de visita (fila de Obras/Hoje): obra pede visita quando fim da produção ≤10d OU em instalação; cadência de 15 dias; silencia se há visita futura agendada.
-- Cobranças (`/chase-items` + `fetchOpenChaseItems`): itens de plano de ação + follow-ups de visita; entram no e-mail diário e no `useAlerts`.
+- Cobranças (`/chase-items` + `fetchOpenChaseItems`): SÓ itens de plano de ação (decisão 2026-08-05: visita não gera pendência item a item — a pendência da visita é o RDO não anexado; follow-ups de visita continuam existindo dentro do diálogo da visita, mas fora das cobranças/e-mail/alertas). Entram no e-mail diário e no `useAlerts`. `VisitRdoActions` compartilhado em components/.
 - Planos por projeto: `/action-plans/by-project`; selo `ActionPlanBadge` + criar via `NewActionPlanDialog`.
 - Snapshots de métricas: `metrics_snapshots` gravada pelo cron; `/dashboard/trends` existe (TrendsStrip fora do Dashboard por decisão).
 - Auditoria: PATCH de projeto grava diff de status/prioridade/nome + 8 datas; `/audit-logs` escopado por entidade liberado a autenticados.

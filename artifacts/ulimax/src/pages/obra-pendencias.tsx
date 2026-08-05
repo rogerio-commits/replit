@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { useLocation } from "wouter";
-import { useListTasks, useListProjects } from "@workspace/api-client-react";
+import { useListTasks, useListProjects, useListAllSiteVisits } from "@workspace/api-client-react";
 import type { Project, Task } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, CalendarClock, CalendarDays, ChevronRight, ClipboardList } from "lucide-react";
+import { Users, CalendarClock, CalendarDays, ChevronRight, ClipboardList, FileText } from "lucide-react";
+import { VisitRdoActions } from "@/components/visit-rdo-actions";
+import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 import { overdueObraDates } from "@/lib/obra-dates";
@@ -12,10 +14,11 @@ import Cobrancas from "./cobrancas";
 
 // ── Obras · aba Pendências ───────────────────────────────────────────────────
 // Tudo em que o gestor precisa atuar, dividido por assunto:
-//   1. Tarefas da equipe vencidas, agrupadas por responsável (cobra a pessoa)
-//   2. Datas vencidas (estimada passou sem a data final registrada)
-//   3. Datas a vencer (próximos 30 dias — para se antecipar)
-//   4. Planos de ação e checagens de visita (lista completa, com WhatsApp)
+//   1. RDOs pendentes — toda visita realizada deve ter RDO; sem arquivo = pendência
+//   2. Tarefas da equipe vencidas, agrupadas por responsável (cobra a pessoa)
+//   3. Datas vencidas (estimada passou sem a data final registrada)
+//   4. Datas a vencer (próximos 30 dias — para se antecipar)
+//   5. Planos de ação (lista completa, com WhatsApp p/ externos)
 
 const DATAS_A_VENCER = 30; // dias
 
@@ -44,6 +47,8 @@ export default function ObraPendencias() {
   const [, navigate] = useLocation();
   const { data: tasks, isLoading: l1 } = useListTasks();
   const { data: projects, isLoading: l2 } = useListProjects();
+  const { data: visits } = useListAllSiteVisits();
+  const canEdit = useCanEdit();
   // Campo nao acompanha fabrica: datas de producao ficam fora do "a vencer".
   const isCampo = useEffectiveRole() === "gestor_obras";
   const dateFields = isCampo
@@ -53,6 +58,12 @@ export default function ObraPendencias() {
   const data = useMemo(() => {
     const allTasks = (tasks ?? []) as Task[];
     const projs = (projects ?? []) as Project[];
+
+    // Visitas realizadas sem RDO — a pendência da visita é o arquivo faltando.
+    const hoje = new Date().toISOString().slice(0, 10);
+    const rdosPendentes = (visits ?? [])
+      .filter((v) => v.date <= hoje && !v.reportFileKey)
+      .sort((a, b) => (a.date < b.date ? -1 : 1));
 
     // Tarefas vencidas por responsável — cobra a pessoa, não a tarefa.
     const porPessoa = new Map<string, { id: number | null; name: string; count: number; oldest: number }>();
@@ -99,8 +110,8 @@ export default function ObraPendencias() {
     }
     aVencer.sort((a, b) => a.d - b.d);
 
-    return { pessoas, vencidas, aVencer };
-  }, [tasks, projects, dateFields]);
+    return { rdosPendentes, pessoas, vencidas, aVencer };
+  }, [tasks, projects, visits, dateFields]);
 
   if (l1 || l2) {
     return (
@@ -114,6 +125,30 @@ export default function ObraPendencias() {
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       <div className="max-w-3xl space-y-5">
+        {/* ── RDOs pendentes ── */}
+        <Panel
+          icon={<FileText className="h-4 w-4 text-red-500" />}
+          title="RDOs de visita pendentes"
+          hint="Toda visita realizada deve ter o RDO anexado — anexe direto aqui"
+          count={data.rdosPendentes.length}
+          empty="Todas as visitas realizadas têm RDO. 👏"
+        >
+          {data.rdosPendentes.map((v) => (
+            <div key={`rdo-${v.id}`} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors cursor-pointer"
+              onClick={() => navigate(`/projects/${v.projectId}`)}>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-foreground truncate">{v.projectName}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  visita de {fmtBr(v.date)}{v.objective ? ` · ${v.objective}` : ""}
+                </p>
+              </div>
+              <span onClick={(e) => e.stopPropagation()}>
+                <VisitRdoActions visit={v} projectId={v.projectId} canEdit={canEdit} />
+              </span>
+            </div>
+          ))}
+        </Panel>
+
         {/* ── Tarefas da equipe ── */}
         <Panel
           icon={<Users className="h-4 w-4 text-red-500" />}
@@ -175,11 +210,11 @@ export default function ObraPendencias() {
         </Panel>
       </div>
 
-      {/* ── Planos de ação e checagens de visita ── */}
+      {/* ── Planos de ação ── */}
       <div className="flex items-center gap-2 pt-1">
         <ClipboardList className="h-4 w-4 text-blue-500" />
         <div>
-          <h2 className="text-sm font-semibold text-foreground leading-tight">Planos de ação e checagens de visita</h2>
+          <h2 className="text-sm font-semibold text-foreground leading-tight">Planos de ação</h2>
           <p className="text-[11px] text-muted-foreground leading-tight">Lista completa, com filtros e cobrança por WhatsApp para externos</p>
         </div>
       </div>

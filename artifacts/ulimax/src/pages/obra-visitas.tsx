@@ -3,20 +3,21 @@ import { useLocation } from "wouter";
 import {
   useListAllSiteVisits,
   useListProjects,
-  useListChaseItems,
 } from "@workspace/api-client-react";
-import type { ChaseItem, Project } from "@workspace/api-client-react";
+import type { Project } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, MapPinned, ChevronRight, CalendarPlus, CalendarDays, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
+import { VisitRdoActions } from "@/components/visit-rdo-actions";
+import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 
 // ── Obras · aba Visitas ──────────────────────────────────────────────────────
 // O centro do trabalho do gestor de obras:
-//   1. Programação do mês — todas as visitas confirmadas do mês, dia a dia
-//      (as já realizadas ficam esmaecidas), + as marcadas para depois do mês.
+//   1. Programação do mês — todas as visitas confirmadas do mês, dia a dia.
+//      Toda visita realizada deve ter RDO: a linha traz Anexar RDO/baixar.
 //   2. Visitas sugeridas — obras que pedem visita pelo critério (fim da
 //      produção ≤10d ou em instalação há 15+ dias sem visita), aguardando o
 //      gestor confirmar com o botão Agendar.
@@ -44,7 +45,7 @@ export default function ObraVisitas() {
   const [, navigate] = useLocation();
   const { data: visits, isLoading: l1 } = useListAllSiteVisits();
   const { data: projects, isLoading: l2 } = useListProjects();
-  const { data: chase } = useListChaseItems();
+  const canEdit = useCanEdit();
   const loading = l1 || l2;
 
   const hoje = new Date().toISOString().slice(0, 10);
@@ -53,14 +54,6 @@ export default function ObraVisitas() {
   const data = useMemo(() => {
     const allVisits = visits ?? [];
     const projs = (projects ?? []) as Project[];
-    const items = (chase ?? []) as ChaseItem[];
-
-    // Itens em aberto por obra (follow-ups): o que conferir quando for lá.
-    const checarPorObra = new Map<number, number>();
-    for (const it of items) {
-      if (it.source !== "visit") continue;
-      checarPorObra.set(it.projectId, (checarPorObra.get(it.projectId) ?? 0) + 1);
-    }
 
     // Programação do mês, agrupada por dia.
     const porDia = new Map<string, { d: number; visitas: typeof allVisits }>();
@@ -107,7 +100,6 @@ export default function ObraVisitas() {
       .map(({ p, emInstalacao, dFimProd, since }) => ({
         p,
         since,
-        checar: checarPorObra.get(p.id) ?? 0,
         contexto: emInstalacao
           ? "em instalação"
           : dFimProd !== null && dFimProd >= 0
@@ -115,8 +107,8 @@ export default function ObraVisitas() {
             : "produção deveria ter terminado",
       }));
 
-    return { dias, depoisDoMes, totalMes, sugeridas, checarPorObra };
-  }, [visits, projects, chase, mesAtual, hoje]);
+    return { dias, depoisDoMes, totalMes, sugeridas };
+  }, [visits, projects, mesAtual, hoje]);
 
   if (loading) {
     return (
@@ -167,9 +159,9 @@ export default function ObraVisitas() {
                         {[v.objective, v.responsibleName].filter(Boolean).join(" · ") || "visita agendada"}
                       </p>
                     </div>
-                    {v.pendingActionItemsCount > 0 && (
-                      <span className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40">
-                        {v.pendingActionItemsCount} pendente{v.pendingActionItemsCount > 1 ? "s" : ""}
+                    {d <= 0 && (
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <VisitRdoActions visit={v} projectId={v.projectId} canEdit={canEdit} />
                       </span>
                     )}
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
@@ -218,14 +210,13 @@ export default function ObraVisitas() {
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">Nenhuma sugestão — todas as obras estão com visita em dia ou agendada. 👏</p>
         ) : (
           <div className="divide-y divide-border">
-            {data.sugeridas.map(({ p, since, checar, contexto }) => (
+            {data.sugeridas.map(({ p, since, contexto }) => (
               <div key={p.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer"
                 onClick={() => navigate(`/projects/${p.id}`)}>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {contexto} · {since === undefined ? "nunca visitada" : `última visita há ${since} dias`}
-                    {checar > 0 ? ` · ${checar} ite${checar !== 1 ? "ns" : "m"} para checar lá` : ""}
                   </p>
                 </div>
                 <span className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40">

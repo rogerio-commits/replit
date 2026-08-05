@@ -2,8 +2,6 @@ import {
   db,
   projectActionItemsTable,
   projectActionPlansTable,
-  siteVisitsTable,
-  visitActionItemsTable,
   projectsTable,
   membersTable,
 } from "@workspace/db";
@@ -11,8 +9,12 @@ import { isNull, eq } from "drizzle-orm";
 
 /**
  * "Cobrança" = item em aberto que o gestor de obras precisa cobrar de alguém:
- * itens de plano de ação e follow-ups de visita, de todas as obras. Diferente
- * das tarefas, esses viviam só por-projeto e não entravam em nenhum lembrete.
+ * itens de plano de ação, de todas as obras.
+ *
+ * Follow-ups de visita NÃO entram mais aqui (decisão de produto): visita não
+ * gera pendência item a item — a pendência de uma visita é o RDO não anexado,
+ * cobrado nas telas de Obras. O source "visit" permanece no contrato por
+ * compatibilidade, mas não é mais emitido.
  *
  * O `responsibleEmail` só existe para a cobrança por e-mail — o endpoint HTTP
  * remove esse campo antes de responder ao cliente.
@@ -32,7 +34,7 @@ export interface ChaseItemRow {
   createdAt: string;
 }
 
-/** Todos os itens em aberto (não concluídos) de planos de ação e visitas. */
+/** Todos os itens em aberto (não concluídos) de planos de ação. */
 export async function fetchOpenChaseItems(): Promise<ChaseItemRow[]> {
   const planItems = await db
     .select({
@@ -52,21 +54,6 @@ export async function fetchOpenChaseItems(): Promise<ChaseItemRow[]> {
     .leftJoin(membersTable, eq(projectActionItemsTable.responsibleId, membersTable.id))
     .where(isNull(projectActionItemsTable.completedAt));
 
-  const visitItems = await db
-    .select({
-      item: visitActionItemsTable,
-      visitDate: siteVisitsTable.date,
-      projectId: siteVisitsTable.projectId,
-      projectName: projectsTable.name,
-      memberName: membersTable.name,
-      memberEmail: membersTable.email,
-    })
-    .from(visitActionItemsTable)
-    .innerJoin(siteVisitsTable, eq(visitActionItemsTable.visitId, siteVisitsTable.id))
-    .leftJoin(projectsTable, eq(siteVisitsTable.projectId, projectsTable.id))
-    .leftJoin(membersTable, eq(visitActionItemsTable.responsibleId, membersTable.id))
-    .where(isNull(visitActionItemsTable.completedAt));
-
   const fromPlans: ChaseItemRow[] = planItems.map((r) => ({
     id: r.item.id,
     source: "action_plan",
@@ -82,20 +69,5 @@ export async function fetchOpenChaseItems(): Promise<ChaseItemRow[]> {
     createdAt: r.item.createdAt.toISOString(),
   }));
 
-  const fromVisits: ChaseItemRow[] = visitItems.map((r) => ({
-    id: r.item.id,
-    source: "visit",
-    description: r.item.description,
-    projectId: r.projectId,
-    projectName: r.projectName ?? null,
-    context: r.visitDate ? `Visita ${r.visitDate}` : null,
-    responsibleId: r.item.responsibleId ?? null,
-    responsibleName: r.memberName ?? null,
-    responsibleEmail: r.memberEmail ?? null,
-    responsibleExternal: null,
-    dueDate: r.item.dueDate ?? null,
-    createdAt: r.item.createdAt.toISOString(),
-  }));
-
-  return [...fromPlans, ...fromVisits];
+  return fromPlans;
 }
