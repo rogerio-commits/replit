@@ -258,7 +258,7 @@ function ProtectedRoutes() {
             <Route path="/portfolio"><Redirect to="/projects" replace /></Route>
             <Route path="/obra" component={Obra} />
             <Route path="/cobrancas"><Redirect to="/obra?tab=pendencias" replace /></Route>
-            <Route path="/agenda"><Redirect to="/obra?tab=agenda" replace /></Route>
+            <Route path="/agenda"><Redirect to="/obra?tab=visitas" replace /></Route>
             <Route path="/painel-obra"><Redirect to="/obra" replace /></Route>
             <Route path="/reuniao" component={Reuniao} />
             <Route path="/desempenho" component={Desempenho} />

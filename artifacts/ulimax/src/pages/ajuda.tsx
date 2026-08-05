@@ -1102,20 +1102,20 @@ const sections: Section[] = [
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">A tela <Strong>Obra</Strong> reúne tudo da obra num lugar só, em três abas. É a página inicial do gestor de obras.</p>
-        <Subsection title="Aba Hoje — o seu dia, em 3 blocos">
+        <p className="text-sm text-muted-foreground">A tela <Strong>Obras</Strong> reúne tudo num lugar só, em três abas. É a página inicial do gestor de obras.</p>
+        <Subsection title="Aba Visitas — a programação">
+          <p className="text-sm text-muted-foreground"><Strong>Programação do mês</Strong>: todas as visitas confirmadas, dia a dia (as já realizadas ficam esmaecidas), mais as marcadas para depois do mês. Abaixo, <Strong>Visitas sugeridas</Strong>: obras que pedem visita — produção terminando em até <Strong>10 dias</Strong> ou obra em instalação há <Strong>15+ dias</Strong> sem visita — aguardando você confirmar com o botão <Strong>Agendar</Strong>. Cada obra indica quantos itens há para checar lá. O <Strong>RDO</Strong> é o arquivo da visita: anexe pelo botão na linha da visita, na página da obra.</p>
+        </Subsection>
+        <Subsection title="Aba Pendências — onde você precisa atuar">
           <Table
-            headers={["Bloco", "O que mostra"]}
+            headers={["Seção", "O que mostra"]}
             rows={[
-              ["1 · Visitas em obras", "As visitas de hoje e as obras pedindo visita (com botão Agendar). Cada obra indica quantos itens há para checar lá. O rodapé mostra as visitas dos próximos 7 dias."],
-              ["2 · Cobre as pessoas", "Tarefas vencidas agrupadas por responsável (clique abre a lista filtrada) e planos de ação com itens vencidos, por obra."],
-              ["3 · Datas para resolver", "Datas estimadas que passaram sem a data final registrada."],
+              ["Tarefas da equipe vencidas", "Agrupadas por responsável — clique abre a lista da pessoa, já filtrada"],
+              ["Datas vencidas", "Estimada passou sem a data final registrada"],
+              ["Datas a vencer", "Datas-chave dos próximos 30 dias, para se antecipar"],
+              ["Planos de ação e checagens", "Lista completa com filtros e cobrança por WhatsApp para externos"],
             ]}
           />
-          <p className="text-sm text-muted-foreground"><Strong>Critério de visita:</Strong> uma obra entra no radar quando o <Strong>fim da produção está a até 10 dias</Strong> (visita de pré-instalação) ou quando está <Strong>em instalação</Strong> — cadência de uma visita a cada <Strong>15 dias</Strong>. Visita futura agendada silencia a cobrança. O <Strong>RDO</Strong> é o arquivo da visita: anexe pelo botão na linha da visita, na página da obra.</p>
-        </Subsection>
-        <Subsection title="Aba Agenda — o que vem pela frente">
-          <p className="text-sm text-muted-foreground">Agenda cronológica para se programar: visitas e datas-chave das obras (medição, produção, instalação, prazos) agrupadas por dia — <Strong>Hoje</Strong>, <Strong>Amanhã</Strong>, cada dia da semana e <Strong>Mais adiante</Strong> (visitas em 30 dias, datas em 60). O que já venceu aparece na fila da aba Hoje.</p>
         </Subsection>
         <Subsection title="Aba Operação">
           <p className="text-sm text-muted-foreground">Instalações, assistência técnica e amostras — o acompanhamento operacional da obra.</p>

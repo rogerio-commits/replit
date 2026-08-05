@@ -3,26 +3,27 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { HardHat, CalendarPlus } from "lucide-react";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
-import PainelObra from "./painel-obra";
-import Agenda from "./agenda";
+import ObraVisitas from "./obra-visitas";
+import ObraPendencias from "./obra-pendencias";
 import CentralObra from "./central-obra";
-import Cobrancas from "./cobrancas";
 
 // ── Obra ─────────────────────────────────────────────────────────────────────
-// Hub único da obra para o gestor de obras, em três abas — antes eram três
-// páginas parecidas (Painel / Agenda / Central da Obra):
-//   Hoje     = o que precisa de ação agora (cockpit)
-//   Agenda   = calendário de visitas e datas-chave
-//   Operação = instalações, assistência técnica e amostras
-// A aba ativa vem da URL (?tab=) para os atalhos "Ver todos" caírem no lugar.
+// Hub único da obra para o gestor de obras, em três abas:
+//   Visitas    = programação do mês confirmada + sugeridas aguardando confirmação
+//   Pendências = tudo em que ele precisa atuar, dividido por assunto
+//   Operação   = instalações, assistência técnica e amostras
+// A aba ativa vem da URL (?tab=) para os atalhos caírem no lugar.
 
-const VALID = ["hoje", "agenda", "pendencias", "operacao"];
+const VALID = ["visitas", "pendencias", "operacao"];
+// Abas antigas (hoje/agenda) redirecionam para a nova casa do conteúdo.
+const LEGACY: Record<string, string> = { hoje: "visitas", agenda: "visitas" };
 
 export default function Obra() {
   const search = useSearch();
   const [, navigate] = useLocation();
-  const raw = new URLSearchParams(search).get("tab") ?? "hoje";
-  const tab = VALID.includes(raw) ? raw : "hoje";
+  const raw = new URLSearchParams(search).get("tab") ?? "visitas";
+  const mapped = LEGACY[raw] ?? raw;
+  const tab = VALID.includes(mapped) ? mapped : "visitas";
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -32,7 +33,7 @@ export default function Obra() {
             <HardHat className="h-7 w-7 text-primary" />
             Obras
           </h1>
-          <p className="text-muted-foreground mt-1">Suas obras num lugar — o que fazer hoje, a agenda e a operação.</p>
+          <p className="text-muted-foreground mt-1">Suas obras num lugar — visitas, pendências e operação.</p>
         </div>
         <NewVisitDialog
           trigger={
@@ -44,15 +45,13 @@ export default function Obra() {
       </div>
 
       <Tabs value={tab} onValueChange={(v) => navigate(`/obra?tab=${v}`)}>
-        <TabsList className="grid w-full grid-cols-4 sm:max-w-xl">
-          <TabsTrigger value="hoje">Hoje</TabsTrigger>
-          <TabsTrigger value="agenda">Agenda</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 sm:max-w-md">
+          <TabsTrigger value="visitas">Visitas</TabsTrigger>
           <TabsTrigger value="pendencias">Pendências</TabsTrigger>
           <TabsTrigger value="operacao">Operação</TabsTrigger>
         </TabsList>
-        <TabsContent value="hoje" className="mt-4"><PainelObra /></TabsContent>
-        <TabsContent value="agenda" className="mt-4"><Agenda /></TabsContent>
-        <TabsContent value="pendencias" className="mt-4"><Cobrancas embedded /></TabsContent>
+        <TabsContent value="visitas" className="mt-4"><ObraVisitas /></TabsContent>
+        <TabsContent value="pendencias" className="mt-4"><ObraPendencias /></TabsContent>
         <TabsContent value="operacao" className="mt-4"><CentralObra embedded /></TabsContent>
       </Tabs>
     </div>
