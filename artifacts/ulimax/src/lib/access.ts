@@ -1,11 +1,12 @@
 // Controle de acesso por papel (client-side): quais rotas cada papel enxerga
 // e qual é a página inicial de cada um. A autorização real continua no servidor.
 
-export type SystemRole = "gestor" | "gestor_obras" | "executor" | "observador";
+export type SystemRole = "gestor" | "gestor_obras" | "projetista_gestor" | "executor" | "observador";
 
 const HOME_BY_ROLE: Record<SystemRole, string> = {
   gestor: "/meu-dia",
   gestor_obras: "/obra",
+  projetista_gestor: "/prancheta",
   executor: "/prancheta",
   observador: "/dashboard",
 };
@@ -41,6 +42,20 @@ const GESTOR_OBRAS_PREFIXES = [
   "/ajuda",
 ];
 
+// Projetista Gestor: o dia a dia do projetista + a visão geral (Dashboard e
+// Trabalho de todas as obras), sem as áreas administrativas do gestor.
+const PROJETISTA_GESTOR_PREFIXES = [
+  "/prancheta",
+  "/meu-dia",
+  "/dashboard",
+  "/tasks",
+  "/kanban",
+  "/projects",
+  "/checklist",
+  "/calendario",
+  "/ajuda",
+];
+
 const OBSERVADOR_PREFIXES = [
   "/dashboard",
   "/projects",
@@ -66,6 +81,7 @@ export function canAccessRoute(role: string | undefined | null, path: string): b
   if (!role || role === "gestor") return true;
   if (matchesAny(LEGACY_PATHS, path)) return true;
   if (role === "gestor_obras") return matchesAny(GESTOR_OBRAS_PREFIXES, path);
+  if (role === "projetista_gestor") return matchesAny(PROJETISTA_GESTOR_PREFIXES, path);
   if (role === "executor") return matchesAny(EXECUTOR_PREFIXES, path);
   if (role === "observador") return matchesAny(OBSERVADOR_PREFIXES, path);
   return true;

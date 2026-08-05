@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { useAppUser } from "./useAppUser";
 
-export type SystemRole = "gestor" | "gestor_obras" | "executor" | "observador";
+export type SystemRole = "gestor" | "gestor_obras" | "projetista_gestor" | "executor" | "observador";
 
 // "Ver como": deixa um gestor pré-visualizar o app com o menu e o acesso de
 // outro papel. É só apresentação no cliente — as permissões reais continuam no

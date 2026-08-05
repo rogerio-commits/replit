@@ -320,7 +320,7 @@ export default function ProjectDetail() {
   const isExecutor = me?.role === "executor";
   // Espelha o servidor (requireExecutorOrGestor): gestor de obras também edita —
   // é ele quem cria visitas e anexa os RDOs.
-  const isGestorObras = me?.role === "gestor_obras";
+  const isGestorObras = me?.role === "gestor_obras" || me?.role === "projetista_gestor";
   const canEdit = isGestor || isGestorObras || (isExecutor && isParticipant);
 
   // Members available to add (not yet in the project)

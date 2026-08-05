@@ -3327,7 +3327,7 @@ components:
 
     UserRole:
       type: string
-      enum: [gestor, executor, observador, gestor_obras]
+      enum: [gestor, executor, observador, gestor_obras, projetista_gestor]
 
     AppUser:
       type: object

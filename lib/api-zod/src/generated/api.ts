@@ -1476,7 +1476,7 @@ export const GetMeResponse = zod.object({
   "id": zod.number(),
   "clerkUserId": zod.string(),
   "email": zod.string(),
-  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras']),
+  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras', 'projetista_gestor']),
   "createdAt": zod.string()
 })
 
@@ -1488,7 +1488,7 @@ export const ListUsersResponseItem = zod.object({
   "id": zod.number(),
   "clerkUserId": zod.string(),
   "email": zod.string(),
-  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras']),
+  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras', 'projetista_gestor']),
   "createdAt": zod.string()
 })
 export const ListUsersResponse = zod.array(ListUsersResponseItem)
@@ -1502,14 +1502,14 @@ export const UpdateUserRoleParams = zod.object({
 })
 
 export const UpdateUserRoleBody = zod.object({
-  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras'])
+  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras', 'projetista_gestor'])
 })
 
 export const UpdateUserRoleResponse = zod.object({
   "id": zod.number(),
   "clerkUserId": zod.string(),
   "email": zod.string(),
-  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras']),
+  "role": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras', 'projetista_gestor']),
   "createdAt": zod.string()
 })
 
@@ -1521,7 +1521,7 @@ export const ListInvitationsResponseItem = zod.object({
   "id": zod.number(),
   "email": zod.string(),
   "name": zod.string(),
-  "intendedRole": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras']),
+  "intendedRole": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras', 'projetista_gestor']),
   "clerkInvitationId": zod.string().nullish(),
   "invitedAt": zod.string(),
   "emailSent": zod.boolean().optional(),
@@ -1536,7 +1536,7 @@ export const ListInvitationsResponse = zod.array(ListInvitationsResponseItem)
 export const CreateInvitationBody = zod.object({
   "email": zod.string(),
   "name": zod.string(),
-  "intendedRole": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras'])
+  "intendedRole": zod.enum(['gestor', 'executor', 'observador', 'gestor_obras', 'projetista_gestor'])
 })
 
 

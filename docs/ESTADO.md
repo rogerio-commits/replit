@@ -10,6 +10,7 @@
 | **gestor** | Meu Dia | Meu Dia, Dashboard, Projetos, Trabalho · Obra: Obras, Instalações, Calendário · Análises: Assistente, Desempenho · Configurações | Dashboard enxuto (7 cartões + FarolLegend), Desempenho (ciclo real + por unidade + Modo reunião), Ver como |
 | **gestor_obras** | Obras (aba Visitas) | Obras, Projetos, Calendário, Ajuda | Hub Obras em 3 abas (Hoje e Agenda EXTINTAS, conteúdo redistribuído): **Visitas** = programação do mês confirmada dia a dia (passadas esmaecidas + "depois deste mês") + painel de sugeridas aguardando confirmação (critério 10d/15d, botão Agendar, nº de itens p/ checar lá) · **Pendências** = dividido: RDOs de visita pendentes (visita realizada sem arquivo, anexa na linha) / tarefas da equipe vencidas POR RESPONSÁVEL (→ /tasks?responsavel=&vencidas=1) / datas vencidas / datas a vencer (30d) / planos de ação (Cobrancas embedded, WhatsApp) · **Operação** = instalações/AT/amostras. painel-obra.tsx e agenda.tsx órfãos de propósito |
 | **executor (projetista)** | Minha Prancheta | Prancheta, Meu Dia, Projetos, Instalações, Calendário (Trabalho FORA do menu desde 2026-08-05 — visão geral é dos gestores; rota /tasks segue acessível p/ deep-links) | Prancheta (reprovado/vencendo/aguardando aprovação), Meu Dia (Minhas Atividades), Trilho de Fases com edição inline |
+| **projetista_gestor** | Minha Prancheta | Prancheta, Meu Dia, Dashboard, Projetos, Trabalho, Instalações, Calendário, Ajuda | Projetista com visão geral: tudo do executor + Dashboard e Trabalho (todas as obras); SEM as áreas administrativas do gestor (Equipe/Templates/Campos/Automações/Auditoria). Servidor: entra em requireExecutorOrGestor (edita qualquer projeto/tarefa, sem restrição de participante); requireGestor continua só p/ gestor. **Migração manual: `ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'projetista_gestor';`** |
 | **observador** | Dashboard | Dashboard, Projetos, Calendário | leitura |
 
 ## Telas principais
@@ -33,7 +34,7 @@
 - UpdateNotifier: aba avisa "Nova versão disponível" (5min/focus).
 
 ## Migrações já aplicadas no Supabase
-`metrics_snapshots` (tabela) · `tasks.started_at` · `attachments.category`. Seed de demo: `scripts/seed-demo.sql` (dados [DEMO], datas relativas, bloco de limpeza no fim).
+`metrics_snapshots` (tabela) · `tasks.started_at` · `attachments.category` · `user_role` + valor `projetista_gestor` (ALTER TYPE). Seed de demo: `scripts/seed-demo.sql` (dados [DEMO], datas relativas, bloco de limpeza no fim).
 
 ## Convenções de desenvolvimento
 - Contrato-first: `lib/api-spec/openapi.yaml` → `pnpm --filter @workspace/api-spec run codegen`; nunca editar `generated/`.

@@ -65,7 +65,7 @@ export function Layout({ children }: LayoutProps) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const { data: me } = useAppUser();
-  const realRole = me?.role as "gestor" | "gestor_obras" | "executor" | "observador" | undefined;
+  const realRole = me?.role as SystemRole | undefined;
   // Papel efetivo: quando um gestor usa "Ver como", o menu e o acesso passam a
   // ser os do papel escolhido (só apresentação — o servidor não muda).
   const role = useEffectiveRole() ?? realRole;
@@ -74,6 +74,7 @@ export function Layout({ children }: LayoutProps) {
   const VIEW_AS_LABELS: Record<SystemRole, string> = {
     gestor: "Gestor (você)",
     gestor_obras: "Gestor de Obras",
+    projetista_gestor: "Projetista Gestor",
     executor: "Projetista",
     observador: "Observador",
   };
@@ -116,6 +117,30 @@ export function Layout({ children }: LayoutProps) {
             items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
           },
         ]
+      : role === "projetista_gestor"
+        ? [
+            {
+              label: "Principal",
+              items: [
+                { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
+                { href: "/meu-dia", label: "Meu Dia", icon: Sun },
+                dashboardItem,
+                { href: "/projects", label: "Projetos", icon: Briefcase },
+                { href: "/tasks", label: "Trabalho", icon: CheckSquare },
+              ],
+            },
+            {
+              label: "Obra",
+              items: [
+                { href: "/checklist", label: "Instalações", icon: ClipboardList },
+                { href: "/calendario", label: "Calendário", icon: CalendarDays },
+              ],
+            },
+            {
+              label: "Sistema",
+              items: [{ href: "/ajuda", label: "Ajuda", icon: BookOpen }],
+            },
+          ]
       : role === "gestor_obras"
         ? [
             {
@@ -328,7 +353,7 @@ export function Layout({ children }: LayoutProps) {
                     <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       Ver como (pré-visualização)
                     </div>
-                    {(["gestor", "gestor_obras", "executor", "observador"] as SystemRole[]).map((r) => {
+                    {(["gestor", "gestor_obras", "projetista_gestor", "executor", "observador"] as SystemRole[]).map((r) => {
                       const active = (viewAs ?? "gestor") === r;
                       return (
                         <DropdownMenuItem

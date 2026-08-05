@@ -14,4 +14,5 @@ export const UserRole = {
   executor: 'executor',
   observador: 'observador',
   gestor_obras: 'gestor_obras',
+  projetista_gestor: 'projetista_gestor',
 } as const;

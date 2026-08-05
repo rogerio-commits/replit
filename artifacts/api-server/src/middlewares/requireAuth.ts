@@ -4,7 +4,7 @@ import { clerkClient } from "@clerk/express";
 import { db, usersTable, invitesTable } from "@workspace/db";
 import { eq, count } from "drizzle-orm";
 
-export type AppUserRole = "gestor" | "executor" | "observador" | "gestor_obras";
+export type AppUserRole = "gestor" | "executor" | "observador" | "gestor_obras" | "projetista_gestor";
 
 export interface AppUser {
   id: number;
@@ -91,7 +91,7 @@ export function requireExecutorOrGestor(
   res: Response,
   next: NextFunction,
 ): void {
-  const okRoles: AppUserRole[] = ["gestor", "executor", "gestor_obras"];
+  const okRoles: AppUserRole[] = ["gestor", "executor", "gestor_obras", "projetista_gestor"];
   if (!req.appUser || !okRoles.includes(req.appUser.role)) {
     res.status(403).json({ error: "Proibido: papel operacional (gestor, gestor de obras ou executor) necessário" });
     return;
