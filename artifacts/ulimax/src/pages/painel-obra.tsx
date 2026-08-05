@@ -27,7 +27,8 @@ import { overdueObraDates } from "@/lib/obra-dates";
 // prazo ou futuras, planos sem atraso) mora em Pendências — não repete aqui.
 
 const INSTALL_STATUSES = ["aguardando_instalacao", "em_instalacao"];
-const VISIT_INTERVAL = 7; // dias sem visita, em fase de instalação, já pede visita
+const VISIT_INTERVAL = 15; // obra em instalação precisa de visita a cada 15 dias
+const PRE_INSTALL_WINDOW = 10; // fim da produção a até 10 dias já pede visita
 const VISIBLE = 8;
 
 function fmtBr(iso: string): string {
@@ -153,17 +154,30 @@ export default function PainelObra() {
         if (!cur || v.date < cur) nextByProject.set(v.projectId, v.date);
       }
     }
+    // Uma obra pede visita quando está em instalação (cadência de 15 dias) ou
+    // quando o fim da produção está a até 10 dias (visita de pré-instalação).
     const precisamVisita = projs
-      .filter((p) => !p.archived && INSTALL_STATUSES.includes(p.status))
-      .map((p) => ({ p, since: lastByProject.get(p.id), next: nextByProject.get(p.id) }))
+      .filter((p) => !p.archived)
+      .map((p) => {
+        const emInstalacao = INSTALL_STATUSES.includes(p.status);
+        const dFimProd = p.producaoEndDate ? daysFromToday(p.producaoEndDate) : null;
+        const preInstalacao = !emInstalacao && dFimProd !== null && dFimProd <= PRE_INSTALL_WINDOW;
+        return { p, emInstalacao, preInstalacao, dFimProd, since: lastByProject.get(p.id), next: nextByProject.get(p.id) };
+      })
+      .filter(({ emInstalacao, preInstalacao }) => emInstalacao || preInstalacao)
       .filter(({ since, next }) => !next && (since === undefined || since >= VISIT_INTERVAL))
       .sort((a, b) => (b.since ?? 9999) - (a.since ?? 9999));
-    for (const { p, since } of precisamVisita) {
+    for (const { p, since, emInstalacao, dFimProd } of precisamVisita) {
+      const contexto = emInstalacao
+        ? "obra em instalação"
+        : dFimProd !== null && dFimProd >= 0
+          ? `produção termina em ${dFimProd === 0 ? "hoje" : `${dFimProd}d`}`
+          : "produção deveria ter terminado";
       q.push({
         key: `ag-${p.id}`,
         kind: "agendar",
         title: `Agendar visita: ${p.name}`,
-        sub: since === undefined ? "obra em instalação nunca visitada" : `última visita há ${since} dias`,
+        sub: since === undefined ? `${contexto} · nunca visitada` : `${contexto} · última visita há ${since} dias`,
         badge: since === undefined ? "nunca" : `${since}d sem visita`,
         badgeTone: "amber",
         projectId: p.id,

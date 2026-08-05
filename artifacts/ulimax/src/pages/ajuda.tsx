@@ -1103,20 +1103,22 @@ const sections: Section[] = [
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A tela <Strong>Obra</Strong> reúne tudo da obra num lugar só, em três abas. É a página inicial do gestor de obras.</p>
-        <Subsection title="Aba Hoje — o que precisa de ação agora">
+        <Subsection title="Aba Hoje — comece por aqui">
+          <p className="text-sm text-muted-foreground">Uma única fila numerada com o que pede sua ação, do mais urgente ao menos. Faça na ordem: o item 1 vem destacado. No fim do expediente, use <Strong>Fechar o dia</Strong> para gerar o RDO automático.</p>
           <Table
-            headers={["Painel", "O que mostra"]}
+            headers={["Tipo de item", "Quando entra na fila"]}
             rows={[
-              ["Precisam de visita", "Obras em instalação sem visita agendada e sem visita recente (7+ dias). Clique em Agendar para marcar uma."],
-              ["Próximas visitas", "Visitas dos próximos 7 dias"],
-              ["Planos de ação por projeto", "Progresso (concluídos/total), itens abertos, vencidos e próximo vencimento — você cobra o plano por obra"],
-              ["Checar in loco", "Follow-ups de visita pendentes para verificar na obra"],
-              ["Datas de obra vencidas", "Fim do projeto ou da produção vencidos sem a data final registrada"],
+              ["Visitar hoje", "Visita agendada para hoje"],
+              ["Cobrar plano de ação", "Obra com itens de plano vencidos (uma linha por obra)"],
+              ["Resolver data vencida", "Data estimada passou sem a data final registrada"],
+              ["Checar na obra", "Follow-up de visita com prazo estourado"],
+              ["Agendar visita", "Obra que pede visita (critério abaixo) sem visita agendada e sem visita nos últimos 15 dias. O botão Agendar marca na hora."],
             ]}
           />
+          <p className="text-sm text-muted-foreground"><Strong>Critério de visita:</Strong> uma obra entra no radar de visitas quando o <Strong>fim da produção está a até 10 dias</Strong> (visita de pré-instalação) ou quando está <Strong>em instalação</Strong> — nessa fase, a cadência é de uma visita a cada <Strong>15 dias</Strong>.</p>
         </Subsection>
         <Subsection title="Aba Agenda — o que vem pela frente">
-          <p className="text-sm text-muted-foreground">Próximas visitas e as datas-chave das obras (medição, produção, instalação, prazos) em ordem cronológica, além de uma seção de <Strong>Datas atrasadas</Strong>.</p>
+          <p className="text-sm text-muted-foreground">Só futuro: próximas visitas (30 dias) e as datas-chave das obras (60 dias) em ordem cronológica. O que já venceu aparece na fila da aba Hoje.</p>
         </Subsection>
         <Subsection title="Aba Operação">
           <p className="text-sm text-muted-foreground">Instalações, assistência técnica e amostras — o acompanhamento operacional da obra.</p>

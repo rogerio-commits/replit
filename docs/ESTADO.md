@@ -22,6 +22,7 @@
 - Fases do projeto: a_iniciar → em_projeto → em_aprovacao → em_producao → aguardando_instalacao → em_instalacao.
 - Farol (`lib/project-health.ts`): 🔴 tarefa vencida OU endDate passado · 🟡 vence ≤3d / parada 7d+ / entrega ≤7d com <70% · 🟢 resto. FarolLegend espelha esses números.
 - Datas de obra "vencidas" = estimada passou E a final correspondente vazia (`lib/obra-dates.ts`).
+- Critério de visita (fila de Obras/Hoje): obra pede visita quando fim da produção ≤10d OU em instalação; cadência de 15 dias; silencia se há visita futura agendada.
 - Cobranças (`/chase-items` + `fetchOpenChaseItems`): itens de plano de ação + follow-ups de visita; entram no e-mail diário e no `useAlerts`.
 - Planos por projeto: `/action-plans/by-project`; selo `ActionPlanBadge` + criar via `NewActionPlanDialog`.
 - Snapshots de métricas: `metrics_snapshots` gravada pelo cron; `/dashboard/trends` existe (TrendsStrip fora do Dashboard por decisão).
