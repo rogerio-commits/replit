@@ -7,10 +7,12 @@ import { projectStatusLabel, projectStatusChip, PROJECT_STATUSES } from "@/lib/p
 import { daysFromToday } from "@/lib/project-health";
 import { PencilRuler, ChevronRight, XCircle, CalendarClock, Hourglass, Ruler } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MinhasAtividades } from "@/components/minhas-atividades";
 
 // ── Minha Prancheta ──────────────────────────────────────────────────────────
-// Home do projetista: bater o olho e saber o que precisa dele hoje — cliente
-// reprovou, fim do projeto vencendo, aprovação parada, medição pendente.
+// Home ÚNICA do projetista: o que precisa dele (cliente reprovou, fim do
+// projeto vencendo, aprovação parada, medição pendente) + as tarefas dele
+// (Minhas Atividades, absorvida do Meu Dia — que saiu do menu do projetista).
 // Cada linha leva direto ao projeto (o Trilho de Fases resolve lá).
 
 type Atencao = {
@@ -121,6 +123,8 @@ export default function Prancheta() {
               </div>
             )}
           </div>
+
+          <MinhasAtividades />
 
           <div className="bg-card rounded-xl border border-border p-4">
             <h2 className="text-sm font-semibold text-foreground mb-3">Projetos por fase</h2>

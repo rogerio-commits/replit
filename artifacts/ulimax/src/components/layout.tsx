@@ -101,7 +101,6 @@ export function Layout({ children }: LayoutProps) {
             label: "Principal",
             items: [
               { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
-              { href: "/meu-dia", label: "Meu Dia", icon: Sun },
               { href: "/projects", label: "Projetos", icon: Briefcase },
             ],
           },
@@ -123,7 +122,6 @@ export function Layout({ children }: LayoutProps) {
               label: "Principal",
               items: [
                 { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
-                { href: "/meu-dia", label: "Meu Dia", icon: Sun },
                 dashboardItem,
                 { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/tasks", label: "Trabalho", icon: CheckSquare },
