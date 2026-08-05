@@ -1,16 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import {
   useListChaseItems,
   useListAllSiteVisits,
   useListProjects,
   useListActionPlanSummaries,
+  useListTasks,
 } from "@workspace/api-client-react";
-import type { ChaseItem, Project } from "@workspace/api-client-react";
+import type { ChaseItem, Project, Task } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  MapPinned, ClipboardList, CalendarClock, CheckSquare, ChevronRight,
-  CalendarPlus, ChevronDown, PartyPopper,
+  MapPinned, CalendarClock, ChevronRight,
+  CalendarPlus, PartyPopper, Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
@@ -20,127 +21,59 @@ import { daysFromToday } from "@/lib/project-health";
 import { overdueObraDates } from "@/lib/obra-dates";
 
 // ── Painel da Obra ───────────────────────────────────────────────────────────
-// A aba Hoje é UMA fila numerada: o que fazer, na ordem. Sem painéis
-// concorrentes — o gestor abre, começa pelo item 1 e desce a lista.
-// Ordem do dia: visitas de hoje → cobranças vencidas (planos, datas,
-// checagens) → visitas a agendar. O que não é acionável hoje (checagens sem
-// prazo ou futuras, planos sem atraso) mora em Pendências — não repete aqui.
+// A aba Hoje segue o dia real do gestor de obras, nesta ordem:
+//   1. Visitas — onde ele passa a maior parte do tempo: as de hoje e as obras
+//      pedindo visita (fim da produção ≤10d ou em instalação, cadência 15d).
+//      Cada obra mostra quantos itens há para checar lá.
+//   2. Pessoas — quem está devendo: tarefas vencidas por responsável e planos
+//      de ação com itens vencidos por obra.
+//   3. Datas — estimadas que passaram sem data final registrada.
+// O que não é acionável hoje mora em Pendências e na Agenda — não repete aqui.
 
 const INSTALL_STATUSES = ["aguardando_instalacao", "em_instalacao"];
 const VISIT_INTERVAL = 15; // obra em instalação precisa de visita a cada 15 dias
 const PRE_INSTALL_WINDOW = 10; // fim da produção a até 10 dias já pede visita
-const VISIBLE = 8;
 
-function fmtBr(iso: string): string {
-  const p = iso.split("T")[0].split("-");
-  return p.length === 3 ? `${p[2]}/${p[1]}` : iso;
-}
-
-type QueueItem = {
-  key: string;
-  kind: "visita_hoje" | "plano" | "data" | "checar" | "agendar";
-  title: string;
-  sub: string;
-  badge: string;
-  badgeTone: "red" | "amber" | "blue" | "muted";
-  projectId: number;
-  projectName: string;
-};
-
-const KIND_ICON: Record<QueueItem["kind"], React.ReactNode> = {
-  visita_hoje: <MapPinned className="h-4 w-4 text-blue-500" />,
-  plano: <ClipboardList className="h-4 w-4 text-red-500" />,
-  data: <CalendarClock className="h-4 w-4 text-red-500" />,
-  checar: <CheckSquare className="h-4 w-4 text-muted-foreground" />,
-  agendar: <CalendarPlus className="h-4 w-4 text-amber-600" />,
+const BADGE_TONE: Record<string, string> = {
+  red: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
+  amber: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40",
+  blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/40",
+  muted: "bg-muted text-muted-foreground border-border",
 };
 
 export default function PainelObra() {
   const [, navigate] = useLocation();
-  const [showAll, setShowAll] = useState(false);
   const { data: chase, isLoading: l1 } = useListChaseItems();
   const { data: visits, isLoading: l2 } = useListAllSiteVisits();
   const { data: projects, isLoading: l3 } = useListProjects();
   const { data: planSummaries } = useListActionPlanSummaries();
-  const loading = l1 || l2 || l3;
+  const { data: tasks, isLoading: l4 } = useListTasks();
+  const loading = l1 || l2 || l3 || l4;
 
-  const queue = useMemo(() => {
+  const data = useMemo(() => {
     const items = (chase ?? []) as ChaseItem[];
     const allVisits = visits ?? [];
     const projs = (projects ?? []) as Project[];
-    const q: QueueItem[] = [];
+    const allTasks = (tasks ?? []) as Task[];
 
-    // 1. Visitas agendadas para hoje — compromissos vêm antes do backlog.
-    for (const v of allVisits) {
-      if (daysFromToday(v.date) !== 0) continue;
-      q.push({
-        key: `vh-${v.id}`,
-        kind: "visita_hoje",
-        title: `Visitar hoje: ${v.projectName ?? "obra"}`,
-        sub: v.objective || "visita agendada",
-        badge: "hoje",
-        badgeTone: "blue",
-        projectId: v.projectId,
-        projectName: v.projectName ?? "",
-      });
+    // Itens para checar em cada obra (follow-ups de visita em aberto):
+    // aparecem como contexto nas linhas de visita — é o que se confere lá.
+    const checarPorObra = new Map<number, number>();
+    for (const it of items) {
+      if (it.source !== "visit") continue;
+      checarPorObra.set(it.projectId, (checarPorObra.get(it.projectId) ?? 0) + 1);
     }
 
-    // 2. Planos de ação com itens vencidos — cobrança por obra, não item a item.
-    const planosVencidos = (planSummaries ?? [])
-      .filter((s) => s.overdueItems > 0)
-      .sort((a, b) => b.overdueItems - a.overdueItems);
-    for (const s of planosVencidos) {
-      q.push({
-        key: `pl-${s.projectId}`,
-        kind: "plano",
-        title: `Cobrar plano de ação: ${s.projectName ?? "obra"}`,
-        sub: `${s.overdueItems} vencido${s.overdueItems !== 1 ? "s" : ""} de ${s.openItems} em aberto`,
-        badge: `${s.overdueItems} vencido${s.overdueItems !== 1 ? "s" : ""}`,
-        badgeTone: "red",
-        projectId: s.projectId,
-        projectName: s.projectName ?? "",
-      });
-    }
+    // ── 1. Visitas ──
+    const visitasHoje = allVisits
+      .filter((v) => daysFromToday(v.date) === 0)
+      .map((v) => ({ v, checar: checarPorObra.get(v.projectId) ?? 0 }));
 
-    // 3. Datas de obra vencidas — estimada passou sem data final registrada.
-    const datas: { projectId: number; projectName: string; label: string; days: number }[] = [];
-    for (const p of projs) {
-      for (const od of overdueObraDates(p)) {
-        datas.push({ projectId: p.id, projectName: p.name, label: od.label, days: od.days });
-      }
-    }
-    datas.sort((a, b) => a.days - b.days);
-    for (const d of datas) {
-      q.push({
-        key: `dt-${d.projectId}-${d.label}`,
-        kind: "data",
-        title: `Resolver ${d.label.toLowerCase()}: ${d.projectName}`,
-        sub: "estimada passou e a data final não foi registrada",
-        badge: `há ${-d.days}d`,
-        badgeTone: "red",
-        projectId: d.projectId,
-        projectName: d.projectName,
-      });
-    }
+    const proximas7 = allVisits.filter((v) => {
+      const d = daysFromToday(v.date);
+      return d > 0 && d <= 7;
+    }).length;
 
-    // 4. Checagens in loco com prazo vencido.
-    const checarVencidos = items
-      .filter((it) => it.source === "visit" && it.dueDate && daysFromToday(it.dueDate) < 0)
-      .sort((a, b) => daysFromToday(a.dueDate!) - daysFromToday(b.dueDate!));
-    for (const it of checarVencidos) {
-      q.push({
-        key: `cv-${it.id}`,
-        kind: "checar",
-        title: `Checar na obra: ${it.description}`,
-        sub: it.projectName ?? "obra",
-        badge: `há ${-daysFromToday(it.dueDate!)}d`,
-        badgeTone: "red",
-        projectId: it.projectId,
-        projectName: it.projectName ?? "",
-      });
-    }
-
-    // 5. Obras em instalação sem visita recente nem agendada.
     const lastByProject = new Map<number, number>();
     const nextByProject = new Map<number, string>();
     for (const v of allVisits) {
@@ -154,142 +87,253 @@ export default function PainelObra() {
         if (!cur || v.date < cur) nextByProject.set(v.projectId, v.date);
       }
     }
-    // Uma obra pede visita quando está em instalação (cadência de 15 dias) ou
-    // quando o fim da produção está a até 10 dias (visita de pré-instalação).
-    const precisamVisita = projs
+    const agendarVisita = projs
       .filter((p) => !p.archived)
       .map((p) => {
         const emInstalacao = INSTALL_STATUSES.includes(p.status);
         const dFimProd = p.producaoEndDate ? daysFromToday(p.producaoEndDate) : null;
         const preInstalacao = !emInstalacao && dFimProd !== null && dFimProd <= PRE_INSTALL_WINDOW;
-        return { p, emInstalacao, preInstalacao, dFimProd, since: lastByProject.get(p.id), next: nextByProject.get(p.id) };
+        return { p, emInstalacao, dFimProd, elegivel: emInstalacao || preInstalacao, since: lastByProject.get(p.id), next: nextByProject.get(p.id) };
       })
-      .filter(({ emInstalacao, preInstalacao }) => emInstalacao || preInstalacao)
-      .filter(({ since, next }) => !next && (since === undefined || since >= VISIT_INTERVAL))
-      .sort((a, b) => (b.since ?? 9999) - (a.since ?? 9999));
-    for (const { p, since, emInstalacao, dFimProd } of precisamVisita) {
-      const contexto = emInstalacao
-        ? "obra em instalação"
-        : dFimProd !== null && dFimProd >= 0
-          ? `produção termina em ${dFimProd === 0 ? "hoje" : `${dFimProd}d`}`
-          : "produção deveria ter terminado";
-      q.push({
-        key: `ag-${p.id}`,
-        kind: "agendar",
-        title: `Agendar visita: ${p.name}`,
-        sub: since === undefined ? `${contexto} · nunca visitada` : `${contexto} · última visita há ${since} dias`,
-        badge: since === undefined ? "nunca" : `${since}d sem visita`,
-        badgeTone: "amber",
-        projectId: p.id,
-        projectName: p.name,
-      });
-    }
+      .filter(({ elegivel, since, next }) => elegivel && !next && (since === undefined || since >= VISIT_INTERVAL))
+      .sort((a, b) => (b.since ?? 9999) - (a.since ?? 9999))
+      .map(({ p, emInstalacao, dFimProd, since }) => ({
+        p,
+        since,
+        checar: checarPorObra.get(p.id) ?? 0,
+        contexto: emInstalacao
+          ? "em instalação"
+          : dFimProd !== null && dFimProd >= 0
+            ? `produção termina em ${dFimProd === 0 ? "hoje" : `${dFimProd}d`}`
+            : "produção deveria ter terminado",
+      }));
 
-    return q;
-  }, [chase, visits, projects, planSummaries]);
+    // ── 2. Pessoas ──
+    // Tarefas vencidas agrupadas por responsável — cobra a pessoa, não a tarefa.
+    const porPessoa = new Map<string, { id: number | null; name: string; count: number; oldest: number }>();
+    for (const t of allTasks) {
+      if (t.status === "done" || !t.dueDate) continue;
+      const overdueDays = -daysFromToday(t.dueDate);
+      if (overdueDays <= 0) continue;
+      const key = t.assignedTo != null ? String(t.assignedTo) : "none";
+      const cur = porPessoa.get(key);
+      if (cur) {
+        cur.count += 1;
+        cur.oldest = Math.max(cur.oldest, overdueDays);
+      } else {
+        porPessoa.set(key, {
+          id: t.assignedTo ?? null,
+          name: t.assigneeName ?? "Sem responsável",
+          count: 1,
+          oldest: overdueDays,
+        });
+      }
+    }
+    const pessoas = Array.from(porPessoa.values()).sort((a, b) => b.count - a.count);
+
+    const planosVencidos = (planSummaries ?? [])
+      .filter((s) => s.overdueItems > 0)
+      .sort((a, b) => b.overdueItems - a.overdueItems);
+
+    // ── 3. Datas ──
+    const datasVencidas: { projectId: number; projectName: string; label: string; days: number }[] = [];
+    for (const p of projs) {
+      for (const od of overdueObraDates(p)) {
+        datasVencidas.push({ projectId: p.id, projectName: p.name, label: od.label, days: od.days });
+      }
+    }
+    datasVencidas.sort((a, b) => a.days - b.days);
+
+    return { visitasHoje, proximas7, agendarVisita, pessoas, planosVencidos, datasVencidas };
+  }, [chase, visits, projects, planSummaries, tasks]);
 
   if (loading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-16 rounded-xl" />
-        <Skeleton className="h-80 rounded-xl" />
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-40 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
       </div>
     );
   }
 
-  const visible = showAll ? queue : queue.slice(0, VISIBLE);
-  const hidden = queue.length - visible.length;
+  const tudoEmDia =
+    data.visitasHoje.length === 0 && data.agendarVisita.length === 0 &&
+    data.pessoas.length === 0 && data.planosVencidos.length === 0 &&
+    data.datasVencidas.length === 0;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500 max-w-3xl">
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="px-4 py-3 border-b border-border">
-          <h2 className="text-base font-bold text-foreground">Comece por aqui</h2>
-          <p className="text-xs text-muted-foreground">
-            {queue.length === 0
-              ? "Nada pede sua ação hoje."
-              : `${queue.length} ${queue.length === 1 ? "item pede" : "itens pedem"} sua ação, do mais urgente ao menos. Faça na ordem.`}
-          </p>
+      {tudoEmDia && (
+        <div className="bg-card rounded-xl border border-border px-4 py-10 text-center">
+          <PartyPopper className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+          <p className="text-sm font-medium text-foreground">Tudo em dia!</p>
+          <p className="text-xs text-muted-foreground mt-1">Visitas em dia, ninguém com tarefa vencida e nenhuma data pendente.</p>
         </div>
+      )}
 
-        {queue.length === 0 ? (
-          <div className="px-4 py-12 text-center">
-            <PartyPopper className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-            <p className="text-sm font-medium text-foreground">Tudo em dia!</p>
-            <p className="text-xs text-muted-foreground mt-1">Visitas em dia, planos sem atraso e nenhuma data vencida.</p>
+      {/* ── 1. Visitas ── */}
+      <Section
+        num={1}
+        icon={<MapPinned className="h-4 w-4 text-primary" />}
+        title="Visitas em obras"
+        hint="Seu principal trabalho: as de hoje e as obras pedindo visita"
+        count={data.visitasHoje.length + data.agendarVisita.length}
+        empty="Nenhuma visita hoje e nenhuma obra pedindo visita."
+        footer={
+          <Link href="/obra?tab=agenda" className="text-primary hover:underline">
+            {data.proximas7 > 0
+              ? `${data.proximas7} visita${data.proximas7 !== 1 ? "s" : ""} nos próximos 7 dias — ver Agenda`
+              : "Ver a Agenda completa"}
+          </Link>
+        }
+      >
+        {data.visitasHoje.map(({ v, checar }) => (
+          <Row
+            key={`vh-${v.id}`}
+            onClick={() => navigate(`/projects/${v.projectId}`)}
+            title={`Visitar hoje: ${v.projectName ?? "obra"}`}
+            sub={`${v.objective || "visita agendada"}${checar > 0 ? ` · ${checar} ite${checar !== 1 ? "ns" : "m"} para checar lá` : ""}`}
+            badge="hoje"
+            badgeTone="blue"
+          />
+        ))}
+        {data.agendarVisita.map(({ p, since, checar, contexto }) => (
+          <div key={`ag-${p.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer"
+            onClick={() => navigate(`/projects/${p.id}`)}>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {contexto} · {since === undefined ? "nunca visitada" : `última visita há ${since} dias`}
+                {checar > 0 ? ` · ${checar} ite${checar !== 1 ? "ns" : "m"} para checar lá` : ""}
+              </p>
+            </div>
+            <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", BADGE_TONE.amber)}>
+              {since === undefined ? "nunca visitada" : `${since}d sem visita`}
+            </span>
+            <span onClick={(e) => e.stopPropagation()}>
+              <NewVisitDialog
+                projectId={p.id}
+                projectName={p.name}
+                trigger={
+                  <Button size="sm" variant="outline" className="shrink-0 h-7 gap-1 text-xs">
+                    <CalendarPlus className="h-3.5 w-3.5" /> Agendar
+                  </Button>
+                }
+              />
+            </span>
           </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {visible.map((it, i) => (
-              <div
-                key={it.key}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer",
-                  i === 0 && !showAll && "bg-primary/[.04]"
-                )}
-                onClick={() => navigate(`/projects/${it.projectId}`)}
-              >
-                <span
-                  className={cn(
-                    "shrink-0 h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold tabular-nums",
-                    i === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {i + 1}
-                </span>
-                <span className="shrink-0">{KIND_ICON[it.kind]}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{it.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{it.sub}</p>
-                </div>
-                <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", BADGE_TONE[it.badgeTone])}>
-                  {it.badge}
-                </span>
-                {it.kind === "agendar" ? (
-                  <span onClick={(e) => e.stopPropagation()}>
-                    <NewVisitDialog
-                      projectId={it.projectId}
-                      projectName={it.projectName}
-                      trigger={
-                        <Button size="sm" variant="outline" className="shrink-0 h-7 gap-1 text-xs">
-                          <CalendarPlus className="h-3.5 w-3.5" /> Agendar
-                        </Button>
-                      }
-                    />
-                  </span>
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        ))}
+      </Section>
 
-        {hidden > 0 && (
-          <button
-            className="w-full px-4 py-2.5 text-xs font-medium text-primary hover:bg-muted/40 flex items-center justify-center gap-1 border-t border-border"
-            onClick={() => setShowAll(true)}
-          >
-            Mostrar os outros {hidden} <ChevronDown className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
+      {/* ── 2. Pessoas ── */}
+      <Section
+        num={2}
+        icon={<Users className="h-4 w-4 text-red-500" />}
+        title="Cobre as pessoas"
+        hint="Tarefas vencidas por responsável e planos de ação atrasados por obra"
+        count={data.pessoas.length + data.planosVencidos.length}
+        empty="Ninguém com tarefa vencida e nenhum plano atrasado."
+      >
+        {data.pessoas.map((pe) => (
+          <Row
+            key={`pe-${pe.id ?? "none"}`}
+            onClick={() => navigate(pe.id != null ? `/tasks?responsavel=${pe.id}&vencidas=1` : "/tasks?vencidas=1")}
+            title={pe.name}
+            sub={`${pe.count} tarefa${pe.count !== 1 ? "s" : ""} vencida${pe.count !== 1 ? "s" : ""} · a mais antiga há ${pe.oldest}d`}
+            badge={`${pe.count} vencida${pe.count !== 1 ? "s" : ""}`}
+            badgeTone="red"
+          />
+        ))}
+        {data.planosVencidos.map((s) => (
+          <Row
+            key={`pl-${s.projectId}`}
+            onClick={() => navigate(`/projects/${s.projectId}`)}
+            title={`Plano de ação: ${s.projectName ?? "obra"}`}
+            sub={`${s.overdueItems} vencido${s.overdueItems !== 1 ? "s" : ""} de ${s.openItems} em aberto`}
+            badge={`${s.overdueItems} vencido${s.overdueItems !== 1 ? "s" : ""}`}
+            badgeTone="red"
+          />
+        ))}
+      </Section>
+
+      {/* ── 3. Datas ── */}
+      <Section
+        num={3}
+        icon={<CalendarClock className="h-4 w-4 text-red-500" />}
+        title="Datas para resolver"
+        hint="Estimadas que passaram sem a data final registrada"
+        count={data.datasVencidas.length}
+        empty="Nenhuma data de obra vencida."
+      >
+        {data.datasVencidas.map((d, i) => (
+          <Row
+            key={`dt-${d.projectId}-${i}`}
+            onClick={() => navigate(`/projects/${d.projectId}`)}
+            title={`${d.label}: ${d.projectName}`}
+            sub="registre a data final ou cobre a conclusão"
+            badge={`há ${-d.days}d`}
+            badgeTone="red"
+          />
+        ))}
+      </Section>
 
       {/* Fim do expediente: RDO automático com o que foi registrado hoje */}
       <FecharDia />
 
       <p className="text-xs text-muted-foreground px-1">
-        Procurando algo que não está na fila? <Link href="/obra?tab=pendencias" className="text-primary hover:underline">Pendências</Link> tem
-        a lista completa de cobranças e <Link href="/obra?tab=agenda" className="text-primary hover:underline">Agenda</Link> mostra
-        as próximas visitas e datas-chave.
+        A lista completa de cobranças (com WhatsApp para externos) fica em{" "}
+        <Link href="/obra?tab=pendencias" className="text-primary hover:underline">Pendências</Link>; visitas futuras e
+        datas-chave, na <Link href="/obra?tab=agenda" className="text-primary hover:underline">Agenda</Link>.
       </p>
     </div>
   );
 }
 
-const BADGE_TONE: Record<string, string> = {
-  red: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
-  amber: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40",
-  blue: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/40",
-  muted: "bg-muted text-muted-foreground border-border",
-};
+function Section({
+  num, icon, title, hint, count, empty, footer, children,
+}: {
+  num: number; icon: React.ReactNode; title: string; hint: string; count: number;
+  empty: string; footer?: React.ReactNode; children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
+        <span className="shrink-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+          {num}
+        </span>
+        {icon}
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-foreground leading-tight">{title}</h2>
+          <p className="text-[11px] text-muted-foreground leading-tight">{hint}</p>
+        </div>
+        <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{count}</span>
+      </div>
+      {count === 0 ? (
+        <p className="px-4 py-5 text-center text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <div className="divide-y divide-border">{children}</div>
+      )}
+      {footer && <div className="px-4 py-2.5 text-xs border-t border-border">{footer}</div>}
+    </div>
+  );
+}
+
+function Row({
+  onClick, title, sub, badge, badgeTone,
+}: {
+  onClick: () => void; title: string; sub: string; badge: string; badgeTone: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer" onClick={onClick}>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-foreground truncate">{title}</p>
+        <p className="text-xs text-muted-foreground truncate">{sub}</p>
+      </div>
+      <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", BADGE_TONE[badgeTone])}>
+        {badge}
+      </span>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+    </div>
+  );
+}
