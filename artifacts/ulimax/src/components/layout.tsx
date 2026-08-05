@@ -101,7 +101,6 @@ export function Layout({ children }: LayoutProps) {
             items: [
               { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
               { href: "/meu-dia", label: "Meu Dia", icon: Sun },
-              { href: "/tasks", label: "Trabalho", icon: CheckSquare },
               { href: "/projects", label: "Projetos", icon: Briefcase },
             ],
           },

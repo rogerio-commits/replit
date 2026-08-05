@@ -9,7 +9,7 @@
 |---|---|---|---|
 | **gestor** | Meu Dia | Meu Dia, Dashboard, Projetos, Trabalho · Obra: Obras, Instalações, Calendário · Análises: Assistente, Desempenho · Configurações | Dashboard enxuto (7 cartões + FarolLegend), Desempenho (ciclo real + por unidade + Modo reunião), Ver como |
 | **gestor_obras** | Obras (aba Visitas) | Obras, Projetos, Calendário, Ajuda | Hub Obras em 3 abas (Hoje e Agenda EXTINTAS, conteúdo redistribuído): **Visitas** = programação do mês confirmada dia a dia (passadas esmaecidas + "depois deste mês") + painel de sugeridas aguardando confirmação (critério 10d/15d, botão Agendar, nº de itens p/ checar lá) · **Pendências** = dividido: RDOs de visita pendentes (visita realizada sem arquivo, anexa na linha) / tarefas da equipe vencidas POR RESPONSÁVEL (→ /tasks?responsavel=&vencidas=1) / datas vencidas / datas a vencer (30d) / planos de ação (Cobrancas embedded, WhatsApp) · **Operação** = instalações/AT/amostras. painel-obra.tsx e agenda.tsx órfãos de propósito |
-| **executor (projetista)** | Minha Prancheta | Prancheta, Meu Dia, Trabalho, Projetos, Instalações, Calendário | Prancheta (reprovado/vencendo/aguardando aprovação), Trilho de Fases com edição inline |
+| **executor (projetista)** | Minha Prancheta | Prancheta, Meu Dia, Projetos, Instalações, Calendário (Trabalho FORA do menu desde 2026-08-05 — visão geral é dos gestores; rota /tasks segue acessível p/ deep-links) | Prancheta (reprovado/vencendo/aguardando aprovação), Meu Dia (Minhas Atividades), Trilho de Fases com edição inline |
 | **observador** | Dashboard | Dashboard, Projetos, Calendário | leitura |
 
 ## Telas principais
