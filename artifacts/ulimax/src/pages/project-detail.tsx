@@ -317,7 +317,10 @@ export default function ProjectDetail() {
   );
   const isParticipant = projectMembers?.some((pm) => pm.memberId === myMember?.id) ?? false;
   const isExecutor = me?.role === "executor";
-  const canEdit = isGestor || (isExecutor && isParticipant);
+  // Espelha o servidor (requireExecutorOrGestor): gestor de obras também edita —
+  // é ele quem cria visitas e anexa os RDOs.
+  const isGestorObras = me?.role === "gestor_obras";
+  const canEdit = isGestor || isGestorObras || (isExecutor && isParticipant);
 
   // Members available to add (not yet in the project)
   const participantMemberIds = new Set(projectMembers?.map((pm) => pm.memberId) ?? []);
