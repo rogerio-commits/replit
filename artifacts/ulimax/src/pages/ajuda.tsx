@@ -1115,7 +1115,7 @@ const sections: Section[] = [
           <p className="text-sm text-muted-foreground"><Strong>Critério de visita:</Strong> uma obra entra no radar quando o <Strong>fim da produção está a até 10 dias</Strong> (visita de pré-instalação) ou quando está <Strong>em instalação</Strong> — cadência de uma visita a cada <Strong>15 dias</Strong>. Visita futura agendada silencia a cobrança. O <Strong>RDO</Strong> é o arquivo da visita: anexe pelo botão na linha da visita, na página da obra.</p>
         </Subsection>
         <Subsection title="Aba Agenda — o que vem pela frente">
-          <p className="text-sm text-muted-foreground">Só futuro: próximas visitas (30 dias) e as datas-chave das obras (60 dias) em ordem cronológica. O que já venceu aparece na fila da aba Hoje.</p>
+          <p className="text-sm text-muted-foreground">Agenda cronológica para se programar: visitas e datas-chave das obras (medição, produção, instalação, prazos) agrupadas por dia — <Strong>Hoje</Strong>, <Strong>Amanhã</Strong>, cada dia da semana e <Strong>Mais adiante</Strong> (visitas em 30 dias, datas em 60). O que já venceu aparece na fila da aba Hoje.</p>
         </Subsection>
         <Subsection title="Aba Operação">
           <p className="text-sm text-muted-foreground">Instalações, assistência técnica e amostras — o acompanhamento operacional da obra.</p>
