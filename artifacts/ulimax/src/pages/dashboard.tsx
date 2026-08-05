@@ -1,16 +1,6 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { Link, useLocation } from "wouter";
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  useDroppable,
-  useDraggable,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { useQueryClient } from "@tanstack/react-query";
-import { format, parseISO, isToday, isTomorrow, isPast, addDays, startOfDay } from "date-fns";
+import { format, parseISO, isToday, isTomorrow, isPast } from "date-fns";
 import { PieChart, Pie, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
 import {
@@ -20,8 +10,6 @@ import {
   useGetRecentActivity,
   useListTasks,
   useListMembers,
-  useUpdateTask,
-  getListTasksQueryKey,
 } from "@workspace/api-client-react";
 import type {
   ListProjectsQueryResult,
@@ -31,7 +19,6 @@ import { useAlerts, type Alert } from "@/hooks/useAlerts";
 import { computeHealthMap, FAROL_META, attentionScore } from "@/lib/project-health";
 import { projectStatusLabel } from "@/lib/project-status";
 import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
-import { useToast } from "@/hooks/use-toast";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { MaterialSplit } from "@/components/material-split";
 import { FarolLegend } from "@/components/farol-legend";
@@ -133,66 +120,6 @@ function AlertRow({ alert }: { alert: Alert }) {
   );
 }
 
-/** Célula de dia do mini-calendário — alvo de soltar tarefas */
-function DroppableWeekDay({
-  dateIso,
-  onOpen,
-  className,
-  children,
-}: {
-  dateIso: string;
-  onOpen: () => void;
-  className: string;
-  children: React.ReactNode;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: `day-${dateIso}`, data: { date: dateIso } });
-  return (
-    <div
-      ref={setNodeRef}
-      onClick={onOpen}
-      className={cn(className, isOver && "border-primary ring-2 ring-primary/30 bg-primary/10")}
-    >
-      {children}
-    </div>
-  );
-}
-
-/** Tarefa arrastável dentro do mini-calendário */
-function DraggableTaskChip({
-  task,
-  disabled,
-}: {
-  task: { id: number; title: string; dueDate?: string | null };
-  disabled: boolean;
-}) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `dtask-${task.id}`,
-    data: { task },
-    disabled,
-  });
-  return (
-    <p
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={
-        transform
-          ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 50, position: "relative" }
-          : undefined
-      }
-      className={cn(
-        "text-[9px] leading-tight text-muted-foreground truncate text-center rounded px-0.5",
-        !disabled && "cursor-grab active:cursor-grabbing hover:bg-muted hover:text-foreground",
-        isDragging && "bg-card border border-primary/40 shadow-lg text-foreground"
-      )}
-    >
-      {task.title}
-    </p>
-  );
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
-
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: projects, isLoading: isProjectsLoading } = useListProjects({});
@@ -203,35 +130,8 @@ export default function Dashboard() {
   const allAlerts = useAlerts();
   const canEdit = useCanEdit();
   const isGestor = useIsGestor();
-  const qc = useQueryClient();
-  const { toast } = useToast();
-  const updateTask = useUpdateTask();
   const [, navigate] = useLocation();
-  const weekSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
-  const justDraggedRef = useRef(false);
-
   const loading = isSummaryLoading || isProjectsLoading;
-
-  /** Soltou uma tarefa em outro dia → muda o prazo dela */
-  function handleWeekDragEnd(e: DragEndEvent) {
-    justDraggedRef.current = true;
-    setTimeout(() => { justDraggedRef.current = false; }, 250);
-    const task = (e.active.data.current as { task?: { id: number; title: string; dueDate?: string | null } } | undefined)?.task;
-    const dateIso = (e.over?.data.current as { date?: string } | undefined)?.date;
-    if (!task || !dateIso) return;
-    const currentDue = task.dueDate ? task.dueDate.split("T")[0] : null;
-    if (currentDue === dateIso) return;
-    updateTask.mutate(
-      { id: task.id, data: { dueDate: dateIso } },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListTasksQueryKey() });
-          toast({ title: `Prazo movido para ${format(parseISO(dateIso), "dd/MM", { locale: ptBR })}.` });
-        },
-        onError: () => toast({ title: "Não foi possível mover o prazo.", variant: "destructive" }),
-      }
-    );
-  }
 
   // Central de alertas — tudo, exceto os alertas pessoais ("tarefa para você")
   const centralAlerts = useMemo(
@@ -280,20 +180,6 @@ export default function Dashboard() {
   }, [siteVisits]);
 
   const total = projects?.length ?? 0;
-
-  const weekDays = useMemo(() => {
-    const today = startOfDay(new Date());
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = addDays(today, i);
-      const dayTasks = (allTasks ?? []).filter(t => {
-        if (!t.dueDate || t.status === "done") return false;
-        try {
-          return startOfDay(parseISO(t.dueDate)).getTime() === date.getTime();
-        } catch { return false; }
-      });
-      return { date, tasks: dayTasks, isToday: i === 0 };
-    });
-  }, [allTasks]);
 
   const taskStatusCounts = useMemo(() => {
     const c = { todo: 0, in_progress: 0, review: 0, done: 0 };
@@ -554,84 +440,6 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Mini Calendário 7 dias ── */}
-      <div className="bg-card rounded-xl border border-border p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarDays className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">Próximos 7 Dias</h2>
-          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {canEdit ? "arraste uma tarefa para mudar o prazo" : "tarefas com prazo"}
-          </span>
-        </div>
-        {isTasksLoading ? (
-          <div className="flex gap-2">
-            {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-20 flex-1 rounded-lg" />)}
-          </div>
-        ) : (
-          <DndContext sensors={weekSensors} onDragEnd={handleWeekDragEnd} autoScroll={false}>
-            <div
-              className="flex gap-2"
-              onClickCapture={(e) => {
-                if (justDraggedRef.current) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-              }}
-            >
-              {weekDays.map(({ date, tasks, isToday: dayIsToday }) => {
-                const dateIso = format(date, "yyyy-MM-dd");
-                return (
-                  <DroppableWeekDay
-                    key={dateIso}
-                    dateIso={dateIso}
-                    onOpen={() => navigate("/tasks")}
-                    className={cn(
-                      "flex-1 min-w-0 flex flex-col items-center gap-1 p-2 rounded-lg border cursor-pointer transition-all hover:border-primary/40 hover:shadow-sm min-h-[84px]",
-                      dayIsToday
-                        ? "bg-primary/5 border-primary/30"
-                        : tasks.length > 0
-                          ? "bg-muted/30 border-border"
-                          : "border-border/40",
-                    )}
-                  >
-                    <span className={cn(
-                      "text-[10px] font-semibold uppercase tracking-wide",
-                      dayIsToday ? "text-primary" : "text-muted-foreground"
-                    )}>
-                      {format(date, "EEE", { locale: ptBR })}
-                    </span>
-                    <span className={cn(
-                      "text-lg font-bold leading-none",
-                      dayIsToday ? "text-primary" : "text-foreground"
-                    )}>
-                      {format(date, "d")}
-                    </span>
-                    {tasks.length > 0 ? (
-                      <span className={cn(
-                        "text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5",
-                        dayIsToday ? "bg-primary text-primary-foreground" : "bg-amber-100 text-amber-700"
-                      )}>
-                        {tasks.length}
-                      </span>
-                    ) : (
-                      <span className="h-[18px]" />
-                    )}
-                    <div className="w-full space-y-0.5 mt-0.5">
-                      {tasks.slice(0, 2).map(t => (
-                        <DraggableTaskChip key={t.id} task={t} disabled={!canEdit} />
-                      ))}
-                      {tasks.length > 2 && (
-                        <p className="text-[9px] text-muted-foreground/60 text-center">+{tasks.length - 2}</p>
-                      )}
-                    </div>
-                  </DroppableWeekDay>
-                );
-              })}
-            </div>
-          </DndContext>
-        )}
       </div>
 
       {/* ── Status das Tarefas + Próximas Visitas ── */}
