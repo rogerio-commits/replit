@@ -15,7 +15,7 @@ import type {
   ListProjectsQueryResult,
   GetRecentActivityQueryResult,
 } from "@workspace/api-client-react";
-import { useAlerts, type Alert } from "@/hooks/useAlerts";
+import { useAlerts } from "@/hooks/useAlerts";
 import { computeHealthMap, FAROL_META, attentionScore } from "@/lib/project-health";
 import { projectStatusLabel } from "@/lib/project-status";
 import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
@@ -94,31 +94,28 @@ function timeAgo(dateStr: string): string {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+// Central de Alertas resumida: uma linha por ASSUNTO (tipo de alerta), com a
+// contagem e o link para a tela canônica — a lista item a item vive lá.
+const ALERT_GROUP_META: Record<string, { label: string; href: string }> = {
+  overdue_task:            { label: "Tarefas atrasadas",                href: "/tasks?vencidas=1" },
+  overdue_obra_date:       { label: "Datas de obra vencidas",           href: "/obra?tab=pendencias" },
+  overdue_installation:    { label: "Instalações atrasadas",            href: "/projects" },
+  overdue_sample:          { label: "Amostras atrasadas",               href: "/obra?tab=operacao" },
+  overdue_chase_item:      { label: "Itens de plano de ação atrasados", href: "/obra?tab=pendencias" },
+  approaching_installation:{ label: "Instalações nos próximos 7 dias",  href: "/obra?tab=pendencias" },
+  approaching_sample:      { label: "Amostras vencendo",                href: "/obra?tab=operacao" },
+  approaching_chase_item:  { label: "Itens de plano vencendo",          href: "/obra?tab=pendencias" },
+  stalled_project:         { label: "Projetos parados em A Iniciar",    href: "/projects" },
+  no_assignee:             { label: "Tarefas sem responsável",          href: "/tasks" },
+  stale_task:              { label: "Tarefas paradas há 7+ dias",       href: "/tasks" },
+  no_installation_date:    { label: "Projetos sem data de instalação",  href: "/projects" },
+};
+
 const SEVERITY_META = {
   danger:  { label: "Críticos",     icon: AlertCircle, row: "bg-red-50 border-red-100 dark:bg-red-950/20 dark:border-red-900/30",       iconColor: "text-red-500",   chip: "bg-red-100 text-red-700" },
   warning: { label: "Atenção",      icon: Clock,       row: "bg-amber-50 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30", iconColor: "text-amber-500", chip: "bg-amber-100 text-amber-700" },
   info:    { label: "Informativos", icon: Info,        row: "bg-muted/30 border-border",                                                  iconColor: "text-blue-500",  chip: "bg-blue-100 text-blue-700" },
 } as const;
-
-function AlertRow({ alert }: { alert: Alert }) {
-  const meta = SEVERITY_META[alert.severity];
-  const Icon = meta.icon;
-  return (
-    <Link href={alert.href}>
-      <div className={cn(
-        "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
-        meta.row,
-      )}>
-        <Icon className={cn("h-3.5 w-3.5 shrink-0", meta.iconColor)} />
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-foreground truncate">{alert.title}</p>
-          <p className="text-[10px] text-muted-foreground truncate">{alert.description}</p>
-        </div>
-        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-      </div>
-    </Link>
-  );
-}
 
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
@@ -144,6 +141,20 @@ export default function Dashboard() {
     info:    centralAlerts.filter(a => a.severity === "info").length,
   }), [centralAlerts]);
   const actionableAlerts = alertCounts.danger + alertCounts.warning;
+
+  // Uma linha por assunto, ordenada por gravidade e volume.
+  const alertGroups = useMemo(() => {
+    const sevOrder: Record<string, number> = { danger: 0, warning: 1, info: 2 };
+    const map = new Map<string, { type: string; severity: "danger" | "warning" | "info"; count: number }>();
+    for (const a of centralAlerts) {
+      const g = map.get(a.type);
+      if (g) g.count += 1;
+      else map.set(a.type, { type: a.type, severity: a.severity, count: 1 });
+    }
+    return [...map.values()].sort(
+      (a, b) => sevOrder[a.severity] - sevOrder[b.severity] || b.count - a.count,
+    );
+  }, [centralAlerts]);
 
   // Tarefas atrasadas por responsável
   const overdueByMember = useMemo(() => {
@@ -368,19 +379,33 @@ export default function Dashboard() {
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-11 w-full" />)}
             </div>
-          ) : centralAlerts.length === 0 ? (
+          ) : alertGroups.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center gap-2">
               <CheckCircle2 className="h-8 w-8 text-emerald-500 opacity-60" />
               <p className="text-sm text-muted-foreground">Nenhum alerta no momento. Tudo em dia!</p>
             </div>
           ) : (
             <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-              {centralAlerts.slice(0, 40).map(a => <AlertRow key={a.id} alert={a} />)}
-              {centralAlerts.length > 40 && (
-                <p className="text-[10px] text-muted-foreground text-center pt-1">
-                  +{centralAlerts.length - 40} outros alertas
-                </p>
-              )}
+              {alertGroups.map((g) => {
+                const meta = ALERT_GROUP_META[g.type] ?? { label: g.type, href: "/projects" };
+                const sev = SEVERITY_META[g.severity];
+                const Icon = sev.icon;
+                return (
+                  <Link key={g.type} href={meta.href}>
+                    <div className={cn(
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2 border cursor-pointer hover:opacity-80 transition-opacity",
+                      sev.row,
+                    )}>
+                      <Icon className={cn("h-4 w-4 shrink-0", sev.iconColor)} />
+                      <p className="flex-1 min-w-0 text-sm font-medium text-foreground truncate">{meta.label}</p>
+                      <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0", sev.chip)}>
+                        {g.count}
+                      </span>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
