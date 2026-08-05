@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
-import { FecharDia } from "@/components/fechar-dia";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 import { overdueObraDates } from "@/lib/obra-dates";
@@ -277,9 +276,6 @@ export default function PainelObra() {
           />
         ))}
       </Section>
-
-      {/* Fim do expediente: RDO automático com o que foi registrado hoje */}
-      <FecharDia />
 
       <p className="text-xs text-muted-foreground px-1">
         A lista completa de cobranças (com WhatsApp para externos) fica em{" "}
