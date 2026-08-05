@@ -1112,7 +1112,7 @@ const sections: Section[] = [
               ["3 · Datas para resolver", "Datas estimadas que passaram sem a data final registrada."],
             ]}
           />
-          <p className="text-sm text-muted-foreground"><Strong>Critério de visita:</Strong> uma obra entra no radar quando o <Strong>fim da produção está a até 10 dias</Strong> (visita de pré-instalação) ou quando está <Strong>em instalação</Strong> — cadência de uma visita a cada <Strong>15 dias</Strong>. Visita futura agendada silencia a cobrança. No fim do expediente, <Strong>Fechar o dia</Strong> gera o RDO automático.</p>
+          <p className="text-sm text-muted-foreground"><Strong>Critério de visita:</Strong> uma obra entra no radar quando o <Strong>fim da produção está a até 10 dias</Strong> (visita de pré-instalação) ou quando está <Strong>em instalação</Strong> — cadência de uma visita a cada <Strong>15 dias</Strong>. Visita futura agendada silencia a cobrança. No fim do expediente, o bloco <Strong>Resumo do dia</Strong> monta o texto com o que foi registrado hoje (visitas, tarefas, pendências) para você revisar e salvar no Diário de Obra — diferente do <Strong>RDO</Strong>, que é o arquivo anexado a cada visita.</p>
         </Subsection>
         <Subsection title="Aba Agenda — o que vem pela frente">
           <p className="text-sm text-muted-foreground">Só futuro: próximas visitas (30 dias) e as datas-chave das obras (60 dias) em ordem cronológica. O que já venceu aparece na fila da aba Hoje.</p>

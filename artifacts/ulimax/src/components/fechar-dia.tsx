@@ -19,11 +19,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Moon, FileText, CheckCircle2 } from "lucide-react";
 
-// ── Fechar o dia (RDO automático) ────────────────────────────────────────────
+// ── Resumo do dia (Diário de Obra) ───────────────────────────────────────────
 // Padrão Procore Daily Log: o diário não é um formulário em branco no fim do
 // dia — o app monta o rascunho com o que aconteceu hoje (visitas, tarefas
 // concluídas, pendências abertas, situação da instalação) e o gestor só revisa
 // e confirma. Vira uma entrada do Diário de Obra do projeto.
+// Nomeado "Resumo do dia" na interface: "RDO" aqui é o arquivo que se anexa
+// à visita — usar a mesma sigla nos dois confundia.
 
 function hoje(): string {
   return new Date().toISOString().slice(0, 10);
@@ -97,8 +99,8 @@ export function FecharDia() {
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <Moon className="h-4 w-4 text-indigo-500" />
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground leading-tight">Fechar o dia</h2>
-            <p className="text-[11px] text-muted-foreground leading-tight">O RDO já está montado com o que você registrou hoje — só revisar e confirmar</p>
+            <h2 className="text-sm font-semibold text-foreground leading-tight">Resumo do dia — Diário de Obra</h2>
+            <p className="text-[11px] text-muted-foreground leading-tight">Fim do expediente: o texto já vem montado com as visitas, tarefas e pendências de hoje — revise e salve no Diário da obra</p>
           </div>
           <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{obras.length} obra{obras.length > 1 ? "s" : ""}</span>
         </div>
@@ -110,7 +112,7 @@ export function FecharDia() {
                 <p className="text-xs text-muted-foreground truncate">{o.linhas.length} registro{o.linhas.length > 1 ? "s" : ""} hoje</p>
               </div>
               <Button size="sm" className="shrink-0 gap-1.5" onClick={() => setObraAberta(o)}>
-                <FileText className="h-3.5 w-3.5" /> Gerar RDO
+                <FileText className="h-3.5 w-3.5" /> Gerar resumo
               </Button>
             </div>
           ))}
@@ -157,7 +159,7 @@ function RdoDialog({ obra, today, onClose }: { obra: ObraDoDia; today: string; o
       },
       {
         onSuccess: () => {
-          toast({ title: "RDO registrado no Diário de Obra" });
+          toast({ title: "Resumo salvo no Diário de Obra" });
           qc.invalidateQueries({ queryKey: getListObraDiaryQueryKey(obra.projectId) });
           onClose();
         },
@@ -170,7 +172,7 @@ function RdoDialog({ obra, today, onClose }: { obra: ObraDoDia; today: string; o
     <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>RDO de hoje — {obra.projectName}</DialogTitle>
+          <DialogTitle>Resumo do dia — {obra.projectName}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <Skeleton className="h-40 rounded-lg" />
@@ -179,7 +181,7 @@ function RdoDialog({ obra, today, onClose }: { obra: ObraDoDia; today: string; o
             {jaFechado && (
               <p className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/40">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
-                Já existe um RDO de hoje para esta obra — salvar cria um registro adicional.
+                Já existe um resumo de hoje para esta obra — salvar cria um registro adicional.
               </p>
             )}
             <div className="space-y-1.5">
@@ -205,7 +207,7 @@ function RdoDialog({ obra, today, onClose }: { obra: ObraDoDia; today: string; o
         <DialogFooter>
           <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
           <Button onClick={handleSave} disabled={createEntry.isPending}>
-            {createEntry.isPending ? "Salvando..." : "Confirmar RDO"}
+            {createEntry.isPending ? "Salvando..." : "Salvar no Diário"}
           </Button>
         </DialogFooter>
       </DialogContent>
