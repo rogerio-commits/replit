@@ -122,7 +122,7 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
-                { href: "/obra", label: "Obras", icon: HardHat, highlight: true },
+                { href: "/obra", label: "Obras", icon: HardHat },
                 { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
