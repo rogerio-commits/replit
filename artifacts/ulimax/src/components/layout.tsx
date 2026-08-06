@@ -84,7 +84,7 @@ export function Layout({ children }: LayoutProps) {
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-  type NavItem = { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean; highlight?: boolean };
+  type NavItem = { href: string; label: string; icon: React.ElementType; badge?: number; badgeDanger?: boolean };
 
   const dashboardItem: NavItem = {
     href: "/dashboard",
@@ -100,7 +100,7 @@ export function Layout({ children }: LayoutProps) {
           {
             label: "Principal",
             items: [
-              { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
+              { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler },
               { href: "/projects", label: "Projetos", icon: Briefcase },
             ],
           },
@@ -121,7 +121,7 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
-                { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler, highlight: true },
+                { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler },
                 dashboardItem,
                 { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/tasks", label: "Trabalho", icon: CheckSquare },
@@ -174,7 +174,7 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Principal",
                 items: [
-                  { href: "/meu-dia", label: "Meu Dia", icon: Sun, highlight: true },
+                  { href: "/meu-dia", label: "Meu Dia", icon: Sun },
                   dashboardItem,
                     { href: "/projects", label: "Projetos", icon: Briefcase },
                   { href: "/tasks", label: "Trabalho", icon: CheckSquare },
@@ -229,7 +229,7 @@ export function Layout({ children }: LayoutProps) {
         <aside className="w-64 border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex shrink-0 print:hidden">
           <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center">
-              <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6 brightness-0 invert" />
+              <img src="/logo-ulimax.png" alt="Ulimax & Co." className="h-6 brightness-0 dark:invert" />
             </Link>
           </div>
           
@@ -248,15 +248,11 @@ export function Layout({ children }: LayoutProps) {
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                           isActive
-                            ? item.highlight
-                              ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
-                              : "bg-sidebar-primary/15 text-sidebar-primary"
-                            : item.highlight
-                              ? "bg-amber-50 text-amber-700 border border-amber-200/70 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40 dark:hover:bg-amber-900/40"
-                              : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                            ? "bg-sidebar-primary/15 text-sidebar-primary"
+                            : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         )}
                       >
-                        <Icon className={cn("h-4 w-4 shrink-0", item.highlight && !isActive && "text-amber-500")} />
+                        <Icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{item.label}</span>
                         {item.badge !== undefined && (
                           <span className={cn(
@@ -448,7 +444,7 @@ export function Layout({ children }: LayoutProps) {
                                     : "text-foreground/70 hover:bg-muted"
                                 )}
                               >
-                                <Icon className={cn("h-4 w-4 shrink-0", item.highlight && !isActive && "text-amber-500")} />
+                                <Icon className="h-4 w-4 shrink-0" />
                                 <span className="flex-1">{item.label}</span>
                                 {item.badge !== undefined && (
                                   <span
