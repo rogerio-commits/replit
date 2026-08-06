@@ -67,7 +67,7 @@ type ProjectItem = ListProjectsQueryResult[number];
 const PROJECT_COLUMNS: { id: ProjectStatusId; label: string; color: string; bg: string }[] = [
   { id: "a_iniciar",             label: "A Iniciar",             color: "text-slate-600",  bg: "bg-slate-100 dark:bg-slate-800/60" },
   { id: "em_projeto",            label: "Em Projeto",            color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-900/20" },
-  { id: "em_aprovacao",          label: "Em Aprovação",          color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+  { id: "em_aprovacao",          label: "Na Arquitetura",         color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
   { id: "em_producao",           label: "Em Produção",           color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-900/20" },
   { id: "aguardando_instalacao", label: "Aguardando Instalação", color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-900/20" },
   { id: "em_instalacao",         label: "Em Instalação",         color: "text-green-600",  bg: "bg-green-50 dark:bg-green-900/20" },

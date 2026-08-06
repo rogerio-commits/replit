@@ -114,6 +114,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { VisitRdoActions } from "@/components/visit-rdo-actions";
+import { PROJECT_STATUSES } from "@/lib/project-status";
 import { useAppUser, useIsGestor } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 
@@ -157,7 +158,7 @@ type VisitFormValues = z.infer<typeof visitSchema>;
 const STATUS_LABELS: Record<string, string> = {
   a_iniciar: "A Iniciar",
   em_projeto: "Em Projeto",
-  em_aprovacao: "Em Aprovação",
+  em_aprovacao: "Na Arquitetura",
   em_producao: "Em Produção",
   aguardando_instalacao: "Aguardando Instalação",
   em_instalacao: "Em Instalação",
@@ -891,10 +892,55 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* Aprovação da Arquitetura — sempre visível: responde "foi aprovado? quando?" */}
+      {/* Aprovação da Arquitetura — só a partir do envio à arquitetura (fase
+          "Na Arquitetura"); depois vira registro permanente e compacto. */}
       {(() => {
         const st = project.approvalStatus;
         const podeRegistrar = isGestor || me?.role === "projetista_gestor";
+        const idx = PROJECT_STATUSES.indexOf(project.status as (typeof PROJECT_STATUSES)[number]);
+        const idxArq = PROJECT_STATUSES.indexOf("em_aprovacao");
+        const naArquitetura = project.status === "em_aprovacao";
+        const jaPassou = idx > idxArq;
+
+        // Antes de enviar à arquitetura não há o que aprovar.
+        if (!naArquitetura && !jaPassou && !st) return null;
+
+        const dataFmt = project.approvalAt
+          ? format(new Date(project.approvalAt), "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+          : null;
+
+        // Fase posterior: faixa compacta de registro (a menos que esteja editando).
+        if (!naArquitetura && !isApproveOpen) {
+          return (
+            <div className={cn(
+              "flex items-center gap-2 flex-wrap rounded-lg border px-3 py-2 text-sm",
+              st === "approved" ? "border-emerald-200 bg-emerald-50/60 dark:bg-emerald-900/10" :
+              st === "rejected" ? "border-red-200 bg-red-50/60 dark:bg-red-900/10" :
+              "border-amber-200 bg-amber-50/60 dark:bg-amber-900/10"
+            )}>
+              {st === "approved" ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> :
+               st === "rejected" ? <XCircle className="h-4 w-4 text-red-600 shrink-0" /> :
+               <Clock className="h-4 w-4 text-amber-600 shrink-0" />}
+              <span className="font-medium text-foreground">
+                {st === "approved" ? "Aprovado pela arquitetura" :
+                 st === "rejected" ? "Reprovado pela arquitetura" :
+                 "Aprovação da arquitetura não registrada"}
+              </span>
+              {dataFmt && <span className="text-muted-foreground">· {dataFmt}</span>}
+              {project.approvalNote && (
+                <span className="text-muted-foreground truncate max-w-[320px]">· {project.approvalNote}</span>
+              )}
+              {podeRegistrar && (
+                <Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground"
+                  onClick={() => setIsApproveOpen(true)}>
+                  {st ? "Corrigir" : "Registrar"}
+                </Button>
+              )}
+            </div>
+          );
+        }
+
+        // Fase "Na Arquitetura" (ou correção): cartão completo, com ação.
         return (
           <Card className={cn(
             "border-2",
@@ -910,15 +956,14 @@ export default function ProjectDetail() {
                 <CardTitle className="text-sm font-semibold">
                   {st === "approved" ? "Aprovado pela arquitetura" :
                    st === "rejected" ? "Reprovado pela arquitetura" :
-                   "Aprovação da arquitetura pendente"}
+                   "Na arquitetura — aguardando aprovação"}
                 </CardTitle>
-                {project.approvalAt ? (
+                {dataFmt ? (
                   <span className="ml-auto text-xs font-medium text-muted-foreground">
-                    {st === "approved" ? "Aprovado em " : "Decidido em "}
-                    {format(new Date(project.approvalAt), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    {st === "approved" ? "Aprovado em " : "Decidido em "}{dataFmt}
                   </span>
                 ) : (
-                  <span className="ml-auto text-xs text-muted-foreground">Sem data registrada</span>
+                  <span className="ml-auto text-xs text-muted-foreground">Desenho enviado por e-mail</span>
                 )}
               </div>
             </CardHeader>
@@ -929,7 +974,7 @@ export default function ProjectDetail() {
                 </p>
               )}
               {!podeRegistrar ? (
-                !st && <p className="text-sm text-muted-foreground">Aguardando a arquitetura aprovar o desenho enviado.</p>
+                !st && <p className="text-sm text-muted-foreground">Aguardando a arquitetura responder.</p>
               ) : !isApproveOpen ? (
                 <Button size="sm" variant="outline" onClick={() => setIsApproveOpen(true)} className="gap-1.5">
                   <CheckCircle2 className="h-4 w-4" />

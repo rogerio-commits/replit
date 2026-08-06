@@ -20,14 +20,14 @@
 - **Obras** (`/obra?tab=`): ver tabela acima. `/cobrancas`, `/agenda`, `/painel-obra`, `/portfolio`, `/kanban`, `/gantt` redirecionam.
 
 ## Backend/domínio
-- Fases do projeto: a_iniciar → em_projeto → em_aprovacao → em_producao → aguardando_instalacao → em_instalacao.
+- Fases do projeto: a_iniciar → em_projeto → em_aprovacao ("Na Arquitetura") → em_producao → aguardando_instalacao → em_instalacao.
 - Farol (`lib/project-health.ts`): 🔴 tarefa vencida OU endDate passado · 🟡 vence ≤3d / parada 7d+ / entrega ≤7d com <70% · 🟢 resto. FarolLegend espelha esses números.
 - Datas de obra "vencidas" = estimada passou E a final correspondente vazia (`lib/obra-dates.ts`).
 - Critério de visita (fila de Obras/Hoje): obra pede visita quando fim da produção ≤10d OU em instalação; cadência de 15 dias; silencia se há visita futura agendada.
 - Cobranças (`/chase-items` + `fetchOpenChaseItems`): SÓ itens de plano de ação (decisão 2026-08-05: visita não gera pendência item a item — a pendência da visita é o RDO não anexado; follow-ups de visita continuam existindo dentro do diálogo da visita, mas fora das cobranças/e-mail/alertas). Entram no e-mail diário e no `useAlerts`. `VisitRdoActions` compartilhado em components/.
 - Planos por projeto: `/action-plans/by-project`; selo `ActionPlanBadge` + criar via `NewActionPlanDialog`.
 - Snapshots de métricas: `metrics_snapshots` gravada pelo cron; `/dashboard/trends` existe (TrendsStrip fora do Dashboard por decisão).
-- Aprovação da arquitetura: `projects.approval_status/approval_note/approval_at/approval_by` (sem migração nova). Painel no project-detail é PERMANENTE (antes só aparecia na fase em_aprovacao) e aceita a **data real** da decisão via `approvedOn` no POST /projects/:id/approve; registra gestor e projetista_gestor.
+- Aprovação da arquitetura: fase `em_aprovacao` = **"Na Arquitetura"** (rótulo em toda a UI; a etapa 'enviado para a arquitetura' já era essa — não criar 7ª fase). Campos `projects.approval_*` (sem migração). No project-detail: nada antes da fase; **cartão com ação** durante a fase; **faixa compacta somente-leitura** depois (com 'Corrigir'/'Registrar' p/ backfill). Data real via `approvedOn` no POST /projects/:id/approve; registram gestor e projetista_gestor.
 - Auditoria: PATCH de projeto grava diff de status/prioridade/nome + 8 datas; `/audit-logs` escopado por entidade liberado a autenticados.
 - `tasks.started_at` = tempo de ciclo real (marcado na 1ª saída de "todo").
 - Atribuição de tarefa notifica o responsável: notificação in-app (sino, p/ quem tem conta) + e-mail via Resend (aguardado — serverless congela após a resposta; sai mesmo sem conta no app). Vale p/ criar, editar e bulk-update; auto-atribuição não notifica. `assignedTo` aceita `null` no contrato (limpar responsável). Depende de `RESEND_API_KEY`/`EMAIL_FROM`/`APP_URL` na Vercel.

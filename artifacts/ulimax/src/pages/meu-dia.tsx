@@ -50,7 +50,7 @@ type Task = ListTasksQueryResult[number];
 const STATUS_LABEL: Record<string, string> = {
   a_iniciar: "A Iniciar",
   em_projeto: "Em Projeto",
-  em_aprovacao: "Em Aprovação",
+  em_aprovacao: "Na Arquitetura",
   em_producao: "Em Produção",
   aguardando_instalacao: "Ag. Instalação",
   em_instalacao: "Em Instalação",

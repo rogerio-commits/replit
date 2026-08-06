@@ -183,7 +183,7 @@ type SortDir = "asc" | "desc";
 const STATUS_LABELS: Record<string, string> = {
   a_iniciar: "A Iniciar",
   em_projeto: "Em Projeto",
-  em_aprovacao: "Em Aprovação",
+  em_aprovacao: "Na Arquitetura",
   em_producao: "Em Produção",
   aguardando_instalacao: "Aguardando Instalação",
   em_instalacao: "Em Instalação",

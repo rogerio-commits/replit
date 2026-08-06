@@ -63,7 +63,7 @@ const PHASES: {
     { key: "endDate", label: "Fim estimado", deadline: true },
     { key: "finalDate", label: "Concluído em" },
   ]},
-  { status: "em_aprovacao", label: "Aprovação", icon: BadgeCheck, fields: [] },
+  { status: "em_aprovacao", label: "Arquitetura", icon: BadgeCheck, fields: [] },
   { status: "em_producao", label: "Produção", icon: Factory, fields: [
     { key: "producaoStartDate", label: "Início" },
     { key: "producaoEndDate", label: "Fim estimado", deadline: true },
@@ -338,11 +338,13 @@ export function PhaseRail({
                   {phase.status === "em_aprovacao" ? (
                     <div className="py-1 text-sm">
                       {project.approvalStatus === "approved" ? (
-                        <span className="text-emerald-600 font-medium">Aprovado pelo cliente ✓</span>
+                        <span className="text-emerald-600 font-medium">
+                          Aprovado pela arquitetura ✓{project.approvalAt ? ` em ${fmtBr(project.approvalAt.slice(0, 10))}` : ""}
+                        </span>
                       ) : project.approvalStatus === "rejected" ? (
-                        <span className="text-red-600 font-medium">Reprovado — revisar projeto{project.approvalNote ? ` · "${project.approvalNote}"` : ""}</span>
+                        <span className="text-red-600 font-medium">Reprovado pela arquitetura — revisar projeto{project.approvalNote ? ` · "${project.approvalNote}"` : ""}</span>
                       ) : (
-                        <span className="text-muted-foreground">Aguardando decisão do cliente (o desenho segue por e-mail).</span>
+                        <span className="text-muted-foreground">Enviado à arquitetura (desenho por e-mail) — registre a decisão no cartão acima.</span>
                       )}
                     </div>
                   ) : phase.status === "em_instalacao" ? (

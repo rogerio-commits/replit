@@ -33,7 +33,7 @@ const STATUS_LABELS: Record<string, string> = {
   done: "Concluída",
   a_iniciar: "A Iniciar",
   em_projeto: "Em Projeto",
-  em_aprovacao: "Em Aprovação",
+  em_aprovacao: "Na Arquitetura",
   em_producao: "Em Produção",
   aguardando_instalacao: "Aguard. Instalação",
   em_instalacao: "Em Instalação",
