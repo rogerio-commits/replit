@@ -148,6 +148,11 @@ export const ProjectApprovalInputAction = {
 export interface ProjectApprovalInput {
   action: ProjectApprovalInputAction;
   note?: string;
+  /**
+     * Data real da decisão da arquitetura (default hoje).
+     * @nullable
+     */
+  approvedOn?: string | null;
 }
 
 export type ProjectInputStatus = typeof ProjectInputStatus[keyof typeof ProjectInputStatus];

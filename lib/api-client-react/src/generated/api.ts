@@ -737,7 +737,7 @@ export const getApproveProjectUrl = (id: number,) => {
 }
 
 /**
- * @summary Approve or reject a project (gestor only)
+ * @summary Approve or reject a project (gestor / projetista_gestor)
  */
 export const approveProject = async (id: number,
     projectApprovalInput: ProjectApprovalInput, options?: RequestInit): Promise<Project> => {
@@ -787,7 +787,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ApproveProjectMutationError = ErrorType<void>
 
     /**
- * @summary Approve or reject a project (gestor only)
+ * @summary Approve or reject a project (gestor / projetista_gestor)
  */
 export const useApproveProject = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveProject>>, TError,{id: number;data: BodyType<ProjectApprovalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

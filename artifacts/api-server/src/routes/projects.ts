@@ -544,7 +544,11 @@ router.post("/projects/:id/unarchive", requireExecutorOrGestor, async (req, res)
   return res.json(projectRow(updated, participantsMap.get(params.data.id) ?? [], taskCounts.total.get(params.data.id) ?? 0, taskCounts.done.get(params.data.id) ?? 0));
 });
 
-router.post("/projects/:id/approve", requireGestor, async (req, res) => {
+router.post("/projects/:id/approve", requireExecutorOrGestor, async (req, res) => {
+  // Aprovação da arquitetura: gestor e projetista gestor registram a decisão.
+  if (req.appUser!.role !== "gestor" && req.appUser!.role !== "projetista_gestor") {
+    return res.status(403).json({ error: "Proibido: apenas gestor ou projetista gestor registram a aprovação" });
+  }
   const params = ApproveProjectParams.safeParse({ id: Number(req.params.id) });
   const body = ApproveProjectBody.safeParse(req.body);
   if (!params.success || !body.success) return res.status(400).json({ error: "Invalid input" });
@@ -567,7 +571,8 @@ router.post("/projects/:id/approve", requireGestor, async (req, res) => {
     .set({
       approvalStatus: body.data.action,
       approvalNote: body.data.note ?? null,
-      approvalAt: new Date(),
+      // Data informada pelo usuário (quando a arquitetura de fato decidiu) ou agora.
+      approvalAt: body.data.approvedOn ? new Date(`${body.data.approvedOn}T12:00:00`) : new Date(),
       approvalBy: dbUser?.id ?? null,
     })
     .where(eq(projectsTable.id, params.data.id))

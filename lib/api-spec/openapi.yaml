@@ -229,7 +229,7 @@ paths:
     post:
       operationId: approveProject
       tags: [projects]
-      summary: Approve or reject a project (gestor only)
+      summary: Approve or reject a project (gestor / projetista_gestor)
       parameters:
         - name: id
           in: path
@@ -2807,6 +2807,10 @@ components:
           enum: [approved, rejected]
         note:
           type: string
+        approvedOn:
+          type: ["string", "null"]
+          format: date
+          description: Data real da decisão da arquitetura (default hoje).
 
     ProjectInput:
       type: object

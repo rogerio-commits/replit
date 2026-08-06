@@ -10,4 +10,9 @@ import type { ProjectApprovalInputAction } from './projectApprovalInputAction';
 export interface ProjectApprovalInput {
   action: ProjectApprovalInputAction;
   note?: string;
+  /**
+     * Data real da decisão da arquitetura (default hoje).
+     * @nullable
+     */
+  approvedOn?: Date | null;
 }

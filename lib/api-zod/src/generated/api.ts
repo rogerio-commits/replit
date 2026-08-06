@@ -261,7 +261,7 @@ export const UnarchiveProjectResponse = zod.object({
 
 
 /**
- * @summary Approve or reject a project (gestor only)
+ * @summary Approve or reject a project (gestor / projetista_gestor)
  */
 export const ApproveProjectParams = zod.object({
   "id": zod.coerce.number()
@@ -269,7 +269,8 @@ export const ApproveProjectParams = zod.object({
 
 export const ApproveProjectBody = zod.object({
   "action": zod.enum(['approved', 'rejected']),
-  "note": zod.string().optional()
+  "note": zod.string().optional(),
+  "approvedOn": zod.coerce.date().nullish().describe('Data real da decisão da arquitetura (default hoje).')
 })
 
 export const ApproveProjectResponse = zod.object({

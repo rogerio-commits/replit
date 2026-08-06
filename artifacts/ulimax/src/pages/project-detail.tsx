@@ -295,13 +295,14 @@ export default function ProjectDetail() {
   const [obsText, setObsText] = useState("");
   const [approvalNote, setApprovalNote] = useState("");
   const [isApproveOpen, setIsApproveOpen] = useState(false);
+  const [approvalDate, setApprovalDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const handleApprove = (action: "approved" | "rejected") => {
     approveProjectMutation.mutate(
-      { id: projectId, data: { action, note: approvalNote || undefined } },
+      { id: projectId, data: { action, note: approvalNote || undefined, approvedOn: approvalDate || undefined } },
       {
         onSuccess: () => {
-          toast({ title: action === "approved" ? "Projeto aprovado!" : "Projeto rejeitado" });
+          toast({ title: action === "approved" ? "Aprovação da arquitetura registrada" : "Reprovação registrada" });
           setIsApproveOpen(false);
           setApprovalNote("");
           queryClient.invalidateQueries({ queryKey: getGetProjectQueryKey(projectId) });
@@ -890,117 +891,100 @@ export default function ProjectDetail() {
         </div>
       </div>
 
-      {/* Approval Panel */}
-      {project.status === "em_aprovacao" && (
-        <Card className={cn(
-          "border-2",
-          project.approvalStatus === "approved" ? "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/10" :
-          project.approvalStatus === "rejected" ? "border-red-300 bg-red-50/50 dark:bg-red-900/10" :
-          "border-amber-300 bg-amber-50/50 dark:bg-amber-900/10"
-        )}>
-          <CardHeader className="py-3 px-4 border-b">
-            <div className="flex items-center gap-2">
-              {project.approvalStatus === "approved" ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> :
-               project.approvalStatus === "rejected" ? <XCircle className="h-4 w-4 text-red-600" /> :
-               <Clock className="h-4 w-4 text-amber-600" />}
-              <CardTitle className="text-sm font-semibold">
-                {project.approvalStatus === "approved" ? "Projeto Aprovado" :
-                 project.approvalStatus === "rejected" ? "Projeto Rejeitado" :
-                 "Aguardando Aprovação"}
-              </CardTitle>
-              {project.approvalAt && (
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {format(new Date(project.approvalAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                </span>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="px-4 py-3">
-            {project.approvalNote && (
-              <p className="text-sm text-foreground mb-3 bg-white/60 dark:bg-black/10 rounded p-2 border border-border/50">
-                <span className="font-medium">Nota: </span>{project.approvalNote}
-              </p>
-            )}
-            {!project.approvalStatus && isGestor && (
-              <>
-                {!isApproveOpen ? (
-                  <Button size="sm" variant="outline" onClick={() => setIsApproveOpen(true)} className="gap-1.5">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Revisar e Decidir
-                  </Button>
+      {/* Aprovação da Arquitetura — sempre visível: responde "foi aprovado? quando?" */}
+      {(() => {
+        const st = project.approvalStatus;
+        const podeRegistrar = isGestor || me?.role === "projetista_gestor";
+        return (
+          <Card className={cn(
+            "border-2",
+            st === "approved" ? "border-emerald-300 bg-emerald-50/50 dark:bg-emerald-900/10" :
+            st === "rejected" ? "border-red-300 bg-red-50/50 dark:bg-red-900/10" :
+            "border-amber-300 bg-amber-50/50 dark:bg-amber-900/10"
+          )}>
+            <CardHeader className="py-3 px-4 border-b">
+              <div className="flex items-center gap-2 flex-wrap">
+                {st === "approved" ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> :
+                 st === "rejected" ? <XCircle className="h-4 w-4 text-red-600" /> :
+                 <Clock className="h-4 w-4 text-amber-600" />}
+                <CardTitle className="text-sm font-semibold">
+                  {st === "approved" ? "Aprovado pela arquitetura" :
+                   st === "rejected" ? "Reprovado pela arquitetura" :
+                   "Aprovação da arquitetura pendente"}
+                </CardTitle>
+                {project.approvalAt ? (
+                  <span className="ml-auto text-xs font-medium text-muted-foreground">
+                    {st === "approved" ? "Aprovado em " : "Decidido em "}
+                    {format(new Date(project.approvalAt), "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </span>
                 ) : (
-                  <div className="space-y-3">
-                    <Textarea
-                      placeholder="Nota de revisão (opcional)..."
-                      value={approvalNote}
-                      onChange={(e) => setApprovalNote(e.target.value)}
-                      rows={2}
-                      className="text-sm"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                        onClick={() => handleApprove("approved")}
-                        disabled={approveProjectMutation.isPending}
-                      >
-                        {approveProjectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
-                        Aprovar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5 border-red-300 text-red-600 hover:bg-red-50"
-                        onClick={() => handleApprove("rejected")}
-                        disabled={approveProjectMutation.isPending}
-                      >
-                        <ThumbsDown className="h-4 w-4" />
-                        Rejeitar
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => { setIsApproveOpen(false); setApprovalNote(""); }}>
-                        Cancelar
-                      </Button>
-                    </div>
-                  </div>
+                  <span className="ml-auto text-xs text-muted-foreground">Sem data registrada</span>
                 )}
-              </>
-            )}
-            {!project.approvalStatus && !isGestor && (
-              <p className="text-sm text-muted-foreground">Aguardando revisão de um gestor.</p>
-            )}
-            {project.approvalStatus && isGestor && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-xs text-muted-foreground"
-                onClick={() => setIsApproveOpen(!isApproveOpen)}
-              >
-                Rever decisão
-              </Button>
-            )}
-            {project.approvalStatus && isGestor && isApproveOpen && (
-              <div className="space-y-3 mt-2">
-                <Textarea
-                  placeholder="Nova nota (opcional)..."
-                  value={approvalNote}
-                  onChange={(e) => setApprovalNote(e.target.value)}
-                  rows={2}
-                  className="text-sm"
-                />
-                <div className="flex gap-2">
-                  <Button size="sm" className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handleApprove("approved")} disabled={approveProjectMutation.isPending}>
-                    <ThumbsUp className="h-4 w-4" /> Aprovar
-                  </Button>
-                  <Button size="sm" variant="outline" className="gap-1.5 border-red-300 text-red-600 hover:bg-red-50" onClick={() => handleApprove("rejected")} disabled={approveProjectMutation.isPending}>
-                    <ThumbsDown className="h-4 w-4" /> Rejeitar
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setIsApproveOpen(false); setApprovalNote(""); }}>Cancelar</Button>
-                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </CardHeader>
+            <CardContent className="px-4 py-3">
+              {project.approvalNote && (
+                <p className="text-sm text-foreground mb-3 bg-white/60 dark:bg-black/10 rounded p-2 border border-border/50">
+                  <span className="font-medium">Nota: </span>{project.approvalNote}
+                </p>
+              )}
+              {!podeRegistrar ? (
+                !st && <p className="text-sm text-muted-foreground">Aguardando a arquitetura aprovar o desenho enviado.</p>
+              ) : !isApproveOpen ? (
+                <Button size="sm" variant="outline" onClick={() => setIsApproveOpen(true)} className="gap-1.5">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {st ? "Corrigir registro" : "Registrar decisão da arquitetura"}
+                </Button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Data da decisão</label>
+                      <Input
+                        type="date"
+                        value={approvalDate}
+                        onChange={(e) => setApprovalDate(e.target.value)}
+                        className="h-9 w-[170px] text-sm"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground pb-2.5">Informe o dia em que a arquitetura de fato respondeu.</p>
+                  </div>
+                  <Textarea
+                    placeholder="Nota da arquitetura (opcional) — ex.: aprovado com ressalva no vão 3"
+                    value={approvalNote}
+                    onChange={(e) => setApprovalNote(e.target.value)}
+                    rows={2}
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      onClick={() => handleApprove("approved")}
+                      disabled={approveProjectMutation.isPending}
+                    >
+                      {approveProjectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
+                      Aprovado
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 border-red-300 text-red-600 hover:bg-red-50"
+                      onClick={() => handleApprove("rejected")}
+                      disabled={approveProjectMutation.isPending}
+                    >
+                      <ThumbsDown className="h-4 w-4" /> Reprovado
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setIsApproveOpen(false); setApprovalNote(""); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Plano de Ação da Obra */}
       <ProjectActionPlan

@@ -27,6 +27,7 @@
 - Cobranças (`/chase-items` + `fetchOpenChaseItems`): SÓ itens de plano de ação (decisão 2026-08-05: visita não gera pendência item a item — a pendência da visita é o RDO não anexado; follow-ups de visita continuam existindo dentro do diálogo da visita, mas fora das cobranças/e-mail/alertas). Entram no e-mail diário e no `useAlerts`. `VisitRdoActions` compartilhado em components/.
 - Planos por projeto: `/action-plans/by-project`; selo `ActionPlanBadge` + criar via `NewActionPlanDialog`.
 - Snapshots de métricas: `metrics_snapshots` gravada pelo cron; `/dashboard/trends` existe (TrendsStrip fora do Dashboard por decisão).
+- Aprovação da arquitetura: `projects.approval_status/approval_note/approval_at/approval_by` (sem migração nova). Painel no project-detail é PERMANENTE (antes só aparecia na fase em_aprovacao) e aceita a **data real** da decisão via `approvedOn` no POST /projects/:id/approve; registra gestor e projetista_gestor.
 - Auditoria: PATCH de projeto grava diff de status/prioridade/nome + 8 datas; `/audit-logs` escopado por entidade liberado a autenticados.
 - `tasks.started_at` = tempo de ciclo real (marcado na 1ª saída de "todo").
 - Atribuição de tarefa notifica o responsável: notificação in-app (sino, p/ quem tem conta) + e-mail via Resend (aguardado — serverless congela após a resposta; sai mesmo sem conta no app). Vale p/ criar, editar e bulk-update; auto-atribuição não notifica. `assignedTo` aceita `null` no contrato (limpar responsável). Depende de `RESEND_API_KEY`/`EMAIL_FROM`/`APP_URL` na Vercel.
