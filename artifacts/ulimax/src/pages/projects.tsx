@@ -1092,10 +1092,28 @@ export default function Projects() {
                     <th className={thCls} title="Tipo de material principal: Madeira ou Alumínio. Clique para ordenar." onClick={() => handleSort("materialType")}>
                       <div className={thInner}>Material <SortIcon col="materialType" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} title="Prazo de entrega do projeto. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("endDate")}>
-                      <div className={thInner}>Entrega <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    <th className={cn(thCls, "border-l border-border/60")} title="Data da medição na obra. Clique para ordenar." onClick={() => handleSort("medicaoDate")}>
+                      <div className={thInner}>Medição <SortIcon col="medicaoDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
-                    <th className={thCls} title="Data prevista de início da instalação na obra. Clique para ordenar." onClick={() => handleSort("instalacaoStartDate")}>
+                    <th className={thCls} title="Início do projeto (desenho). Clique para ordenar." onClick={() => handleSort("startDate")}>
+                      <div className={thInner}>Início Proj. <SortIcon col="startDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} title="Fim estimado do projeto (prazo de entrega do desenho). Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("endDate")}>
+                      <div className={thInner}>Fim Proj. <SortIcon col="endDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} title="Data final real do projeto — preenchida quando o projeto foi concluído. Clique para ordenar." onClick={() => handleSort("finalDate")}>
+                      <div className={thInner}>Final Proj. <SortIcon col="finalDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "border-l border-border/60")} title="Início estimado da produção na fábrica. Clique para ordenar." onClick={() => handleSort("producaoStartDate")}>
+                      <div className={thInner}>Início Prod. <SortIcon col="producaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} title="Fim estimado da produção. Fica amarelo se faltam ≤7 dias e vermelho se já passou. Clique para ordenar." onClick={() => handleSort("producaoEndDate")}>
+                      <div className={thInner}>Fim Prod. <SortIcon col="producaoEndDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={thCls} title="Data final real da produção — preenchida quando a produção terminou. Clique para ordenar." onClick={() => handleSort("producaoFinalDate")}>
+                      <div className={thInner}>Final Prod. <SortIcon col="producaoFinalDate" sortKey={sortKey} sortDir={sortDir} /></div>
+                    </th>
+                    <th className={cn(thCls, "border-l border-border/60")} title="Data prevista de início da instalação na obra. Clique para ordenar." onClick={() => handleSort("instalacaoStartDate")}>
                       <div className={thInner}>Instalação <SortIcon col="instalacaoStartDate" sortKey={sortKey} sortDir={sortDir} /></div>
                     </th>
                   </tr>
@@ -1182,8 +1200,14 @@ export default function Projects() {
                           )}
                         </Link>
                       </td>
-                      <DateCell val={project.endDate}           href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" deadline />
-                      <DateCell val={project.instalacaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" />
+                      <DateCell val={project.medicaoDate}         href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap border-l border-border/60" />
+                      <DateCell val={project.startDate}           href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" />
+                      <DateCell val={project.endDate}             href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" deadline />
+                      <DateCell val={project.finalDate}           href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" />
+                      <DateCell val={project.producaoStartDate}   href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap border-l border-border/60" />
+                      <DateCell val={project.producaoEndDate}     href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" deadline />
+                      <DateCell val={project.producaoFinalDate}   href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap" />
+                      <DateCell val={project.instalacaoStartDate} href={`/projects/${project.id}`} baseCls="px-3 py-2.5 text-xs tabular-nums text-muted-foreground whitespace-nowrap border-l border-border/60" />
                     </tr>
                   ))}
                 </tbody>
