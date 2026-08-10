@@ -93,8 +93,15 @@ function SectionCard({
   );
 }
 
-function EmptyNote({ text }: { text: string }) {
-  return <p className="text-sm text-muted-foreground py-4 text-center">{text}</p>;
+/** Uma linha só para tudo que está em dia — no lugar de um cartão vazio por assunto. */
+function EmDiaLinha({ labels }: { labels: string[] }) {
+  if (labels.length === 0) return null;
+  return (
+    <p className="flex items-center gap-1.5 text-xs text-muted-foreground px-1">
+      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+      Em dia: {labels.join(" · ")}.
+    </p>
+  );
 }
 
 const MAX_ROWS = 8;
@@ -207,6 +214,7 @@ export default function CentralObra({ embedded = false }: { embedded?: boolean }
     openWhatsApp(text);
   };
 
+  const pendentesOperacao = openAT.length + pendingSamples.length + actionItems.length;
   const isLoading = loadingEvents || loadingAT || loadingAmostras || loadingChecklist;
 
   return (
@@ -242,7 +250,12 @@ export default function CentralObra({ embedded = false }: { embedded?: boolean }
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="visao-geral" className="gap-1.5 text-xs sm:text-sm">
             <HardHat className="h-3.5 w-3.5 shrink-0" />
-            Visão Geral
+            Resumo
+            {pendentesOperacao > 0 && (
+              <span className="ml-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 leading-5 shrink-0">
+                {pendentesOperacao}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="assistencia" className="gap-1.5 text-xs sm:text-sm">
             <Wrench className="h-3.5 w-3.5 shrink-0" />
@@ -266,184 +279,163 @@ export default function CentralObra({ embedded = false }: { embedded?: boolean }
 
         <TabsContent value="visao-geral" className="mt-4">
           {isLoading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-56 rounded-xl" />
-              ))}
+            <div className="space-y-3">
+              <Skeleton className="h-40 rounded-xl" />
+              <Skeleton className="h-40 rounded-xl" />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Instalações próximas */}
-          <SectionCard
-            title="Instalações — próximos 7 dias"
-            icon={CalendarDays}
-            count={upcomingEvents.length}
-            href="/calendario"
-            hrefLabel="Calendário"
-          >
-            {upcomingEvents.length === 0 ? (
-              <EmptyNote text="Nenhum evento nos próximos 7 dias." />
-            ) : (
-              <ul className="divide-y divide-border/50">
-                {upcomingEvents.slice(0, MAX_ROWS).map((ev) => (
-                  <li key={ev.id} className="flex items-center gap-3 py-2">
-                    <span className="text-xs font-medium text-muted-foreground w-20 shrink-0 capitalize">
-                      {format(parseLocalDate(ev.startDate), "EEE dd/MM", { locale: ptBR })}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{ev.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[ev.teamDescription?.trim() || "Sem equipe", projectName(ev.projectId)]
-                          .filter(Boolean)
-                          .join(" · ")}
-                        {ev.eventType === "assistencia" ? " · assistência" : ""}
-                      </p>
-                    </div>
-                    <Chip chip={prazoChip(ev.startDate)} />
-                  </li>
-                ))}
-                {upcomingEvents.length > MAX_ROWS && (
-                  <li className="py-2 text-xs text-muted-foreground">
-                    +{upcomingEvents.length - MAX_ROWS} outros no calendário
-                  </li>
-                )}
-              </ul>
-            )}
-          </SectionCard>
+          ) : (() => {
+            // Só entra na tela o que pede ação; o que está em dia vira uma linha.
+            const emDia: string[] = [];
+            if (openAT.length === 0) emDia.push("assistências");
+            if (pendingSamples.length === 0) emDia.push("amostras");
+            if (actionItems.length === 0) emDia.push("planos de ação das peças");
+            if (upcomingEvents.length === 0) emDia.push("instalações da semana");
+            const nadaPendente = emDia.length === 4;
 
-          {/* Assistências abertas */}
-          <SectionCard
-            title="Assistências em aberto"
-            icon={Wrench}
-            count={openAT.length}
-            href="/obra"
-            hrefLabel="Ver todas"
-          >
-            {openAT.length === 0 ? (
-              <EmptyNote text="Nenhuma assistência pendente. ✅" />
-            ) : (
-              <ul className="divide-y divide-border/50">
-                {openAT.slice(0, MAX_ROWS).map((a) => (
-                  <li key={a.id} className="flex items-center gap-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{a.clientName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{a.description}</p>
-                    </div>
-                    <Chip chip={prazoChip(a.scheduledDate)} />
-                    {canEdit && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 gap-1 text-xs shrink-0"
-                        disabled={updateAT.isPending}
-                        onClick={() => toggleRealizado(a.id)}
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Realizado
-                      </Button>
+            if (nadaPendente) {
+              return (
+                <div className="bg-card rounded-xl border border-border px-4 py-8 text-center">
+                  <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-foreground">Operação em dia</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Nenhuma assistência aberta, amostra a entregar, plano de ação de peça ou instalação nos próximos 7 dias.
+                  </p>
+                </div>
+              );
+            }
+
+            const blocos: React.ReactNode[] = [];
+
+            if (openAT.length > 0) {
+              blocos.push(
+                <SectionCard key="at" title="Assistências em aberto" icon={Wrench} count={openAT.length} href="/obra?tab=operacao" hrefLabel="Ver todas">
+                  <ul className="divide-y divide-border/50">
+                    {openAT.slice(0, MAX_ROWS).map((a) => (
+                      <li key={a.id} className="flex items-center gap-3 py-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{a.clientName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{a.description}</p>
+                        </div>
+                        <Chip chip={prazoChip(a.scheduledDate)} />
+                        {canEdit && (
+                          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs shrink-0"
+                            disabled={updateAT.isPending} onClick={() => toggleRealizado(a.id)}>
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Realizado
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                    {openAT.length > MAX_ROWS && (
+                      <li className="py-2 text-xs text-muted-foreground">+{openAT.length - MAX_ROWS} outras</li>
                     )}
-                  </li>
-                ))}
-                {openAT.length > MAX_ROWS && (
-                  <li className="py-2 text-xs text-muted-foreground">+{openAT.length - MAX_ROWS} outras</li>
-                )}
-              </ul>
-            )}
-          </SectionCard>
+                  </ul>
+                </SectionCard>
+              );
+            }
 
-          {/* Amostras pendentes */}
-          <SectionCard
-            title="Amostras a entregar"
-            icon={FlaskConical}
-            count={pendingSamples.length}
-            href="/obra"
-            hrefLabel="Ver todas"
-          >
-            {pendingSamples.length === 0 ? (
-              <EmptyNote text="Nenhuma amostra pendente. ✅" />
-            ) : (
-              <ul className="divide-y divide-border/50">
-                {pendingSamples.slice(0, MAX_ROWS).map((s) => (
-                  <li key={s.id} className="flex items-center gap-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{s.samples}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[s.requester, projectName(s.projectId)].filter(Boolean).join(" · ")}
-                      </p>
-                    </div>
-                    <Chip chip={prazoChip(s.deadline)} />
-                    {canEdit && (
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          variant={s.ready ? "default" : "outline"}
-                          size="sm"
-                          className="h-7 text-xs px-2"
-                          disabled={updateSample.isPending}
-                          onClick={() => toggleSample(s, "ready")}
-                        >
-                          Pronta
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs px-2"
-                          disabled={updateSample.isPending || !s.ready}
-                          onClick={() => toggleSample(s, "delivered")}
-                        >
-                          Entregue
-                        </Button>
-                      </div>
+            if (pendingSamples.length > 0) {
+              blocos.push(
+                <SectionCard key="am" title="Amostras a entregar" icon={FlaskConical} count={pendingSamples.length} href="/obra?tab=operacao" hrefLabel="Ver todas">
+                  <ul className="divide-y divide-border/50">
+                    {pendingSamples.slice(0, MAX_ROWS).map((s2) => (
+                      <li key={s2.id} className="flex items-center gap-3 py-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{s2.samples}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {[s2.requester, projectName(s2.projectId)].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                        <Chip chip={prazoChip(s2.deadline)} />
+                        {canEdit && (
+                          <div className="flex gap-1 shrink-0">
+                            <Button variant={s2.ready ? "default" : "outline"} size="sm" className="h-7 text-xs px-2"
+                              disabled={updateSample.isPending} onClick={() => toggleSample(s2, "ready")}>
+                              Pronta
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-7 text-xs px-2"
+                              disabled={updateSample.isPending || !s2.ready} onClick={() => toggleSample(s2, "delivered")}>
+                              Entregue
+                            </Button>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                    {pendingSamples.length > MAX_ROWS && (
+                      <li className="py-2 text-xs text-muted-foreground">+{pendingSamples.length - MAX_ROWS} outras</li>
                     )}
-                  </li>
-                ))}
-                {pendingSamples.length > MAX_ROWS && (
-                  <li className="py-2 text-xs text-muted-foreground">
-                    +{pendingSamples.length - MAX_ROWS} outras
-                  </li>
-                )}
-              </ul>
-            )}
-          </SectionCard>
+                  </ul>
+                </SectionCard>
+              );
+            }
 
-          {/* Checklist: planos de ação */}
-          <SectionCard
-            title="Peças com plano de ação"
-            icon={ClipboardList}
-            count={actionItems.length}
-            href="/checklist"
-            hrefLabel="Instalações"
-          >
-            {actionItems.length === 0 ? (
-              <EmptyNote text="Nenhum plano de ação em aberto. ✅" />
-            ) : (
-              <ul className="divide-y divide-border/50">
-                {actionItems.slice(0, MAX_ROWS).map((i) => (
-                  <li key={i.id} className="flex items-center gap-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
-                        {i.peca}
-                        {i.local ? <span className="text-muted-foreground font-normal"> — {i.local}</span> : null}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {[projectName(i.projectId), i.actionDescription].filter(Boolean).join(" · ")}
-                      </p>
-                    </div>
-                    <Chip chip={prazoChip(i.actionDueDate)} />
-                  </li>
-                ))}
-                {actionItems.length > MAX_ROWS && (
-                  <li className="py-2 text-xs text-muted-foreground">+{actionItems.length - MAX_ROWS} outras</li>
+            if (actionItems.length > 0) {
+              blocos.push(
+                <SectionCard key="pa" title="Peças com plano de ação" icon={ClipboardList} count={actionItems.length} href="/checklist" hrefLabel="Instalações">
+                  <ul className="divide-y divide-border/50">
+                    {actionItems.slice(0, MAX_ROWS).map((i) => (
+                      <li key={i.id} className="flex items-center gap-3 py-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {i.peca}
+                            {i.local ? <span className="text-muted-foreground font-normal"> — {i.local}</span> : null}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {[projectName(i.projectId), i.actionDescription].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                        <Chip chip={prazoChip(i.actionDueDate)} />
+                      </li>
+                    ))}
+                    {actionItems.length > MAX_ROWS && (
+                      <li className="py-2 text-xs text-muted-foreground">+{actionItems.length - MAX_ROWS} outras</li>
+                    )}
+                  </ul>
+                </SectionCard>
+              );
+            }
+
+            if (upcomingEvents.length > 0) {
+              blocos.push(
+                <SectionCard key="inst" title="Instalações — próximos 7 dias" icon={CalendarDays} count={upcomingEvents.length} href="/calendario" hrefLabel="Calendário">
+                  <ul className="divide-y divide-border/50">
+                    {upcomingEvents.slice(0, MAX_ROWS).map((ev) => (
+                      <li key={ev.id} className="flex items-center gap-3 py-2">
+                        <span className="text-xs font-medium text-muted-foreground w-20 shrink-0 capitalize">
+                          {format(parseLocalDate(ev.startDate), "EEE dd/MM", { locale: ptBR })}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{ev.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {[ev.teamDescription?.trim() || "Sem equipe", projectName(ev.projectId)].filter(Boolean).join(" · ")}
+                            {ev.eventType === "assistencia" ? " · assistência" : ""}
+                          </p>
+                        </div>
+                        <Chip chip={prazoChip(ev.startDate)} />
+                      </li>
+                    ))}
+                    {upcomingEvents.length > MAX_ROWS && (
+                      <li className="py-2 text-xs text-muted-foreground">+{upcomingEvents.length - MAX_ROWS} outros no calendário</li>
+                    )}
+                  </ul>
+                </SectionCard>
+              );
+            }
+
+            return (
+              <div className="space-y-3">
+                <div className={cn("grid grid-cols-1 gap-3", blocos.length > 1 && "lg:grid-cols-2")}>
+                  {blocos}
+                </div>
+                <EmDiaLinha labels={emDia} />
+                {naoInstaladas > 0 && (
+                  <p className="text-xs text-muted-foreground px-1">
+                    {naoInstaladas} {naoInstaladas === 1 ? "peça ainda não instalada" : "peças ainda não instaladas"} no total —
+                    veja em <Link href="/checklist" className="underline hover:text-foreground">Instalações</Link>.
+                  </p>
                 )}
-              </ul>
-            )}
-            {naoInstaladas > 0 && (
-              <p className="mt-3 text-xs text-muted-foreground border-t border-border/50 pt-2">
-                {naoInstaladas} {naoInstaladas === 1 ? "peça ainda não instalada" : "peças ainda não instaladas"} no
-                total — veja em <Link href="/checklist" className="underline hover:text-foreground">Instalações</Link>.
-              </p>
-            )}
-          </SectionCard>
-          </div>
-          )}
+              </div>
+            );
+          })()}
         </TabsContent>
 
         <TabsContent value="assistencia" className="mt-4">
