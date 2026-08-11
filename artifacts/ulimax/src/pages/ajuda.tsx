@@ -105,11 +105,9 @@ const sections: Section[] = [
           headers={["Componente", "Descrição"]}
           rows={[
             ["KPIs", "Total de projetos, projetos ativos, alertas e tarefas concluídas"],
-            ["🚦 Onde focar agora", "Farol 🟢🟡🔴 com os projetos que precisam de atenção e o motivo"],
+            ["🚦 Onde focar agora", "O radar, em duas lentes lado a lado: Por obra (farol 🟢🟡🔴 com o motivo, abre o projeto) e Por assunto (contagens do tipo 'Tarefas atrasadas 12', que abrem a tela onde se resolve)"],
             ["Por unidade", "Comparativo Madeira × Alumínio: ativos, em aberto, vencidas, concluídas"],
-            ["seção “Onde focar agora” do Dashboard", "Tudo que precisa de ação: atrasos, instalações, cobranças, datas de obra"],
             ["Atrasadas por Responsável", "Quem está devendo tarefa vencida"],
-            ["Próximos 7 Dias", "Mini-calendário com os prazos da semana (arraste para remarcar)"],
             ["Status das Tarefas + Próximas Visitas", "Distribuição das tarefas e as visitas agendadas"],
             ["Atividade Recente", "Últimas movimentações em tarefas e projetos"],
           ]}
@@ -169,6 +167,9 @@ const sections: Section[] = [
             ]}
           />
         </Subsection>
+        <Subsection title="Quem usa o Meu Dia">
+          <p className="text-sm text-muted-foreground">É a tela inicial do <Strong>Gestor</Strong>. Projetistas têm o mesmo conteúdo pessoal dentro da <Strong>Minha Prancheta</Strong> (bloco <em>Minhas Atividades</em>), que é a home deles.</p>
+        </Subsection>
         <Subsection title="Concluir uma tarefa sem sair da página">
           <p className="text-sm text-muted-foreground">Passe o mouse sobre o <Strong>círculo</Strong> à esquerda de qualquer tarefa em <em>Minhas Tarefas</em> — ele exibe um ícone de ✓ verde. Clique para marcar a tarefa como concluída instantaneamente, sem abrir nenhum modal. Também é possível <Strong>adiar o prazo</Strong> (amanhã, em 3 dias ou próxima semana) pelo botão de adiar na própria linha da tarefa.</p>
         </Subsection>
@@ -187,9 +188,32 @@ const sections: Section[] = [
           />
         </Subsection>
         <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">O <Strong>Meu Dia</Strong> é a tela inicial após o login — aparece em destaque âmbar no topo do menu lateral.</p>
+          <p className="text-sm text-muted-foreground">Para o Gestor, o <Strong>Meu Dia</Strong> é a tela inicial após o login, no topo do menu lateral.</p>
         </Subsection>
         <Tip>Use o Meu Dia como ponto de partida diário: conclua tarefas com um clique, abra detalhes sem navegar para outra página, e acompanhe seus marcos no painel lateral.</Tip>
+      </div>
+    ),
+  },
+  {
+    id: "prancheta",
+    title: "Minha Prancheta (projetista)",
+    icon: Sun,
+    isNew: true,
+    content: (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          É a tela inicial do <Strong>Projetista</Strong> e do <Strong>Projetista Gestor</Strong> — o dia
+          inteiro dele numa página só.
+        </p>
+        <Table
+          headers={["Bloco", "O que mostra"]}
+          rows={[
+            ["Precisa de você", "Cliente reprovou o desenho, fim do projeto vencendo, aguardando aprovação da arquitetura e medição já feita esperando avanço de fase"],
+            ["Minhas Atividades", "Suas tarefas abertas, com concluir, iniciar e adiar prazo na própria linha (o mesmo bloco que o Gestor vê no Meu Dia)"],
+            ["Projetos por fase", "Quantos projetos há em cada fase — clique para abrir a lista filtrada"],
+          ]}
+        />
+        <Tip>Cada linha de "Precisa de você" abre o projeto direto no Trilho de Fases, onde a data se edita no lugar.</Tip>
       </div>
     ),
   },
@@ -208,10 +232,13 @@ const sections: Section[] = [
             <li>Clique em <Strong>Salvar</Strong>.</li>
           </ol>
         </Subsection>
+        <Subsection title="A tabela mostra todas as datas">
+          <p className="text-sm text-muted-foreground">Na visão <Strong>Tabela</Strong>, além de Farol, Projeto, Tarefas, Fase, Prioridade e Material, vêm as 8 datas do fluxo, separadas por etapa: <Strong>Medição</Strong> | Início, Fim e Final do <Strong>Projeto</Strong> | Início, Fim e Final da <Strong>Produção</Strong> | <Strong>Instalação</Strong>. Clique no cabeçalho para ordenar por qualquer uma. Fim Proj. e Fim Prod. ficam vermelhos quando vencem e âmbar a 7 dias ou menos.</p>
+        </Subsection>
         <Subsection title="Filtros disponíveis">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li><Strong>Busca por texto</Strong>: filtra por nome ou descrição</li>
-            <li><Strong>Status</Strong>: A Iniciar · Em Projeto · Em Aprovação · Em Produção · Ag. Instalação · Em Instalação</li>
+            <li><Strong>Status</Strong>: A Iniciar · Em Projeto · <Strong>Na Arquitetura</Strong> · Em Produção · Ag. Instalação · Em Instalação</li>
             <li><Strong>Prioridade</Strong>: Normal ou Alta</li>
             <li><Strong>Farol</Strong>: clique nos contadores 🔴 🟡 🟢 para ver só os projetos daquela cor</li>
           </ul>
@@ -279,11 +306,26 @@ const sections: Section[] = [
             <li>Clique em <Strong>Criar Tarefa</Strong>.</li>
           </ol>
         </Subsection>
+        <Subsection title="Responsável e aviso automático">
+          <p className="text-sm text-muted-foreground">
+            Toda tarefa pode ter um <Strong>responsável interno Ulimax</Strong> — inclusive as criadas na
+            seção <Strong>Tarefas da Equipe</Strong> dentro do projeto. Ao atribuir a alguém, essa pessoa
+            recebe <Strong>notificação no sino</Strong> (se já tem conta) e um <Strong>e-mail</Strong>
+            "Nova tarefa: ...". Vale também para a atribuição em lote. Atribuir a si mesmo não gera aviso.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            A tarefa passa a aparecer em <em>Minhas Atividades</em> da pessoa e, se atrasar, ela entra em
+            <Strong> Obras → Pendências</Strong> agrupada por responsável, para o gestor cobrar.
+          </p>
+        </Subsection>
         <Subsection title="Edição inline do título">
           <p className="text-sm text-muted-foreground">Para renomear uma tarefa rapidamente, sem abrir o modal completo, dê um <Strong>duplo clique</Strong> no título dela na lista. O título vira um campo de texto editável — pressione <Strong>Enter</Strong> para salvar ou <Strong>Esc</Strong> para cancelar. Também é possível clicar no ícone de lápis que aparece ao passar o mouse.</p>
         </Subsection>
         <Subsection title="Duplicar uma tarefa">
           <p className="text-sm text-muted-foreground">Clique no ícone de <Strong>Copiar</Strong> (duas páginas sobrepostas) à direita de qualquer tarefa. Uma cópia idêntica é criada imediatamente com o mesmo título, projeto, prioridade e responsável — o status volta para <em>A Fazer</em>.</p>
+        </Subsection>
+        <Subsection title="A tabela mostra todas as datas">
+          <p className="text-sm text-muted-foreground">Na visão <Strong>Tabela</Strong>, além de Farol, Projeto, Tarefas, Fase, Prioridade e Material, vêm as 8 datas do fluxo, separadas por etapa: <Strong>Medição</Strong> | Início, Fim e Final do <Strong>Projeto</Strong> | Início, Fim e Final da <Strong>Produção</Strong> | <Strong>Instalação</Strong>. Clique no cabeçalho para ordenar por qualquer uma. Fim Proj. e Fim Prod. ficam vermelhos quando vencem e âmbar a 7 dias ou menos.</p>
         </Subsection>
         <Subsection title="Filtros disponíveis">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
@@ -632,7 +674,7 @@ const sections: Section[] = [
               ["Comentário adicionado na sua tarefa", "O responsável pela tarefa"],
               ["Você foi mencionado com @nome", "A pessoa mencionada no comentário"],
               ["Status do projeto mudou de fase", "Todos os membros do projeto"],
-              ["Projeto entrou em Em Aprovação", "Todos os membros + gestores"],
+              ["Projeto entrou em Na Arquitetura", "Todos os membros + gestores"],
               ["Projeto aprovado ou rejeitado", "Todos os membros do projeto"],
             ]}
           />
@@ -721,35 +763,35 @@ const sections: Section[] = [
   },
   {
     id: "aprovacao",
-    title: "Fluxo de Aprovação",
+    title: "Aprovação da Arquitetura",
     icon: BadgeCheck,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Quando um projeto avança para a fase <Strong>Em Aprovação</Strong>, um painel de revisão é exibido no topo da página de detalhe para que gestores tomem a decisão de aprovar ou rejeitar.</p>
+        <p className="text-sm text-muted-foreground">Mover o projeto para a fase <Strong>Na Arquitetura</Strong> significa "desenho enviado para a arquitetura". Nessa fase, um cartão no topo do detalhe do projeto pede o registro da decisão — e o registro fica visível para sempre depois.</p>
         <Subsection title="Como funciona o fluxo">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Altere o status do projeto para <Strong>Em Aprovação</Strong> (via edição ou arrastando na aba Fases dos Projetos, em Trabalho).</li>
+            <li>Ao enviar o desenho, mova o projeto para <Strong>Na Arquitetura</Strong> (pelo Trilho de Fases, pela edição ou arrastando no Kanban).</li>
             <li>Todos os membros do projeto e os gestores recebem uma notificação automática.</li>
-            <li>O painel âmbar <em>Aguardando Aprovação</em> aparece no detalhe do projeto.</li>
-            <li>Um gestor clica em <Strong>Revisar e Decidir</Strong>, adiciona uma nota opcional e escolhe <Strong>Aprovar</Strong> ou <Strong>Rejeitar</Strong>.</li>
+            <li>O cartão âmbar <em>Na arquitetura — aguardando aprovação</em> aparece no detalhe do projeto.</li>
+            <li>Quando a arquitetura responder, clique em <Strong>Registrar decisão da arquitetura</Strong>, informe a <Strong>Data da decisão</Strong> (o dia em que ela de fato respondeu, não o dia do lançamento), escreva a nota se houver e escolha <Strong>Aprovado</Strong> ou <Strong>Reprovado</Strong>.</li>
             <li>Todos os membros são notificados da decisão.</li>
           </ol>
         </Subsection>
-        <Subsection title="Estados do painel">
+        <Subsection title="Onde o registro aparece, fase a fase">
           <Table
-            headers={["Cor do painel", "Estado"]}
+            headers={["Fase do projeto", "O que você vê"]}
             rows={[
-              ["Âmbar", "Pendente — aguardando decisão do gestor"],
-              ["Verde", "Aprovado — projeto liberado para avançar"],
-              ["Vermelho", "Rejeitado — projeto necessita de ajustes"],
+              ["Medição · Em Projeto", "Nada — o desenho ainda não foi enviado, não há o que aprovar"],
+              ["Na Arquitetura", "Cartão completo com Data da decisão e os botões Aprovado / Reprovado"],
+              ["Produção em diante", "Faixa compacta: 'Aprovado pela arquitetura · 12 de março de 2026' (ou reprovado). Se ninguém registrou, a faixa fica âmbar com o botão Registrar — dá para lançar retroativamente"],
             ]}
           />
         </Subsection>
-        <Subsection title="Rever uma decisão">
-          <p className="text-sm text-muted-foreground">Mesmo após aprovação ou rejeição, gestores podem clicar em <Strong>Rever decisão</Strong> no painel para registrar uma nova nota e mudar o resultado.</p>
+        <Subsection title="Corrigir um registro">
+          <p className="text-sm text-muted-foreground">O botão <Strong>Corrigir</Strong> (ou <Strong>Corrigir registro</Strong>) permite ajustar a data, a nota ou o resultado a qualquer momento.</p>
         </Subsection>
         <Subsection title="Quem pode aprovar">
-          <p className="text-sm text-muted-foreground">Somente usuários com função <Strong>Gestor</Strong> veem os botões de decisão. Executores e Observadores veem o painel em modo leitura, com o status atual e a nota registrada.</p>
+          <p className="text-sm text-muted-foreground">Registram a decisão o <Strong>Gestor</Strong> e o <Strong>Projetista Gestor</Strong>. Os demais papéis veem o painel em modo leitura, com o status e a nota.</p>
         </Subsection>
         <Tip>A nota de aprovação fica visível para toda a equipe no painel do projeto — use-a para registrar condições, ressalvas ou instruções para a próxima etapa.</Tip>
       </div>
@@ -900,7 +942,7 @@ const sections: Section[] = [
               ["Status de tarefa alterado", "Quando qualquer tarefa muda de um status para outro"],
               ["Projeto concluído", "Quando todas as tarefas de um projeto são concluídas"],
               ["Tarefa atribuída a membro", "Quando o campo responsável de uma tarefa é preenchido ou alterado"],
-              ["Status do projeto alterado", "Quando o status de um projeto muda (ex: Em Projeto → Em Aprovação)"],
+              ["Status do projeto alterado", "Quando o status de um projeto muda (ex: Em Projeto → Na Arquitetura)"],
             ]}
           />
         </Subsection>
@@ -1005,7 +1047,7 @@ const sections: Section[] = [
         </Subsection>
         <Subsection title="Enviar agenda pelo WhatsApp">
           <p className="text-sm text-muted-foreground">
-            Na barra do Calendário há um botão <Strong>WhatsApp</Strong> (ícone de mensagem). Escolha o período — <Strong>Hoje</Strong>, <Strong>Hoje e amanhã</Strong> ou <Strong>Próximos 7 dias</Strong> — e o WhatsApp abre com a agenda já montada e agrupada por equipe, pronta para enviar. O mesmo botão aparece na <Strong>Central da Obra</Strong>.
+            Na barra do Calendário há um botão <Strong>WhatsApp</Strong> (ícone de mensagem). Escolha o período — <Strong>Hoje</Strong>, <Strong>Hoje e amanhã</Strong> ou <Strong>Próximos 7 dias</Strong> — e o WhatsApp abre com a agenda já montada e agrupada por equipe, pronta para enviar. O mesmo botão aparece em <Strong>Obras → Operação</Strong>.
           </p>
         </Subsection>
       </div>
@@ -1017,7 +1059,7 @@ const sections: Section[] = [
     icon: Bell,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Os alertas automáticos do sistema aparecem na <Strong>seção “Onde focar agora” do Dashboard</Strong> do Dashboard e no sino de notificações.</p>
+        <p className="text-sm text-muted-foreground">Os alertas automáticos aparecem no bloco <Strong>🚦 Onde focar agora</Strong> do Dashboard — na lente <em>Por assunto</em>, agrupados por tipo com a contagem — e no sino de notificações.</p>
         <Table
           headers={["Nível", "Quando aparece"]}
           rows={[
@@ -1026,13 +1068,7 @@ const sections: Section[] = [
             ["🔵 Informativo", "Projetos parados, tarefas sem responsável"],
           ]}
         />
-        <Subsection title="Categorias">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Minhas Tarefas</Strong>: alertas relacionados ao seu usuário</li>
-            <li><Strong>Críticos</Strong>, <Strong>Atenção</Strong>, <Strong>Informativos</Strong></li>
-          </ul>
-        </Subsection>
-        <Tip>Clique em qualquer card de alerta para ser direcionado diretamente ao projeto ou tarefa relacionado.</Tip>
+        <Tip>Cada linha leva à tela onde o assunto se resolve: "Tarefas atrasadas" abre Trabalho já filtrado, "Datas de obra vencidas" abre Obras → Pendências, e assim por diante.</Tip>
       </div>
     ),
   },
@@ -1044,11 +1080,11 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
           Abertura e acompanhamento de chamados de suporte pós-entrega.
-          O módulo fica na aba <Strong>Assistência</Strong> dentro da <Strong>Central da Obra</Strong>.
+          O módulo fica em <Strong>Obras → Operação → Assistência</Strong>.
         </p>
         <Subsection title="Abrir um chamado">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Acesse <Strong>Central da Obra → aba Assistência</Strong>.</li>
+            <li>Acesse <Strong>Obras → Operação → Assistência</Strong>.</li>
             <li>Clique em <Strong>+ Novo Chamado</Strong>.</li>
             <li>Preencha: cliente, contato, descrição do problema, data agendada e responsável técnico.</li>
             <li>Clique em <Strong>Salvar</Strong>.</li>
@@ -1103,23 +1139,23 @@ const sections: Section[] = [
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">A tela <Strong>Obras</Strong> reúne tudo num lugar só, em três abas. É a página inicial do gestor de obras.</p>
+        <p className="text-sm text-muted-foreground">Cada aba mostra <Strong>quantos itens pedem ação</Strong>: número vermelho quando há atraso (tarefa, data ou plano vencido, amostra atrasada) e âmbar quando é só coisa aguardando. Abaixo das abas, uma linha aponta o que espera nas outras.</p>
         <Subsection title="Aba Visitas — a programação">
           <p className="text-sm text-muted-foreground"><Strong>Programação do mês</Strong>: todas as visitas confirmadas, dia a dia (as já realizadas ficam esmaecidas), mais as marcadas para depois do mês. Abaixo, <Strong>Visitas sugeridas</Strong>: obras que pedem visita — produção terminando em até <Strong>10 dias</Strong> ou obra em instalação há <Strong>15+ dias</Strong> sem visita — aguardando você confirmar com o botão <Strong>Agendar</Strong>. <Strong>Toda visita realizada deve ter seu RDO anexado</Strong> — o botão Anexar RDO fica na própria linha da visita, e visitas sem RDO aparecem como pendência na aba Pendências.</p>
         </Subsection>
         <Subsection title="Aba Pendências — onde você precisa atuar">
+          <p className="text-sm text-muted-foreground mb-2">Uma fila única, do mais atrasado ao menos. Ela abre no filtro <Strong>Atrasadas</Strong>; os outros chips são <Strong>Vencem em 7 dias</Strong> e <Strong>Todas</Strong>. Dentro dela, três blocos coloridos:</p>
           <Table
-            headers={["Seção", "O que mostra"]}
+            headers={["Bloco", "O que reúne", "Ação na linha"]}
             rows={[
-              ["RDOs de visita pendentes", "Visitas realizadas sem RDO — anexe o arquivo direto na linha"],
-              ["Tarefas da equipe vencidas", "Agrupadas por responsável — clique abre a lista da pessoa, já filtrada"],
-              ["Datas vencidas", "Estimada passou sem a data final registrada"],
-              ["Datas a vencer", "Datas-chave dos próximos 30 dias, para se antecipar"],
-              ["Planos de ação", "Lista completa com filtros e cobrança por WhatsApp para externos"],
+              ["🟣 Pendências da equipe", "Tarefas vencidas por responsável e itens de plano de ação", "Abrir as tarefas da pessoa · Cobrar no WhatsApp (externo)"],
+              ["🔵 RDOs de visita", "Visita realizada sem o relatório anexado", "Anexar RDO"],
+              ["🟢 Datas", "Vencidas sem data final e as que vencem em 30 dias", "Abrir a obra"],
             ]}
           />
         </Subsection>
         <Subsection title="Aba Operação">
-          <p className="text-sm text-muted-foreground">Instalações, assistência técnica e amostras — o acompanhamento operacional da obra.</p>
+          <p className="text-sm text-muted-foreground">O pós-visita: assistência técnica, amostras e instalações da semana. O <Strong>Resumo</Strong> mostra só o que pede ação, com Realizado / Pronta / Entregue na própria linha; as sub-abas <Strong>Assistência</Strong> e <Strong>Amostras</Strong> guardam o cadastro e o histórico completos.</p>
         </Subsection>
         <Tip>Como gestor, use <Strong>Ver como → Gestor de Obras</Strong> (menu do usuário) para enxergar exatamente o que essa pessoa vê.</Tip>
       </div>
@@ -1127,19 +1163,26 @@ const sections: Section[] = [
   },
   {
     id: "cobrancas",
-    title: "Minhas Cobranças",
+    title: "Pendências da obra (o que cobrar)",
     icon: ClipboardList,
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Lista tudo que você precisa cobrar — itens de plano de ação e follow-ups de visita <Strong>em aberto</Strong>, de todas as obras.</p>
-        <Subsection title="Agrupado por projeto">
-          <p className="text-sm text-muted-foreground">Por padrão, as cobranças vêm agrupadas por obra (com total, vencidas e próximo vencimento). Use o alternador <Strong>Por projeto / Por item</Strong> para trocar a visão. Os filtros de prazo, responsável e obra funcionam nas duas.</p>
+        <p className="text-sm text-muted-foreground">Fica em <Strong>Obras → Pendências</Strong>: uma fila única com tudo que você precisa cobrar em todas as obras, do mais atrasado ao menos.</p>
+        <Subsection title="Comece pelo filtro">
+          <p className="text-sm text-muted-foreground">A aba abre em <Strong>Atrasadas</Strong> — o que exige ação hoje. Os outros chips são <Strong>Vencem em 7 dias</Strong> (para se antecipar) e <Strong>Todas</Strong>. O número ao lado de cada chip mostra quantos itens há.</p>
         </Subsection>
-        <Subsection title="Cobrar um responsável externo por WhatsApp">
-          <p className="text-sm text-muted-foreground">Itens com responsável <Strong>externo</Strong> (fornecedor/terceiro, que não tem e-mail no sistema) mostram o botão <Strong>Cobrar</Strong>, que abre o WhatsApp com a mensagem pronta — você escolhe o contato e envia.</p>
+        <Subsection title="Três blocos dentro da fila">
+          <Table
+            headers={["Bloco", "O que reúne", "Ação na linha"]}
+            rows={[
+              ["🟣 Pendências da equipe", "Tarefas vencidas (uma linha por responsável) e itens de plano de ação", "Abrir as tarefas da pessoa · Cobrar no WhatsApp (responsável externo)"],
+              ["🔵 RDOs de visita", "Visita já realizada sem o relatório anexado", "Anexar RDO ali mesmo"],
+              ["🟢 Datas", "Datas estimadas vencidas sem a final registrada e as que vão vencer em 30 dias", "Abrir a obra e registrar"],
+            ]}
+          />
         </Subsection>
-        <Tip>Esses itens também entram no e-mail diário de cobrança e na seção “Onde focar agora” do Dashboard do Dashboard.</Tip>
+        <Tip>A cor da barra identifica o bloco; o selo à direita de cada linha (vermelho/âmbar) é a urgência. Itens de plano de ação também entram no e-mail diário e no radar do Dashboard.</Tip>
       </div>
     ),
   },
@@ -1152,7 +1195,7 @@ const sections: Section[] = [
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Um plano de ação é um <Strong>conjunto de tarefas</Strong> que a obra precisa realizar. Você cobra o plano por projeto, não item a item.</p>
         <Subsection title="Ver se a obra tem plano ativo">
-          <p className="text-sm text-muted-foreground">O <Strong>selo de plano</Strong> aparece na Lista de Projetos, no cabeçalho do projeto e no cartão de Minhas Cobranças: <em>"Plano: N"</em> (vermelho se houver itens vencidos) quando há itens em aberto, ou <em>"Plano ✓"</em> quando tudo foi concluído.</p>
+          <p className="text-sm text-muted-foreground">O <Strong>selo de plano</Strong> aparece na Lista de Projetos, no cabeçalho do projeto e nas Pendências da obra: <em>"Plano: N"</em> (vermelho se houver itens vencidos) quando há itens em aberto, ou <em>"Plano ✓"</em> quando tudo foi concluído.</p>
         </Subsection>
         <Subsection title="Criar um plano">
           <p className="text-sm text-muted-foreground">Onde a obra ainda não tem plano, o selo vira o botão <Strong>+ Plano de ação</Strong>: informe o título e a primeira tarefa (o plano já nasce ativo). Para gerenciar o plano completo — adicionar itens, marcar como feito, exportar em PDF — abra a página do projeto.</p>
@@ -1173,7 +1216,7 @@ const sections: Section[] = [
           <li>Botão <Strong>Nova visita</Strong> no topo da tela Obra (abas Hoje e Agenda) — escolha a obra no diálogo.</li>
           <li>Dentro da página do projeto, na seção de visitas.</li>
         </ul>
-        <p className="text-sm text-muted-foreground">Cada visita registra data, responsável, quem foi, objetivo e observações. Os follow-ups da visita viram itens a <Strong>checar in loco</Strong> na próxima ida à obra.</p>
+        <p className="text-sm text-muted-foreground">Cada visita registra data, responsável, quem foi, objetivo e observações — e precisa do <Strong>RDO anexado</Strong> depois de realizada.</p>
       </div>
     ),
   },
@@ -1184,7 +1227,7 @@ const sections: Section[] = [
     isNew: true,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Recurso só para <Strong>gestores</Strong>. Permite ver o app com o menu e o acesso de outro papel (Gestor de Obras, Projetista, Observador) sem trocar de conta.</p>
+        <p className="text-sm text-muted-foreground">Recurso só para <Strong>gestores</Strong>. Permite ver o app com o menu e o acesso de outro papel (Gestor de Obras, Projetista Gestor, Projetista, Observador) sem trocar de conta.</p>
         <Subsection title="Como usar">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
             <li>Clique no seu nome/e-mail no canto inferior esquerdo.</li>
@@ -1198,20 +1241,20 @@ const sections: Section[] = [
   },
   {
     id: "central-obra",
-    title: "Central da Obra",
+    title: "Operação (assistência e amostras)",
     icon: HardHat,
     isNew: true,
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          A <Strong>Central da Obra</Strong> é o hub operacional do sistema — três abas numa única tela,
-          sem precisar navegar entre páginas diferentes.
+          É a aba <Strong>Operação</Strong> em Obras — o pós-visita: instalações da semana, assistência
+          técnica e amostras.
         </p>
         <Subsection title="As três abas">
           <Table
             headers={["Aba", "O que contém"]}
             rows={[
-              ["Visão Geral", "Resumo com 4 cards: instalações dos próximos 7 dias, assistências em aberto, amostras a entregar e peças com plano de ação. Ações rápidas (Realizado / Pronta / Entregue) sem abrir formulário."],
+              ["Resumo", "Só o que pede ação — assistências em aberto, amostras a entregar, peças com plano de ação e instalações dos próximos 7 dias — com as ações na própria linha (Realizado / Pronta / Entregue). O que está em dia vira uma linha de texto; se não há nada pendente, aparece apenas 'Operação em dia'."],
               ["Assistência", "Lista completa de chamados de suporte pós-entrega. Botão '+ Novo Chamado' no canto direito. Filtros por status, projeto e busca livre."],
               ["Amostras", "Controle de amostras por projeto. Botão '+ Nova Amostra' no canto direito. Filtros por status, projeto e busca livre."],
             ]}
@@ -1233,7 +1276,7 @@ const sections: Section[] = [
           <p className="text-sm text-muted-foreground">
             O papel <Strong>Gestor de Obras</Strong> enxerga e opera tudo da obra em todos os projetos
             (sem precisar ser participante de cada um), mas não acessa as áreas administrativas
-            (Equipe, Templates, Automação, Auditoria, Aprovação) e não pode excluir projetos.
+            (Equipe, Templates, Automação, Auditoria) e não pode excluir projetos.
             Para usar, convide a pessoa em <Strong>Equipe → Convidar</Strong> escolhendo a função Gestor de Obras.
           </p>
         </Subsection>
@@ -1278,14 +1321,14 @@ const sections: Section[] = [
           </ol>
           <Tip>O ícone de lixeira é visível apenas para <Strong>Gestor</Strong>, <Strong>Gestor de Obras</Strong> e <Strong>Executor</Strong> que seja participante do projeto. Observadores não podem excluir visitas.</Tip>
         </Subsection>
-        <Subsection title="Anexar relatório PDF">
+        <Subsection title="RDO — toda visita realizada precisa do seu">
+          <p className="text-sm text-muted-foreground mb-2">O <Strong>RDO</Strong> é o arquivo que você faz no aplicativo de vistoria (com fotos e comentários). No sistema, ele fica anexado à visita — e uma visita realizada sem RDO aparece como pendência.</p>
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique na visita desejada para abrir o painel de detalhes.</li>
-            <li>Na seção <Strong>Relatório de Visita (PDF)</Strong>, clique em <Strong>Anexar PDF</Strong>.</li>
-            <li>Selecione o arquivo gerado no seu aplicativo de vistoria — formatos aceitos: <Strong>PDF, DOC e DOCX</Strong>.</li>
-            <li>O envio ocorre automaticamente; ao concluir, o link <em>Abrir relatório</em> aparece para toda a equipe.</li>
+            <li>Na linha da visita, clique em <Strong>Anexar RDO</Strong> — na página da obra, em <Strong>Obras → Visitas</Strong> (programação do mês) ou em <Strong>Obras → Pendências</Strong>.</li>
+            <li>Selecione o arquivo — aceita <Strong>PDF, DOC, DOCX e imagens</Strong>.</li>
+            <li>Ao concluir, o botão vira <Strong>RDO</Strong> e qualquer pessoa da equipe baixa o arquivo por ali.</li>
           </ol>
-          <p className="text-sm text-muted-foreground mt-2">Para remover o arquivo, clique no ícone <Strong>✕</Strong> que aparece ao lado do link do relatório. O botão de remoção é visível apenas para Gestor e Gestor de Obras.</p>
+          <Tip>Uma visita não gera pendências item a item: a pendência da visita é justamente o RDO que ainda não foi anexado.</Tip>
         </Subsection>
         <Subsection title="Plano de ação">
           <p className="text-sm text-muted-foreground mb-2">Registre pontos levantados na visita que precisam de acompanhamento, atribuindo responsável e prazo para cada um.</p>
@@ -1325,9 +1368,10 @@ const sections: Section[] = [
         <Table
           headers={["Função", "O que pode fazer"]}
           rows={[
-            ["Gestor", "Acesso total: criar, editar e excluir qualquer item"],
-            ["Gestor de Obras", "Opera tudo da obra em todos os projetos (Central da Obra, calendário, assistência, amostras, tarefas) — sem áreas administrativas e sem excluir projetos"],
-            ["Executor", "Editar apenas projetos e tarefas em que é participante"],
+            ["Gestor", "Acesso total: criar, editar e excluir qualquer item, mais Equipe, Templates, Campos, Automações e Auditoria"],
+            ["Gestor de Obras", "Opera tudo da obra em todos os projetos (Obras, calendário, assistência, amostras, tarefas) — sem áreas administrativas e sem excluir projetos. Home: Obras"],
+            ["Projetista Gestor", "O projetista com visão do todo: tudo do Projetista + Dashboard e Trabalho de todas as obras, e edita qualquer projeto (sem precisar ser participante). Sem as áreas administrativas. Home: Minha Prancheta"],
+            ["Projetista (Executor)", "Edita apenas projetos e tarefas em que é participante. Home: Minha Prancheta"],
             ["Observador", "Somente visualização — não pode criar ou editar"],
           ]}
         />
