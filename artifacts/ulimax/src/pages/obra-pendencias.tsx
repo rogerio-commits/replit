@@ -8,7 +8,6 @@ import {
 } from "@workspace/api-client-react";
 import type { ChaseItem, Project, Task } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import {
   Users, CalendarClock, CalendarDays, ChevronRight, ClipboardList,
   FileText, MessageCircle, PartyPopper,
@@ -24,8 +23,8 @@ import { useEffectiveRole } from "@/hooks/useViewAs";
 // UMA fila de decisão, não cinco painéis: cada linha é uma pendência com a
 // obra, o responsável, há quanto tempo venceu e a ÚNICA ação que resolve
 // (anexar RDO, cobrar no WhatsApp, abrir as tarefas da pessoa, abrir a obra).
-// Ordem: mais atrasado primeiro; o que ainda vai vencer fica no fim, e só
-// aparece quando o filtro pede.
+// Dentro da fila, três blocos leves — Equipe (quem deve algo), RDO (relatório
+// de visita faltando) e Datas — cada um ordenado do mais atrasado ao menos.
 
 const DATAS_A_VENCER = 30; // dias
 
@@ -41,8 +40,11 @@ const DATE_FIELDS: { key: keyof Project; label: string }[] = [
 
 type Filtro = "atrasadas" | "semana" | "todas";
 
+type Grupo = "equipe" | "rdo" | "datas";
+
 type Pendencia = {
   key: string;
+  grupo: Grupo;
   /** dias em relação a hoje: negativo = atrasado */
   d: number;
   icon: React.ReactNode;
@@ -75,6 +77,13 @@ function whatsappUrl(item: ChaseItem): string {
   return `https://wa.me/?text=${encodeURIComponent(msg)}`;
 }
 
+// Blocos da fila, na ordem em que o gestor decide.
+const GRUPOS: { id: Grupo; label: string; hint: string }[] = [
+  { id: "equipe", label: "Pendências da equipe", hint: "tarefas e planos de ação — cobre a pessoa" },
+  { id: "rdo", label: "RDOs de visita", hint: "visita realizada sem relatório anexado" },
+  { id: "datas", label: "Datas", hint: "estimadas vencidas e as que vão vencer" },
+];
+
 const TONE: Record<string, string> = {
   red: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40",
   amber: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40",
@@ -106,6 +115,7 @@ export default function ObraPendencias() {
       if (v.date > hoje || v.reportFileKey) continue;
       out.push({
         key: `rdo-${v.id}`,
+        grupo: "rdo",
         d: daysFromToday(v.date),
         icon: <FileText className="h-4 w-4 text-red-500 shrink-0" />,
         title: `RDO da visita: ${v.projectName}`,
@@ -128,6 +138,7 @@ export default function ObraPendencias() {
       const quem = it.responsibleName ?? it.responsibleExternal ?? "sem responsável";
       out.push({
         key: `plano-${it.id}`,
+        grupo: "equipe",
         d,
         icon: <ClipboardList className="h-4 w-4 text-red-500 shrink-0" />,
         title: it.description,
@@ -168,6 +179,7 @@ export default function ObraPendencias() {
     for (const pe of porPessoa.values()) {
       out.push({
         key: `pessoa-${pe.id ?? "none"}`,
+        grupo: "equipe",
         d: -pe.oldest,
         icon: <Users className="h-4 w-4 text-red-500 shrink-0" />,
         title: `${pe.name} — ${pe.count} tarefa${pe.count !== 1 ? "s" : ""} vencida${pe.count !== 1 ? "s" : ""}`,
@@ -183,6 +195,7 @@ export default function ObraPendencias() {
       for (const od of overdueObraDates(p)) {
         out.push({
           key: `dv-${p.id}-${od.label}`,
+          grupo: "datas",
           d: od.days,
           icon: <CalendarClock className="h-4 w-4 text-red-500 shrink-0" />,
           title: `${od.label}: ${p.name}`,
@@ -204,6 +217,7 @@ export default function ObraPendencias() {
         if (d < 0 || d > DATAS_A_VENCER) continue;
         out.push({
           key: `av-${p.id}-${String(f.key)}`,
+          grupo: "datas",
           d,
           icon: <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />,
           title: `${f.label}: ${p.name}`,
@@ -280,25 +294,38 @@ export default function ObraPendencias() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {lista.map((it) => (
-              <div
-                key={it.key}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors cursor-pointer"
-                onClick={it.onOpen}
-              >
-                {it.icon}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{it.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{it.sub}</p>
+          GRUPOS.map(({ id, label, hint }) => {
+            const doGrupo = lista.filter((i) => i.grupo === id);
+            if (doGrupo.length === 0) return null;
+            return (
+              <div key={id}>
+                <div className="flex items-center gap-2 px-4 py-1.5 border-y border-border bg-muted/30 first:border-t-0">
+                  <span className="text-xs font-semibold text-foreground">{label}</span>
+                  <span className="text-[11px] text-muted-foreground">· {hint}</span>
+                  <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{doGrupo.length}</span>
                 </div>
-                <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", TONE[it.tone])}>
-                  {it.badge}
-                </span>
-                {it.action ?? <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />}
+                <div className="divide-y divide-border">
+                  {doGrupo.map((it) => (
+                    <div
+                      key={it.key}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors cursor-pointer"
+                      onClick={it.onOpen}
+                    >
+                      {it.icon}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{it.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{it.sub}</p>
+                      </div>
+                      <span className={cn("shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full border", TONE[it.tone])}>
+                        {it.badge}
+                      </span>
+                      {it.action ?? <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })
         )}
       </div>
     </div>
