@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { format, parseISO, isToday, isTomorrow, isPast } from "date-fns";
-import { PieChart, Pie, Cell } from "recharts";
 import { ptBR } from "date-fns/locale";
 import {
   useGetDashboardSummary,
@@ -54,15 +53,6 @@ function fmtDate(val?: string | null) {
   if (!val) return null;
   try { return format(parseISO(val), "dd/MM/yy", { locale: ptBR }); }
   catch { return null; }
-}
-
-function visitDateLabel(dateStr: string): { label: string; today: boolean } {
-  try {
-    const d = parseISO(dateStr);
-    if (isToday(d)) return { label: "Hoje", today: true };
-    if (isTomorrow(d)) return { label: "Amanhã", today: false };
-    return { label: format(d, "dd/MM", { locale: ptBR }), today: false };
-  } catch { return { label: dateStr, today: false }; }
 }
 
 function activityIcon(item: ActivityItem): string {
@@ -157,58 +147,29 @@ export default function Dashboard() {
   }, [centralAlerts]);
 
   // Tarefas atrasadas por responsável
-  const overdueByMember = useMemo(() => {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const isTaskOverdue = (t: { status: string; dueDate?: string | null }) => {
-      if (t.status === "done" || !t.dueDate) return false;
-      try { return parseISO(t.dueDate) < today; } catch { return false; }
-    };
-    const tasks = (allTasks ?? []) as unknown as { assignedTo?: number | null; status: string; dueDate?: string | null }[];
-    const rows = (members ?? []).map(m => {
-      const mine = tasks.filter(t => t.assignedTo === m.id && t.status !== "done");
-      return { member: m, open: mine.length, overdue: mine.filter(isTaskOverdue).length };
-    }).filter(w => w.overdue > 0).sort((a, b) => b.overdue - a.overdue);
-    const unassignedOverdue = tasks.filter(t => !t.assignedTo && isTaskOverdue(t)).length;
-    return { rows, unassignedOverdue };
-  }, [members, allTasks]);
-
-  const materialCounts = useMemo(() => {
-    const m = { madeira: 0, aluminio: 0 };
-    for (const p of projects ?? []) {
-      if (p.materialType === "madeira") m.madeira++;
-      else if (p.materialType === "aluminio") m.aluminio++;
-    }
-    return m;
-  }, [projects]);
-
-  // Upcoming site visits — sort by date ascending, show future ones first
-  const upcomingVisits = useMemo(() => {
-    if (!siteVisits) return [];
-    return [...siteVisits]
-      .filter(v => { try { return !isPast(parseISO(v.date)) || isToday(parseISO(v.date)); } catch { return false; } })
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 4);
-  }, [siteVisits]);
-
-  const total = projects?.length ?? 0;
-
-  const taskStatusCounts = useMemo(() => {
-    const c = { todo: 0, in_progress: 0, review: 0, done: 0 };
-    for (const t of allTasks ?? []) {
-      if (t.status in c) c[t.status as keyof typeof c]++;
-    }
-    return [
-      { key: "todo",        name: "A Fazer",      value: c.todo,         fill: "#94a3b8" },
-      { key: "in_progress", name: "Em Andamento", value: c.in_progress,  fill: "#3b82f6" },
-      { key: "review",      name: "Em Revisão",   value: c.review,       fill: "#f59e0b" },
-      { key: "done",        name: "Concluída",    value: c.done,         fill: "#10b981" },
-    ];
-  }, [allTasks]);
-
   function scrollToAlerts(e: React.MouseEvent) {
     e.preventDefault();
     document.getElementById("central-alertas")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  const total = projects?.length ?? 0;
+
+  const ativos = useMemo(
+    () => (projects ?? []).filter((p) => ACTIVE_STATUSES.has(p.status)).length,
+    [projects],
+  );
+
+  // Projetos com entrega nos próximos 30 dias — o que aperta no mês.
+  const entregas30 = useMemo(() => {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    return (projects ?? []).filter((p) => {
+      if (p.archived || !p.endDate) return false;
+      try {
+        const d = Math.floor((parseISO(p.endDate).getTime() - hoje.getTime()) / 86_400_000);
+        return d >= 0 && d <= 30;
+      } catch { return false; }
+    }).length;
+  }, [projects]);
 
   const farol = useMemo(() => {
     const map = computeHealthMap(projects ?? [], allTasks ?? []);
@@ -231,84 +192,64 @@ export default function Dashboard() {
         <p className="text-muted-foreground mt-1">Visão geral dos projetos, equipe e alertas.</p>
       </div>
 
-      {/* ── KPI Strip ── */}
+      {/* ── Números do dia: 4 respostas rápidas, todas clicáveis ── */}
       {loading ? (
         <div className="grid gap-4 grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[88px] rounded-xl" />)}
         </div>
       ) : (
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {/* Total de Projetos — com breakdown de material */}
           <Link href="/projects">
             <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Total de Projetos</span>
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="text-2xl font-bold text-foreground">{total}</div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="flex items-center gap-1 text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200 rounded-md px-2 py-0.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                  Madeira <strong>{materialCounts.madeira}</strong>
-                </span>
-                <span className="flex items-center gap-1 text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-md px-2 py-0.5">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                  Alumínio <strong>{materialCounts.aluminio}</strong>
-                </span>
-              </div>
-            </div>
-          </Link>
-
-          {/* Projetos Ativos */}
-          <Link href="/projects">
-            <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Projetos Ativos</span>
+                <span className="text-sm font-medium text-muted-foreground">Projetos ativos</span>
                 <Layers className="h-4 w-4 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {(projects ?? []).filter(p => ACTIVE_STATUSES.has(p.status)).length}
-              </div>
-              <p className="text-xs text-muted-foreground">em projeto, produção ou instalação</p>
+              <div className="text-2xl font-bold text-blue-600">{ativos}</div>
+              <p className="text-xs text-muted-foreground">de {total} no total</p>
             </div>
           </Link>
 
-          {/* Alertas */}
           <a href="#central-alertas" onClick={scrollToAlerts}>
             <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Alertas</span>
-                <AlertCircle className={cn("h-4 w-4", actionableAlerts > 0 ? "text-red-500" : "text-muted-foreground")} />
+                <span className="text-sm font-medium text-muted-foreground">Precisam de atenção</span>
+                <AlertCircle className={cn("h-4 w-4", farol.red > 0 ? "text-red-500" : "text-muted-foreground")} />
               </div>
-              <div className={cn("text-2xl font-bold", actionableAlerts > 0 ? "text-red-600" : "text-foreground")}>
-                {actionableAlerts}
+              <div className={cn("text-2xl font-bold", farol.red > 0 ? "text-red-600" : "text-foreground")}>
+                {farol.red + farol.yellow}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {alertCounts.danger} críticos · {alertCounts.warning} atenção
-              </p>
+              <p className="text-xs text-muted-foreground">🔴 {farol.red} críticos · 🟡 {farol.yellow} atenção</p>
             </div>
           </a>
 
-          {/* Tarefas Concluídas */}
-          <Link href={summary?.overdueTasks ? "/tasks?vencidas=1" : "/tasks"}>
+          <Link href="/tasks?vencidas=1">
             <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Tarefas Concluídas</span>
-                <CheckSquare className="h-4 w-4 text-emerald-500" />
+                <span className="text-sm font-medium text-muted-foreground">Tarefas atrasadas</span>
+                <CheckSquare className={cn("h-4 w-4", (summary?.overdueTasks ?? 0) > 0 ? "text-red-500" : "text-emerald-500")} />
               </div>
-              <div className="text-2xl font-bold text-emerald-600">
-                {summary ? `${summary.doneTasks}/${summary.totalTasks}` : "—"}
+              <div className={cn("text-2xl font-bold", (summary?.overdueTasks ?? 0) > 0 ? "text-red-600" : "text-emerald-600")}>
+                {summary?.overdueTasks ?? 0}
               </div>
-              <p className={cn("text-xs", summary?.overdueTasks ? "text-red-600 font-medium" : "text-muted-foreground")}>
-                {summary?.overdueTasks ? `${summary.overdueTasks} tarefa(s) atrasada(s) — ver` : "nenhuma tarefa atrasada"}
+              <p className="text-xs text-muted-foreground">
+                {summary ? `${summary.doneTasks}/${summary.totalTasks} tarefas concluídas` : "—"}
               </p>
+            </div>
+          </Link>
+
+          <Link href="/projects">
+            <div className="bg-card rounded-xl border border-border p-4 flex flex-col gap-1.5 cursor-pointer hover:border-primary/40 hover:shadow-sm transition-all h-full">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Entregas em 30 dias</span>
+                <CalendarDays className="h-4 w-4 text-amber-500" />
+              </div>
+              <div className="text-2xl font-bold text-foreground">{entregas30}</div>
+              <p className="text-xs text-muted-foreground">projetos com prazo de entrega chegando</p>
             </div>
           </Link>
         </div>
       )}
-
-      {/* ── Comparativo por unidade (Madeira × Alumínio) ── */}
-      {!loading && <MaterialSplit />}
 
       {/* ── Onde focar agora: um radar, duas lentes (por obra × por assunto) ── */}
       {!loading && !isTasksLoading && (projects?.length ?? 0) > 0 && (
@@ -395,167 +336,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Atrasadas por Responsável ── */}
-      <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1.5 h-4 rounded-full bg-violet-500" />
-            <h2 className="text-sm font-semibold text-foreground">Atrasadas por Responsável</h2>
-          </div>
-          {isTasksLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-            </div>
-          ) : overdueByMember.rows.length === 0 && overdueByMember.unassignedOverdue === 0 ? (
-            <div className="py-10 text-center flex flex-col items-center gap-2">
-              <CheckCircle2 className="h-8 w-8 text-emerald-500 opacity-60" />
-              <p className="text-sm text-muted-foreground">Nenhuma tarefa atrasada.</p>
-            </div>
-          ) : (
-            <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-              {overdueByMember.rows.map(w => {
-                const initials = w.member.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
-                return (
-                  <Link key={w.member.id} href={`/tasks?responsavel=${w.member.id}&vencidas=1`}>
-                    <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-muted/30 border-border cursor-pointer hover:border-primary/40 transition-colors">
-                      <div className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-[10px] font-bold shrink-0">
-                        {initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">{w.member.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{w.open} aberta(s) no total</p>
-                      </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-red-100 text-red-700 whitespace-nowrap">
-                        {w.overdue} atrasada{w.overdue > 1 ? "s" : ""}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-              {overdueByMember.unassignedOverdue > 0 && (
-                <Link href="/tasks?vencidas=1">
-                  <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 border bg-amber-50 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                      <UserX className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground">Sem responsável</p>
-                      <p className="text-[10px] text-muted-foreground">tarefas atrasadas sem dono</p>
-                    </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 bg-amber-100 text-amber-700">
-                      {overdueByMember.unassignedOverdue}
-                    </span>
-                  </div>
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-
-      {/* ── Status das Tarefas + Próximas Visitas ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Task status donut — legenda clicável */}
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <CheckSquare className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Status das Tarefas</h2>
-            {!isTasksLoading && (
-              <span className="ml-auto text-xs font-bold text-muted-foreground">
-                {taskStatusCounts.reduce((s, c) => s + c.value, 0)} total
-              </span>
-            )}
-          </div>
-          {isTasksLoading ? (
-            <Skeleton className="h-28 w-full rounded-lg" />
-          ) : (
-            <div className="flex items-center gap-4">
-              <div className="shrink-0">
-                <PieChart width={100} height={100}>
-                  <Pie
-                    data={taskStatusCounts}
-                    cx={50} cy={50}
-                    innerRadius={28} outerRadius={44}
-                    dataKey="value"
-                    paddingAngle={2}
-                    strokeWidth={0}
-                  >
-                    {taskStatusCounts.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </div>
-              <div className="flex-1 space-y-1 min-w-0">
-                {taskStatusCounts.map(s => (
-                  <Link key={s.key} href={`/tasks?status=${s.key}`}>
-                    <div className="flex items-center gap-2 rounded-md px-1.5 py-1 cursor-pointer hover:bg-muted/50 transition-colors">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.fill }} />
-                      <span className="text-xs text-muted-foreground flex-1 truncate">{s.name}</span>
-                      <span className="text-xs font-bold text-foreground shrink-0">{s.value}</span>
-                      <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Próximas Visitas */}
-        <div className="bg-card rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className="h-4 w-4 text-emerald-600" />
-            <h2 className="text-sm font-semibold text-foreground">Próximas Visitas</h2>
-          </div>
-          {isVisitsLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
-            </div>
-          ) : upcomingVisits.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma visita programada.</p>
-          ) : (
-            <div className="space-y-2">
-              {upcomingVisits.map((v) => {
-                const { label, today } = visitDateLabel(v.date);
-                return (
-                  <div key={v.id} className="flex gap-2.5 pb-2 border-b last:border-0 last:pb-0">
-                    <div className="text-center min-w-[44px]">
-                      <div className={cn(
-                        "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                        today ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground",
-                      )}>{label}</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5 justify-center">
-                        <CalendarDays className="w-2.5 h-2.5" />
-                        {(() => { try { return format(parseISO(v.date), "dd/MM", { locale: ptBR }); } catch { return ""; } })()}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/projects/${v.projectId}`}>
-                        <p className="text-xs font-medium truncate hover:text-primary cursor-pointer">{v.projectName}</p>
-                      </Link>
-                      <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
-                        <Users className="w-2.5 h-2.5 shrink-0" />{v.visitors}
-                      </p>
-                    </div>
-                    {v.totalActionItemsCount > 0 && (
-                      v.pendingActionItemsCount === 0 ? (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5 text-[10px] font-medium text-green-700 border border-green-200 shrink-0">
-                          <CheckCircle2 className="h-2.5 w-2.5" />
-                          OK
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-orange-50 px-1.5 py-0.5 text-[10px] font-medium text-orange-700 border border-orange-200 shrink-0">
-                          <Clock className="h-2.5 w-2.5" />
-                          {v.pendingActionItemsCount}
-                        </span>
-                      )
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* ── Comparativo por unidade (Madeira × Alumínio) ── */}
+      {!loading && <MaterialSplit />}
 
       {/* ── Atividade Recente ── */}
       <div className="bg-card rounded-xl border border-border p-4">

@@ -104,15 +104,13 @@ const sections: Section[] = [
         <Table
           headers={["Componente", "Descrição"]}
           rows={[
-            ["KPIs", "Total de projetos, projetos ativos, alertas e tarefas concluídas"],
+            ["Números do dia", "Quatro cartões clicáveis: Projetos ativos · Precisam de atenção (🔴🟡) · Tarefas atrasadas · Entregas em 30 dias"],
             ["🚦 Onde focar agora", "O radar, em duas lentes lado a lado: Por obra (farol 🟢🟡🔴 com o motivo, abre o projeto) e Por assunto (contagens do tipo 'Tarefas atrasadas 12', que abrem a tela onde se resolve)"],
             ["Por unidade", "Comparativo Madeira × Alumínio: ativos, em aberto, vencidas, concluídas"],
-            ["Atrasadas por Responsável", "Quem está devendo tarefa vencida"],
-            ["Status das Tarefas + Próximas Visitas", "Distribuição das tarefas e as visitas agendadas"],
             ["Atividade Recente", "Últimas movimentações em tarefas e projetos"],
           ]}
         />
-        <Tip>Quase tudo é clicável: os números levam às listas já filtradas e os alertas abrem direto o projeto ou a tarefa.</Tip>
+        <Tip>Quase tudo é clicável: os números levam às listas já filtradas e o radar abre o projeto ou a tela onde o assunto se resolve. Quem está devendo tarefa aparece em <Strong>Obras → Pendências</Strong>, agrupado por responsável; as visitas ficam em <Strong>Obras → Visitas</Strong>.</Tip>
       </div>
     ),
   },
