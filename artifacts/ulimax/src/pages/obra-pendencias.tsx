@@ -77,11 +77,27 @@ function whatsappUrl(item: ChaseItem): string {
   return `https://wa.me/?text=${encodeURIComponent(msg)}`;
 }
 
-// Blocos da fila, na ordem em que o gestor decide.
-const GRUPOS: { id: Grupo; label: string; hint: string }[] = [
-  { id: "equipe", label: "Pendências da equipe", hint: "tarefas e planos de ação — cobre a pessoa" },
-  { id: "rdo", label: "RDOs de visita", hint: "visita realizada sem relatório anexado" },
-  { id: "datas", label: "Datas", hint: "estimadas vencidas e as que vão vencer" },
+// Blocos da fila, na ordem em que o gestor decide. A cor identifica o bloco
+// (não a urgência — essa continua no selo de prazo de cada linha).
+const GRUPOS: {
+  id: Grupo; label: string; hint: string; icon: React.ElementType;
+  bar: string; icone: string; fundo: string;
+}[] = [
+  {
+    id: "equipe", label: "Pendências da equipe", hint: "tarefas e planos de ação — cobre a pessoa",
+    icon: Users, bar: "bg-violet-500", icone: "text-violet-500",
+    fundo: "bg-violet-50/60 dark:bg-violet-950/20",
+  },
+  {
+    id: "rdo", label: "RDOs de visita", hint: "visita realizada sem relatório anexado",
+    icon: FileText, bar: "bg-blue-500", icone: "text-blue-500",
+    fundo: "bg-blue-50/60 dark:bg-blue-950/20",
+  },
+  {
+    id: "datas", label: "Datas", hint: "estimadas vencidas e as que vão vencer",
+    icon: CalendarClock, bar: "bg-teal-500", icone: "text-teal-500",
+    fundo: "bg-teal-50/60 dark:bg-teal-950/20",
+  },
 ];
 
 const TONE: Record<string, string> = {
@@ -294,15 +310,17 @@ export default function ObraPendencias() {
             </p>
           </div>
         ) : (
-          GRUPOS.map(({ id, label, hint }) => {
+          GRUPOS.map(({ id, label, hint, icon: GrupoIcon, bar, icone, fundo }) => {
             const doGrupo = lista.filter((i) => i.grupo === id);
             if (doGrupo.length === 0) return null;
             return (
               <div key={id}>
-                <div className="flex items-center gap-2 px-4 py-1.5 border-y border-border bg-muted/30 first:border-t-0">
-                  <span className="text-xs font-semibold text-foreground">{label}</span>
-                  <span className="text-[11px] text-muted-foreground">· {hint}</span>
-                  <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{doGrupo.length}</span>
+                <div className={cn("flex items-center gap-2 pl-0 pr-4 py-2 border-y border-border", fundo)}>
+                  <span className={cn("w-1 self-stretch rounded-r-full shrink-0", bar)} />
+                  <GrupoIcon className={cn("h-4 w-4 shrink-0 ml-3", icone)} />
+                  <span className="text-sm font-semibold text-foreground">{label}</span>
+                  <span className="text-[11px] text-muted-foreground hidden sm:inline">· {hint}</span>
+                  <span className="ml-auto text-xs font-bold text-muted-foreground tabular-nums">{doGrupo.length}</span>
                 </div>
                 <div className="divide-y divide-border">
                   {doGrupo.map((it) => (
