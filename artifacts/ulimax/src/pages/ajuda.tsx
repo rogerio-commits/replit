@@ -107,7 +107,7 @@ const sections: Section[] = [
             ["Números do dia", "Quatro cartões clicáveis: Projetos ativos · Precisam de atenção (🔴🟡) · Tarefas atrasadas · Entregas em 30 dias"],
             ["🚦 Onde focar agora", "O radar, em duas lentes lado a lado: Por obra (farol 🟢🟡🔴 com o motivo, abre o projeto) e Por assunto (contagens do tipo 'Tarefas atrasadas 12', que abrem a tela onde se resolve)"],
             ["Por unidade", "Comparativo Madeira × Alumínio: ativos, em aberto, vencidas, concluídas"],
-            ["Atividade Recente", "Últimas movimentações em tarefas e projetos"],
+            ["O que andou", "Os últimos acontecimentos, cada um com a data em que de fato ocorreu: tarefa concluída/iniciada/criada, projeto criado, arquitetura aprovou ou reprovou e visita registrada"],
           ]}
         />
         <Tip>Quase tudo é clicável: os números levam às listas já filtradas e o radar abre o projeto ou a tela onde o assunto se resolve. Quem está devendo tarefa aparece em <Strong>Obras → Pendências</Strong>, agrupado por responsável; as visitas ficam em <Strong>Obras → Visitas</Strong>.</Tip>

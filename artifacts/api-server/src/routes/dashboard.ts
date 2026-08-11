@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, projectsTable, tasksTable, membersTable, auditLogsTable, metricsSnapshotsTable } from "@workspace/db";
+import { db, projectsTable, tasksTable, membersTable, auditLogsTable, metricsSnapshotsTable, siteVisitsTable } from "@workspace/db";
 import { eq, gte, asc } from "drizzle-orm";
 
 const router = Router();
@@ -45,46 +45,100 @@ router.get("/dashboard/summary", async (_req, res) => {
 });
 
 router.get("/dashboard/recent-activity", async (_req, res) => {
-  const { eq } = await import("drizzle-orm");
+  // Pulso do que aconteceu — cada evento carrega a data em que DE FATO ocorreu
+  // (conclusão, início, aprovação), não a data de criação do registro.
+  const { eq, desc, isNotNull, and, ne } = await import("drizzle-orm");
+  const LIMITE = 12;
 
-  const recentTasks = await db
-    .select({
-      task: tasksTable,
-      projectName: projectsTable.name,
-    })
-    .from(tasksTable)
-    .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
-    .orderBy(tasksTable.createdAt)
-    .limit(5);
+  type Evento = {
+    id: number;
+    kind: string;
+    title: string;
+    projectName: string | null;
+    actorName: string | null;
+    at: string;
+  };
 
-  const recentProjects = await db
-    .select()
-    .from(projectsTable)
-    .orderBy(projectsTable.createdAt)
-    .limit(5);
+  const [feitas, iniciadas, criadas, projetos, decisoes, visitas] = await Promise.all([
+    db.select({ task: tasksTable, projectName: projectsTable.name })
+      .from(tasksTable)
+      .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+      .where(isNotNull(tasksTable.completedAt))
+      .orderBy(desc(tasksTable.completedAt))
+      .limit(LIMITE),
+    db.select({ task: tasksTable, projectName: projectsTable.name })
+      .from(tasksTable)
+      .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+      .where(and(isNotNull(tasksTable.startedAt), ne(tasksTable.status, "done")))
+      .orderBy(desc(tasksTable.startedAt))
+      .limit(LIMITE),
+    db.select({ task: tasksTable, projectName: projectsTable.name })
+      .from(tasksTable)
+      .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+      .orderBy(desc(tasksTable.createdAt))
+      .limit(LIMITE),
+    db.select().from(projectsTable).orderBy(desc(projectsTable.createdAt)).limit(LIMITE),
+    db.select().from(projectsTable)
+      .where(isNotNull(projectsTable.approvalAt))
+      .orderBy(desc(projectsTable.approvalAt))
+      .limit(LIMITE),
+    db.select({ visit: siteVisitsTable, projectName: projectsTable.name, memberName: membersTable.name })
+      .from(siteVisitsTable)
+      .leftJoin(projectsTable, eq(siteVisitsTable.projectId, projectsTable.id))
+      .leftJoin(membersTable, eq(siteVisitsTable.responsibleId, membersTable.id))
+      .orderBy(desc(siteVisitsTable.createdAt))
+      .limit(LIMITE),
+  ]);
 
-  const activity = [
-    ...recentTasks.map((r) => ({
-      id: r.task.id,
-      type: "task" as const,
-      title: r.task.title,
-      status: r.task.status,
-      priority: r.task.priority,
-      projectName: r.projectName ?? null,
-      createdAt: r.task.createdAt.toISOString(),
+  const eventos: Evento[] = [
+    ...feitas.map((r) => ({
+      id: r.task.id, kind: "task_done", title: r.task.title,
+      projectName: r.projectName ?? null, actorName: null,
+      at: r.task.completedAt!.toISOString(),
     })),
-    ...recentProjects.map((p) => ({
+    ...iniciadas.map((r) => ({
+      id: r.task.id, kind: "task_started", title: r.task.title,
+      projectName: r.projectName ?? null, actorName: null,
+      at: r.task.startedAt!.toISOString(),
+    })),
+    ...criadas.map((r) => ({
+      id: r.task.id, kind: "task_created", title: r.task.title,
+      projectName: r.projectName ?? null, actorName: null,
+      at: r.task.createdAt.toISOString(),
+    })),
+    ...projetos.map((p) => ({
+      id: p.id, kind: "project_created", title: p.name,
+      projectName: null, actorName: null,
+      at: p.createdAt.toISOString(),
+    })),
+    ...decisoes.map((p) => ({
       id: p.id,
-      type: "project" as const,
-      title: p.name,
-      status: p.status,
-      priority: p.priority,
-      projectName: null,
-      createdAt: p.createdAt.toISOString(),
+      kind: p.approvalStatus === "rejected" ? "project_rejected" : "project_approved",
+      title: p.name, projectName: null, actorName: null,
+      at: p.approvalAt!.toISOString(),
     })),
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+    ...visitas.map((r) => ({
+      id: r.visit.id, kind: "visit_registered",
+      title: r.visit.objective || "Visita na obra",
+      projectName: r.projectName ?? null,
+      actorName: r.memberName ?? null,
+      at: r.visit.createdAt.toISOString(),
+    })),
+  ];
 
-  return res.json(activity);
+  // Uma tarefa concluída não precisa reaparecer como "criada" no mesmo feed.
+  const jaVisto = new Set<string>();
+  const feed = eventos
+    .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
+    .filter((e) => {
+      const chave = `${e.kind.startsWith("task") ? "task" : e.kind.split("_")[0]}-${e.id}`;
+      if (jaVisto.has(chave)) return false;
+      jaVisto.add(chave);
+      return true;
+    })
+    .slice(0, 10);
+
+  return res.json(feed);
 });
 
 router.get("/dashboard/yesterday", async (_req, res) => {

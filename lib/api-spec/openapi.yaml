@@ -3311,23 +3311,30 @@ components:
 
     ActivityItem:
       type: object
-      required: [id, type, title, status, priority, createdAt]
+      required: [id, kind, title, at]
       properties:
         id:
           type: integer
-        type:
+        kind:
           type: string
-          enum: [task, project]
+          description: O que aconteceu — cada evento traz a data em que de fato ocorreu.
+          enum:
+            - task_created
+            - task_started
+            - task_done
+            - project_created
+            - project_approved
+            - project_rejected
+            - visit_registered
         title:
-          type: string
-        status:
-          type: string
-        priority:
           type: string
         projectName:
           type: ["string", "null"]
-        createdAt:
+        actorName:
+          type: ["string", "null"]
+        at:
           type: string
+          description: Quando o evento aconteceu (conclusão, início, aprovação...).
 
     UserRole:
       type: string

@@ -1385,12 +1385,11 @@ export const GetDashboardSummaryResponse = zod.object({
  */
 export const GetRecentActivityResponseItem = zod.object({
   "id": zod.number(),
-  "type": zod.enum(['task', 'project']),
+  "kind": zod.enum(['task_created', 'task_started', 'task_done', 'project_created', 'project_approved', 'project_rejected', 'visit_registered']).describe('O que aconteceu — cada evento traz a data em que de fato ocorreu.'),
   "title": zod.string(),
-  "status": zod.string(),
-  "priority": zod.string(),
   "projectName": zod.string().nullish(),
-  "createdAt": zod.string()
+  "actorName": zod.string().nullish(),
+  "at": zod.string().describe('Quando o evento aconteceu (conclusão, início, aprovação...).')
 })
 export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem)
 

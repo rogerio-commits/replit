@@ -7,7 +7,7 @@
  */
 
 export * from './activityItem';
-export * from './activityItemType';
+export * from './activityItemKind';
 export * from './addProjectMemberInput';
 export * from './addTagToTaskInput';
 export * from './applyTemplateInput';

@@ -640,23 +640,33 @@ export interface ChaseItem {
   createdAt: string;
 }
 
-export type ActivityItemType = typeof ActivityItemType[keyof typeof ActivityItemType];
+/**
+ * O que aconteceu — cada evento traz a data em que de fato ocorreu.
+ */
+export type ActivityItemKind = typeof ActivityItemKind[keyof typeof ActivityItemKind];
 
 
-export const ActivityItemType = {
-  task: 'task',
-  project: 'project',
+export const ActivityItemKind = {
+  task_created: 'task_created',
+  task_started: 'task_started',
+  task_done: 'task_done',
+  project_created: 'project_created',
+  project_approved: 'project_approved',
+  project_rejected: 'project_rejected',
+  visit_registered: 'visit_registered',
 } as const;
 
 export interface ActivityItem {
   id: number;
-  type: ActivityItemType;
+  /** O que aconteceu — cada evento traz a data em que de fato ocorreu. */
+  kind: ActivityItemKind;
   title: string;
-  status: string;
-  priority: string;
   /** @nullable */
   projectName?: string | null;
-  createdAt: string;
+  /** @nullable */
+  actorName?: string | null;
+  /** Quando o evento aconteceu (conclusão, início, aprovação...). */
+  at: string;
 }
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];

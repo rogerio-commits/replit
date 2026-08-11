@@ -55,19 +55,20 @@ function fmtDate(val?: string | null) {
   catch { return null; }
 }
 
-function activityIcon(item: ActivityItem): string {
-  if (item.type === "project") return "🔵";
-  if (item.status === "done") return "✅";
-  if (item.status === "in_progress") return "⚙️";
-  if (item.status === "review") return "🔍";
-  return "➕";
-}
+// Cada tipo de evento tem seu ícone e sua frase — a data vem do próprio
+// acontecimento (conclusão, início, aprovação), não da criação do registro.
+const EVENTO_META: Record<string, { icone: string; texto: (t: string) => string }> = {
+  task_done:         { icone: "✅", texto: (t) => `Tarefa concluída: ${t}` },
+  task_started:      { icone: "⚙️", texto: (t) => `Tarefa iniciada: ${t}` },
+  task_created:      { icone: "📝", texto: (t) => `Nova tarefa: ${t}` },
+  project_created:   { icone: "🔵", texto: (t) => `Projeto criado: ${t}` },
+  project_approved:  { icone: "🟢", texto: (t) => `Arquitetura aprovou: ${t}` },
+  project_rejected:  { icone: "🔴", texto: (t) => `Arquitetura reprovou: ${t}` },
+  visit_registered:  { icone: "📍", texto: (t) => `Visita registrada: ${t}` },
+};
 
-function activityText(item: ActivityItem): string {
-  if (item.type === "project") return `Projeto "${item.title}" atualizado`;
-  if (item.status === "done") return `Tarefa concluída: ${item.title}`;
-  if (item.status === "in_progress") return `Em andamento: ${item.title}`;
-  return `Nova tarefa: ${item.title}`;
+function eventoMeta(kind: string) {
+  return EVENTO_META[kind] ?? { icone: "•", texto: (t: string) => t };
 }
 
 function timeAgo(dateStr: string): string {
@@ -343,7 +344,8 @@ export default function Dashboard() {
       <div className="bg-card rounded-xl border border-border p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-1.5 h-4 rounded-full bg-blue-500" />
-          <h2 className="text-sm font-semibold text-foreground">Atividade Recente</h2>
+          <h2 className="text-sm font-semibold text-foreground">O que andou</h2>
+          <span className="text-[11px] text-muted-foreground">últimos acontecimentos</span>
         </div>
         {isActivityLoading ? (
           <div className="space-y-3">
@@ -356,18 +358,19 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-0">
             {(activity as ActivityItem[]).slice(0, 8).map((item, i, arr) => (
-              <div key={`${item.type}-${item.id}`} className="flex gap-3 pb-3 relative">
+              <div key={`${item.kind}-${item.id}`} className="flex gap-3 pb-3 relative">
                 {i < arr.length - 1 && (
                   <div className="absolute left-[9px] top-5 bottom-0 w-px bg-border" />
                 )}
                 <div className="w-[18px] h-[18px] rounded-full bg-muted border border-border flex items-center justify-center text-[10px] shrink-0 z-10 mt-0.5">
-                  {activityIcon(item)}
+                  {eventoMeta(item.kind).icone}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-foreground leading-snug">{activityText(item)}</p>
+                  <p className="text-xs font-medium text-foreground leading-snug">{eventoMeta(item.kind).texto(item.title)}</p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     {item.projectName && <span>{item.projectName} · </span>}
-                    há {timeAgo(item.createdAt)}
+                    {item.actorName && <span>{item.actorName} · </span>}
+                    há {timeAgo(item.at)}
                   </p>
                 </div>
               </div>

@@ -5,15 +5,17 @@
  * Ulimax — Sistema de Controle de Projetos
  * OpenAPI spec version: 0.1.0
  */
-import type { ActivityItemType } from './activityItemType';
+import type { ActivityItemKind } from './activityItemKind';
 
 export interface ActivityItem {
   id: number;
-  type: ActivityItemType;
+  /** O que aconteceu — cada evento traz a data em que de fato ocorreu. */
+  kind: ActivityItemKind;
   title: string;
-  status: string;
-  priority: string;
   /** @nullable */
   projectName?: string | null;
-  createdAt: string;
+  /** @nullable */
+  actorName?: string | null;
+  /** Quando o evento aconteceu (conclusão, início, aprovação...). */
+  at: string;
 }
