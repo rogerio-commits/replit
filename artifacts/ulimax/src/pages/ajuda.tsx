@@ -210,7 +210,8 @@ const sections: Section[] = [
           rows={[
             ["Precisa de você", "Cliente reprovou o desenho, fim do projeto vencendo, aguardando aprovação da arquitetura e medição já feita esperando avanço de fase"],
             ["Minhas Atividades", "Suas tarefas abertas, com concluir, iniciar e adiar prazo na própria linha (o mesmo bloco que o Gestor vê no Meu Dia)"],
-            ["Projetos por fase", "Quantos projetos há em cada fase — clique para abrir a lista filtrada"],
+            ["Meus projetos", "Os projetos em que você é participante, do prazo mais próximo ao mais distante: fase, data de entrega, progresso das tarefas e selo vermelho/âmbar quando a entrega está a 7 dias ou já venceu"],
+            ["Todos os projetos por fase", "Quantos projetos há em cada fase na empresa — clique para abrir a lista filtrada"],
           ]}
         />
         <Tip>Cada linha de "Precisa de você" abre o projeto direto no Trilho de Fases, onde a data se edita no lugar.</Tip>
