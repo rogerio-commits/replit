@@ -1018,6 +1018,14 @@ const sections: Section[] = [
     content: (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">Cronograma visual no estilo Gantt para controlar datas de instalação e assistência técnica por equipe.</p>
+                <Subsection title="Agendar uma equipe em 3 cliques">
+          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+            <li>No painel <Strong>Aguardando agendamento</Strong> (obras com instalação prevista e ainda sem equipe), clique em <Strong>Agendar equipe</Strong> — ou clique direto numa célula do calendário, na linha da equipe e no dia.</li>
+            <li>Escolha a <Strong>obra</Strong> na lista: o título é preenchido sozinho e a data prevista de instalação já vem sugerida. Escolha a <Strong>equipe</Strong> entre as existentes (ou <em>+ Nova equipe…</em>).</li>
+            <li>Clique na <Strong>duração</Strong> — 1, 2, 3 ou 5 dias — e salve. Depois, arraste a barra no calendário para remarcar ou trocar de equipe.</li>
+          </ol>
+          <Tip>Vincular o evento à obra faz ele aparecer no projeto e nas telas de Obras. Escolher a equipe de uma lista evita criar linhas duplicadas por diferença de digitação.</Tip>
+        </Subsection>
         <Subsection title="Navegar pelo calendário">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li>Use as setas <Strong>‹</Strong> e <Strong>›</Strong> para navegar entre meses.</li>

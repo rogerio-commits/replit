@@ -18,13 +18,21 @@ import {
 } from "@dnd-kit/core";
 import { useCanEdit } from "@/hooks/useAppUser";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   useListInstallationEvents,
   useCreateInstallationEvent,
   useUpdateInstallationEvent,
   useDeleteInstallationEvent,
   getListInstallationEventsQueryKey,
+  useListProjects,
 } from "@workspace/api-client-react";
-import type { InstallationEvent } from "@workspace/api-client-react";
+import type { InstallationEvent, Project } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -395,7 +403,11 @@ function DraggableEventBar({
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
+const NOVA_EQUIPE = "__nova__";
+const SEM_OBRA = "none";
+
 const eventSchema = z.object({
+  projectId:       z.string().optional(),
   title:           z.string().min(1, "Título obrigatório"),
   teamDescription: z.string().optional(),
   eventType:       z.enum(["instalacao", "assistencia"]).default("instalacao"),
@@ -413,23 +425,30 @@ function EventDialog({
   onOpenChange,
   defaultDate,
   defaultTeam,
+  defaultProjectId,
+  teams,
   editing,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   defaultDate: string;
   defaultTeam: string;
+  defaultProjectId?: number | null;
+  teams: string[];
   editing: InstallationEvent | null;
 }) {
   const { toast }  = useToast();
   const qc         = useQueryClient();
   const createMut  = useCreateInstallationEvent();
   const updateMut  = useUpdateInstallationEvent();
+  const { data: projects } = useListProjects();
+  const [equipeNova, setEquipeNova] = useState(false);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     values: editing
       ? {
+          projectId:       editing.projectId != null ? String(editing.projectId) : SEM_OBRA,
           title:           editing.title,
           teamDescription: editing.teamDescription ?? "",
           eventType:       (editing.eventType ?? "instalacao") as "instalacao" | "assistencia",
@@ -439,6 +458,7 @@ function EventDialog({
           color:           editing.color ?? "orange",
         }
       : {
+          projectId:       defaultProjectId != null ? String(defaultProjectId) : SEM_OBRA,
           title:           "",
           teamDescription: defaultTeam === NO_TEAM ? "" : defaultTeam,
           eventType:       "instalacao" as const,
@@ -451,6 +471,7 @@ function EventDialog({
 
   function onSubmit(values: EventFormValues) {
     const payload = {
+      projectId:       values.projectId && values.projectId !== SEM_OBRA ? Number(values.projectId) : undefined,
       title:           values.title,
       teamDescription: values.teamDescription || undefined,
       eventType:       values.eventType,
@@ -486,9 +507,40 @@ function EventDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField control={form.control} name="projectId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Obra</FormLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => {
+                    field.onChange(v);
+                    // Escolher a obra preenche o título e sugere a data prevista de instalação.
+                    const proj = (projects as Project[] | undefined)?.find((p) => String(p.id) === v);
+                    if (proj) {
+                      const tipo = form.getValues("eventType") === "assistencia" ? "Assistência" : "Instalação";
+                      form.setValue("title", `${tipo} — ${proj.name}`);
+                      if (!editing && proj.instalacaoStartDate) {
+                        form.setValue("startDate", proj.instalacaoStartDate.slice(0, 10));
+                      }
+                    }
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger><SelectValue placeholder="Escolha a obra" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={SEM_OBRA}>Sem obra vinculada</SelectItem>
+                    {(projects as Project[] | undefined)?.filter((p) => !p.archived).map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">Vincular à obra preenche o título e liga o evento ao projeto.</p>
+              </FormItem>
+            )} />
             <FormField control={form.control} name="title" render={({ field }) => (
               <FormItem>
-                <FormLabel>Título / Obra</FormLabel>
+                <FormLabel>Título</FormLabel>
                 <FormControl><Input placeholder="Ex: Instalação — Cliente ABC" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
@@ -498,16 +550,38 @@ function EventDialog({
                 <FormLabel className="flex items-center gap-2">
                   Equipe
                   {editing && (
-                    <span className="text-[11px] font-normal text-muted-foreground">(fixo na linha)</span>
+                    <span className="text-[11px] font-normal text-muted-foreground">(arraste a barra no calendário para trocar)</span>
                   )}
                 </FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Ex: Equipe A — João, Maria"
-                    disabled={!!editing}
-                    {...field}
-                  />
-                </FormControl>
+                {equipeNova || editing ? (
+                  <FormControl>
+                    <Input placeholder="Ex: Equipe A — João, Maria" disabled={!!editing} {...field} />
+                  </FormControl>
+                ) : (
+                  <Select
+                    value={field.value || ""}
+                    onValueChange={(v) => {
+                      if (v === NOVA_EQUIPE) { setEquipeNova(true); field.onChange(""); return; }
+                      field.onChange(v);
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Escolha a equipe" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {teams.filter((t) => t !== NO_TEAM).map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                      <SelectItem value={NOVA_EQUIPE}>+ Nova equipe…</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+                {equipeNova && !editing && (
+                  <button type="button" className="text-[11px] text-primary hover:underline self-start"
+                    onClick={() => { setEquipeNova(false); form.setValue("teamDescription", ""); }}>
+                    escolher uma equipe existente
+                  </button>
+                )}
               </FormItem>
             )} />
             <FormField control={form.control} name="eventType" render={({ field }) => (
@@ -553,6 +627,26 @@ function EventDialog({
                   <FormControl><Input type="date" {...field} /></FormControl>
                 </FormItem>
               )} />
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-muted-foreground">Duração:</span>
+              {[1, 2, 3, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className="rounded-md border border-border bg-card px-2 py-1 text-xs font-medium hover:bg-muted transition-colors"
+                  onClick={() => {
+                    const ini = form.getValues("startDate");
+                    if (!ini) return;
+                    // n dias corridos a partir do início (1 dia = começa e termina no mesmo dia)
+                    const d = new Date(`${ini}T12:00:00`);
+                    d.setDate(d.getDate() + n - 1);
+                    form.setValue("endDate", d.toISOString().slice(0, 10));
+                  }}
+                >
+                  {n} {n === 1 ? "dia" : "dias"}
+                </button>
+              ))}
             </div>
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem>
@@ -851,6 +945,7 @@ export default function Calendario() {
   const [defaultDate, setDefaultDate]   = useState(isoDate(new Date()));
   const [defaultTeam, setDefaultTeam]   = useState("");
   const [editingEvent, setEditingEvent] = useState<InstallationEvent | null>(null);
+  const [defaultProjectId, setDefaultProjectId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InstallationEvent | null>(null);
   const [newTeamOpen, setNewTeamOpen]   = useState(false);
   const [newTeamName, setNewTeamName]   = useState("");
@@ -864,7 +959,20 @@ export default function Calendario() {
   const updateMut      = useUpdateInstallationEvent();
 
   const { data: events = [], isLoading } = useListInstallationEvents();
+  const { data: projects } = useListProjects();
   const canEdit = useCanEdit();
+
+  // Obras que já têm instalação prevista (ou estão aguardando) e ainda não têm
+  // nenhum evento no calendário — é o que falta agendar.
+  const aguardandoAgendamento = useMemo(() => {
+    const comEvento = new Set(events.map((e) => e.projectId).filter((id): id is number => id != null));
+    return ((projects ?? []) as Project[])
+      .filter((p) => {
+        if (p.archived || comEvento.has(p.id)) return false;
+        return Boolean(p.instalacaoStartDate) || p.status === "aguardando_instalacao";
+      })
+      .sort((a, b) => (a.instalacaoStartDate ?? "9999") < (b.instalacaoStartDate ?? "9999") ? -1 : 1);
+  }, [projects, events]);
 
   // Abre o diálogo de novo evento quando a página é chamada com ?create=1 (botão "+ Criar")
   const autoCreateRef = useRef(false);
@@ -1049,10 +1157,11 @@ export default function Calendario() {
     return result;
   }, [days]);
 
-  function openCreate(team: string, date: string) {
+  function openCreate(team: string, date: string, projectId: number | null = null) {
     setEditingEvent(null);
     setDefaultDate(date);
     setDefaultTeam(team);
+    setDefaultProjectId(projectId);
     setDialogOpen(true);
   }
 
@@ -1395,12 +1504,53 @@ export default function Calendario() {
         </DndContext>
       )}
 
+      {/* ── Aguardando agendamento: obras com instalação prevista e sem equipe ── */}
+      {canEdit && aguardandoAgendamento.length > 0 && (
+        <div className="bg-card rounded-xl border border-amber-200 dark:border-amber-800/40 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+            <HardHat className="h-4 w-4 text-amber-600" />
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-foreground leading-tight">Aguardando agendamento</h2>
+              <p className="text-[11px] text-muted-foreground leading-tight">Obras com instalação prevista e ainda sem equipe no calendário</p>
+            </div>
+            <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{aguardandoAgendamento.length}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {aguardandoAgendamento.slice(0, 8).map((p) => (
+              <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {p.instalacaoStartDate
+                      ? `instalação prevista para ${p.instalacaoStartDate.slice(0, 10).split("-").reverse().join("/")}`
+                      : "aguardando instalação, sem data prevista"}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 h-7 gap-1 text-xs"
+                  onClick={() => openCreate("", p.instalacaoStartDate?.slice(0, 10) ?? isoDate(new Date()), p.id)}
+                >
+                  <Users className="h-3.5 w-3.5" /> Agendar equipe
+                </Button>
+              </div>
+            ))}
+            {aguardandoAgendamento.length > 8 && (
+              <p className="px-4 py-2 text-xs text-muted-foreground">+{aguardandoAgendamento.length - 8} outras obras</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Dialogs ──────────────────────────────────────────────────────── */}
       <EventDialog
         open={dialogOpen}
         onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditingEvent(null); }}
         defaultDate={defaultDate}
         defaultTeam={defaultTeam}
+        defaultProjectId={defaultProjectId}
+        teams={[...allTeams]}
         editing={editingEvent}
       />
 
