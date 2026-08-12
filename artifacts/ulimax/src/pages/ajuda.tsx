@@ -1028,11 +1028,13 @@ const sections: Section[] = [
         </Subsection>
         <Subsection title="Assistência em obra antiga (fora do sistema)">
           <p className="text-sm text-muted-foreground">
-            Obra entregue anos atrás não precisa estar cadastrada como projeto. Abra o chamado em
-            <Strong> Obras → Operação → Assistência</Strong> (cliente, contato e o que houve) e ele passa a
-            aparecer no calendário, no painel <Strong>Assistências aguardando equipe</Strong>. Clique em
-            <Strong> Alocar equipe</Strong>: o diálogo abre com o chamado escolhido, o título preenchido e a
-            data prevista. Ao salvar, a data volta para o chamado e ele entra como <em>em andamento</em>.
+            Obra entregue anos atrás não precisa estar cadastrada como projeto — nem o chamado precisa
+            existir antes. No calendário, crie o evento, escolha o tipo <Strong>Assistência</Strong> e use
+            <Strong> + Novo chamado (obra antiga)</Strong>: preencha cliente (o título se preenche sozinho),
+            contato e o que houve. Ao salvar, o chamado é criado já <em>em andamento</em> e com a data — e
+            passa a aparecer em <Strong>Obras → Operação → Assistência</Strong>.
+            Se o chamado já existe, ele aparece no painel <Strong>Assistências aguardando equipe</Strong>:
+            clique em <Strong>Alocar equipe</Strong> e o diálogo abre preenchido.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             No formulário, escolher o tipo <Strong>Assistência</Strong> troca o campo Obra pelo campo

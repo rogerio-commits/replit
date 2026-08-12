@@ -32,6 +32,7 @@ import {
   getListInstallationEventsQueryKey,
   useListProjects,
   useListAssistenciaTecnica,
+  useCreateAssistenciaTecnica,
   useUpdateAssistenciaTecnica,
   getListAssistenciaTecnicaQueryKey,
 } from "@workspace/api-client-react";
@@ -410,6 +411,7 @@ const NOVA_EQUIPE = "__nova__";
 const SEM_OBRA = "none";
 
 const SEM_CHAMADO = "none";
+const NOVO_CHAMADO = "__novo__";
 
 /** Eventos da mesma equipe que se sobrepõem ao período — conflito de agenda. */
 function conflitos(
@@ -434,6 +436,10 @@ function conflitos(
 const eventSchema = z.object({
   projectId:       z.string().optional(),
   assistenciaId:   z.string().optional(),
+  // Chamado aberto na hora, para obra antiga que não está (nem estará) no app.
+  novoCliente:     z.string().optional(),
+  novoContato:     z.string().optional(),
+  novoProblema:    z.string().optional(),
   title:           z.string().min(1, "Título obrigatório"),
   teamDescription: z.string().optional(),
   eventType:       z.enum(["instalacao", "assistencia"]).default("instalacao"),
@@ -473,6 +479,7 @@ function EventDialog({
   const updateMut  = useUpdateInstallationEvent();
   const { data: projects } = useListProjects();
   const { data: assistencias } = useListAssistenciaTecnica();
+  const createAT = useCreateAssistenciaTecnica();
   const updateAT = useUpdateAssistenciaTecnica();
   const [equipeNova, setEquipeNova] = useState(false);
 
@@ -482,6 +489,9 @@ function EventDialog({
       ? {
           projectId:       editing.projectId != null ? String(editing.projectId) : SEM_OBRA,
           assistenciaId:   editing.assistenciaId != null ? String(editing.assistenciaId) : SEM_CHAMADO,
+          novoCliente:     "",
+          novoContato:     "",
+          novoProblema:    "",
           title:           editing.title,
           teamDescription: editing.teamDescription ?? "",
           eventType:       (editing.eventType ?? "instalacao") as "instalacao" | "assistencia",
@@ -493,6 +503,9 @@ function EventDialog({
       : {
           projectId:       defaultProjectId != null ? String(defaultProjectId) : SEM_OBRA,
           assistenciaId:   defaultAssistenciaId != null ? String(defaultAssistenciaId) : SEM_CHAMADO,
+          novoCliente:     "",
+          novoContato:     "",
+          novoProblema:    "",
           title:           "",
           teamDescription: defaultTeam === NO_TEAM ? "" : defaultTeam,
           eventType:       "instalacao" as const,
@@ -503,10 +516,36 @@ function EventDialog({
         },
   });
 
-  function onSubmit(values: EventFormValues) {
+  async function onSubmit(values: EventFormValues) {
+    // Obra antiga fora do app: abre o chamado aqui e já vincula ao evento.
+    let assistenciaCriada: number | undefined;
+    if (values.eventType === "assistencia" && values.assistenciaId === NOVO_CHAMADO) {
+      const cliente = (values.novoCliente ?? "").trim();
+      if (!cliente) {
+        toast({ title: "Informe o cliente do chamado", variant: "destructive" });
+        return;
+      }
+      try {
+        const criado = await createAT.mutateAsync({
+          data: {
+            clientName: cliente,
+            contact: (values.novoContato ?? "").trim() || "não informado",
+            description: (values.novoProblema ?? "").trim() || "Assistência técnica",
+            scheduledDate: values.startDate,
+            status: "em_andamento",
+          },
+        });
+        assistenciaCriada = criado.id;
+        qc.invalidateQueries({ queryKey: getListAssistenciaTecnicaQueryKey() });
+      } catch {
+        toast({ title: "Erro ao abrir o chamado", variant: "destructive" });
+        return;
+      }
+    }
+
     const payload = {
       projectId:       values.projectId && values.projectId !== SEM_OBRA ? Number(values.projectId) : undefined,
-      assistenciaId:   values.assistenciaId && values.assistenciaId !== SEM_CHAMADO ? Number(values.assistenciaId) : undefined,
+      assistenciaId:   assistenciaCriada ?? (values.assistenciaId && values.assistenciaId !== SEM_CHAMADO && values.assistenciaId !== NOVO_CHAMADO ? Number(values.assistenciaId) : undefined),
       title:           values.title,
       teamDescription: values.teamDescription || undefined,
       eventType:       values.eventType,
@@ -518,7 +557,7 @@ function EventDialog({
     const done = () => {
       qc.invalidateQueries({ queryKey: getListInstallationEventsQueryKey() });
       // Agendar a equipe é o que define a data do chamado — mantém as telas juntas.
-      if (payload.assistenciaId) {
+      if (payload.assistenciaId && !assistenciaCriada) {
         updateAT.mutate(
           { id: payload.assistenciaId, data: { scheduledDate: payload.startDate, status: "em_andamento" } },
           { onSuccess: () => qc.invalidateQueries({ queryKey: getListAssistenciaTecnicaQueryKey() }) },
@@ -568,6 +607,7 @@ function EventDialog({
                       <SelectTrigger><SelectValue placeholder="Escolha o chamado" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value={NOVO_CHAMADO}>+ Novo chamado (obra antiga)…</SelectItem>
                       <SelectItem value={SEM_CHAMADO}>Sem chamado vinculado</SelectItem>
                       {(assistencias as AssistenciaTecnica[] | undefined)
                         ?.filter((a) => !a.realizado && a.status !== "cancelado")
@@ -579,8 +619,44 @@ function EventDialog({
                     </SelectContent>
                   </Select>
                   <p className="text-[11px] text-muted-foreground">
-                    Obra antiga não precisa estar cadastrada: o chamado guarda cliente e contato. Agendar aqui grava a data no chamado.
+                    Obra antiga não precisa estar cadastrada como projeto. Se o chamado ainda não existe, use
+                    <strong> + Novo chamado</strong> e preencha aqui mesmo.
                   </p>
+                  {field.value === NOVO_CHAMADO && (
+                    <div className="mt-2 space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                      <FormField control={form.control} name="novoCliente" render={({ field: f }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Cliente *</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Ex.: Família Silva — Rua das Acácias, 120"
+                              {...f}
+                              onChange={(e) => {
+                                f.onChange(e);
+                                const nome = e.target.value.trim();
+                                if (nome) form.setValue("title", `Assistência — ${nome}`);
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="novoContato" render={({ field: f }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Contato</FormLabel>
+                          <FormControl><Input placeholder="Telefone ou e-mail" {...f} /></FormControl>
+                        </FormItem>
+                      )} />
+                      <FormField control={form.control} name="novoProblema" render={({ field: f }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">O que houve</FormLabel>
+                          <FormControl><Input placeholder="Ex.: vedação da janela da suíte" {...f} /></FormControl>
+                        </FormItem>
+                      )} />
+                      <p className="text-[11px] text-muted-foreground">
+                        O chamado é criado ao salvar e passa a aparecer em Obras → Operação → Assistência.
+                      </p>
+                    </div>
+                  )}
                 </FormItem>
               )} />
             ) : (
