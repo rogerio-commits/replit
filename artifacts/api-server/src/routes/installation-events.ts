@@ -16,6 +16,7 @@ function eventRow(e: typeof installationEventsTable.$inferSelect) {
     id: e.id,
     title: e.title,
     projectId: e.projectId ?? null,
+    assistenciaId: e.assistenciaId ?? null,
     teamDescription: e.teamDescription ?? null,
     eventType: e.eventType,
     startDate: e.startDate,
@@ -59,6 +60,7 @@ router.post("/installation-events", requireExecutorOrGestor, async (req, res) =>
     .values({
       title: body.data.title,
       projectId: body.data.projectId ?? null,
+      assistenciaId: body.data.assistenciaId ?? null,
       teamDescription: body.data.teamDescription ?? null,
       eventType: body.data.eventType ?? "instalacao",
       startDate: body.data.startDate,
@@ -81,6 +83,7 @@ router.patch("/installation-events/:id", requireExecutorOrGestor, async (req, re
   const update: Record<string, unknown> = {};
   if (body.data.title !== undefined) update.title = body.data.title;
   if (body.data.projectId !== undefined) update.projectId = body.data.projectId;
+  if (body.data.assistenciaId !== undefined) update.assistenciaId = body.data.assistenciaId;
   if (body.data.teamDescription !== undefined) update.teamDescription = body.data.teamDescription;
   if (body.data.eventType !== undefined) update.eventType = body.data.eventType;
   if (body.data.startDate !== undefined) update.startDate = body.data.startDate;

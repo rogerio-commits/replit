@@ -724,6 +724,8 @@ export interface InstallationEvent {
   /** @nullable */
   projectId?: number | null;
   /** @nullable */
+  assistenciaId?: number | null;
+  /** @nullable */
   teamDescription?: string | null;
   eventType: InstallationEventType;
   startDate: string;
@@ -738,6 +740,8 @@ export interface InstallationEvent {
 export interface InstallationEventInput {
   title: string;
   projectId?: number;
+  /** @nullable */
+  assistenciaId?: number | null;
   teamDescription?: string;
   eventType?: InstallationEventType;
   startDate: string;
@@ -749,6 +753,8 @@ export interface InstallationEventInput {
 export interface InstallationEventUpdate {
   title?: string;
   projectId?: number;
+  /** @nullable */
+  assistenciaId?: number | null;
   teamDescription?: string;
   eventType?: InstallationEventType;
   startDate?: string;

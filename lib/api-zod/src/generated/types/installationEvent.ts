@@ -13,6 +13,8 @@ export interface InstallationEvent {
   /** @nullable */
   projectId?: number | null;
   /** @nullable */
+  assistenciaId?: number | null;
+  /** @nullable */
   teamDescription?: string | null;
   eventType: InstallationEventType;
   startDate: string;

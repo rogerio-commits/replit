@@ -1026,6 +1026,26 @@ const sections: Section[] = [
           </ol>
           <Tip>Vincular o evento à obra faz ele aparecer no projeto e nas telas de Obras. Escolher a equipe de uma lista evita criar linhas duplicadas por diferença de digitação.</Tip>
         </Subsection>
+        <Subsection title="Assistência em obra antiga (fora do sistema)">
+          <p className="text-sm text-muted-foreground">
+            Obra entregue anos atrás não precisa estar cadastrada como projeto. Abra o chamado em
+            <Strong> Obras → Operação → Assistência</Strong> (cliente, contato e o que houve) e ele passa a
+            aparecer no calendário, no painel <Strong>Assistências aguardando equipe</Strong>. Clique em
+            <Strong> Alocar equipe</Strong>: o diálogo abre com o chamado escolhido, o título preenchido e a
+            data prevista. Ao salvar, a data volta para o chamado e ele entra como <em>em andamento</em>.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            No formulário, escolher o tipo <Strong>Assistência</Strong> troca o campo Obra pelo campo
+            <Strong> Chamado de assistência</Strong>.
+          </p>
+        </Subsection>
+        <Subsection title="Aviso de conflito de equipe">
+          <p className="text-sm text-muted-foreground">
+            Se a equipe escolhida já tiver compromisso no período, um aviso âmbar aparece no formulário
+            listando o que já está marcado — e um aviso equivalente surge ao arrastar uma barra para o
+            período ou a equipe ocupada. É só alerta: você decide e pode salvar mesmo assim.
+          </p>
+        </Subsection>
         <Subsection title="Navegar pelo calendário">
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li>Use as setas <Strong>‹</Strong> e <Strong>›</Strong> para navegar entre meses.</li>

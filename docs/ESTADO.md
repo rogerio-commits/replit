@@ -31,11 +31,12 @@
 - Auditoria: PATCH de projeto grava diff de status/prioridade/nome + 8 datas; `/audit-logs` escopado por entidade liberado a autenticados.
 - `tasks.started_at` = tempo de ciclo real (marcado na 1ª saída de "todo").
 - Atribuição de tarefa notifica o responsável: notificação in-app (sino, p/ quem tem conta) + e-mail via Resend (aguardado — serverless congela após a resposta; sai mesmo sem conta no app). Vale p/ criar, editar e bulk-update; auto-atribuição não notifica. `assignedTo` aceita `null` no contrato (limpar responsável). Depende de `RESEND_API_KEY`/`EMAIL_FROM`/`APP_URL` na Vercel.
+- Calendário de equipes: evento (`installation_events`) agora liga a **obra** (`project_id`, o form nunca preenchia) ou a **assistência** (`assistencia_id`, coluna NOVA — obra antiga fora do sistema). Painéis 'Aguardando agendamento' (obras) e 'Assistências aguardando equipe' com botão que abre o diálogo preenchido; equipe é select das existentes + nova; duração em botões 1/2/3/5 dias; aviso (não bloqueia) de conflito de equipe no form e ao arrastar. Agendar assistência grava `scheduledDate` e status `em_andamento` no chamado.
 - Anexos: `attachments.category` (planta/aprovacao/rdo/diario/visita/outro).
 - UpdateNotifier: aba avisa "Nova versão disponível" (5min/focus).
 
 ## Migrações já aplicadas no Supabase
-`metrics_snapshots` (tabela) · `tasks.started_at` · `attachments.category` · `user_role` + valor `projetista_gestor` (ALTER TYPE). Seed de demo: `scripts/seed-demo.sql` (dados [DEMO], datas relativas, bloco de limpeza no fim).
+`metrics_snapshots` (tabela) · `tasks.started_at` · `attachments.category` · `user_role` + valor `projetista_gestor` (ALTER TYPE) · `installation_events.assistencia_id`. Seed de demo: `scripts/seed-demo.sql` (dados [DEMO], datas relativas, bloco de limpeza no fim).
 
 ## Convenções de desenvolvimento
 - Contrato-first: `lib/api-spec/openapi.yaml` → `pnpm --filter @workspace/api-spec run codegen`; nunca editar `generated/`.

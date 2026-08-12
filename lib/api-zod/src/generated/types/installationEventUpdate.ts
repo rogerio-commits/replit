@@ -10,6 +10,8 @@ import type { InstallationEventType } from './installationEventType';
 export interface InstallationEventUpdate {
   title?: string;
   projectId?: number;
+  /** @nullable */
+  assistenciaId?: number | null;
   teamDescription?: string;
   eventType?: InstallationEventType;
   startDate?: string;

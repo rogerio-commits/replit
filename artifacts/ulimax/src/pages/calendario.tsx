@@ -31,8 +31,11 @@ import {
   useDeleteInstallationEvent,
   getListInstallationEventsQueryKey,
   useListProjects,
+  useListAssistenciaTecnica,
+  useUpdateAssistenciaTecnica,
+  getListAssistenciaTecnicaQueryKey,
 } from "@workspace/api-client-react";
-import type { InstallationEvent, Project } from "@workspace/api-client-react";
+import type { InstallationEvent, Project, AssistenciaTecnica } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -406,8 +409,31 @@ function DraggableEventBar({
 const NOVA_EQUIPE = "__nova__";
 const SEM_OBRA = "none";
 
+const SEM_CHAMADO = "none";
+
+/** Eventos da mesma equipe que se sobrepõem ao período — conflito de agenda. */
+function conflitos(
+  events: InstallationEvent[],
+  team: string,
+  inicio: string,
+  fim: string,
+  ignorarId?: number,
+): InstallationEvent[] {
+  const t = team.trim();
+  if (!t || !inicio) return [];
+  const fimReal = fim || inicio;
+  return events.filter((e) => {
+    if (e.id === ignorarId) return false;
+    if ((e.teamDescription?.trim() || "") !== t) return false;
+    const eIni = e.startDate;
+    const eFim = e.endDate ?? e.startDate;
+    return eIni <= fimReal && eFim >= inicio;
+  });
+}
+
 const eventSchema = z.object({
   projectId:       z.string().optional(),
+  assistenciaId:   z.string().optional(),
   title:           z.string().min(1, "Título obrigatório"),
   teamDescription: z.string().optional(),
   eventType:       z.enum(["instalacao", "assistencia"]).default("instalacao"),
@@ -426,7 +452,9 @@ function EventDialog({
   defaultDate,
   defaultTeam,
   defaultProjectId,
+  defaultAssistenciaId,
   teams,
+  events,
   editing,
 }: {
   open: boolean;
@@ -434,7 +462,9 @@ function EventDialog({
   defaultDate: string;
   defaultTeam: string;
   defaultProjectId?: number | null;
+  defaultAssistenciaId?: number | null;
   teams: string[];
+  events: InstallationEvent[];
   editing: InstallationEvent | null;
 }) {
   const { toast }  = useToast();
@@ -442,6 +472,8 @@ function EventDialog({
   const createMut  = useCreateInstallationEvent();
   const updateMut  = useUpdateInstallationEvent();
   const { data: projects } = useListProjects();
+  const { data: assistencias } = useListAssistenciaTecnica();
+  const updateAT = useUpdateAssistenciaTecnica();
   const [equipeNova, setEquipeNova] = useState(false);
 
   const form = useForm<EventFormValues>({
@@ -449,6 +481,7 @@ function EventDialog({
     values: editing
       ? {
           projectId:       editing.projectId != null ? String(editing.projectId) : SEM_OBRA,
+          assistenciaId:   editing.assistenciaId != null ? String(editing.assistenciaId) : SEM_CHAMADO,
           title:           editing.title,
           teamDescription: editing.teamDescription ?? "",
           eventType:       (editing.eventType ?? "instalacao") as "instalacao" | "assistencia",
@@ -459,6 +492,7 @@ function EventDialog({
         }
       : {
           projectId:       defaultProjectId != null ? String(defaultProjectId) : SEM_OBRA,
+          assistenciaId:   defaultAssistenciaId != null ? String(defaultAssistenciaId) : SEM_CHAMADO,
           title:           "",
           teamDescription: defaultTeam === NO_TEAM ? "" : defaultTeam,
           eventType:       "instalacao" as const,
@@ -472,6 +506,7 @@ function EventDialog({
   function onSubmit(values: EventFormValues) {
     const payload = {
       projectId:       values.projectId && values.projectId !== SEM_OBRA ? Number(values.projectId) : undefined,
+      assistenciaId:   values.assistenciaId && values.assistenciaId !== SEM_CHAMADO ? Number(values.assistenciaId) : undefined,
       title:           values.title,
       teamDescription: values.teamDescription || undefined,
       eventType:       values.eventType,
@@ -482,6 +517,13 @@ function EventDialog({
     };
     const done = () => {
       qc.invalidateQueries({ queryKey: getListInstallationEventsQueryKey() });
+      // Agendar a equipe é o que define a data do chamado — mantém as telas juntas.
+      if (payload.assistenciaId) {
+        updateAT.mutate(
+          { id: payload.assistenciaId, data: { scheduledDate: payload.startDate, status: "em_andamento" } },
+          { onSuccess: () => qc.invalidateQueries({ queryKey: getListAssistenciaTecnicaQueryKey() }) },
+        );
+      }
       onOpenChange(false);
     };
     if (editing) {
@@ -507,6 +549,41 @@ function EventDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            {form.watch("eventType") === "assistencia" ? (
+              <FormField control={form.control} name="assistenciaId" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chamado de assistência</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => {
+                      field.onChange(v);
+                      const at = (assistencias as AssistenciaTecnica[] | undefined)?.find((a) => String(a.id) === v);
+                      if (at) {
+                        form.setValue("title", `Assistência — ${at.clientName}`);
+                        if (!editing && at.scheduledDate) form.setValue("startDate", at.scheduledDate.slice(0, 10));
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="Escolha o chamado" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={SEM_CHAMADO}>Sem chamado vinculado</SelectItem>
+                      {(assistencias as AssistenciaTecnica[] | undefined)
+                        ?.filter((a) => !a.realizado && a.status !== "cancelado")
+                        .map((a) => (
+                          <SelectItem key={a.id} value={String(a.id)}>
+                            {a.clientName} — {a.description.slice(0, 40)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Obra antiga não precisa estar cadastrada: o chamado guarda cliente e contato. Agendar aqui grava a data no chamado.
+                  </p>
+                </FormItem>
+              )} />
+            ) : (
             <FormField control={form.control} name="projectId" render={({ field }) => (
               <FormItem>
                 <FormLabel>Obra</FormLabel>
@@ -538,6 +615,7 @@ function EventDialog({
                 <p className="text-[11px] text-muted-foreground">Vincular à obra preenche o título e liga o evento ao projeto.</p>
               </FormItem>
             )} />
+            )}
             <FormField control={form.control} name="title" render={({ field }) => (
               <FormItem>
                 <FormLabel>Título</FormLabel>
@@ -628,6 +706,30 @@ function EventDialog({
                 </FormItem>
               )} />
             </div>
+            {(() => {
+              const time = form.watch("teamDescription") ?? "";
+              const ini = form.watch("startDate");
+              const fim = form.watch("endDate") ?? "";
+              const bate = conflitos(events, time, ini, fim, editing?.id);
+              if (bate.length === 0) return null;
+              return (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs dark:bg-amber-950/20 dark:border-amber-800/40">
+                  <p className="font-semibold text-amber-800 dark:text-amber-300">
+                    Conflito de agenda — {time} já tem {bate.length === 1 ? "compromisso" : `${bate.length} compromissos`} nesse período:
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-amber-700 dark:text-amber-400">
+                    {bate.slice(0, 3).map((c) => (
+                      <li key={c.id}>
+                        • {c.title} ({c.startDate.slice(8, 10)}/{c.startDate.slice(5, 7)}
+                        {c.endDate && c.endDate !== c.startDate ? ` a ${c.endDate.slice(8, 10)}/${c.endDate.slice(5, 7)}` : ""})
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 text-amber-700/80 dark:text-amber-400/80">Você pode salvar mesmo assim — é só um aviso.</p>
+                </div>
+              );
+            })()}
+
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-xs text-muted-foreground">Duração:</span>
               {[1, 2, 3, 5].map((n) => (
@@ -946,6 +1048,7 @@ export default function Calendario() {
   const [defaultTeam, setDefaultTeam]   = useState("");
   const [editingEvent, setEditingEvent] = useState<InstallationEvent | null>(null);
   const [defaultProjectId, setDefaultProjectId] = useState<number | null>(null);
+  const [defaultAssistenciaId, setDefaultAssistenciaId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<InstallationEvent | null>(null);
   const [newTeamOpen, setNewTeamOpen]   = useState(false);
   const [newTeamName, setNewTeamName]   = useState("");
@@ -960,7 +1063,17 @@ export default function Calendario() {
 
   const { data: events = [], isLoading } = useListInstallationEvents();
   const { data: projects } = useListProjects();
+  const { data: assistencias } = useListAssistenciaTecnica();
   const canEdit = useCanEdit();
+
+  // Chamados de assistência ainda sem equipe no calendário — obra antiga não
+  // precisa estar cadastrada como projeto.
+  const assistenciasSemEquipe = useMemo(() => {
+    const comEvento = new Set(events.map((e) => e.assistenciaId).filter((id): id is number => id != null));
+    return ((assistencias ?? []) as AssistenciaTecnica[])
+      .filter((a) => !a.realizado && a.status !== "cancelado" && a.status !== "concluido" && !comEvento.has(a.id))
+      .sort((a, b) => (a.scheduledDate ?? "9999") < (b.scheduledDate ?? "9999") ? -1 : 1);
+  }, [assistencias, events]);
 
   // Obras que já têm instalação prevista (ou estão aguardando) e ainda não têm
   // nenhum evento no calendário — é o que falta agendar.
@@ -1004,6 +1117,19 @@ export default function Calendario() {
     const newTeam = overData.team;
     // Mover para "Sem equipe" não altera a equipe (a API não limpa o campo) — só as datas
     const teamChanged = newTeam !== data.team && newTeam !== NO_TEAM;
+    // Avisa (sem bloquear) quando a equipe de destino já tem algo no periodo.
+    const destinoTeam = teamChanged ? newTeam : data.team;
+    const novoIni = isoDate(addDays(new Date(`${ev.startDate}T12:00:00`), daysDelta));
+    const novoFim = ev.endDate
+      ? isoDate(addDays(new Date(`${ev.endDate}T12:00:00`), daysDelta))
+      : novoIni;
+    const bate = conflitos(events, destinoTeam, novoIni, novoFim, ev.id);
+    if (bate.length > 0) {
+      toast({
+        title: `Atenção: ${destinoTeam} já tem ${bate.length === 1 ? "compromisso" : `${bate.length} compromissos`} nesse período`,
+        description: bate.slice(0, 2).map((c) => c.title).join(" · "),
+      });
+    }
     if (daysDelta === 0 && !teamChanged) return;
 
     const newStart = ymd(addDays(parseISO(ev.startDate), daysDelta));
@@ -1157,11 +1283,12 @@ export default function Calendario() {
     return result;
   }, [days]);
 
-  function openCreate(team: string, date: string, projectId: number | null = null) {
+  function openCreate(team: string, date: string, projectId: number | null = null, assistenciaId: number | null = null) {
     setEditingEvent(null);
     setDefaultDate(date);
     setDefaultTeam(team);
     setDefaultProjectId(projectId);
+    setDefaultAssistenciaId(assistenciaId);
     setDialogOpen(true);
   }
 
@@ -1543,6 +1670,45 @@ export default function Calendario() {
         </div>
       )}
 
+      {/* ── Assistências aguardando equipe (obras antigas, fora do sistema) ── */}
+      {canEdit && assistenciasSemEquipe.length > 0 && (
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+            <Wrench className="h-4 w-4 text-orange-600" />
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-foreground leading-tight">Assistências aguardando equipe</h2>
+              <p className="text-[11px] text-muted-foreground leading-tight">Chamados em aberto que ainda não têm equipe alocada no calendário</p>
+            </div>
+            <span className="ml-auto text-xs font-semibold text-muted-foreground tabular-nums">{assistenciasSemEquipe.length}</span>
+          </div>
+          <div className="divide-y divide-border">
+            {assistenciasSemEquipe.slice(0, 8).map((a) => (
+              <div key={a.id} className="flex items-center gap-3 px-4 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{a.clientName}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {a.description}
+                    {a.contact ? ` · ${a.contact}` : ""}
+                    {a.scheduledDate ? ` · prevista ${a.scheduledDate.slice(0, 10).split("-").reverse().join("/")}` : ""}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 h-7 gap-1 text-xs"
+                  onClick={() => openCreate("", a.scheduledDate?.slice(0, 10) ?? isoDate(new Date()), null, a.id)}
+                >
+                  <Users className="h-3.5 w-3.5" /> Alocar equipe
+                </Button>
+              </div>
+            ))}
+            {assistenciasSemEquipe.length > 8 && (
+              <p className="px-4 py-2 text-xs text-muted-foreground">+{assistenciasSemEquipe.length - 8} outros chamados</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Dialogs ──────────────────────────────────────────────────────── */}
       <EventDialog
         open={dialogOpen}
@@ -1550,7 +1716,9 @@ export default function Calendario() {
         defaultDate={defaultDate}
         defaultTeam={defaultTeam}
         defaultProjectId={defaultProjectId}
+        defaultAssistenciaId={defaultAssistenciaId}
         teams={[...allTeams]}
+        events={events}
         editing={editingEvent}
       />
 

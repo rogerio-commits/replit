@@ -1781,6 +1781,7 @@ export const ListInstallationEventsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "projectId": zod.number().nullish(),
+  "assistenciaId": zod.number().nullish(),
   "teamDescription": zod.string().nullish(),
   "eventType": zod.enum(['instalacao', 'assistencia']),
   "startDate": zod.string(),
@@ -1798,6 +1799,7 @@ export const ListInstallationEventsResponse = zod.array(ListInstallationEventsRe
 export const CreateInstallationEventBody = zod.object({
   "title": zod.string(),
   "projectId": zod.number().optional(),
+  "assistenciaId": zod.number().nullish(),
   "teamDescription": zod.string().optional(),
   "eventType": zod.enum(['instalacao', 'assistencia']).optional(),
   "startDate": zod.string(),
@@ -1817,6 +1819,7 @@ export const UpdateInstallationEventParams = zod.object({
 export const UpdateInstallationEventBody = zod.object({
   "title": zod.string().optional(),
   "projectId": zod.number().optional(),
+  "assistenciaId": zod.number().nullish(),
   "teamDescription": zod.string().optional(),
   "eventType": zod.enum(['instalacao', 'assistencia']).optional(),
   "startDate": zod.string().optional(),
@@ -1829,6 +1832,7 @@ export const UpdateInstallationEventResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
   "projectId": zod.number().nullish(),
+  "assistenciaId": zod.number().nullish(),
   "teamDescription": zod.string().nullish(),
   "eventType": zod.enum(['instalacao', 'assistencia']),
   "startDate": zod.string(),

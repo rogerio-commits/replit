@@ -3408,6 +3408,8 @@ components:
           type: string
         projectId:
           type: ["integer", "null"]
+        assistenciaId:
+          type: ["integer", "null"]
         teamDescription:
           type: ["string", "null"]
         eventType:
@@ -3431,6 +3433,8 @@ components:
           type: string
         projectId:
           type: integer
+        assistenciaId:
+          type: ["integer", "null"]
         teamDescription:
           type: string
         eventType:
@@ -3451,6 +3455,8 @@ components:
           type: string
         projectId:
           type: integer
+        assistenciaId:
+          type: ["integer", "null"]
         teamDescription:
           type: string
         eventType:

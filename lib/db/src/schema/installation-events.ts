@@ -8,6 +8,8 @@ export const installationEventsTable = pgTable("installation_events", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   projectId: integer("project_id"),
+  // Assistência de obra antiga não tem projeto no sistema — aponta o chamado.
+  assistenciaId: integer("assistencia_id"),
   teamDescription: text("team_description"),
   eventType: installationEventTypeEnum("event_type").notNull().default("instalacao"),
   startDate: text("start_date").notNull(),
