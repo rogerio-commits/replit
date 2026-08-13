@@ -17,7 +17,9 @@ export function Dica({
   children: React.ReactNode;
 }) {
   return (
-    <Tooltip>
+    // 150ms: o padrão do Radix é 700ms — tempo demais, ninguém para o mouse
+    // tanto tempo e a dica parecia não existir.
+    <Tooltip delayDuration={150}>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent side={lado} className="max-w-[260px] text-xs leading-snug">
         {texto}
