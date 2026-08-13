@@ -70,6 +70,7 @@ import Papa from "papaparse";
 import { useToast } from "@/hooks/use-toast";
 import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
+import { Dica } from "@/components/dica";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
 import { ActionPlanBadge } from "@/components/action-plan-badge";
 import { useActionPlanMap } from "@/hooks/useActionPlanMap";
@@ -591,22 +592,28 @@ export default function Projects() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant={showArchived ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowArchived((v) => !v)}
-          >
-            <Archive className="mr-2 h-4 w-4" />
-            {showArchived ? "Ver ativos" : "Ver arquivados"}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={filtered.length === 0}>
-            <FileText className="mr-2 h-4 w-4" />
-            PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filtered.length === 0}>
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
-          </Button>
+          <Dica texto="Alterna entre os projetos em andamento e os que foram arquivados (encerrados, sem sumir do sistema).">
+            <Button
+              variant={showArchived ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowArchived((v) => !v)}
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              {showArchived ? "Ver ativos" : "Ver arquivados"}
+            </Button>
+          </Dica>
+          <Dica texto="Abre a janela de impressão com a lista do jeito que está filtrada — para levar impressa a uma reunião.">
+            <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={filtered.length === 0}>
+              <FileText className="mr-2 h-4 w-4" />
+              PDF
+            </Button>
+          </Dica>
+          <Dica texto="Baixa uma planilha com todos os projetos filtrados e todas as datas — para abrir no Excel.">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filtered.length === 0}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
+            </Button>
+          </Dica>
           {canEdit && (
           <Dialog open={isImportOpen} onOpenChange={(open) => { setIsImportOpen(open); if (!open) resetImport(); }}>
             <DialogTrigger asChild>
@@ -1024,6 +1031,9 @@ export default function Projects() {
                 {([["tabela", "Tabela"], ["kanban", "Kanban"]] as const).map(([v, l]) => (
                   <button
                     key={v}
+                    title={v === "tabela"
+                      ? "Lista com todas as datas do projeto, ordenável por qualquer coluna"
+                      : "Quadro por fase — arraste o cartão para avançar o projeto de fase"}
                     onClick={() => setView(v)}
                     className={cn(
                       "px-3 py-1.5 transition-colors border-l border-border first:border-l-0",

@@ -7,6 +7,7 @@ import {
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Dica } from "@/components/dica";
 import { FileText, Upload, Loader2 } from "lucide-react";
 
 // ── RDO da visita, direto na linha ───────────────────────────────────────────
@@ -56,22 +57,26 @@ export function VisitRdoActions({
 
   if (visit.reportFileKey) {
     return (
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" asChild>
-        <a href={`${BASE}/api/storage${visit.reportFileKey}`} target="_blank" rel="noopener noreferrer" title="Baixar o RDO desta visita">
-          <FileText className="h-3.5 w-3.5" /> RDO
-        </a>
-      </Button>
+      <Dica texto="Baixa o RDO desta visita — o arquivo com fotos e comentários que você anexou.">
+        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" asChild>
+          <a href={`${BASE}/api/storage${visit.reportFileKey}`} target="_blank" rel="noopener noreferrer">
+            <FileText className="h-3.5 w-3.5" /> RDO
+          </a>
+        </Button>
+      </Dica>
     );
   }
   if (!canEdit) return null;
   return (
     <>
       <input ref={inputRef} type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" className="hidden" onChange={handleUpload} />
-      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={uploading}
-        onClick={() => inputRef.current?.click()} title="Anexar o RDO desta visita">
-        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-        {uploading ? "Enviando..." : "Anexar RDO"}
-      </Button>
+      <Dica texto="Anexa o relatório da visita (PDF, DOC ou foto) feito no seu app de vistoria. Toda visita realizada precisa do RDO — sem ele, ela aparece em Pendências.">
+        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={uploading}
+          onClick={() => inputRef.current?.click()}>
+          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          {uploading ? "Enviando..." : "Anexar RDO"}
+        </Button>
+      </Dica>
     </>
   );
 }

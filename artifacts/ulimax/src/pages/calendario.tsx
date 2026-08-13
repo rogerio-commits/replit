@@ -17,6 +17,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { useCanEdit } from "@/hooks/useAppUser";
+import { Dica } from "@/components/dica";
 import {
   Select,
   SelectContent,
@@ -807,7 +808,7 @@ function EventDialog({
             })()}
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs text-muted-foreground">Duração:</span>
+              <span className="text-xs text-muted-foreground" title="Calcula a data de término a partir do início">Duração:</span>
               {[1, 2, 3, 5].map((n) => (
                 <button
                   key={n}
@@ -1482,20 +1483,24 @@ export default function Calendario() {
 
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-muted/60 rounded-lg px-1 py-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+            <Dica texto="Mês anterior."><Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </Button></Dica>
             <span className="min-w-[130px] text-center text-sm font-semibold capitalize">{monthLabel}</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+            <Dica texto="Próximo mês."><Button variant="ghost" size="icon" className="h-7 w-7 rounded-md" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </Button></Dica>
           </div>
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
+          <Dica texto="Volta o calendário para o mês atual.">
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCurrentMonth(new Date())}>Hoje</Button>
+          </Dica>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                <MessageCircle className="mr-1.5 h-3.5 w-3.5" /> WhatsApp
-              </Button>
+              <Dica texto="Monta a agenda do período agrupada por equipe e abre o WhatsApp com o texto pronto para enviar.">
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <MessageCircle className="mr-1.5 h-3.5 w-3.5" /> WhatsApp
+                </Button>
+              </Dica>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={() => shareAgenda(0)}>Agenda de hoje</DropdownMenuItem>
@@ -1505,12 +1510,16 @@ export default function Calendario() {
           </DropdownMenu>
           {canEdit && (
             <>
-              <Button variant="outline" size="sm" className="h-8" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
-                <Users className="mr-1.5 h-4 w-4" /> Nova Equipe
-              </Button>
-              <Button size="sm" className="h-8" onClick={() => openCreate("", isoDate(new Date()))}>
-                <Plus className="mr-1.5 h-4 w-4" /> Novo Evento
-              </Button>
+              <Dica texto="Cria uma linha vazia no calendário para uma equipe nova — depois é só arrastar ou criar eventos nela.">
+                <Button variant="outline" size="sm" className="h-8" onClick={() => { setNewTeamName(""); setNewTeamOpen(true); }}>
+                  <Users className="mr-1.5 h-4 w-4" /> Nova Equipe
+                </Button>
+              </Dica>
+              <Dica texto="Agenda uma equipe: escolha a obra (ou o chamado de assistência), a equipe e a duração. Você também pode clicar direto num dia da linha da equipe.">
+                <Button size="sm" className="h-8" onClick={() => openCreate("", isoDate(new Date()))}>
+                  <Plus className="mr-1.5 h-4 w-4" /> Novo Evento
+                </Button>
+              </Dica>
             </>
           )}
         </div>
@@ -1729,14 +1738,16 @@ export default function Calendario() {
                       : "aguardando instalação, sem data prevista"}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0 h-7 gap-1 text-xs"
-                  onClick={() => openCreate("", p.instalacaoStartDate?.slice(0, 10) ?? isoDate(new Date()), p.id)}
-                >
-                  <Users className="h-3.5 w-3.5" /> Agendar equipe
-                </Button>
+                <Dica texto="Abre o agendamento já com esta obra e a data prevista — falta escolher a equipe e a duração.">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 h-7 gap-1 text-xs"
+                    onClick={() => openCreate("", p.instalacaoStartDate?.slice(0, 10) ?? isoDate(new Date()), p.id)}
+                  >
+                    <Users className="h-3.5 w-3.5" /> Agendar equipe
+                  </Button>
+                </Dica>
               </div>
             ))}
             {aguardandoAgendamento.length > 8 && (
@@ -1768,14 +1779,16 @@ export default function Calendario() {
                     {a.scheduledDate ? ` · prevista ${a.scheduledDate.slice(0, 10).split("-").reverse().join("/")}` : ""}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0 h-7 gap-1 text-xs"
-                  onClick={() => openCreate("", a.scheduledDate?.slice(0, 10) ?? isoDate(new Date()), null, a.id)}
-                >
-                  <Users className="h-3.5 w-3.5" /> Alocar equipe
-                </Button>
+                <Dica texto="Marca a equipe para este chamado. Ao salvar, a data também é gravada no chamado e ele passa a 'em andamento'.">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 h-7 gap-1 text-xs"
+                    onClick={() => openCreate("", a.scheduledDate?.slice(0, 10) ?? isoDate(new Date()), null, a.id)}
+                  >
+                    <Users className="h-3.5 w-3.5" /> Alocar equipe
+                  </Button>
+                </Dica>
               </div>
             ))}
             {assistenciasSemEquipe.length > 8 && (

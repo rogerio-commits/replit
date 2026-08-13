@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
 import { VisitRdoActions } from "@/components/visit-rdo-actions";
 import { useCanEdit } from "@/hooks/useAppUser";
+import { Dica } from "@/components/dica";
 import { cn } from "@/lib/utils";
 import { daysFromToday } from "@/lib/project-health";
 
@@ -227,9 +228,11 @@ export default function ObraVisitas() {
                     projectId={p.id}
                     projectName={p.name}
                     trigger={
-                      <Button size="sm" variant="outline" className="shrink-0 h-7 gap-1 text-xs">
-                        <CalendarPlus className="h-3.5 w-3.5" /> Agendar
-                      </Button>
+                      <Dica texto="Confirma a visita nesta obra: escolha a data e o objetivo. Ela sai desta lista e entra na programação do mês.">
+                        <Button size="sm" variant="outline" className="shrink-0 h-7 gap-1 text-xs">
+                          <CalendarPlus className="h-3.5 w-3.5" /> Agendar
+                        </Button>
+                      </Dica>
                     }
                   />
                 </span>

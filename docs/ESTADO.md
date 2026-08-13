@@ -43,6 +43,7 @@
 - pnpm **10** (packageManager fixado). Deploy: Vercel na `main` (todo push na main = produção).
 - iCloud no Desktop gera duplicatas `" 2.ts"`: nunca `git add -A`; limpar com `find -E lib artifacts -type f -regex '.* [0-9]+\.(ts|tsx)' -delete` e conferir `git status` antes do push.
 - Componente novo: verificar que está MONTADO (grep da string no chunk do build).
+- **Dicas nos botões**: `components/dica.tsx` (Tooltip; TooltipProvider já está no App). Todo botão de ação novo ganha `<Dica texto="...">` dizendo o RESULTADO, não o rótulo — a maioria dos usuários não abre a tela de Ajuda.
 - Erros de tipo em cascata: limpar `lib/**/dist` + `*.tsbuildinfo` e rebuildar.
 
 ## Pendências conhecidas (backlog)

@@ -17,6 +17,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Dica } from "@/components/dica";
 import {
   Check, ChevronDown, ChevronRight, Ruler, PencilRuler, BadgeCheck,
   Factory, Truck, Wrench, ArrowRight, GripVertical, History,
@@ -295,7 +296,7 @@ export function PhaseRail({
           type="button"
           onClick={() => setHistoryOpen(true)}
           className="ml-auto flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-          title="Quem inseriu ou alterou cada data, e quando"
+          title="Mostra quem inseriu ou alterou cada data do projeto, e quando"
         >
           <History className="h-3.5 w-3.5" /> Histórico
         </button>
@@ -370,9 +371,11 @@ export function PhaseRail({
 
                   {isActive && canEdit && idx < PHASES.length - 1 && (
                     <div className="pt-2">
-                      <Button size="sm" className="gap-1.5" onClick={advance} disabled={updateProject.isPending}>
-                        Concluir fase <ArrowRight className="h-3.5 w-3.5" /> {PHASES[idx + 1].label}
-                      </Button>
+                      <Dica texto={`Encerra esta etapa e move o projeto para ${PHASES[idx + 1].label}. Não exige anexar desenho — o envio continua por e-mail.`}>
+                        <Button size="sm" className="gap-1.5" onClick={advance} disabled={updateProject.isPending}>
+                          Concluir fase <ArrowRight className="h-3.5 w-3.5" /> {PHASES[idx + 1].label}
+                        </Button>
+                      </Dica>
                     </div>
                   )}
                 </div>

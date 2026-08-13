@@ -5,6 +5,7 @@ import { HardHat, CalendarPlus } from "lucide-react";
 import { NewVisitDialog } from "@/components/new-visit-dialog";
 import { useObraTabCounts, type TabCount } from "@/hooks/useObraTabCounts";
 import { cn } from "@/lib/utils";
+import { Dica } from "@/components/dica";
 import ObraVisitas from "./obra-visitas";
 import ObraPendencias from "./obra-pendencias";
 import CentralObra from "./central-obra";
@@ -56,9 +57,11 @@ export default function Obra() {
         </div>
         <NewVisitDialog
           trigger={
-            <Button className="shrink-0 gap-1.5">
-              <CalendarPlus className="h-4 w-4" /> Nova visita
-            </Button>
+            <Dica texto="Agenda ou registra uma visita: escolha a obra, a data e o objetivo. Depois de realizada, anexe o RDO na linha da visita.">
+              <Button className="shrink-0 gap-1.5">
+                <CalendarPlus className="h-4 w-4" /> Nova visita
+              </Button>
+            </Dica>
           }
         />
       </div>

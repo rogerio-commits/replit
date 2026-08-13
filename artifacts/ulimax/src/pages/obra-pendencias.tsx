@@ -168,7 +168,7 @@ export default function ObraPendencias() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            title="Cobrar no WhatsApp"
+            title="Abre o WhatsApp com a mensagem de cobrança pronta — você escolhe o contato e envia"
             className="shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/40"
           >
             <MessageCircle className="h-3.5 w-3.5" /> Cobrar
