@@ -249,6 +249,7 @@ function DroppableDayCell({
     <div
       ref={setNodeRef}
       onClick={interactive ? onClick : undefined}
+      title={interactive ? `Clique para agendar ${team === NO_TEAM ? "uma equipe" : team} neste dia` : undefined}
       className={cn(
         "absolute top-0 bottom-0 border-r border-border/30 transition-colors",
         interactive && "cursor-pointer"
@@ -365,12 +366,14 @@ function DraggableEventBar({
               <span className="hidden group-hover:flex items-center gap-0.5 shrink-0 ml-1 relative z-10">
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(event); }}
+                  title="Editar este evento (obra, tipo, datas e observações)"
                   className="p-0.5 rounded hover:bg-white/20"
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onDelete(event); }}
+                  title="Excluir este evento do calendário"
                   className="p-0.5 rounded hover:bg-white/20"
                 >
                   <Trash2 className="h-3 w-3" />
@@ -752,6 +755,9 @@ function EventDialog({
                       <button
                         key={opt.value}
                         type="button"
+                        title={opt.value === "instalacao"
+                          ? "Instalação de esquadrias numa obra cadastrada no sistema"
+                          : "Assistência técnica — serve também para obra antiga, que não existe como projeto"}
                         onClick={() => field.onChange(opt.value)}
                         className={cn(
                           "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-colors",
@@ -841,7 +847,7 @@ function EventDialog({
                     <button key={c.id} type="button" onClick={() => field.onChange(c.id)}
                       className={cn("w-7 h-7 rounded-full border-2 transition-all", c.bg,
                         field.value === c.id ? "border-foreground scale-110" : "border-transparent"
-                      )} title={c.label}
+                      )} title={`Cor da barra desta equipe no calendário: ${c.label}`}
                     />
                   ))}
                 </div>
@@ -849,10 +855,14 @@ function EventDialog({
             )} />
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {editing ? "Salvar" : "Criar"}
-              </Button>
+              <Dica texto={editing
+                ? "Salva as alterações — a barra se ajusta no calendário."
+                : "Cria o evento e mostra a barra na linha da equipe. Depois é só arrastar para remarcar."}>
+                <Button type="submit" disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editing ? "Salvar" : "Criar"}
+                </Button>
+              </Dica>
             </div>
           </form>
         </Form>
@@ -1018,7 +1028,7 @@ function GanttRow({
             <button
               type="button"
               onClick={canEdit ? startEdit : undefined}
-              title={canEdit ? "Clique para renomear a equipe" : undefined}
+              title={canEdit ? "Clique para renomear a equipe — o nome muda em todos os eventos dela" : undefined}
               className={cn(
                 "flex-1 min-w-0 text-left text-sm font-medium truncate",
                 "rounded px-1 -mx-1 transition-colors",
@@ -1033,7 +1043,7 @@ function GanttRow({
             <button
               type="button"
               onClick={startEdit}
-              title="Renomear equipe"
+              title="Renomear esta equipe em todos os eventos dela"
               className="shrink-0 opacity-0 group-hover/team:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted"
             >
               <Pencil className="h-3 w-3 text-muted-foreground" />
@@ -1843,17 +1853,19 @@ export default function Calendario() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setNewTeamOpen(false)}>Cancelar</Button>
-              <Button
-                disabled={!newTeamName.trim()}
-                onClick={() => {
-                  const trimmed = newTeamName.trim();
-                  if (!trimmed) return;
-                  setNewTeamOpen(false);
-                  openCreate(trimmed, isoDate(new Date()));
-                }}
-              >
-                Continuar
-              </Button>
+              <Dica texto="Abre o agendamento já com esta equipe — a linha dela aparece no calendário assim que o primeiro evento for salvo.">
+                <Button
+                  disabled={!newTeamName.trim()}
+                  onClick={() => {
+                    const trimmed = newTeamName.trim();
+                    if (!trimmed) return;
+                    setNewTeamOpen(false);
+                    openCreate(trimmed, isoDate(new Date()));
+                  }}
+                >
+                  Continuar
+                </Button>
+              </Dica>
             </div>
           </div>
         </DialogContent>
