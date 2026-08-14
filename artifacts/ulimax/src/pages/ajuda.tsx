@@ -1138,6 +1138,12 @@ const sections: Section[] = [
     icon: ClipboardList,
     content: (
       <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          <Strong>Recurso opcional, fora do menu.</Strong> O controle peça a peça só compensa quando a
+          equipe realmente marca cada esquadria na obra. Hoje o acompanhamento da instalação acontece pelo
+          <Strong> Calendário</Strong> (equipe e data), pela <Strong>fase do projeto</Strong> e pelas
+          <Strong> visitas com RDO</Strong>. Se quiser usar o checklist, acesse por <code>/checklist</code>.
+        </p>
         <p className="text-sm text-muted-foreground">Controle item a item das peças (esquadrias) instaladas em cada projeto.</p>
         <Subsection title="Adicionar um item">
           <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
