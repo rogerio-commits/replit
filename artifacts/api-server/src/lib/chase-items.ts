@@ -1,20 +1,11 @@
-import {
-  db,
-  projectActionItemsTable,
-  projectActionPlansTable,
-  projectsTable,
-  membersTable,
-} from "@workspace/db";
-import { isNull, eq } from "drizzle-orm";
+import { db, tasksTable, projectsTable, membersTable } from "@workspace/db";
+import { eq, ne, isNotNull, and } from "drizzle-orm";
 
 /**
- * "Cobrança" = item em aberto que o gestor de obras precisa cobrar de alguém:
- * itens de plano de ação, de todas as obras.
- *
- * Follow-ups de visita NÃO entram mais aqui (decisão de produto): visita não
- * gera pendência item a item — a pendência de uma visita é o RDO não anexado,
- * cobrado nas telas de Obras. O source "visit" permanece no contrato por
- * compatibilidade, mas não é mais emitido.
+ * "Cobrança" = tarefa em aberto com prazo, de qualquer obra. O conceito de
+ * "item de plano de ação" foi fundido em tarefa (2026-09): uma coisa só para
+ * registrar, cobrar e concluir. O responsável pode ser interno (membro) ou
+ * externo (fornecedor, via `responsibleExternal`).
  *
  * O `responsibleEmail` só existe para a cobrança por e-mail — o endpoint HTTP
  * remove esse campo antes de responder ao cliente.
@@ -25,7 +16,7 @@ export interface ChaseItemRow {
   description: string;
   projectId: number;
   projectName: string | null;
-  context: string | null; // título do plano ou data da visita
+  context: string | null;
   responsibleId: number | null;
   responsibleName: string | null;
   responsibleEmail: string | null;
@@ -34,40 +25,32 @@ export interface ChaseItemRow {
   createdAt: string;
 }
 
-/** Todos os itens em aberto (não concluídos) de planos de ação. */
+/** Tarefas em aberto com prazo — a fila de cobrança do gestor. */
 export async function fetchOpenChaseItems(): Promise<ChaseItemRow[]> {
-  const planItems = await db
+  const rows = await db
     .select({
-      item: projectActionItemsTable,
-      planTitle: projectActionPlansTable.title,
-      projectId: projectActionPlansTable.projectId,
+      task: tasksTable,
       projectName: projectsTable.name,
       memberName: membersTable.name,
       memberEmail: membersTable.email,
     })
-    .from(projectActionItemsTable)
-    .innerJoin(
-      projectActionPlansTable,
-      eq(projectActionItemsTable.planId, projectActionPlansTable.id),
-    )
-    .leftJoin(projectsTable, eq(projectActionPlansTable.projectId, projectsTable.id))
-    .leftJoin(membersTable, eq(projectActionItemsTable.responsibleId, membersTable.id))
-    .where(isNull(projectActionItemsTable.completedAt));
+    .from(tasksTable)
+    .leftJoin(projectsTable, eq(tasksTable.projectId, projectsTable.id))
+    .leftJoin(membersTable, eq(tasksTable.assignedTo, membersTable.id))
+    .where(and(ne(tasksTable.status, "done"), isNotNull(tasksTable.dueDate)));
 
-  const fromPlans: ChaseItemRow[] = planItems.map((r) => ({
-    id: r.item.id,
-    source: "action_plan",
-    description: r.item.description,
-    projectId: r.projectId,
+  return rows.map((r) => ({
+    id: r.task.id,
+    source: "action_plan" as const,
+    description: r.task.title,
+    projectId: r.task.projectId,
     projectName: r.projectName ?? null,
-    context: r.planTitle ?? null,
-    responsibleId: r.item.responsibleId ?? null,
+    context: null,
+    responsibleId: r.task.assignedTo ?? null,
     responsibleName: r.memberName ?? null,
     responsibleEmail: r.memberEmail ?? null,
-    responsibleExternal: r.item.responsibleExternal ?? null,
-    dueDate: r.item.dueDate ?? null,
-    createdAt: r.item.createdAt.toISOString(),
+    responsibleExternal: r.task.responsibleExternal ?? null,
+    dueDate: r.task.dueDate ?? null,
+    createdAt: r.task.createdAt.toISOString(),
   }));
-
-  return fromPlans;
 }

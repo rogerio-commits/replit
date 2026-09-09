@@ -355,6 +355,8 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   assignedTo?: number | null;
   /** @nullable */
   assigneeName?: string | null;
@@ -414,6 +416,8 @@ export interface TaskInput {
   status: TaskInputStatus;
   priority: TaskInputPriority;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   assignedTo?: number | null;
   dueDate?: string;
   recurrence?: TaskInputRecurrence;
@@ -456,6 +460,8 @@ export interface TaskUpdate {
   description?: string;
   status?: TaskUpdateStatus;
   priority?: TaskUpdatePriority;
+  /** @nullable */
+  responsibleExternal?: string | null;
   /** @nullable */
   assignedTo?: number | null;
   dueDate?: string;

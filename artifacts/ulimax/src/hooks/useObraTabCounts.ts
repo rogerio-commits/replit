@@ -3,7 +3,6 @@ import {
   useListAllSiteVisits,
   useListProjects,
   useListTasks,
-  useListActionPlanSummaries,
   useListAssistenciaTecnica,
   useListSampleControls,
 } from "@workspace/api-client-react";
@@ -36,7 +35,6 @@ export function useObraTabCounts(): ObraTabCounts {
   const { data: visits } = useListAllSiteVisits();
   const { data: projects } = useListProjects();
   const { data: tasks } = useListTasks();
-  const { data: planSummaries } = useListActionPlanSummaries();
   const { data: assistencias } = useListAssistenciaTecnica();
   const { data: amostras } = useListSampleControls();
 
@@ -78,8 +76,7 @@ export function useObraTabCounts(): ObraTabCounts {
     ).length;
     let datasVencidas = 0;
     for (const p of projs) datasVencidas += overdueObraDates(p).length;
-    const planosVencidos = (planSummaries ?? []).filter((s) => s.overdueItems > 0).length;
-    const pendencias = rdosPendentes + tarefasVencidas + datasVencidas + planosVencidos;
+    const pendencias = rdosPendentes + tarefasVencidas + datasVencidas;
 
     // ── Operação: assistências em aberto + amostras a entregar ──
     const atAbertas = (assistencias ?? []).filter((a) => !a.realizado).length;
@@ -90,8 +87,8 @@ export function useObraTabCounts(): ObraTabCounts {
 
     return {
       visitas: { count: visitasHoje + sugeridas, urgent: sugeridas > 0 },
-      pendencias: { count: pendencias, urgent: tarefasVencidas + datasVencidas + planosVencidos > 0 },
+      pendencias: { count: pendencias, urgent: tarefasVencidas + datasVencidas > 0 },
       operacao: { count: atAbertas + amostrasAbertas, urgent: amostrasAtrasadas > 0 },
     };
-  }, [visits, projects, tasks, planSummaries, assistencias, amostras]);
+  }, [visits, projects, tasks, assistencias, amostras]);
 }

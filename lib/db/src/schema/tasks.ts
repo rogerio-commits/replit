@@ -15,6 +15,9 @@ export const tasksTable = pgTable("tasks", {
   status: taskStatusEnum("status").notNull().default("todo"),
   priority: taskPriorityEnum("priority").notNull().default("medium"),
   assignedTo: integer("assigned_to"),
+  // Fornecedor/terceiro sem conta no sistema — herdado dos planos de ação,
+  // que deixaram de existir como conceito separado.
+  responsibleExternal: text("responsible_external"),
   dueDate: text("due_date"),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),

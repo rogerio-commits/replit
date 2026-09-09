@@ -21,6 +21,8 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   assignedTo?: number | null;
   /** @nullable */
   assigneeName?: string | null;

@@ -298,7 +298,7 @@ export default function CentralObra({ embedded = false }: { embedded?: boolean }
                   <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
                   <p className="text-sm font-medium text-foreground">Operação em dia</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Nenhuma assistência aberta, amostra a entregar, plano de ação de peça ou instalação nos próximos 7 dias.
+                    Nenhuma assistência aberta, amostra a entregar, pendência de peça ou instalação nos próximos 7 dias.
                   </p>
                 </div>
               );
@@ -370,7 +370,7 @@ export default function CentralObra({ embedded = false }: { embedded?: boolean }
 
             if (actionItems.length > 0) {
               blocos.push(
-                <SectionCard key="pa" title="Peças com plano de ação" icon={ClipboardList} count={actionItems.length} href="/checklist" hrefLabel="Instalações">
+                <SectionCard key="pa" title="Peças com pendência" icon={ClipboardList} count={actionItems.length} href="/checklist" hrefLabel="Instalações">
                   <ul className="divide-y divide-border/50">
                     {actionItems.slice(0, MAX_ROWS).map((i) => (
                       <li key={i.id} className="flex items-center gap-3 py-2">

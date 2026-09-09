@@ -72,8 +72,6 @@ import { useCanEdit } from "@/hooks/useAppUser";
 import { cn } from "@/lib/utils";
 import { Dica } from "@/components/dica";
 import { computeHealthMap, FAROL_META, type FarolLevel } from "@/lib/project-health";
-import { ActionPlanBadge } from "@/components/action-plan-badge";
-import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 import { FarolLegend } from "@/components/farol-legend";
 import { ProjectsBoard } from "./kanban";
 
@@ -338,7 +336,6 @@ export default function Projects() {
   const { data: allMembers } = useListMembers();
   const { data: allTasks, isLoading: isTasksLoading } = useListTasks();
 
-  const planMap = useActionPlanMap();
   const [, navigate] = useLocation();
   // Visão da lista: tabela (densa), cards (leitura rápida) ou kanban por fase.
   const [view, setViewState] = useState<"tabela" | "kanban">(() => {
@@ -1163,9 +1160,6 @@ export default function Projects() {
                             <p className="text-xs text-muted-foreground truncate mt-0.5">{project.description}</p>
                           )}
                         </Link>
-                        <div className="mt-1">
-                          <ActionPlanBadge projectId={project.id} projectName={project.name} summary={planMap.get(project.id)} />
-                        </div>
                       </td>
                       <td className="px-3 py-2.5 min-w-[90px]">
                         <Link href={`/projects/${project.id}`} className="block">

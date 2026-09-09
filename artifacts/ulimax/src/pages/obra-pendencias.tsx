@@ -4,9 +4,8 @@ import {
   useListTasks,
   useListProjects,
   useListAllSiteVisits,
-  useListChaseItems,
 } from "@workspace/api-client-react";
-import type { ChaseItem, Project, Task } from "@workspace/api-client-react";
+import type { Project, Task } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users, CalendarClock, CalendarDays, ChevronRight, ClipboardList,
@@ -69,11 +68,11 @@ function prazoLabel(d: number): string {
 }
 
 // Cobrança pronta para o WhatsApp — sem número salvo, o gestor escolhe o contato.
-function whatsappUrl(item: ChaseItem): string {
-  const nome = item.responsibleExternal ?? "";
-  const prazo = item.dueDate ? ` Prazo: ${item.dueDate.split("-").reverse().join("/")}.` : "";
-  const obra = item.projectName ? ` (obra: ${item.projectName})` : "";
-  const msg = `Olá${nome ? `, ${nome}` : ""}! Passando para acompanhar: "${item.description}"${obra}.${prazo}`;
+function whatsappUrl(t: Task): string {
+  const nome = t.responsibleExternal ?? "";
+  const prazo = t.dueDate ? ` Prazo: ${t.dueDate.split("-").reverse().join("/")}.` : "";
+  const obra = t.projectName ? ` (obra: ${t.projectName})` : "";
+  const msg = `Olá${nome ? `, ${nome}` : ""}! Passando para acompanhar: "${t.title}"${obra}.${prazo}`;
   return `https://wa.me/?text=${encodeURIComponent(msg)}`;
 }
 
@@ -84,7 +83,7 @@ const GRUPOS: {
   bar: string; icone: string; fundo: string;
 }[] = [
   {
-    id: "equipe", label: "Pendências da equipe", hint: "tarefas e planos de ação — cobre a pessoa",
+    id: "equipe", label: "Pendências da equipe", hint: "tarefas vencidas por responsável e cobranças de fornecedor",
     icon: Users, bar: "bg-violet-500", icone: "text-violet-500",
     fundo: "bg-violet-50/60 dark:bg-violet-950/20",
   },
@@ -112,7 +111,6 @@ export default function ObraPendencias() {
   const { data: tasks, isLoading: l1 } = useListTasks();
   const { data: projects, isLoading: l2 } = useListProjects();
   const { data: visits } = useListAllSiteVisits();
-  const { data: chase } = useListChaseItems();
   const canEdit = useCanEdit();
   // Campo nao acompanha fabrica: datas de producao ficam fora do "a vencer".
   const isCampo = useEffectiveRole() === "gestor_obras";
@@ -147,24 +145,24 @@ export default function ObraPendencias() {
       });
     }
 
-    // Itens de plano de ação — cobra o responsável (WhatsApp para externos).
-    for (const it of (chase ?? []) as ChaseItem[]) {
-      const d = it.dueDate ? daysFromToday(it.dueDate) : 999;
+    // Tarefa de fornecedor/terceiro — vai linha a linha, com o botão de cobrar.
+    for (const t of allTasks) {
+      if (t.status === "done" || !t.responsibleExternal) continue;
+      const d = t.dueDate ? daysFromToday(t.dueDate) : 999;
       if (d > DATAS_A_VENCER) continue;
-      const quem = it.responsibleName ?? it.responsibleExternal ?? "sem responsável";
       out.push({
-        key: `plano-${it.id}`,
+        key: `ext-${t.id}`,
         grupo: "equipe",
         d,
         icon: <ClipboardList className="h-4 w-4 text-red-500 shrink-0" />,
-        title: it.description,
-        sub: `${it.projectName ?? "Obra"} · ${quem}${it.dueDate ? ` · prazo ${fmtBr(it.dueDate)}` : " · sem prazo"}`,
-        badge: it.dueDate ? prazoLabel(d) : "sem prazo",
+        title: t.title,
+        sub: `${t.projectName ?? "Obra"} · ${t.responsibleExternal}${t.dueDate ? ` · prazo ${fmtBr(t.dueDate)}` : " · sem prazo"}`,
+        badge: t.dueDate ? prazoLabel(d) : "sem prazo",
         tone: d < 0 ? "red" : d <= 3 ? "amber" : "muted",
-        onOpen: () => navigate(`/projects/${it.projectId}`),
-        action: it.responsibleExternal ? (
+        onOpen: () => navigate(`/projects/${t.projectId}`),
+        action: (
           <a
-            href={whatsappUrl(it)}
+            href={whatsappUrl(t)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -173,14 +171,14 @@ export default function ObraPendencias() {
           >
             <MessageCircle className="h-3.5 w-3.5" /> Cobrar
           </a>
-        ) : undefined,
+        ),
       });
     }
 
     // Tarefas vencidas — uma linha por pessoa: cobra-se a pessoa, não a tarefa.
     const porPessoa = new Map<string, { id: number | null; name: string; count: number; oldest: number }>();
     for (const t of allTasks) {
-      if (t.status === "done" || !t.dueDate) continue;
+      if (t.status === "done" || !t.dueDate || t.responsibleExternal) continue;
       const atraso = -daysFromToday(t.dueDate);
       if (atraso <= 0) continue;
       const k = t.assignedTo != null ? String(t.assignedTo) : "none";
@@ -247,7 +245,7 @@ export default function ObraPendencias() {
 
     out.sort((a, b) => a.d - b.d);
     return out;
-  }, [tasks, projects, visits, chase, dateFields, canEdit, navigate]);
+  }, [tasks, projects, visits, dateFields, canEdit, navigate]);
 
   const atrasadas = itens.filter((i) => i.d < 0);
   const semana = itens.filter((i) => i.d >= 0 && i.d <= 7);

@@ -16,6 +16,8 @@ export interface TaskUpdate {
   status?: TaskUpdateStatus;
   priority?: TaskUpdatePriority;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   assignedTo?: number | null;
   dueDate?: string;
   projectId?: number;

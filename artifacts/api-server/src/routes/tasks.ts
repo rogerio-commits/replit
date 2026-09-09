@@ -99,6 +99,7 @@ function taskRow(
     priority: row.task.priority,
     assignedTo: row.task.assignedTo ?? null,
     assigneeName: row.memberName ?? null,
+    responsibleExternal: row.task.responsibleExternal ?? null,
     projectName: row.projectName ?? null,
     dueDate: row.task.dueDate ?? null,
     startedAt: row.task.startedAt ? row.task.startedAt.toISOString() : null,
@@ -212,6 +213,7 @@ router.post("/tasks", requireExecutorOrGestor, async (req, res) => {
       status: (body.data.status as "todo" | "in_progress" | "review" | "done") ?? "todo",
       priority: (body.data.priority as "low" | "medium" | "high") ?? "medium",
       assignedTo: body.data.assignedTo ?? null,
+      responsibleExternal: body.data.responsibleExternal ?? null,
       dueDate: body.data.dueDate ?? null,
     })
     .returning();
@@ -344,6 +346,7 @@ router.patch("/tasks/:id", requireExecutorOrGestor, async (req, res) => {
   }
   if (body.data.priority !== undefined) updateData.priority = body.data.priority;
   if (body.data.assignedTo !== undefined) updateData.assignedTo = body.data.assignedTo;
+  if (body.data.responsibleExternal !== undefined) updateData.responsibleExternal = body.data.responsibleExternal;
   if (body.data.dueDate !== undefined) updateData.dueDate = body.data.dueDate;
   if (body.data.projectId !== undefined) updateData.projectId = body.data.projectId;
   if (body.data.recurrence !== undefined) updateData.recurrence = body.data.recurrence;

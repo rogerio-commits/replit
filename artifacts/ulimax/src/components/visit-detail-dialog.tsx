@@ -288,7 +288,7 @@ export function VisitDetailDialog({ visit, projectId, members, canEdit, open, on
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Check className="h-4 w-4 text-primary" />
-            Plano de Ação
+            Anotações da visita
             {actionItems && actionItems.length > 0 && (
               <span className="text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
                 {doneItems.length}/{actionItems.length} concluídos

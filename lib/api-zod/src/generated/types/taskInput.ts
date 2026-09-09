@@ -18,6 +18,8 @@ export interface TaskInput {
   status: TaskInputStatus;
   priority: TaskInputPriority;
   /** @nullable */
+  responsibleExternal?: string | null;
+  /** @nullable */
   assignedTo?: number | null;
   dueDate?: string;
   recurrence?: TaskInputRecurrence;

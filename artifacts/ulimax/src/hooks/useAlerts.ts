@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useListProjects, useListTasks, useListMembers, useGetMe, useListSampleControls, useListChaseItems } from "@workspace/api-client-react";
-import type { Project, Task, SampleControl, ChaseItem } from "@workspace/api-client-react";
+import { useListProjects, useListTasks, useListMembers, useGetMe, useListSampleControls } from "@workspace/api-client-react";
+import type { Project, Task, SampleControl } from "@workspace/api-client-react";
 import { overdueObraDates } from "@/lib/obra-dates";
 
 export type AlertSeverity = "danger" | "warning" | "info";
@@ -16,8 +16,6 @@ export type AlertType =
   | "task_assigned_to_me"
   | "overdue_sample"
   | "approaching_sample"
-  | "overdue_chase_item"
-  | "approaching_chase_item"
   | "overdue_obra_date";
 
 export interface Alert {
@@ -35,7 +33,6 @@ const APPROACHING_DAYS = 7;
 const SAMPLE_APPROACHING_DAYS = 5;
 const STALLED_DAYS = 30;
 const STALE_TASK_DAYS = 7;
-const CHASE_APPROACHING_DAYS = 3;
 
 function todayMidnight() {
   const d = new Date();
@@ -60,7 +57,6 @@ export function computeAlerts(
   tasks: Task[],
   myMemberId?: number | null,
   samples: SampleControl[] = [],
-  chase: ChaseItem[] = [],
 ): Alert[] {
   const t = todayMidnight();
   const alerts: Alert[] = [];
@@ -219,36 +215,6 @@ export function computeAlerts(
     }
   }
 
-  // Cobranças: itens de plano de ação e follow-ups de visita em aberto.
-  for (const ci of chase) {
-    if (!ci.dueDate) continue;
-    const diff = daysDiff(t, parseDate(ci.dueDate));
-    const who = ci.responsibleName ?? ci.responsibleExternal ?? "sem responsável";
-    const kind = ci.source === "visit" ? "Follow-up de visita" : "Item de plano";
-    if (diff < 0) {
-      alerts.push({
-        id: `overdue-chase-${ci.source}-${ci.id}`,
-        type: "overdue_chase_item",
-        severity: "danger",
-        title: `${kind} atrasado: ${ci.description.slice(0, 60)}`,
-        description: `Prazo ${fmtDate(ci.dueDate)} expirou · ${ci.projectName ?? "Obra"} · ${who}`,
-        href: "/obra?tab=pendencias",
-        projectId: ci.projectId,
-      });
-    } else if (diff <= CHASE_APPROACHING_DAYS) {
-      const label = diff === 0 ? "hoje" : `em ${diff} dia${diff > 1 ? "s" : ""}`;
-      alerts.push({
-        id: `approaching-chase-${ci.source}-${ci.id}`,
-        type: "approaching_chase_item",
-        severity: "warning",
-        title: `${kind} vence ${label}: ${ci.description.slice(0, 60)}`,
-        description: `Vence ${fmtDate(ci.dueDate)} · ${ci.projectName ?? "Obra"} · ${who}`,
-        href: "/obra?tab=pendencias",
-        projectId: ci.projectId,
-      });
-    }
-  }
-
   const order: Record<AlertSeverity, number> = { danger: 0, warning: 1, info: 2 };
   return alerts.sort((a, b) => order[a.severity] - order[b.severity]);
 }
@@ -259,7 +225,6 @@ export function useAlerts() {
   const { data: members } = useListMembers();
   const { data: me } = useGetMe({ query: { staleTime: 5 * 60 * 1000, queryKey: ["/api/me"] } });
   const { data: samples } = useListSampleControls();
-  const { data: chase } = useListChaseItems();
 
   const myMemberId = useMemo(() => {
     if (!me?.email || !members) return null;
@@ -268,8 +233,8 @@ export function useAlerts() {
   }, [me, members]);
 
   return useMemo(
-    () => computeAlerts(projects ?? [], tasks ?? [], myMemberId, samples ?? [], chase ?? []),
-    [projects, tasks, myMemberId, samples, chase],
+    () => computeAlerts(projects ?? [], tasks ?? [], myMemberId, samples ?? []),
+    [projects, tasks, myMemberId, samples],
   );
 }
 

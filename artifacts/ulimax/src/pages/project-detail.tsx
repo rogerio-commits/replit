@@ -36,12 +36,9 @@ import {
   getListProjectObservationsQueryKey,
 } from "@workspace/api-client-react";
 import { ProjectMaterials } from "@/components/project-materials";
-import { ProjectActionPlan } from "@/components/project-action-plan";
 import { PhaseRail } from "@/components/phase-rail";
 import { VisitDetailDialog } from "@/components/visit-detail-dialog";
-import { ActionPlanBadge } from "@/components/action-plan-badge";
 import { useEffectiveRole } from "@/hooks/useViewAs";
-import { useActionPlanMap } from "@/hooks/useActionPlanMap";
 import { BatchCreateTasks } from "@/components/batch-create-tasks";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -140,6 +137,7 @@ const taskSchema = z.object({
   status: z.enum(["todo", "in_progress", "review", "done"]),
   priority: z.enum(["low", "medium", "high"]),
   assignedTo: z.string().optional(),
+  responsibleExternal: z.string().optional(),
   dueDate: z.string().optional(),
 });
 
@@ -211,7 +209,6 @@ function getPriorityColor(priority: string) {
 export default function ProjectDetail() {
   const { id } = useParams();
   const projectId = parseInt(id || "0", 10);
-  const planMap = useActionPlanMap();
   const isCampo = useEffectiveRole() === "gestor_obras";
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -355,7 +352,7 @@ export default function ProjectDetail() {
 
   const taskForm = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
-    defaultValues: { title: "", description: "", status: "todo", priority: "medium", assignedTo: "none", dueDate: "" },
+    defaultValues: { title: "", description: "", status: "todo", priority: "medium", assignedTo: "none", responsibleExternal: "", dueDate: "" },
   });
 
   const visitForm = useForm<VisitFormValues>({
@@ -447,23 +444,26 @@ export default function ProjectDetail() {
     });
   };
 
-  const openEditTask = (task: { id: number; title: string; description?: string | null; status: string; priority: string; assignedTo?: number | null; dueDate?: string | null }) => {
+  const openEditTask = (task: { id: number; title: string; description?: string | null; status: string; priority: string; assignedTo?: number | null; responsibleExternal?: string | null; dueDate?: string | null }) => {
     setEditingTaskId(task.id);
     taskForm.reset({
       title: task.title,
       description: task.description ?? "",
       status: task.status as TaskFormValues["status"],
       priority: task.priority as TaskFormValues["priority"],
-      assignedTo: task.assignedTo ? String(task.assignedTo) : "none",
+      assignedTo: task.assignedTo ? String(task.assignedTo) : (task.responsibleExternal ? "externo" : "none"),
+      responsibleExternal: task.responsibleExternal ?? "",
       dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
     });
     setIsCreateTaskOpen(true);
   };
 
   const onCreateTask = (data: TaskFormValues) => {
+    const externo = data.assignedTo === "externo";
     const payload = {
       ...data,
-      assignedTo: data.assignedTo && data.assignedTo !== "none" ? Number(data.assignedTo) : null,
+      assignedTo: !externo && data.assignedTo && data.assignedTo !== "none" ? Number(data.assignedTo) : null,
+      responsibleExternal: externo ? (data.responsibleExternal ?? "").trim() || null : null,
     };
     if (editingTaskId !== null) {
       updateTask.mutate({ id: editingTaskId, data: payload }, {
@@ -637,7 +637,6 @@ export default function ProjectDetail() {
               <Badge variant="outline" className={getStatusColor(project.status)}>
                 {STATUS_LABELS[project.status] ?? project.status}
               </Badge>
-              <ActionPlanBadge projectId={projectId} projectName={project.name} summary={planMap.get(projectId)} />
               {isExecutor && !isGestor && (
                 <Badge variant="outline" className={cn(
                   "text-xs",
@@ -1031,14 +1030,6 @@ export default function ProjectDetail() {
         );
       })()}
 
-      {/* Plano de Ação da Obra */}
-      <ProjectActionPlan
-        projectId={projectId}
-        projectName={project?.name ?? "Projeto"}
-        members={(allMembers ?? []).map((m) => ({ id: m.id, name: m.name }))}
-        canEdit={canEdit}
-      />
-
       {/* Visitas na Obra */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -1141,7 +1132,7 @@ export default function ProjectDetail() {
                     { value: "all", label: "Todas" },
                     { value: "pending", label: "Com pendências" },
                     { value: "completed", label: "Concluídas" },
-                    { value: "no_plan", label: "Sem plano de ação" },
+                    { value: "no_plan", label: "Sem anotações" },
                   ] as const
                 ).map((opt) => (
                   <button
@@ -1187,7 +1178,7 @@ export default function ProjectDetail() {
                           <th className="px-3 py-2 text-left font-medium text-muted-foreground">Responsável</th>
                           <th className="px-3 py-2 text-left font-medium text-muted-foreground">Objetivo</th>
                           <th className="px-3 py-2 text-left font-medium text-muted-foreground">Observações</th>
-                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Plano de Ação</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted-foreground">Anotações</th>
                           <th className="px-3 py-2" />
                         </tr>
                       </thead>
@@ -1419,7 +1410,7 @@ export default function ProjectDetail() {
                     <div className="grid grid-cols-2 gap-4">
                       <FormField control={taskForm.control} name="assignedTo" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Responsável (interno Ulimax)</FormLabel>
+                          <FormLabel>Responsável</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
@@ -1429,8 +1420,17 @@ export default function ProjectDetail() {
                               {(allMembers ?? []).map((m) => (
                                 <SelectItem key={m.id} value={String(m.id)}>{m.name}</SelectItem>
                               ))}
+                              <SelectItem value="externo">Externo (fornecedor, terceiro)…</SelectItem>
                             </SelectContent>
                           </Select>
+                          {field.value === "externo" && (
+                            <Input
+                              className="mt-2"
+                              placeholder="Nome do fornecedor ou terceiro"
+                              value={taskForm.watch("responsibleExternal") ?? ""}
+                              onChange={(e) => taskForm.setValue("responsibleExternal", e.target.value)}
+                            />
+                          )}
                           <FormMessage />
                         </FormItem>
                       )} />

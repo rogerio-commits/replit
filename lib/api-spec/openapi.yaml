@@ -2991,6 +2991,8 @@ components:
         priority:
           type: string
           enum: [low, medium, high]
+        responsibleExternal:
+          type: ["string", "null"]
         assignedTo:
           type: ["integer", "null"]
         assigneeName:
@@ -3038,6 +3040,8 @@ components:
         priority:
           type: string
           enum: [low, medium, high]
+        responsibleExternal:
+          type: ["string", "null"]
         assignedTo:
           type: ["integer", "null"]
         dueDate:
@@ -3062,6 +3066,8 @@ components:
         priority:
           type: string
           enum: [low, medium, high]
+        responsibleExternal:
+          type: ["string", "null"]
         assignedTo:
           type: ["integer", "null"]
         dueDate:
