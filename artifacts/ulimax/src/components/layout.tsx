@@ -172,9 +172,8 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Principal",
                 items: [
-                  { href: "/meu-dia", label: "Meu Dia", icon: Sun },
                   dashboardItem,
-                    { href: "/projects", label: "Projetos", icon: Briefcase },
+                  { href: "/projects", label: "Projetos", icon: Briefcase },
                   { href: "/tasks", label: "Trabalho", icon: CheckSquare },
                 ],
               },
@@ -196,9 +195,6 @@ export function Layout({ children }: LayoutProps) {
                 label: "Configurações",
                 items: [
                   { href: "/members", label: "Equipe", icon: Users },
-                  { href: "/templates", label: "Templates", icon: Layers },
-                  { href: "/campos-personalizados", label: "Campos Personalizados", icon: Settings2 },
-                  { href: "/automacao", label: "Automações", icon: Zap },
                   { href: "/auditoria", label: "Auditoria", icon: History },
                 ],
               },

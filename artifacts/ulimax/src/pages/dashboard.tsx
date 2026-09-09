@@ -20,6 +20,7 @@ import { projectStatusLabel } from "@/lib/project-status";
 import { useCanEdit, useIsGestor } from "@/hooks/useAppUser";
 import { OnboardingBanner } from "@/components/onboarding-banner";
 import { MaterialSplit } from "@/components/material-split";
+import { MinhasAtividades } from "@/components/minhas-atividades";
 import { FarolLegend } from "@/components/farol-legend";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -336,6 +337,11 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ── Minhas Atividades: o Meu Dia virou este bloco ── */}
+      <div className="max-w-3xl">
+        <MinhasAtividades />
+      </div>
 
       {/* ── Comparativo por unidade (Madeira × Alumínio) ── */}
       {!loading && <MaterialSplit />}
