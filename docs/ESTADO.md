@@ -19,6 +19,13 @@
 - **Trabalho** (`/tasks`): abas Lista | Tarefas (colunas drag, cartão clicável abre detalhe) | Fases dos Projetos | Linha do Tempo. Filtro Madeira/Alumínio. Deep-links `?vencidas=1&responsavel=` caem na Lista.
 - **Obras** (`/obra?tab=`): ver tabela acima. `/cobrancas`, `/agenda`, `/painel-obra`, `/portfolio`, `/kanban`, `/gantt` redirecionam.
 
+## Simplificação de 2026-09 (adesão)
+Motivo: "muito complexo para a aderência das pessoas". Três fases:
+1. **Menu do gestor 14→10** e **uma home só**: Meu Dia saiu do menu (Dashboard virou home e ganhou o bloco `MinhasAtividades`); Templates, Campos Personalizados e Automações saíram do menu (rotas preservadas).
+2. **"Plano de ação" deixou de existir — tudo é Tarefa.** `tasks.responsible_external` (SQL rodado) guarda fornecedor/terceiro; os itens de `project_action_items` foram migrados para `tasks` por INSERT. Saíram: seção Plano de Ação do projeto, ActionPlanBadge, itens de plano em Pendências, alertas de cobrança. `fetchOpenChaseItems` agora lê tarefas (mantém o e-mail diário). Tabelas antigas preservadas, sem uso.
+3. **Página do projeto e Ajuda enxutas**: saíram os 4 cartões de status (contador foi para o título de Tarefas) e o Histórico de Atividades (o Trilho tem Histórico de datas; gestor tem Auditoria). Ajuda de **51 → 24 tópicos**; 10 seções de recursos avançados de tarefa viraram uma só.
+Conceitos eliminados: plano de ação, item de plano, cobrança, Meu Dia.
+
 ## Backend/domínio
 - Fases do projeto: a_iniciar → em_projeto → em_aprovacao ("Na Arquitetura") → em_producao → aguardando_instalacao → em_instalacao.
 - Farol (`lib/project-health.ts`): 🔴 tarefa vencida OU endDate passado · 🟡 vence ≤3d / parada 7d+ / entrega ≤7d com <70% · 🟢 resto. FarolLegend espelha esses números.

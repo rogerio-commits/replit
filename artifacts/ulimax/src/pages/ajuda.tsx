@@ -147,52 +147,6 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "meu-dia",
-    title: "Meu Dia",
-    icon: Sun,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Página pessoal que exibe somente as tarefas e projetos relacionados ao usuário logado — o ponto de partida ideal para começar o dia de trabalho.</p>
-        <Subsection title="O que aparece">
-          <Table
-            headers={["Seção", "Conteúdo"]}
-            rows={[
-              ["KPIs pessoais", "Total de tarefas atribuídas a você, concluídas, em andamento e atrasadas"],
-              ["Minhas Tarefas", "Lista das tarefas onde você é o responsável, com conclusão inline e painel de detalhes"],
-              ["Meus Projetos", "Projetos em que você é participante, com progresso de tarefas"],
-              ["Prazos próximos", "Tarefas vencendo hoje ou nos próximos 7 dias"],
-              ["Marcos", "Marcos dos seus projetos com vencimento nos próximos 14 dias, no painel lateral"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Quem usa o Meu Dia">
-          <p className="text-sm text-muted-foreground">É a tela inicial do <Strong>Gestor</Strong>. Projetistas têm o mesmo conteúdo pessoal dentro da <Strong>Minha Prancheta</Strong> (bloco <em>Minhas Atividades</em>), que é a home deles.</p>
-        </Subsection>
-        <Subsection title="Concluir uma tarefa sem sair da página">
-          <p className="text-sm text-muted-foreground">Passe o mouse sobre o <Strong>círculo</Strong> à esquerda de qualquer tarefa em <em>Minhas Tarefas</em> — ele exibe um ícone de ✓ verde. Clique para marcar a tarefa como concluída instantaneamente, sem abrir nenhum modal. Também é possível <Strong>adiar o prazo</Strong> (amanhã, em 3 dias ou próxima semana) pelo botão de adiar na própria linha da tarefa.</p>
-        </Subsection>
-        <Subsection title="Abrir detalhes de uma tarefa">
-          <p className="text-sm text-muted-foreground">Clique em qualquer lugar no <Strong>card da tarefa</Strong> para abrir o painel lateral completo com descrição, subtarefas, comentários, anexos e registro de horas — o mesmo painel disponível na página Tarefas.</p>
-        </Subsection>
-        <Subsection title="Seção Marcos (sidebar)">
-          <p className="text-sm text-muted-foreground mb-2">O painel lateral direito exibe a seção <Strong>Marcos</Strong> com os marcos dos seus projetos que vencem nos próximos 14 dias. Cada item mostra o nome do marco, o projeto de origem e um badge de urgência:</p>
-          <Table
-            headers={["Cor do badge", "Significado"]}
-            rows={[
-              ["Vermelho", "Marco vencido ou vence hoje"],
-              ["Laranja", "Vence em até 3 dias"],
-              ["Âmbar", "Vence entre 4 e 14 dias"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">Para o Gestor, o <Strong>Meu Dia</Strong> é a tela inicial após o login, no topo do menu lateral.</p>
-        </Subsection>
-        <Tip>Use o Meu Dia como ponto de partida diário: conclua tarefas com um clique, abra detalhes sem navegar para outra página, e acompanhe seus marcos no painel lateral.</Tip>
-      </div>
-    ),
-  },
-  {
     id: "prancheta",
     title: "Minha Prancheta (projetista)",
     icon: Sun,
@@ -368,184 +322,34 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "criar-lote",
-    title: "Criar Tarefas em Lote",
-    icon: ClipboardPaste,
-    isNew: true,
+    id: "avancado-tarefas",
+    title: "Recursos avançados de tarefas",
+    icon: CheckSquare,
     content: (
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Transforme uma lista anotada (do papel, do WhatsApp, de uma reunião) em tarefas de verdade em segundos — cada linha vira uma tarefa.</p>
-        <Subsection title="Como usar">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Na página <Strong>Tarefas</Strong>, clique em <Strong>Criar em Lote</Strong>.</li>
-            <li>Escolha o <Strong>projeto</Strong> que receberá as tarefas.</li>
-            <li>Cole ou digite a lista — <Strong>uma tarefa por linha</Strong>.</li>
-            <li>Confira a prévia (título, responsável e prazo reconhecidos) e clique em <Strong>Criar</Strong>.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="O sistema reconhece automaticamente">
-          <Table
-            headers={["Você escreve", "O sistema entende"]}
-            rows={[
-              ["Medir vão da janela - João - sexta", "Tarefa para João com prazo na próxima sexta-feira"],
-              ["Comprar dobradiças ; 28/07", "Tarefa com prazo em 28/07"],
-              ["Enviar projeto | Maria | amanhã", "Tarefa para Maria com prazo amanhã"],
-              ["Revisar orçamento", "Tarefa simples, sem responsável nem prazo"],
-            ]}
-          />
-          <p className="text-sm text-muted-foreground mt-2">Separe as partes com <Strong>-</Strong>, <Strong>;</Strong> ou <Strong>|</Strong>. Prazos aceitos: <em>hoje</em>, <em>amanhã</em>, dias da semana (<em>segunda</em> a <em>sábado</em>) e datas como <em>25/07</em>.</p>
-        </Subsection>
-        <Tip>Se houver duas pessoas com nomes parecidos, o sistema deixa a tarefa sem responsável em vez de arriscar atribuir errado — o nome fica no título para você definir depois.</Tip>
+        <p className="text-sm text-muted-foreground">
+          O básico (criar, atribuir, dar prazo e concluir) resolve o dia a dia. Estes recursos existem para
+          quem precisar — todos ficam dentro do painel da tarefa, que abre ao clicar nela.
+        </p>
+        <Table
+          headers={["Recurso", "Para que serve"]}
+          rows={[
+            ["Subtarefas", "Quebrar uma tarefa grande em passos, com progresso próprio"],
+            ["Comentários e anexos", "Conversar sobre a tarefa e guardar arquivos junto dela"],
+            ["Etiquetas", "Marcar assuntos (ex.: vidro, ferragem) e filtrar por eles"],
+            ["Descrição em Markdown", "Formatar a descrição com listas, negrito e links"],
+            ["Recorrência", "Tarefa que se repete (diária, semanal, mensal, anual)"],
+            ["Registro de horas", "Apontar o tempo gasto na tarefa"],
+            ["Dependências", "Marcar que uma tarefa espera outra terminar"],
+            ["Criar em lote", "Colar uma lista e transformar cada linha numa tarefa"],
+            ["Operações em massa", "Selecionar várias tarefas e mudar status, responsável ou prazo de uma vez"],
+          ]}
+        />
+        <Tip>Nada disso é obrigatório: uma tarefa com título, responsável e prazo já cumpre o papel.</Tip>
       </div>
     ),
   },
-  {
-    id: "subtarefas",
-    title: "Subtarefas",
-    icon: ListTree,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Divida qualquer tarefa em etapas menores para acompanhar o progresso passo a passo.</p>
-        <Subsection title="Criar uma subtarefa">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Abra o painel de detalhes de uma tarefa clicando em <Strong>Detalhes</Strong>.</li>
-            <li>Na seção <Strong>Subtarefas</Strong>, clique em <Strong>+ Adicionar</Strong>.</li>
-            <li>Digite o título da subtarefa e pressione <Strong>Enter</Strong> ou clique em <Strong>Salvar</Strong>.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Marcar como concluída">
-          <p className="text-sm text-muted-foreground">Clique no <Strong>círculo</Strong> à esquerda de qualquer subtarefa para alternar entre pendente e concluída. O texto é riscado e o progresso atualizado automaticamente.</p>
-        </Subsection>
-        <Subsection title="Progresso">
-          <p className="text-sm text-muted-foreground">Uma barra de progresso mostra o percentual de subtarefas concluídas (ex: <em>3/5 · 60%</em>). Na lista de tarefas, as contagens também aparecem visíveis no card.</p>
-        </Subsection>
-        <Tip>Use subtarefas para detalhar etapas de instalação, checklists de materiais ou sequências de aprovação dentro de uma mesma tarefa principal.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "operacoes-massa",
-    title: "Operações em Massa",
-    icon: CheckCheck,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Atualize o status ou a prioridade de várias tarefas ao mesmo tempo, sem precisar editar uma a uma.</p>
-        <Subsection title="Como selecionar tarefas">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Na página <Strong>Tarefas</Strong>, marque o <Strong>checkbox</Strong> à esquerda de cada tarefa que deseja incluir.</li>
-            <li>Use <Strong>Selecionar todos</Strong> no topo da lista para marcar todas as tarefas visíveis de uma vez.</li>
-          </ul>
-        </Subsection>
-        <Subsection title="Barra de ações em massa">
-          <p className="text-sm text-muted-foreground mb-2">Ao selecionar pelo menos uma tarefa, uma barra aparece no topo da página com as ações disponíveis:</p>
-          <Table
-            headers={["Ação", "Resultado"]}
-            rows={[
-              ["Alterar Status", "Define o mesmo status para todas as tarefas selecionadas"],
-              ["Alterar Prioridade", "Define a mesma prioridade para todas as tarefas selecionadas"],
-              ["Alterar Responsável", "Atribui o mesmo responsável a todas as tarefas selecionadas"],
-              ["Excluir", "Remove permanentemente todas as tarefas selecionadas"],
-              ["Limpar", "Desmarca todas as tarefas sem fazer alterações"],
-            ]}
-          />
-        </Subsection>
-        <Tip>Os filtros funcionam em conjunto com a seleção em massa — aplique um filtro de status ou projeto primeiro e use "Selecionar todos" para operar somente sobre o subconjunto filtrado.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "etiquetas",
-    title: "Etiquetas (Tags)",
-    icon: Tag,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Classifique tarefas com etiquetas coloridas para facilitar a identificação visual e a organização por categoria.</p>
-        <Subsection title="Criar uma etiqueta nova">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Abra o painel de detalhes de uma tarefa clicando em <Strong>Detalhes</Strong>.</li>
-            <li>Na seção <Strong>Etiquetas</Strong>, clique em <Strong>Adicionar</Strong>.</li>
-            <li>Clique em <Strong>Criar nova etiqueta</Strong>, digite o nome e escolha uma cor.</li>
-            <li>Pressione <Strong>Criar</Strong> — a etiqueta é criada e já vinculada à tarefa.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Reutilizar etiquetas existentes">
-          <p className="text-sm text-muted-foreground">No popover de etiquetas, as já criadas aparecem na lista. Clique em qualquer uma para vinculá-la imediatamente à tarefa atual.</p>
-        </Subsection>
-        <Subsection title="Remover uma etiqueta de uma tarefa">
-          <p className="text-sm text-muted-foreground">No badge da etiqueta, dentro do painel de detalhes, clique no <Strong>×</Strong> para desvinculá-la daquela tarefa. A etiqueta continua existindo para ser usada em outras tarefas.</p>
-        </Subsection>
-        <Tip>As etiquetas aparecem tanto no painel de detalhes quanto nos cards da lista de tarefas, facilitando a identificação sem precisar abrir cada item.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "dependencias",
-    title: "Dependências entre Tarefas",
-    icon: Link2,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Indique quais tarefas precisam ser concluídas antes que outra possa ser iniciada, tornando as sequências de trabalho explícitas e visíveis.</p>
-        <Subsection title="Adicionar uma dependência">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Abra o painel de detalhes da tarefa que será <Strong>bloqueada</Strong>.</li>
-            <li>Na seção <Strong>Bloqueada por</Strong>, clique em <Strong>Adicionar</Strong>.</li>
-            <li>Busque pelo nome da tarefa que precisa ser concluída primeiro.</li>
-            <li>Clique nela para confirmar a dependência.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Leitura visual">
-          <Table
-            headers={["Indicador", "Significado"]}
-            rows={[
-              ["Fundo âmbar", "Dependência ainda pendente (bloqueio ativo)"],
-              ["Texto riscado", "Tarefa dependente já concluída (bloqueio liberado)"],
-              ["Contador 'N pendentes'", "Quantas dependências ainda estão em aberto"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Remover uma dependência">
-          <p className="text-sm text-muted-foreground">Passe o mouse sobre a dependência na lista e clique no <Strong>×</Strong> que aparece à direita.</p>
-        </Subsection>
-        <Tip>Uma tarefa não pode depender de si mesma, e o sistema impede dependências duplicadas automaticamente.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "markdown",
-    title: "Descrições em Markdown",
-    icon: FileText,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">A descrição das tarefas suporta formatação Markdown — escreva com marcações simples e o sistema renderiza o resultado com visual limpo e legível.</p>
-        <Subsection title="Editor com pré-visualização">
-          <p className="text-sm text-muted-foreground mb-2">Ao criar ou editar uma tarefa, o campo de descrição tem duas abas:</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Editar</Strong>: campo de texto puro onde você digita com marcações Markdown.</li>
-            <li><Strong>Pré-visualizar</Strong>: mostra o resultado renderizado antes de salvar.</li>
-          </ul>
-        </Subsection>
-        <Subsection title="Formatações suportadas">
-          <Table
-            headers={["Você digita", "Resultado"]}
-            rows={[
-              ["**texto**", "negrito"],
-              ["*texto*", "itálico"],
-              ["`código`", "trecho de código inline"],
-              ["- item", "lista com marcadores"],
-              ["1. item", "lista numerada"],
-              ["[link](url)", "link clicável"],
-              ["> texto", "citação (blockquote)"],
-              ["## Título", "cabeçalho"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Como a descrição aparece">
-          <p className="text-sm text-muted-foreground">No painel de detalhes da tarefa, a descrição é sempre exibida já renderizada — negrito, listas e links funcionam sem precisar de nenhuma ação extra.</p>
-        </Subsection>
-        <Tip>Use listas para detalhar etapas de execução, negrito para destacar pontos críticos e links para referenciar documentos externos ou projetos relacionados.</Tip>
-      </div>
-    ),
-  },
+
   {
     id: "busca",
     title: "Busca Global",
@@ -575,52 +379,6 @@ const sections: Section[] = [
           ]}
         />
         <Tip>Sem texto digitado, o painel exibe o menu de navegação rápida entre as páginas principais do sistema.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "comentarios",
-    title: "Comentários em Tarefas",
-    icon: MessageSquare,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Cada tarefa possui um histórico de comentários para comunicação contextualizada diretamente no item de trabalho.</p>
-        <Subsection title="Como comentar em uma tarefa">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Na página <Strong>Tarefas</Strong>, localize a tarefa desejada.</li>
-            <li>Clique no botão <Strong>Detalhes</Strong> à direita da tarefa.</li>
-            <li>No painel lateral que se abre, role até a seção <Strong>Comentários</Strong>.</li>
-            <li>Digite sua mensagem no campo de texto e pressione <Strong>Comentar</Strong>.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Histórico">
-          <p className="text-sm text-muted-foreground">Os comentários são exibidos em ordem cronológica, com o nome do autor e o horário de cada mensagem. O histórico completo é visível para todos os membros com acesso ao projeto.</p>
-        </Subsection>
-        <Tip>Use comentários para registrar decisões, solicitar aprovações ou comunicar bloqueios — tudo vinculado diretamente à tarefa, sem precisar de e-mails externos.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "anexos",
-    title: "Anexos em Tarefas",
-    icon: Paperclip,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Arquivos (imagens, PDFs, planilhas, etc.) podem ser anexados diretamente a qualquer tarefa para centralizar as evidências e documentos do trabalho.</p>
-        <Subsection title="Enviar um arquivo">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Abra o painel de detalhes de uma tarefa clicando em <Strong>Detalhes</Strong>.</li>
-            <li>Na seção <Strong>Anexos</Strong>, arraste e solte o arquivo ou clique na área de upload.</li>
-            <li>Aguarde o envio — o arquivo aparece na lista assim que concluído.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Baixar ou excluir">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique no nome do arquivo para fazer o <Strong>download</Strong>.</li>
-            <li>Clique no ícone de lixeira ao lado do arquivo para <Strong>excluí-lo</Strong> (somente Gestor ou quem fez o upload).</li>
-          </ul>
-        </Subsection>
-        <Tip>Formatos suportados: imagens (JPG, PNG, GIF), documentos (PDF, DOCX, XLSX) e qualquer outro tipo de arquivo. O limite por arquivo é definido pela configuração do servidor.</Tip>
       </div>
     ),
   },
@@ -686,81 +444,6 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "gantt",
-    title: "Linha do Tempo (Gantt)",
-    icon: GanttChart,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          A visualização em Gantt é a aba <Strong>Linha do Tempo</Strong> da tela <Strong>Trabalho</Strong>.
-          Exibe todos os projetos e suas tarefas numa grade de tempo — navegue por semana, mês ou trimestre.
-        </p>
-        <Subsection title="Como acessar">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique em <Strong>Trabalho</Strong> no menu lateral.</li>
-            <li>Selecione a aba <Strong>Linha do Tempo</Strong>.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Controles de navegação">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Semana / Mês / Trimestre</Strong> — altera a escala horizontal do gráfico.</li>
-            <li><Strong>‹ ›</Strong> — avança ou recua o período exibido.</li>
-            <li><Strong>Hoje</Strong> — recentra a visualização no dia atual (linha vermelha).</li>
-            <li>Clique no chevron ao lado do projeto para expandir as tarefas individuais.</li>
-          </ul>
-        </Subsection>
-        <Subsection title="Legenda de cores">
-          <Table
-            headers={["Cor", "Significado"]}
-            rows={[
-              ["Verde", "Tarefa concluída"],
-              ["Azul", "Em Andamento"],
-              ["Amarelo", "Em Revisão"],
-              ["Cinza", "A Fazer"],
-              ["Diamante âmbar", "Prazo da tarefa"],
-              ["Linha vermelha", "Hoje"],
-            ]}
-          />
-        </Subsection>
-        <Tip>Tarefas sem datas cadastradas não aparecem no gráfico — preencha início e prazo na tarefa para que a barra seja exibida.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "fotos-arquivos",
-    title: "Fotos e Arquivos do Projeto",
-    icon: Camera,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Cada projeto possui duas seções dedicadas a mídia: <Strong>Fotos</Strong> (galeria de imagens da obra) e <Strong>Arquivos</Strong> (documentos, planilhas, PDFs e demais tipos).</p>
-        <Subsection title="Enviar fotos">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Abra o detalhe do projeto e role até a seção <Strong>Fotos</Strong>.</li>
-            <li>Clique na área de upload ou arraste as imagens (JPG, PNG, WebP, GIF).</li>
-            <li>As fotos aparecem na galeria assim que o upload conclui.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Galeria e lightbox">
-          <p className="text-sm text-muted-foreground">Clique em qualquer miniatura da galeria para abrir o <Strong>lightbox</Strong> em tela cheia. No lightbox, use as setas para navegar entre as fotos sem fechar o painel.</p>
-        </Subsection>
-        <Subsection title="Enviar arquivos">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Role até a seção <Strong>Arquivos</Strong> do projeto.</li>
-            <li>Clique na área de upload ou arraste o arquivo desejado (PDF, DOCX, XLSX, etc.).</li>
-            <li>O arquivo aparece na lista com nome, tamanho e data de envio.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Baixar ou excluir">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique no ícone de <Strong>download</Strong> para salvar o arquivo localmente.</li>
-            <li>Clique no ícone de <Strong>lixeira</Strong> para excluir — esta ação é permanente.</li>
-          </ul>
-        </Subsection>
-        <Tip>Fotos e arquivos ficam separados para facilitar a navegação: imagens ficam na galeria visual e documentos ficam na lista de arquivos, cada um com seu próprio espaço de upload.</Tip>
-      </div>
-    ),
-  },
-  {
     id: "aprovacao",
     title: "Aprovação da Arquitetura",
     icon: BadgeCheck,
@@ -793,183 +476,6 @@ const sections: Section[] = [
           <p className="text-sm text-muted-foreground">Registram a decisão o <Strong>Gestor</Strong> e o <Strong>Projetista Gestor</Strong>. Os demais papéis veem o painel em modo leitura, com o status e a nota.</p>
         </Subsection>
         <Tip>A nota de aprovação fica visível para toda a equipe no painel do projeto — use-a para registrar condições, ressalvas ou instruções para a próxima etapa.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "produtividade",
-    title: "Produtividade",
-    icon: BarChart2,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">A análise de produtividade mostra o desempenho individual de cada membro da equipe, com base nas tarefas atribuídas e concluídas.</p>
-        <Subsection title="Acessar">
-          <p className="text-sm text-muted-foreground">Abra <Strong>Desempenho</Strong> no menu Análises: a tabela por pessoa mostra abertas e atrasadas de cada membro.</p>
-        </Subsection>
-        <Subsection title="O que você vê">
-          <Table
-            headers={["Gráfico / Seção", "O que mostra"]}
-            rows={[
-              ["Carga da equipe", "Tarefas abertas, vencidas e concluídas por membro"],
-              ["Barra de conclusão", "Percentual de tarefas concluídas em relação ao total atribuído"],
-              ["Ordenação", "Quem tem mais tarefas vencidas ou abertas aparece no topo"],
-            ]}
-          />
-        </Subsection>
-        <Tip>Use esta página para identificar membros sobrecarregados ou subutilizados e redistribuir tarefas de forma mais equilibrada.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "templates",
-    title: "Templates de Projeto",
-    icon: Layers,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Templates são modelos reutilizáveis de projeto — defina uma estrutura padrão de tarefas uma vez e aplique quantas vezes precisar para criar projetos novos de forma ágil.</p>
-        <Subsection title="Criar um template">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Acesse <Strong>Templates</Strong> no menu lateral.</li>
-            <li>Clique em <Strong>Novo Template</Strong>.</li>
-            <li>Preencha nome, descrição e prioridade padrão.</li>
-            <li>Com o template selecionado, clique em <Strong>Adicionar Tarefa</Strong> para incluir as etapas padrão.</li>
-            <li>Para cada tarefa, informe título, prioridade e <Strong>Dias após início</Strong> — o offset que define em quantos dias após o início do projeto aquela tarefa deverá ser entregue.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Usar um template (criar projeto)">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Selecione o template na lista da esquerda.</li>
-            <li>Clique no botão <Strong>Usar Template</Strong> (ícone de play verde).</li>
-            <li>Informe o nome do projeto e a data de início.</li>
-            <li>Clique em <Strong>Criar Projeto</Strong> — o projeto é criado com todas as tarefas e os prazos calculados automaticamente.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Gerenciar tarefas do template">
-          <p className="text-sm text-muted-foreground">No painel de detalhe do template, cada tarefa exibe o título, prioridade e offset de dias. Clique no <Strong>×</Strong> ao lado de uma tarefa para removê-la do template sem afetar projetos já criados a partir dele.</p>
-        </Subsection>
-        <Tip>Crie templates para os tipos de projeto mais comuns na sua operação (ex.: "Residencial Alumínio", "Comercial Madeira") e padronize as etapas da equipe. Apenas gestores podem criar e excluir templates.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "recorrencia",
-    title: "Tarefas Recorrentes",
-    icon: Repeat2,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Tarefas recorrentes se repetem automaticamente em um intervalo definido — ao marcar uma como concluída, a próxima ocorrência é criada automaticamente com o prazo deslocado.</p>
-        <Subsection title="Configurar recorrência">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Ao criar ou editar uma tarefa, localize o campo <Strong>Recorrência</Strong> no formulário.</li>
-            <li>Escolha o intervalo: <em>Diária, Semanal, Mensal</em> ou <em>Anual</em>.</li>
-            <li>Opcionalmente, defina uma <Strong>Fim da recorrência</Strong> — data a partir da qual nenhuma nova ocorrência será criada.</li>
-            <li>Salve a tarefa normalmente.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Como funciona ao concluir">
-          <Table
-            headers={["Intervalo", "Próxima ocorrência criada em"]}
-            rows={[
-              ["Diária", "1 dia após o prazo original"],
-              ["Semanal", "7 dias após o prazo original"],
-              ["Mensal", "1 mês após o prazo original"],
-              ["Anual", "1 ano após o prazo original"],
-            ]}
-          />
-          <p className="text-sm text-muted-foreground mt-2">A nova tarefa é criada com status <em>A Fazer</em> e herda o mesmo título, projeto, responsável e prioridade da original.</p>
-        </Subsection>
-        <Subsection title="Desativar recorrência">
-          <p className="text-sm text-muted-foreground">Edite a tarefa e mude o campo <Strong>Recorrência</Strong> para <em>Sem recorrência</em>. A partir de então, concluir a tarefa não gera novas ocorrências.</p>
-        </Subsection>
-        <Tip>Use tarefas recorrentes para atividades periódicas como vistorias semanais, relatórios mensais ou revisões anuais de contrato — o sistema cuida de criar as próximas ocorrências automaticamente.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "registro-horas",
-    title: "Registro de Horas",
-    icon: Clock,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Registre o tempo trabalhado em cada tarefa para acompanhar o esforço real da equipe e comparar com o planejado.</p>
-        <Subsection title="Como registrar horas">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Na página <Strong>Tarefas</Strong>, clique em <Strong>Detalhes</Strong> na tarefa desejada.</li>
-            <li>No painel lateral, role até a seção <Strong>Registro de Horas</Strong>.</li>
-            <li>Preencha a quantidade de horas, a data e uma descrição do que foi feito.</li>
-            <li>Clique em <Strong>Registrar</Strong> — o lançamento aparece no histórico imediatamente.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Histórico e total">
-          <Table
-            headers={["Campo", "Descrição"]}
-            rows={[
-              ["Data", "Data em que o trabalho foi realizado"],
-              ["Horas", "Tempo investido naquela sessão (ex: 2.5 = 2h30m)"],
-              ["Descrição", "Breve relato do que foi executado"],
-              ["Total", "Soma de todas as horas registradas na tarefa, exibida no rodapé"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Excluir um lançamento">
-          <p className="text-sm text-muted-foreground">Passe o mouse sobre um registro no histórico e clique no ícone de <Strong>lixeira</Strong> que aparece à direita. A exclusão é imediata e o total é recalculado automaticamente.</p>
-        </Subsection>
-        <Tip>Use decimais para frações de hora — por exemplo, <em>1.5</em> equivale a 1h30m. O total acumulado na tarefa é sempre exibido em destaque para facilitar o acompanhamento de esforço.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "automacao",
-    title: "Regras de Automação",
-    icon: Zap,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Crie regras que disparam ações automaticamente no servidor quando determinados eventos acontecem — sem precisar agir manualmente em cada caso. As regras são executadas em tempo real pelo backend.</p>
-        <Subsection title="Como criar uma regra">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Acesse <Strong>Automações</Strong> no menu lateral (seção Sistema).</li>
-            <li>Clique em <Strong>+ Nova Regra</Strong>.</li>
-            <li>Preencha o nome da regra, escolha o <Strong>Gatilho</Strong> e a <Strong>Ação</Strong>.</li>
-            <li>Clique em <Strong>Criar Regra</Strong> — a regra entra em vigor imediatamente.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Gatilhos disponíveis">
-          <Table
-            headers={["Gatilho", "Quando é acionado"]}
-            rows={[
-              ["Tarefa concluída", "Quando uma tarefa muda para o status Concluída"],
-              ["Status de tarefa alterado", "Quando qualquer tarefa muda de um status para outro"],
-              ["Projeto concluído", "Quando todas as tarefas de um projeto são concluídas"],
-              ["Tarefa atribuída a membro", "Quando o campo responsável de uma tarefa é preenchido ou alterado"],
-              ["Status do projeto alterado", "Quando o status de um projeto muda (ex: Em Projeto → Na Arquitetura)"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Ações disponíveis">
-          <Table
-            headers={["Ação", "O que acontece"]}
-            rows={[
-              ["Notificar responsável", "Envia notificação ao responsável pela tarefa"],
-              ["Notificar toda a equipe", "Envia notificação para todos os membros do projeto"],
-              ["Notificar gestores", "Envia notificação a todos os usuários com papel de Gestor"],
-              ["Avançar status da tarefa", "Avança o status da tarefa automaticamente para o próximo: A Fazer → Em Andamento → Em Revisão → Concluída"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Estatísticas de execução">
-          <p className="text-sm text-muted-foreground">Cada regra exibe duas informações de uso diretamente na lista:</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground mt-1">
-            <li><Strong>Execuções</Strong> — contador de quantas vezes a regra disparou desde sua criação.</li>
-            <li><Strong>Última execução</Strong> — data e hora da última vez que a regra foi acionada. Regras nunca executadas exibem "Nunca executada".</li>
-          </ul>
-        </Subsection>
-        <Subsection title="Ativar e desativar regras">
-          <p className="text-sm text-muted-foreground">Cada regra possui um <Strong>toggle</Strong> na lista. Desative uma regra temporariamente sem precisar excluí-la — o toggle fica cinza quando inativa e verde quando ativa. O painel de estatísticas no topo mostra quantas regras estão ativas.</p>
-        </Subsection>
-        <Subsection title="Excluir uma regra">
-          <p className="text-sm text-muted-foreground">Clique no ícone de <Strong>lixeira</Strong> ao lado da regra. A exclusão é permanente e a regra deixa de funcionar imediatamente.</p>
-        </Subsection>
-        <Tip>Combine "Tarefa atribuída" + "Notificar responsável" para avisar automaticamente o colaborador toda vez que uma nova tarefa chegar para ele. Somente Gestores podem criar e excluir regras.</Tip>
       </div>
     ),
   },
@@ -1133,40 +639,6 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "checklist",
-    title: "Checklist de Obra",
-    icon: ClipboardList,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          <Strong>Recurso opcional, fora do menu.</Strong> O controle peça a peça só compensa quando a
-          equipe realmente marca cada esquadria na obra. Hoje o acompanhamento da instalação acontece pelo
-          <Strong> Calendário</Strong> (equipe e data), pela <Strong>fase do projeto</Strong> e pelas
-          <Strong> visitas com RDO</Strong>. Se quiser usar o checklist, acesse por <code>/checklist</code>.
-        </p>
-        <p className="text-sm text-muted-foreground">Controle item a item das peças (esquadrias) instaladas em cada projeto.</p>
-        <Subsection title="Adicionar um item">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Selecione o projeto.</li>
-            <li>Clique em <Strong>+ Adicionar Item</Strong>.</li>
-            <li>Informe a peça (ex: Porta Principal) e o local (ex: Hall de Entrada).</li>
-          </ol>
-        </Subsection>
-        <Table
-          headers={["Status", "Significado"]}
-          rows={[
-            ["Não Instalado", "Aguardando instalação"],
-            ["Instalado", "Peça instalada, aguardando vistoria final"],
-            ["Finalizado", "Peça aprovada e encerrada"],
-          ]}
-        />
-        <Subsection title="Plano de ação">
-          <p className="text-sm text-muted-foreground">Quando uma peça apresenta problema, clique em <Strong>Plano de Ação</Strong> ao lado do item. Descreva o problema, defina o responsável e a data limite.</p>
-        </Subsection>
-      </div>
-    ),
-  },
-  {
     id: "obra-hub",
     title: "Obra — o dia a dia do gestor",
     icon: HardHat,
@@ -1197,65 +669,6 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "cobrancas",
-    title: "Pendências da obra (o que cobrar)",
-    icon: ClipboardList,
-    isNew: true,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Fica em <Strong>Obras → Pendências</Strong>: uma fila única com tudo que você precisa cobrar em todas as obras, do mais atrasado ao menos.</p>
-        <Subsection title="Comece pelo filtro">
-          <p className="text-sm text-muted-foreground">A aba abre em <Strong>Atrasadas</Strong> — o que exige ação hoje. Os outros chips são <Strong>Vencem em 7 dias</Strong> (para se antecipar) e <Strong>Todas</Strong>. O número ao lado de cada chip mostra quantos itens há.</p>
-        </Subsection>
-        <Subsection title="Três blocos dentro da fila">
-          <Table
-            headers={["Bloco", "O que reúne", "Ação na linha"]}
-            rows={[
-              ["🟣 Pendências da equipe", "Tarefas vencidas (uma linha por responsável) e itens de plano de ação", "Abrir as tarefas da pessoa · Cobrar no WhatsApp (responsável externo)"],
-              ["🔵 RDOs de visita", "Visita já realizada sem o relatório anexado", "Anexar RDO ali mesmo"],
-              ["🟢 Datas", "Datas estimadas vencidas sem a final registrada e as que vão vencer em 30 dias", "Abrir a obra e registrar"],
-            ]}
-          />
-        </Subsection>
-        <Tip>A cor da barra identifica o bloco; o selo à direita de cada linha (vermelho/âmbar) é a urgência. Itens de plano de ação também entram no e-mail diário e no radar do Dashboard.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "planos-acao",
-    title: "Planos de ação",
-    icon: ClipboardPaste,
-    isNew: true,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Um plano de ação é um <Strong>conjunto de tarefas</Strong> que a obra precisa realizar. Você cobra o plano por projeto, não item a item.</p>
-        <Subsection title="Ver se a obra tem plano ativo">
-          <p className="text-sm text-muted-foreground">O <Strong>selo de plano</Strong> aparece na Lista de Projetos, no cabeçalho do projeto e nas Pendências da obra: <em>"Plano: N"</em> (vermelho se houver itens vencidos) quando há itens em aberto, ou <em>"Plano ✓"</em> quando tudo foi concluído.</p>
-        </Subsection>
-        <Subsection title="Criar um plano">
-          <p className="text-sm text-muted-foreground">Onde a obra ainda não tem plano, o selo vira o botão <Strong>+ Plano de ação</Strong>: informe o título e a primeira tarefa (o plano já nasce ativo). Para gerenciar o plano completo — adicionar itens, marcar como feito, exportar em PDF — abra a página do projeto.</p>
-        </Subsection>
-      </div>
-    ),
-  },
-  {
-    id: "agendar-visita",
-    title: "Agendar visitas",
-    icon: CalendarDays,
-    isNew: true,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Durante a instalação, a frequência de visitas precisa subir. Há três formas de registrar uma visita:</p>
-        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-          <li>No Painel (aba <Strong>Hoje</Strong>), no bloco <Strong>Precisam de visita</Strong>, clique em <Strong>Agendar</Strong> — a obra já vem preenchida.</li>
-          <li>Botão <Strong>Nova visita</Strong> no topo da tela Obra (abas Hoje e Agenda) — escolha a obra no diálogo.</li>
-          <li>Dentro da página do projeto, na seção de visitas.</li>
-        </ul>
-        <p className="text-sm text-muted-foreground">Cada visita registra data, responsável, quem foi, objetivo e observações — e precisa do <Strong>RDO anexado</Strong> depois de realizada.</p>
-      </div>
-    ),
-  },
-  {
     id: "ver-como",
     title: "Ver como (pré-visualização de papéis)",
     icon: SlidersHorizontal,
@@ -1271,50 +684,6 @@ const sections: Section[] = [
           </ol>
         </Subsection>
         <Tip>É apenas apresentação: suas permissões reais no servidor não mudam — você continua com acesso total.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "central-obra",
-    title: "Operação (assistência e amostras)",
-    icon: HardHat,
-    isNew: true,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          É a aba <Strong>Operação</Strong> em Obras — o pós-visita: instalações da semana, assistência
-          técnica e amostras.
-        </p>
-        <Subsection title="As três abas">
-          <Table
-            headers={["Aba", "O que contém"]}
-            rows={[
-              ["Resumo", "Só o que pede ação — assistências em aberto, amostras a entregar, peças com plano de ação e instalações dos próximos 7 dias — com as ações na própria linha (Realizado / Pronta / Entregue). O que está em dia vira uma linha de texto; se não há nada pendente, aparece apenas 'Operação em dia'."],
-              ["Assistência", "Lista completa de chamados de suporte pós-entrega. Botão '+ Novo Chamado' no canto direito. Filtros por status, projeto e busca livre."],
-              ["Amostras", "Controle de amostras por projeto. Botão '+ Nova Amostra' no canto direito. Filtros por status, projeto e busca livre."],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Badges de contagem">
-          <p className="text-sm text-muted-foreground">
-            As abas <Strong>Assistência</Strong> e <Strong>Amostras</Strong> exibem um número em destaque
-            quando há itens pendentes — assim você vê de relance o que precisa de atenção sem nem clicar.
-          </p>
-        </Subsection>
-        <Subsection title="Ações disponíveis no topo">
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Agenda no WhatsApp</Strong> — monta a mensagem com os eventos dos próximos 7 dias agrupados por equipe e abre o WhatsApp com o texto pronto.</li>
-            <li><Strong>Novo Evento</Strong> — atalho para criar um evento no Calendário.</li>
-          </ul>
-        </Subsection>
-        <Subsection title="Papel Gestor de Obras">
-          <p className="text-sm text-muted-foreground">
-            O papel <Strong>Gestor de Obras</Strong> enxerga e opera tudo da obra em todos os projetos
-            (sem precisar ser participante de cada um), mas não acessa as áreas administrativas
-            (Equipe, Templates, Automação, Auditoria) e não pode excluir projetos.
-            Para usar, convide a pessoa em <Strong>Equipe → Convidar</Strong> escolhendo a função Gestor de Obras.
-          </p>
-        </Subsection>
       </div>
     ),
   },
@@ -1415,37 +784,6 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "reuniao",
-    title: "Reunião Semanal",
-    icon: Presentation,
-    isNew: true,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Pauta de reunião montada automaticamente com o que importa na semana — abra na segunda-feira e conduza a reunião sem preparar nada.</p>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">Abra <Strong>Desempenho</Strong> (menu Análises) e clique no botão <Strong>Modo reunião</Strong> (visível somente para Gestores).</p>
-        </Subsection>
-        <Subsection title="O que aparece na pauta">
-          <Table
-            headers={["Bloco", "Conteúdo"]}
-            rows={[
-              ["Projetos que pedem atenção", "Projetos 🔴 e 🟡 com os motivos do farol"],
-              ["Tarefas atrasadas", "Agrupadas por responsável, para cobrança direta"],
-              ["Vencem nos próximos 7 dias", "O que precisa ser priorizado nesta semana"],
-              ["Paradas há 7+ dias", "Tarefas sem andamento que merecem uma decisão"],
-              ["Concluídas na última semana", "Reconhecimento do que foi entregue, por pessoa"],
-              ["Sem responsável", "Tarefas abertas que ninguém assumiu ainda"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Imprimir a pauta">
-          <p className="text-sm text-muted-foreground">Clique em <Strong>Imprimir / Salvar PDF</Strong> no topo da página para levar a pauta em papel ou salvar o arquivo.</p>
-        </Subsection>
-        <Tip>Use a pauta como roteiro fixo: comece pelos projetos em vermelho, passe pelas atrasadas e termine celebrando as entregas da semana.</Tip>
-      </div>
-    ),
-  },
-  {
     id: "desempenho",
     title: "Desempenho da Equipe",
     icon: Activity,
@@ -1541,30 +879,6 @@ const sections: Section[] = [
     ),
   },
   {
-    id: "cobranca-automatica",
-    title: "Cobrança Automática",
-    icon: BellRing,
-    isNew: true,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">Todo dia, a partir das <Strong>7h</Strong>, o sistema cobra as pendências sozinho: cada pessoa recebe um aviso no sininho 🔔 com o que precisa de atenção, e os gestores recebem um resumo geral da equipe.</p>
-        <Subsection title="O que cada um recebe">
-          <Table
-            headers={["Quem", "O que recebe"]}
-            rows={[
-              ["Cada membro", "Aviso com suas tarefas atrasadas, que vencem hoje, que vencem em até 3 dias e paradas há 7+ dias"],
-              ["Gestores e Gestores de Obras", "Resumo do dia: totais de atrasadas, vencendo hoje/em breve, paradas e tarefas sem responsável"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Disparar a cobrança agora">
-          <p className="text-sm text-muted-foreground">Menu lateral → <Strong>Automações</Strong> → cartão <Strong>Cobrança automática de pendências</Strong> → botão <Strong>Executar agora</Strong> (somente Gestores). Útil antes de uma reunião ou no fim do dia.</p>
-        </Subsection>
-        <Tip>Hoje os avisos chegam pelo sininho dentro do sistema. O envio também por e-mail já está preparado e pode ser ativado no futuro.</Tip>
-      </div>
-    ),
-  },
-  {
     id: "celular-obra",
     title: "Uso no Celular (Obra)",
     icon: Smartphone,
@@ -1589,86 +903,6 @@ const sections: Section[] = [
           </ul>
         </Subsection>
         <Tip>Peça para a equipe de instalação anexar uma foto ao concluir cada esquadria — o histórico da obra fica registrado sem esforço.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "campos-personalizados",
-    title: "Campos Personalizados",
-    icon: Settings2,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Adicione campos extras a projetos e tarefas para registrar informações específicas do seu negócio — como número de contrato, metragem, cidade ou qualquer dado relevante.
-        </p>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">
-            Clique em <Strong>Campos Personalizados</Strong> no menu lateral, na seção <Strong>Análises</Strong>.
-          </p>
-        </Subsection>
-        <Subsection title="Tipos de campo disponíveis">
-          <Table
-            headers={["Tipo", "Uso"]}
-            rows={[
-              ["Texto", "Qualquer informação livre: endereço, observação, código..."],
-              ["Número", "Valores numéricos: metragem, quantidade, valor estimado..."],
-              ["Data", "Datas específicas: entrega prevista, início de garantia..."],
-              ["Seleção", "Lista de opções predefinidas: aprovado/reprovado, região..."],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Criar um campo">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique em <Strong>+ Novo Campo</Strong>.</li>
-            <li>Informe o nome, escolha se aplica a Projeto ou Tarefa e selecione o tipo.</li>
-            <li>Para campos de <Strong>Seleção</Strong>, informe as opções separadas por vírgula.</li>
-            <li>Clique em <Strong>Criar Campo</Strong>.</li>
-          </ol>
-        </Subsection>
-        <Tip>Use o filtro no topo para ver apenas campos de Projetos ou apenas campos de Tarefas.</Tip>
-        <Subsection title="Excluir um campo">
-          <p className="text-sm text-muted-foreground">
-            Passe o mouse sobre o campo e clique no ícone de lixeira que aparece à direita. A exclusão é permanente.
-          </p>
-        </Subsection>
-      </div>
-    ),
-  },
-  {
-    id: "diario-obra",
-    title: "Diário de Obra",
-    icon: BookOpen,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Registro diário das atividades executadas em campo — clima, efetivo, ocorrências e observações — acessível dentro de cada projeto.
-        </p>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">
-            Abra o <Strong>Detalhe de um Projeto</Strong> e role a página até encontrar o card <Strong>Diário de Obra</Strong>.
-          </p>
-        </Subsection>
-        <Subsection title="Criar um registro">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique em <Strong>Novo Registro</Strong>.</li>
-            <li>Selecione a <Strong>data</Strong> e o número de pessoas em campo (<Strong>Efetivo</Strong>).</li>
-            <li>Escolha o <Strong>clima</Strong> do dia (opcional).</li>
-            <li>Descreva as <Strong>Atividades executadas</Strong> (campo obrigatório).</li>
-            <li>Preencha <Strong>Observações</Strong> e <Strong>Ocorrências</Strong> se houver.</li>
-            <li>Clique em <Strong>Salvar Registro</Strong>.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Visualizar registros">
-          <p className="text-sm text-muted-foreground">
-            Os registros aparecem em ordem cronológica. Clique em um registro para expandi-lo e ver todos os detalhes. Clique novamente para recolher.
-          </p>
-        </Subsection>
-        <Tip>O campo <Strong>Ocorrências</Strong> é ideal para registrar acidentes, imprevistos, falta de material ou qualquer situação que afete o andamento da obra.</Tip>
-        <Subsection title="Excluir um registro">
-          <p className="text-sm text-muted-foreground">
-            Expanda o registro e clique em <Strong>Excluir</Strong> no rodapé. A ação é irreversível.
-          </p>
-        </Subsection>
       </div>
     ),
   },
@@ -1714,118 +948,7 @@ const sections: Section[] = [
         <Tip>Informe o <Strong>valor unitário</Strong> sempre que possível — isso permite acompanhar o custo total de materiais por projeto.</Tip>
       </div>
     ),
-  },
-  {
-    id: "marcos",
-    title: "Marcos do Projeto",
-    icon: Flag,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Marcos são datas-chave intermediárias dentro de um projeto — como "Aprovação do projeto", "Início da instalação" ou "Entrega ao cliente". Ficam visíveis no detalhe de cada projeto com indicador de prazo e status.
-        </p>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">
-            Abra o <Strong>Detalhe de um Projeto</Strong> e localize o card <Strong>Marcos do Projeto</Strong> (aparece ao lado do Gráfico de Progresso Semanal).
-          </p>
-        </Subsection>
-        <Subsection title="Criar um marco">
-          <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-            <li>Clique em <Strong>+ Adicionar marco</Strong> (visível apenas para Gestores).</li>
-            <li>Informe o <Strong>nome do marco</Strong> e selecione a <Strong>data prevista</Strong>.</li>
-            <li>Clique em <Strong>Salvar</Strong> ou pressione Enter.</li>
-          </ol>
-        </Subsection>
-        <Subsection title="Status dos marcos">
-          <Table
-            headers={["Ícone", "Significado"]}
-            rows={[
-              ["✅ Verde", "Marco concluído — clique para reabrir se necessário"],
-              ["🕐 Muted", "Marco futuro — dentro do prazo"],
-              ["🟡 Âmbar", "Marco vence em 7 dias ou menos"],
-              ["🔴 Vermelho", "Marco vencido — data já passou e não foi concluído"],
-            ]}
-          />
-        </Subsection>
-        <Subsection title="Marcar como concluído">
-          <p className="text-sm text-muted-foreground">
-            Clique no ícone de círculo à esquerda do marco para alternar entre concluído e pendente. Qualquer membro pode fazer isso. Marcos concluídos ficam com texto riscado e fundo verde claro.
-          </p>
-        </Subsection>
-        <Tip>Use marcos para monitorar etapas críticas que não dependem de tarefas — como aprovações externas, datas de entrega contratuais ou vistorias.</Tip>
-        <Subsection title="Excluir um marco">
-          <p className="text-sm text-muted-foreground">
-            Passe o mouse sobre o marco e clique no ícone de lixeira que aparece à direita (visível apenas para Gestores). A exclusão é permanente.
-          </p>
-        </Subsection>
-      </div>
-    ),
-  },
-  {
-    id: "burndown",
-    title: "Gráfico de Progresso Semanal",
-    icon: TrendingUp,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Gráfico de barras que mostra a evolução semanal de tarefas criadas versus tarefas concluídas nas últimas 12 semanas de cada projeto. Permite identificar ritmo de trabalho, gargalos e períodos de alta entrega.
-        </p>
-        <Subsection title="Como acessar">
-          <p className="text-sm text-muted-foreground">
-            Abra o <Strong>Detalhe de um Projeto</Strong> e localize o card <Strong>Progresso Semanal</Strong> (aparece ao lado dos Marcos do Projeto).
-          </p>
-        </Subsection>
-        <Subsection title="Como ler o gráfico">
-          <Table
-            headers={["Barra", "Significado"]}
-            rows={[
-              ["Cinza (Criadas)", "Tarefas criadas naquela semana — crescimento do escopo"],
-              ["Azul/Primária (Concluídas)", "Tarefas concluídas naquela semana — velocidade de entrega"],
-            ]}
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            Semanas em que as barras <Strong>azuis superam as cinzas</Strong> indicam alta produtividade. Semanas em que as cinzas dominam podem indicar escopo crescendo mais rápido que a equipe entrega.
-          </p>
-        </Subsection>
-        <Tip>Se o gráfico aparecer vazio, significa que nenhuma tarefa foi criada ou concluída nas últimas 12 semanas. Adicione tarefas ao projeto para começar a ver o histórico.</Tip>
-      </div>
-    ),
-  },
-  {
-    id: "dashboard-analytics",
-    title: "Dashboard — Análises e Alertas",
-    icon: AlertCircle,
-    content: (
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          O Dashboard ganhou duas novas seções de análise na parte inferior: <Strong>Carga da Equipe</Strong> e <Strong>Projetos com Prazo Vencido</Strong>.
-        </p>
-        <Subsection title="Carga da Equipe">
-          <p className="text-sm text-muted-foreground mb-2">
-            Exibe todos os membros que possuem tarefas atribuídas, com:
-          </p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-            <li><Strong>Tarefas abertas</Strong> — quantidade de tarefas ainda não concluídas atribuídas ao membro.</li>
-            <li><Strong>Tarefas vencidas</Strong> — abertas com prazo já expirado (aparece em vermelho).</li>
-            <li><Strong>Barra de progresso</Strong> — percentual de tarefas concluídas em relação ao total atribuído.</li>
-          </ul>
-          <p className="text-sm text-muted-foreground mt-2">Os membros com mais tarefas abertas aparecem no topo da lista.</p>
-        </Subsection>
-        <Subsection title="Projetos com Prazo Vencido">
-          <p className="text-sm text-muted-foreground">
-            Lista todos os projetos que têm pelo menos uma data de fase no passado (fim estimado, entrega, produção etc.), agrupados por projeto. Cada item mostra quantos prazos estão vencidos e qual o maior atraso em dias. Clique no item para ir direto ao projeto.
-          </p>
-        </Subsection>
-        <Tip>Use o card <Strong>Alertas de Prazo</Strong> (existente) para ver todas as datas próximas, e o novo card <Strong>Projetos com Prazo Vencido</Strong> para focar exclusivamente no que já passou da data.</Tip>
-        <Subsection title="Complemento: Desempenho">
-          <p className="text-sm text-muted-foreground">
-            Para uma análise mais completa por membro, acesse <Strong>Desempenho</Strong> (menu Análises) — a tabela por pessoa mostra concluídas, pontualidade, abertas e atrasadas de cada membro.
-          </p>
-        </Subsection>
-      </div>
-    ),
-  },
-];
+  },];
 
 function Strong({ children }: { children: React.ReactNode }) {
   return <span className="font-semibold text-foreground">{children}</span>;

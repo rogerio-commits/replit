@@ -1285,52 +1285,15 @@ export default function ProjectDetail() {
         onClose={() => setSelectedVisitId(null)}
       />
 
-      {/* Stats */}
-      <h2 className="text-lg font-semibold">Tarefas da Equipe</h2>
-      {isStatsLoading ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
-        </div>
-      ) : stats ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="bg-slate-50 dark:bg-slate-900/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wider">A Fazer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.todo}</div>
-              <p className="text-xs text-muted-foreground mt-1">Tarefas ainda não iniciadas</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-50 dark:bg-blue-900/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-500 uppercase tracking-wider">Em Andamento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.inProgress}</div>
-              <p className="text-xs text-muted-foreground mt-1">Sendo executadas agora</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-amber-50 dark:bg-amber-900/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-amber-500 uppercase tracking-wider">Em Revisão</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">{stats.review}</div>
-              <p className="text-xs text-muted-foreground mt-1">Aguardando verificação</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-emerald-50 dark:bg-emerald-900/10">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-emerald-500 uppercase tracking-wider">Concluído</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{stats.done}</div>
-              <p className="text-xs text-muted-foreground mt-1">Tarefas finalizadas</p>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
+      {/* Tarefas da Equipe — o contador vive no título, sem faixa de cartões */}
+      <div className="flex items-baseline gap-2">
+        <h2 className="text-lg font-semibold">Tarefas da Equipe</h2>
+        {stats && (
+          <span className="text-sm text-muted-foreground">
+            {stats.done} de {stats.todo + stats.inProgress + stats.review + stats.done} concluídas
+          </span>
+        )}
+      </div>
 
       {/* Tasks */}
       <Card>
@@ -1813,66 +1776,6 @@ export default function ProjectDetail() {
         </Card>
       )}
 
-      {/* Activity Timeline */}
-      {activityItems && activityItems.length > 0 && (
-        <Card>
-          <CardHeader className="py-3 px-4 border-b">
-            <div className="flex items-center gap-2">
-              <History className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <CardTitle className="text-sm font-semibold">Histórico de Atividades</CardTitle>
-                <p className="text-xs text-muted-foreground font-normal">Linha do tempo de todas as ações realizadas neste projeto</p>
-              </div>
-              <span className="ml-1 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                {activityItems.length}
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="relative pl-8 pr-4 py-4">
-              <div className="absolute left-[27px] top-4 bottom-4 w-px bg-border" />
-              <div className="space-y-4">
-                {activityItems.map((item) => {
-                  const date = new Date(item.createdAt);
-                  const dateLabel = isToday(date)
-                    ? `Hoje às ${format(date, "HH:mm")}`
-                    : isYesterday(date)
-                    ? `Ontem às ${format(date, "HH:mm")}`
-                    : format(date, "d MMM yyyy 'às' HH:mm", { locale: ptBR });
-
-                  const dotColor =
-                    item.type === "task_completed"
-                      ? "bg-emerald-500"
-                      : item.type === "task_commented"
-                      ? "bg-blue-500"
-                      : "bg-slate-400";
-
-                  const Icon =
-                    item.type === "task_completed"
-                      ? CheckSquare
-                      : item.type === "task_commented"
-                      ? MessageSquare
-                      : Plus;
-
-                  return (
-                    <div key={item.id} className="relative flex gap-3 items-start">
-                      <div className={`absolute -left-5 mt-0.5 h-4 w-4 rounded-full border-2 border-background ${dotColor} flex items-center justify-center shrink-0`}>
-                        <Icon className="h-2 w-2 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground leading-snug">{item.description}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {item.actorName} · {dateLabel}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
