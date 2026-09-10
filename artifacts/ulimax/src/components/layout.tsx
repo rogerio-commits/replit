@@ -100,8 +100,8 @@ export function Layout({ children }: LayoutProps) {
           {
             label: "Principal",
             items: [
+              { href: "/projects", label: "Obras", icon: Briefcase },
               { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler },
-              { href: "/projects", label: "Projetos", icon: Briefcase },
             ],
           },
           {
@@ -120,9 +120,9 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
+                { href: "/projects", label: "Obras", icon: Briefcase },
                 { href: "/prancheta", label: "Minha Prancheta", icon: PencilRuler },
                 dashboardItem,
-                { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/tasks", label: "Trabalho", icon: CheckSquare },
               ],
             },
@@ -142,8 +142,8 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
-                { href: "/obra", label: "Obras", icon: HardHat },
-                { href: "/projects", label: "Projetos", icon: Briefcase },
+                { href: "/projects", label: "Obras", icon: Briefcase },
+                { href: "/obra", label: "Visitas e pendências", icon: HardHat },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
             },
@@ -157,8 +157,8 @@ export function Layout({ children }: LayoutProps) {
             {
               label: "Principal",
               items: [
+                { href: "/projects", label: "Obras", icon: Briefcase },
                 dashboardItem,
-                { href: "/projects", label: "Projetos", icon: Briefcase },
                 { href: "/calendario", label: "Calendário", icon: CalendarDays },
               ],
             },
@@ -172,15 +172,15 @@ export function Layout({ children }: LayoutProps) {
               {
                 label: "Principal",
                 items: [
+                  { href: "/projects", label: "Obras", icon: Briefcase },
                   dashboardItem,
-                  { href: "/projects", label: "Projetos", icon: Briefcase },
                   { href: "/tasks", label: "Trabalho", icon: CheckSquare },
                 ],
               },
               {
                 label: "Obra",
                 items: [
-                  { href: "/obra", label: "Obras", icon: HardHat },
+                  { href: "/obra", label: "Visitas e pendências", icon: HardHat },
                   { href: "/calendario", label: "Calendário", icon: CalendarDays },
                 ],
               },

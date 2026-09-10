@@ -3,12 +3,14 @@
 
 export type SystemRole = "gestor" | "gestor_obras" | "projetista_gestor" | "executor" | "observador";
 
+// Todo mundo entra pelo mesmo lugar: o painel com todas as obras. É a única
+// tela que responde "como estamos?" para qualquer papel.
 const HOME_BY_ROLE: Record<SystemRole, string> = {
-  gestor: "/dashboard",
-  gestor_obras: "/obra",
-  projetista_gestor: "/prancheta",
-  executor: "/prancheta",
-  observador: "/dashboard",
+  gestor: "/projects",
+  gestor_obras: "/projects",
+  projetista_gestor: "/projects",
+  executor: "/projects",
+  observador: "/projects",
 };
 
 // Rotas permitidas por papel (gestor tem acesso total).

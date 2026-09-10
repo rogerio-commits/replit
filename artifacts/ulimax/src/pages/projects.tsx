@@ -338,9 +338,11 @@ export default function Projects() {
 
   const [, navigate] = useLocation();
   // Visão da lista: tabela (densa), cards (leitura rápida) ou kanban por fase.
+  // O painel é a casa de todo mundo: abre nele, a tabela fica como alternativa
+  // para quem precisa das datas em colunas.
   const [view, setViewState] = useState<"tabela" | "kanban">(() => {
     const saved = localStorage.getItem("ulimax:projects-view");
-    return saved === "kanban" ? "kanban" : "tabela";
+    return saved === "tabela" ? "tabela" : "kanban";
   });
   const setView = (v: "tabela" | "kanban") => {
     setViewState(v);
@@ -1025,12 +1027,12 @@ export default function Projects() {
             )}
             <div className="ml-auto flex items-center gap-2">
               <div className="inline-flex rounded-md border border-border overflow-hidden text-xs font-medium shrink-0">
-                {([["tabela", "Tabela"], ["kanban", "Kanban"]] as const).map(([v, l]) => (
+                {([["kanban", "Painel"], ["tabela", "Tabela"]] as const).map(([v, l]) => (
                   <button
                     key={v}
                     title={v === "tabela"
                       ? "Lista com todas as datas do projeto, ordenável por qualquer coluna"
-                      : "Quadro por fase — arraste o cartão para avançar o projeto de fase"}
+                      : "Todas as obras por fase, com o que cada uma está pedindo — arraste para avançar de fase"}
                     onClick={() => setView(v)}
                     className={cn(
                       "px-3 py-1.5 transition-colors border-l border-border first:border-l-0",

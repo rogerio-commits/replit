@@ -14,6 +14,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListTasks,
+  useListAllSiteVisits,
   useUpdateTask,
   useListProjects,
   useUpdateProject,
@@ -37,6 +38,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { computeHealthMap, FAROL_META, daysFromToday, type FarolLevel } from "@/lib/project-health";
+import { overdueObraDates } from "@/lib/obra-dates";
 import {
   CalendarDays, GripVertical, Plus, User, AlertCircle,
   Loader2, CheckSquare, Briefcase, GanttChartSquare, Columns3,
@@ -188,37 +190,84 @@ function DraggableTaskCard({ task, onOpen }: { task: TaskItem; onOpen: () => voi
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
-function ProjectCard({ project, farol, isDragging = false }: { project: ProjectItem; farol?: FarolLevel; isDragging?: boolean }) {
+/** O que a obra está pedindo agora — lido do cartão, sem abrir o projeto. */
+type SinaisObra = {
+  avisos: { texto: string; tom: "red" | "amber" }[];
+  iniciais: string[];
+};
+
+function ProjectCard({
+  project, farol, sinais, isDragging = false,
+}: {
+  project: ProjectItem;
+  farol?: FarolLevel;
+  sinais?: SinaisObra;
+  isDragging?: boolean;
+}) {
   const overdue = project.endDate ? daysFromToday(project.endDate) < 0 : false;
   const meta = farol ? FAROL_META[farol] : null;
+  const pct = project.taskTotal > 0 ? Math.round((project.taskDone / project.taskTotal) * 100) : null;
   return (
     <div data-testid={`kanban-card-project-${project.id}`} className={cn(
       "bg-card border rounded-lg p-3 space-y-2 shadow-sm select-none cursor-pointer",
       isDragging ? "shadow-xl rotate-1 opacity-90 ring-2 ring-primary/30" : "hover:shadow-md transition-shadow",
       overdue && "border-red-300"
     )}>
-      <div className="flex items-start justify-between gap-2">
+      {/* nome + farol */}
+      <div className="flex items-start gap-2">
+        {meta && <span className={cn("h-2.5 w-2.5 rounded-full shrink-0 mt-1.5", meta.dot)} title={meta.label} />}
         <p className="text-sm font-medium leading-snug flex-1">{project.name}</p>
         <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        {meta && (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium border rounded-full px-1.5 py-0.5", meta.chip)}>
-            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", meta.dot)} />
-            {meta.label}
+
+      {/* o que esta obra está pedindo agora */}
+      {sinais && sinais.avisos.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {sinais.avisos.map((a) => (
+            <span
+              key={a.texto}
+              className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-semibold rounded-full px-1.5 py-0.5 border",
+                a.tom === "red"
+                  ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800/40"
+                  : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40",
+              )}
+            >
+              {a.texto}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* progresso das tarefas */}
+      {pct !== null && (
+        <div className="space-y-1">
+          <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="text-[10px] text-muted-foreground tabular-nums">{project.taskDone}/{project.taskTotal} tarefas</p>
+        </div>
+      )}
+
+      {/* rodapé: material, equipe e prazo */}
+      <div className="flex items-center gap-2 pt-0.5">
+        {project.materialType && (
+          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+            <span className={cn("h-1.5 w-1.5 rounded-full", project.materialType === "madeira" ? "bg-amber-600" : "bg-sky-600")} />
+            {project.materialType === "madeira" ? "Madeira" : "Alumínio"}
           </span>
         )}
-        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", PRIORITY_COLORS[project.priority])}>
-          {PRIORITY_LABELS[project.priority]}
-        </Badge>
-      </div>
-      <div className="flex items-center justify-between gap-2 pt-0.5">
-        {project.taskTotal > 0
-          ? <span className="text-[11px] text-muted-foreground tabular-nums">{project.taskDone}/{project.taskTotal} tarefas</span>
-          : <span />
-        }
+        {sinais && sinais.iniciais.length > 0 && (
+          <span className="flex -space-x-1.5">
+            {sinais.iniciais.slice(0, 3).map((ini, i) => (
+              <span key={i} className="h-5 w-5 rounded-full bg-muted border border-background grid place-items-center text-[9px] font-semibold text-muted-foreground">
+                {ini}
+              </span>
+            ))}
+          </span>
+        )}
         {project.endDate && (
-          <div className={cn("flex items-center gap-1 text-[11px]", overdue ? "text-red-600 font-medium" : "text-muted-foreground")}>
+          <div className={cn("ml-auto flex items-center gap-1 text-[11px] tabular-nums", overdue ? "text-red-600 font-medium" : "text-muted-foreground")}>
             {overdue ? <AlertCircle className="h-3 w-3" /> : <CalendarDays className="h-3 w-3" />}
             <span>{formatDate(project.endDate)}</span>
           </div>
@@ -228,7 +277,7 @@ function ProjectCard({ project, farol, isDragging = false }: { project: ProjectI
   );
 }
 
-function DraggableProjectCard({ project, farol, onOpen }: { project: ProjectItem; farol?: FarolLevel; onOpen: () => void }) {
+function DraggableProjectCard({ project, farol, sinais, onOpen }: { project: ProjectItem; farol?: FarolLevel; sinais?: SinaisObra; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `project-${project.id}` });
   return (
     <div
@@ -238,7 +287,7 @@ function DraggableProjectCard({ project, farol, onOpen }: { project: ProjectItem
       style={{ opacity: isDragging ? 0 : 1 }}
       onClick={onOpen}
     >
-      <ProjectCard project={project} farol={farol} />
+      <ProjectCard project={project} farol={farol} sinais={sinais} />
     </div>
   );
 }
@@ -480,6 +529,7 @@ export function ProjectsBoard() {
 
   const { data: projects, isLoading } = useListProjects();
   const { data: allTasks } = useListTasks();
+  const { data: allVisits } = useListAllSiteVisits();
   const updateProject = useUpdateProject();
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -488,6 +538,63 @@ export function ProjectsBoard() {
     () => computeHealthMap(projects ?? [], allTasks ?? []),
     [projects, allTasks]
   );
+
+  // Um mapa de "o que esta obra está pedindo" por projeto: o cartão precisa
+  // responder isso sem que ninguém abra o projeto.
+  const sinaisMap = useMemo(() => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    const map = new Map<number, SinaisObra>();
+
+    const atrasadasPorObra = new Map<number, number>();
+    for (const t of allTasks ?? []) {
+      if (t.status === "done" || !t.dueDate || daysFromToday(t.dueDate) >= 0) continue;
+      atrasadasPorObra.set(t.projectId, (atrasadasPorObra.get(t.projectId) ?? 0) + 1);
+    }
+
+    const rdoPorObra = new Map<number, number>();
+    const visitaProxima = new Map<number, number>();
+    for (const v of allVisits ?? []) {
+      if (v.date <= hoje && !v.reportFileKey) {
+        rdoPorObra.set(v.projectId, (rdoPorObra.get(v.projectId) ?? 0) + 1);
+      }
+      const d = daysFromToday(v.date);
+      if (d >= 0) {
+        const atual = visitaProxima.get(v.projectId);
+        if (atual === undefined || d < atual) visitaProxima.set(v.projectId, d);
+      }
+    }
+
+    for (const p of projects ?? []) {
+      const avisos: SinaisObra["avisos"] = [];
+      const atrasadas = atrasadasPorObra.get(p.id) ?? 0;
+      if (atrasadas > 0) avisos.push({ texto: `${atrasadas} tarefa${atrasadas > 1 ? "s" : ""} atrasada${atrasadas > 1 ? "s" : ""}`, tom: "red" });
+
+      const rdos = rdoPorObra.get(p.id) ?? 0;
+      if (rdos > 0) avisos.push({ texto: rdos === 1 ? "RDO pendente" : `${rdos} RDOs pendentes`, tom: "red" });
+
+      for (const od of overdueObraDates(p)) {
+        avisos.push({ texto: `${od.label} há ${-od.days}d`, tom: "red" });
+      }
+
+      if (p.status === "em_aprovacao") {
+        if (p.approvalStatus === "rejected") avisos.push({ texto: "Arquitetura reprovou", tom: "red" });
+        else if (!p.approvalStatus) avisos.push({ texto: "Aguardando arquitetura", tom: "amber" });
+      }
+
+      const dVisita = visitaProxima.get(p.id);
+      if (dVisita !== undefined && dVisita <= 2) {
+        avisos.push({ texto: dVisita === 0 ? "Visita hoje" : dVisita === 1 ? "Visita amanhã" : `Visita em ${dVisita}d`, tom: "amber" });
+      }
+
+      const iniciais = (p.participants ?? [])
+        .map((pt) => (pt.memberName ?? "").trim())
+        .filter(Boolean)
+        .map((nome) => nome.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase());
+
+      map.set(p.id, { avisos: avisos.slice(0, 3), iniciais });
+    }
+    return map;
+  }, [projects, allTasks, allVisits]);
 
   const projectsByColumn = useMemo(() => {
     const map: Record<ProjectStatusId, ProjectItem[]> = {
@@ -566,7 +673,7 @@ export function ProjectsBoard() {
           <KanbanColumn key={col.id} colId={col.id} label={col.label} color={col.color} bg={col.bg}
             count={projectsByColumn[col.id].length} onAdd={() => navigate("/projects?create=1")}>
             {projectsByColumn[col.id].map((p) => (
-              <DraggableProjectCard key={p.id} project={p} farol={healthMap.get(p.id)?.level} onOpen={() => openProject(p.id)} />
+              <DraggableProjectCard key={p.id} project={p} farol={healthMap.get(p.id)?.level} sinais={sinaisMap.get(p.id)} onOpen={() => openProject(p.id)} />
             ))}
           </KanbanColumn>
         ))}
