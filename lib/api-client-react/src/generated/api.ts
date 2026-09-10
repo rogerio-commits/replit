@@ -69,6 +69,8 @@ import type {
   MemberInput,
   MemberProductivity,
   MemberUpdate,
+  MemberWithAccessInput,
+  MemberWithAccessResult,
   MetricsTrends,
   Milestone,
   MilestoneInput,
@@ -4783,6 +4785,77 @@ export const useCreateMember = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateMemberMutationOptions(options));
+    }
+
+export const getCreateMemberWithAccessUrl = () => {
+
+
+
+
+  return `/api/members/with-access`
+}
+
+/**
+ * @summary Create a team member already with login and password
+ */
+export const createMemberWithAccess = async (memberWithAccessInput: MemberWithAccessInput, options?: RequestInit): Promise<MemberWithAccessResult> => {
+
+  return customFetch<MemberWithAccessResult>(getCreateMemberWithAccessUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      memberWithAccessInput,)
+  }
+);}
+
+
+
+
+export const getCreateMemberWithAccessMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMemberWithAccess>>, TError,{data: BodyType<MemberWithAccessInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMemberWithAccess>>, TError,{data: BodyType<MemberWithAccessInput>}, TContext> => {
+
+const mutationKey = ['createMemberWithAccess'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMemberWithAccess>>, {data: BodyType<MemberWithAccessInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMemberWithAccess(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMemberWithAccessMutationResult = NonNullable<Awaited<ReturnType<typeof createMemberWithAccess>>>
+    export type CreateMemberWithAccessMutationBody = BodyType<MemberWithAccessInput>
+    export type CreateMemberWithAccessMutationError = ErrorType<void>
+
+    /**
+ * @summary Create a team member already with login and password
+ */
+export const useCreateMemberWithAccess = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMemberWithAccess>>, TError,{data: BodyType<MemberWithAccessInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMemberWithAccess>>,
+        TError,
+        {data: BodyType<MemberWithAccessInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMemberWithAccessMutationOptions(options));
     }
 
 export const getGetMemberUrl = (id: number,) => {

@@ -1302,6 +1302,24 @@ export const CreateMemberBody = zod.object({
 
 
 /**
+ * @summary Create a team member already with login and password
+ */
+
+export const createMemberWithAccessBodyPasswordMin = 8;
+
+
+
+export const CreateMemberWithAccessBody = zod.object({
+  "name": zod.string().min(1),
+  "role": zod.string(),
+  "email": zod.string(),
+  "password": zod.string().min(createMemberWithAccessBodyPasswordMin),
+  "intendedRole": zod.enum(['gestor', 'gestor_obras', 'projetista_gestor', 'executor', 'observador']),
+  "team": zod.enum(['projetos', 'tecnica']).optional()
+})
+
+
+/**
  * @summary Get a member by ID
  */
 export const GetMemberParams = zod.object({

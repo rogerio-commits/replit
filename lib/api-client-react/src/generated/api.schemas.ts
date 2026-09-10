@@ -522,6 +522,33 @@ export interface MemberInput {
   team?: MemberTeam;
 }
 
+export type MemberWithAccessInputIntendedRole = typeof MemberWithAccessInputIntendedRole[keyof typeof MemberWithAccessInputIntendedRole];
+
+
+export const MemberWithAccessInputIntendedRole = {
+  gestor: 'gestor',
+  gestor_obras: 'gestor_obras',
+  projetista_gestor: 'projetista_gestor',
+  executor: 'executor',
+  observador: 'observador',
+} as const;
+
+export interface MemberWithAccessInput {
+  /** @minLength 1 */
+  name: string;
+  role: string;
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  intendedRole: MemberWithAccessInputIntendedRole;
+  team?: MemberTeam;
+}
+
+export interface MemberWithAccessResult {
+  member: Member;
+  accountCreated: boolean;
+}
+
 export interface MemberUpdate {
   name?: string;
   role?: string;

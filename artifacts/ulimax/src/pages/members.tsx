@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   useListMembers,
   useCreateMember,
+  useCreateMemberWithAccess,
   useUpdateMember,
   useDeleteMember,
   useListUsers,
@@ -65,6 +66,8 @@ import {
   Check,
   RefreshCw,
   PencilRuler,
+  EyeOff,
+  UserPlus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@clerk/react";
@@ -119,9 +122,44 @@ const memberSchema = z.object({
   email:        z.string().email("E-mail válido obrigatório"),
   team:         z.enum(["projetos", "tecnica"]),
   intendedRole: z.enum(["gestor", "gestor_obras", "projetista_gestor", "executor", "observador"]),
+  // Só é exigida no cadastro com senha — validada no submit, porque o mesmo
+  // formulário também edita membros e envia convite.
+  password:     z.string().optional(),
 });
 
 type MemberFormValues = z.infer<typeof memberSchema>;
+
+/** Senha forte pronta para entregar à pessoa: legível e sem caracteres ambíguos. */
+function gerarSenha(): string {
+  const minusculas = "abcdefghijkmnopqrstuvwxyz";
+  const maiusculas = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const numeros    = "23456789";
+  const simbolos   = "!@#$%&*";
+  const todos = minusculas + maiusculas + numeros + simbolos;
+
+  const sorteia = (pool: string, qtd: number) => {
+    const bytes = new Uint32Array(qtd);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => pool[b % pool.length]);
+  };
+
+  const chars = [
+    ...sorteia(minusculas, 1),
+    ...sorteia(maiusculas, 1),
+    ...sorteia(numeros, 1),
+    ...sorteia(simbolos, 1),
+    ...sorteia(todos, 8),
+  ];
+
+  // Embaralha para os obrigatórios não ficarem sempre nas 4 primeiras posições.
+  const ordem = new Uint32Array(chars.length);
+  crypto.getRandomValues(ordem);
+  return chars
+    .map((c, i) => ({ c, k: ordem[i] }))
+    .sort((a, b) => a.k - b.k)
+    .map((x) => x.c)
+    .join("");
+}
 
 const inviteRoleSchema = z.object({
   intendedRole: z.enum(["gestor", "gestor_obras", "projetista_gestor", "executor", "observador"]),
@@ -407,6 +445,11 @@ export default function Members() {
   const [resetLinkData, setResetLinkData] = useState<{ memberName: string; url: string } | null>(null);
   const [resetLinkLoading, setResetLinkLoading] = useState(false);
   const [copiedLink, setCopiedLink]       = useState(false);
+  // Cadastro com senha é o caminho padrão; o convite por e-mail vira alternativa.
+  const [modoAcesso, setModoAcesso]       = useState<"senha" | "convite">("senha");
+  const [mostrarSenha, setMostrarSenha]   = useState(false);
+  const [credenciais, setCredenciais]     = useState<{ nome: string; email: string; senha: string } | null>(null);
+  const [copiouCredenciais, setCopiouCredenciais] = useState(false);
 
   const { toast }      = useToast();
   const { getToken }   = useAuth();
@@ -420,12 +463,13 @@ export default function Members() {
   const createInvitation = useCreateInvitation();
   const deleteInvitation = useDeleteInvitation();
   const createMember     = useCreateMember();
+  const createMemberWithAccess = useCreateMemberWithAccess();
   const updateMember     = useUpdateMember();
   const deleteMember     = useDeleteMember();
 
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(memberSchema),
-    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor" },
+    defaultValues: { name: "", role: "", email: "", team: "projetos", intendedRole: "executor", password: "" },
   });
 
   const inviteRoleForm = useForm<InviteRoleValues>({
@@ -435,7 +479,9 @@ export default function Members() {
 
   const resetDialog = () => {
     setEditingMember(null);
-    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor" });
+    setMostrarSenha(false);
+    setModoAcesso("senha");
+    form.reset({ name: "", role: "", email: "", team: "projetos", intendedRole: "executor", password: "" });
   };
 
   const onSubmit = (data: MemberFormValues) => {
@@ -451,6 +497,47 @@ export default function Members() {
         },
         onError: () => toast({ title: "Erro ao atualizar membro", variant: "destructive" }),
       });
+      return;
+    }
+
+    // Caminho padrão: o gestor já entrega a pessoa pronta para entrar.
+    if (modoAcesso === "senha") {
+      const senha = (data.password ?? "").trim();
+      if (senha.length < 8) {
+        form.setError("password", { message: "Defina uma senha de pelo menos 8 caracteres" });
+        return;
+      }
+
+      createMemberWithAccess.mutate(
+        {
+          data: {
+            name: data.name,
+            role: data.role,
+            email: data.email,
+            team: data.team,
+            intendedRole: data.intendedRole,
+            password: senha,
+          },
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+            queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/invitations"] });
+            setCredenciais({ nome: data.name, email: data.email, senha });
+            setIsCreateOpen(false);
+            resetDialog();
+          },
+          onError: (err: unknown) => {
+            const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+            toast({
+              title: "Não foi possível criar o acesso",
+              description: msg ?? "Tente novamente.",
+              variant: "destructive",
+            });
+          },
+        }
+      );
       return;
     }
 
@@ -496,6 +583,7 @@ export default function Members() {
       email: member.email,
       team: (member.team as MemberTeam) ?? "projetos",
       intendedRole: "executor",
+      password: "",
     });
     setEditingMember(member.id);
     setIsCreateOpen(true);
@@ -605,6 +693,7 @@ export default function Members() {
       email: inv.email,
       team: "projetos",
       intendedRole: inv.intendedRole as SystemRole,
+      password: "",
     });
     setEditingMember(null);
     setIsCreateOpen(true);
@@ -642,7 +731,20 @@ export default function Members() {
     m.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const isPending = createMember.isPending || updateMember.isPending || createInvitation.isPending;
+  const isPending =
+    createMember.isPending ||
+    createMemberWithAccess.isPending ||
+    updateMember.isPending ||
+    createInvitation.isPending;
+
+  const handleCopyCredenciais = () => {
+    if (!credenciais) return;
+    navigator.clipboard.writeText(
+      `Acesso ao Ulimax Projetos\nSite: ${window.location.origin}\nE-mail: ${credenciais.email}\nSenha: ${credenciais.senha}`
+    );
+    setCopiouCredenciais(true);
+    setTimeout(() => setCopiouCredenciais(false), 2000);
+  };
 
   const cardProps = {
     users, invitations, isGestor, pendingRoleId, resendingInviteId,
@@ -678,9 +780,37 @@ export default function Members() {
                 <DialogTitle>{editingMember ? "Editar Membro" : "Adicionar Membro"}</DialogTitle>
               </DialogHeader>
               {!editingMember && (
-                <p className="text-sm text-muted-foreground -mt-1">
-                  O membro será adicionado à equipe e receberá um e-mail de convite para criar sua senha.
-                </p>
+                <div className="-mt-1 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      ["senha",   UserPlus, "Cadastrar com senha", "A pessoa já entra hoje"],
+                      ["convite", Send,     "Enviar convite",       "Ela cria a própria senha"],
+                    ] as const).map(([modo, Icon, titulo, sub]) => (
+                      <button
+                        key={modo}
+                        type="button"
+                        onClick={() => setModoAcesso(modo)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-left transition-colors",
+                          modoAcesso === modo
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:bg-muted/50"
+                        )}
+                      >
+                        <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <Icon className={cn("h-3.5 w-3.5", modoAcesso === modo && "text-primary")} />
+                          {titulo}
+                        </span>
+                        <span className="block text-[11px] text-muted-foreground mt-0.5">{sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {modoAcesso === "senha"
+                      ? "Você define a senha e entrega para a pessoa — sem esperar e-mail."
+                      : "Um e-mail com o link de cadastro será enviado para ela."}
+                  </p>
+                </div>
               )}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -721,13 +851,63 @@ export default function Members() {
                     )} />
                   )}
 
+                  {!editingMember && modoAcesso === "senha" && (
+                    <FormField control={form.control} name="password" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Senha de acesso</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input
+                              type={mostrarSenha ? "text" : "password"}
+                              autoComplete="new-password"
+                              placeholder="Mínimo 8 caracteres"
+                              className="font-mono"
+                              {...field}
+                              value={field.value ?? ""}
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="shrink-0"
+                            title={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                            onClick={() => setMostrarSenha((v) => !v)}
+                          >
+                            {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0 gap-1.5"
+                            onClick={() => {
+                              form.setValue("password", gerarSenha(), { shouldValidate: false });
+                              form.clearErrors("password");
+                              setMostrarSenha(true);
+                            }}
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Gerar
+                          </Button>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Anote ou copie: depois de salvar, a senha não pode ser consultada — só redefinida.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  )}
+
                   <DialogFooter>
                     <Button type="submit" disabled={isPending} className="w-full">
                       {isPending
                         ? "Salvando..."
                         : editingMember
                           ? "Atualizar"
-                          : <><Send className="mr-2 h-4 w-4" />Adicionar e Enviar Convite</>}
+                          : modoAcesso === "senha"
+                            ? <><UserPlus className="mr-2 h-4 w-4" />Cadastrar e Liberar Acesso</>
+                            : <><Send className="mr-2 h-4 w-4" />Adicionar e Enviar Convite</>}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -869,6 +1049,42 @@ export default function Members() {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Credenciais recém-criadas — única chance de ver a senha */}
+      <Dialog open={!!credenciais} onOpenChange={(open) => { if (!open) { setCredenciais(null); setCopiouCredenciais(false); } }}>
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-600" />
+              {credenciais?.nome} já pode entrar
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Envie estes dados para a pessoa. <strong>Esta é a única vez que a senha aparece</strong> — depois só é possível redefinir.
+            </p>
+            <div className="rounded-lg border bg-muted/50 p-3 space-y-2 text-sm">
+              <div className="flex gap-2">
+                <span className="text-muted-foreground w-14 shrink-0">Site</span>
+                <span className="font-mono text-xs truncate">{window.location.origin}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-muted-foreground w-14 shrink-0">E-mail</span>
+                <span className="font-mono text-xs truncate select-all">{credenciais?.email}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-muted-foreground w-14 shrink-0">Senha</span>
+                <span className="font-mono text-xs select-all">{credenciais?.senha}</span>
+              </div>
+            </div>
+            <Button onClick={handleCopyCredenciais} className="w-full">
+              {copiouCredenciais
+                ? <><Check className="h-4 w-4 mr-1.5" />Copiado</>
+                : <><Copy className="h-4 w-4 mr-1.5" />Copiar dados de acesso</>}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -1368,6 +1368,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/Member"
 
+  /members/with-access:
+    post:
+      operationId: createMemberWithAccess
+      tags: [members]
+      summary: Create a team member already with login and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberWithAccessInput"
+      responses:
+        "201":
+          description: Created member with account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberWithAccessResult"
+        "400":
+          description: Invalid body or password rejected
+        "409":
+          description: E-mail already in use
+
   /members/{id}:
     get:
       operationId: getMember
@@ -3142,6 +3165,35 @@ components:
           type: string
         team:
           $ref: "#/components/schemas/MemberTeam"
+
+    MemberWithAccessInput:
+      type: object
+      required: [name, role, email, password, intendedRole]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        role:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        intendedRole:
+          type: string
+          enum: [gestor, gestor_obras, projetista_gestor, executor, observador]
+        team:
+          $ref: "#/components/schemas/MemberTeam"
+
+    MemberWithAccessResult:
+      type: object
+      required: [member, accountCreated]
+      properties:
+        member:
+          $ref: "#/components/schemas/Member"
+        accountCreated:
+          type: boolean
 
     MemberUpdate:
       type: object
